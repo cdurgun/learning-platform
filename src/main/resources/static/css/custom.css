@@ -1,0 +1,26 @@
+body {
+    background-color: #fbfbfd;
+}
+
+.markdown-content h2 {
+    margin-top: 2rem;
+}
+
+.markdown-content pre {
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.markdown-content pre code {
+    border-radius: 0.5rem;
+}
+
+.markdown-content blockquote {
+    border-left: 4px solid #dee2e6;
+    padding-left: 1rem;
+    color: #6c757d;
+}
+
+.navbar-brand {
+    font-weight: 600;
+}

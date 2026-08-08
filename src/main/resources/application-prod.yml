@@ -1,0 +1,17 @@
+# Üretimde tüm gizli bilgiler ortam değişkenlerinden okunur, repoya asla yazılmaz.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  thymeleaf:
+    cache: true
+
+logging:
+  level:
+    com.cdurgun.learning: INFO
+    org.hibernate.SQL: WARN

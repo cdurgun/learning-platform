@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <!-- Bu dosya doğrudan render edilmez; yalnızca aşağıdaki fragment'leri barındırır. -->
+</head>
+<body>
+
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+    <a class="navbar-brand" th:href="@{/}">Learning Platform</a>
+    <div class="ms-auto d-flex gap-2">
+        <a class="btn btn-sm btn-outline-light"
+           th:classappend="${language != null and language.code == 'tr'} ? 'active' : ''"
+           th:href="@{/(lang='tr')}">TR</a>
+        <a class="btn btn-sm btn-outline-light"
+           th:classappend="${language != null and language.code == 'en'} ? 'active' : ''"
+           th:href="@{/(lang='en')}">EN</a>
+    </div>
+</nav>
+
+<aside th:fragment="sidebar" class="col-12 col-md-3 col-lg-2 bg-light border-end p-3">
+    <div th:each="course : ${nav}" class="mb-4">
+        <h6 class="text-uppercase text-muted small fw-bold" th:text="${course.name()}">Kurs</h6>
+        <div th:each="category : ${course.categories()}" class="mb-3">
+            <div class="fw-semibold small mb-1" th:text="${category.name()}">Kategori</div>
+            <ul class="nav flex-column">
+                <li class="nav-item" th:each="topicItem : ${category.topics()}">
+                    <a class="nav-link py-1 px-2"
+                       th:href="@{/topics/{slug}(slug=${topicItem.slug()}, lang=${language.code})}"
+                       th:text="${topicItem.title()}">Konu</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <p th:if="${#lists.isEmpty(nav)}" class="text-muted small" th:text="#{nav.noContent}">Henüz yayınlanmış içerik yok.</p>
+</aside>
+
+<footer th:fragment="footer" class="border-top mt-5 py-3 text-center text-muted small">
+    <span>&copy; 2026 Learning Platform</span>
+</footer>
+
+</body>
+</html>

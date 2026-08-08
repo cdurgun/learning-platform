@@ -1,0 +1,108 @@
+# Learning Platform
+
+Türkçe ve İngilizce içerik sunan, Java odaklı bir öğrenim platformu.
+
+## Mimari
+
+- **Veritabanı (PostgreSQL):** sadece metadata — kurs/kategori/konu hiyerarşisi, çeviri
+  başlıkları/özetleri, SEO alanları, yayın durumu, zorluk seviyesi, sıralama.
+- **Markdown dosyaları (`src/main/resources/content/{lang}/{slug}.md`):** derslerin asıl
+  içeriği. Tek doğruluk kaynağı budur.
+- **Java örnekleri (`src/main/resources/examples/{topic-slug}/*.java`):** gerçek, derlenebilir
+  `.java` dosyaları. Markdown içinde `{{DosyaAdi.java}}` yazılarak sayfaya gömülür.
+- DB ile dosyalar arasındaki bağlantı **slug convention** ile kurulur, path DB'de saklanmaz:
+  `content/{language}/{topic.slug}.md` ve `examples/{topic.slug}/{example_name}.java`.
+- **Yayın durumu çeviri seviyesinde:** `Topic`'te `published` yok, `TopicTranslation`'da var —
+  bir dilin yayında, diğerinin taslak olması normal bir senaryo (örn. TR hazır, EN'de çalışılıyor).
+  Bir konu, istenen dilde henüz yayınlanmamışsa 404 değil, "bu içerik bu dilde henüz mevcut
+  değil" şeklinde dostane bir sayfa gösterilir (diğer dile geçiş linkiyle birlikte).
+
+## İçerik render hattı (Markdown → HTML)
+
+`MarkdownService`, bir konunun ham Markdown'ını üç adımda işler:
+
+1. **Preprocess:** `{{ExampleName.java}}` yer tutucularını, `examples/{topic-slug}/` altındaki
+   ilgili dosyanın içeriğiyle, fenced code block olarak değiştirir.
+2. **Parse + render:** CommonMark ile standart HTML üretir.
+3. **Callout post-process:** `> 💡 Tip ...` ve `> ⚠️ Warning ...` kalıbıyla yazılmış
+   blockquote'ları Bootstrap alert kutularına çevirir (regex tabanlı, tek paragraflık
+   callout'ları destekler — bkz. `MarkdownService` içindeki sınırlama notu).
+
+## Çok dillilik (i18n)
+
+İki ayrı katman var, ikisi de aynı `?lang=tr|en` parametresine bağlı:
+
+- **İçerik:** `TopicTranslation` (başlık/özet/SEO) + `content/{lang}/{slug}.md` (ders gövdesi).
+- **Arayüz metinleri (chrome):** `messages.properties` / `messages_tr.properties` /
+  `messages_en.properties` + Thymeleaf'in `#{...}` söz dizimi. Locale, `LangParamLocaleResolver`
+  ile doğrudan `lang` parametresinden çözülür (cookie/session yok, stateless).
+
+## Gereksinimler
+
+- Java 21+
+- Maven 3.9+
+- Docker (yerel PostgreSQL için)
+
+## Yerel geliştirme
+
+```bash
+docker compose up -d
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Uygulama http://localhost:8080 adresinde açılır. Flyway, uygulama başlarken şemayı ve
+demo (Enum) verisini otomatik oluşturur/günceller.
+
+> **Not:** `docker-compose.yml`, host tarafında **5433** portunu kullanır (container'ın
+> kendi içi hâlâ 5432). Bunun sebebi, birçok geliştirme makinesinde 5432'de zaten native bir
+> PostgreSQL kurulu olması — iki Postgres aynı porta çakışınca hangisine bağlandığın belirsiz
+> hâle geliyor. `application-dev.yml` / `application-test.yml` da buna göre 5433'e işaret eder.
+
+## Profiller
+
+| Profil | Amaç |
+|---|---|
+| `dev`  | Yerel geliştirme, Docker Compose PostgreSQL (host portu 5433) |
+| `test` | Test çalıştırmaları |
+| `prod` | Üretim, ortam değişkenleriyle yapılandırılır |
+
+## Veritabanı migrasyonları (Flyway)
+
+| Migration | İçerik |
+|---|---|
+| `V1` | Şema: `course`, `category`, `topic`, `topic_translation`, `code_example` |
+| `V2` | Demo veri: Java / Java Basics / Enum konusu (TR yayında, EN taslak) |
+| `V3` | Constructor & Fields bölümleri için örnek metadata'sı (Planet) |
+| `V4` | Kalan bölümler için örnek metadata'sı (Methods, Interface, Abstract Method, EnumSet, EnumMap, Singleton, Strategy Pattern, Real World) |
+| `V5` | `estimated_minutes` güncellemesi (içerik tamamlandığı için 15 → 35) |
+| `V6` | İngilizce Enum çevirisini yayına alır (`published = true`) |
+
+## Proje yapısı
+
+```
+src/main/java/com/cdurgun/learning/
+    domain/          Course, Category, Topic, TopicTranslation, CodeExample, Language, Difficulty
+    domain/converter/ Language <-> DB (tr/en kodu) dönüştürücüsü
+    repository/      Spring Data JPA repository'leri
+    service/         ContentResolver, CodeExampleResolver, MarkdownService, NavigationService
+    controller/      HomeController, TopicController
+    config/          LangParamLocaleResolver, WebConfig
+    web/nav/         Sidebar/anasayfa navigasyon DTO'ları (CourseNav)
+
+src/main/resources/
+    content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
+    examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
+    db/migration/                 Flyway migration'ları
+    templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
+    messages*.properties          Arayüz metni çevirileri
+```
+
+## Yol haritası
+
+- **Faz 1 — Foundation:** ✅ Proje iskeleti, Postgres/Flyway, Thymeleaf/Bootstrap layout,
+  Markdown → HTML hattı, kod örneği gömme, highlight.js.
+- **Faz 2 — Java Content (Enum):** ✅ Enum konusunun tamamı (~19 bölüm), TR ve EN, ilgili
+  kod örnekleriyle birlikte; arayüz metinleri için tam i18n.
+- **Faz 3 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
+  yeni konular (Interface, Generics, Streams...), CI'da örnek `.java` dosyalarının
+  otomatik derleme kontrolü.

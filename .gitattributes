@@ -1,0 +1,14 @@
+# Satır sonlarını normalize et
+* text=auto eol=lf
+
+*.java text diff=java
+*.md   text
+*.yml  text
+*.yaml text
+*.sql  text
+*.html text diff=html
+
+# Binary dosyalar
+*.jar  binary
+*.png  binary
+*.jpg  binary

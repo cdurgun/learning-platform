@@ -1,0 +1,13 @@
+# NOT: Bu profil şimdilik dev ile aynı Postgres sunucusunu, ayrı bir DB adıyla kullanır.
+# `learning_test` veritabanını elle oluşturman gerekir. İleride (Faz 3+) bunun yerine
+# Testcontainers ile her test çalıştırmasında izole, tek kullanımlık bir Postgres
+# container'ı ayağa kaldırmak çok daha sağlam olur.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/learning_test
+    username: learning
+    password: learning
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
