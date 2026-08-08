@@ -1,9 +1,14 @@
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     background-color: #fbfbfd;
 }
 
 .markdown-content h2 {
     margin-top: 2rem;
+    scroll-margin-top: 1rem;
 }
 
 .markdown-content pre {

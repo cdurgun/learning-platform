@@ -101,7 +101,10 @@ public class TopicController {
 
         model.addAttribute("contentAvailable", true);
         model.addAttribute("translation", translation.get());
-        model.addAttribute("contentHtml", markdownService.render(rawMarkdown.get(), slug));
+
+        MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown.get(), slug);
+        model.addAttribute("contentHtml", rendered.html());
+        model.addAttribute("toc", rendered.toc());
 
         addPreviousAndNext(model, topic, slug, language);
 

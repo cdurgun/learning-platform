@@ -19,7 +19,7 @@
     <div class="row">
         <div th:replace="~{fragments/layout :: sidebar}"></div>
 
-        <main class="col-12 col-md-9 col-lg-10 p-4">
+        <main class="col-12 col-md-9 col-lg-7 p-4">
 
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb">
@@ -89,6 +89,20 @@
             </div>
 
         </main>
+
+        <!-- Sağdaki "Bu sayfada" navigasyonu: sadece lg+ ekranlarda gösteriliyor (mobil/tablette
+             yer yok, kullanıcı zaten doğal scroll ile ilerliyor). toc, MarkdownService'in
+             render edilmiş HTML'den çıkardığı h2 id'lerinden geliyor (bkz. MarkdownService). -->
+        <nav th:if="${contentAvailable and toc != null and !#lists.isEmpty(toc)}"
+             class="d-none d-lg-block col-lg-3 p-4 sticky-top" style="top: 1rem;"
+             aria-label="Sayfa içi navigasyon">
+            <div class="text-uppercase text-muted small fw-bold mb-2" th:text="#{toc.onThisPage}">Bu sayfada</div>
+            <ul class="nav flex-column small">
+                <li class="nav-item" th:each="entry : ${toc}">
+                    <a class="nav-link py-1 px-0" th:href="'#' + ${entry.id()}" th:text="${entry.text()}">Başlık</a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 

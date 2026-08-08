@@ -1,10 +1,14 @@
 package com.cdurgun.learning.service;
 
+import org.commonmark.Extension;
+import org.commonmark.ext.heading.anchor.HeadingAnchorExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,9 +19,14 @@ import java.util.regex.Pattern;
  *   <li><b>Preprocess:</b> {@code {{ExampleName.java}}} yer tutucularını, ilgili konunun
  *       {@code examples/} klasöründeki gerçek dosyasının içeriğiyle, fenced code block
  *       olarak değiştirir.</li>
- *   <li><b>Parse + render:</b> CommonMark ile standart HTML üretir.</li>
+ *   <li><b>Parse + render:</b> CommonMark ile, {@code HeadingAnchorExtension} sayesinde her
+ *       başlığa otomatik {@code id} vererek, standart HTML üretir.</li>
  *   <li><b>Callout post-process:</b> {@code > 💡 Tip ...} ve {@code > ⚠️ Warning ...}
  *       kalıbıyla yazılmış blockquote'ları Bootstrap alert kutularına çevirir.</li>
+ *   <li><b>TOC çıkarımı:</b> Üretilen HTML'deki {@code <h2 id="...">} etiketlerini tarayıp
+ *       sağdaki "Bu sayfada" navigasyonu için bir (id, başlık) listesi çıkarır — id'ler
+ *       burada YENİDEN üretilmiyor, doğrudan render edilmiş HTML'den okunuyor; böylece
+ *       TOC linkleri ile gerçek başlık id'leri hiçbir zaman birbirinden sapamaz.</li>
  * </ol>
  *
  * <p><b>Bilinen sınırlama:</b> callout dönüşümü tek paragraflık blockquote'ları destekler
@@ -38,8 +47,15 @@ public class MarkdownService {
             "<blockquote>\\s*<p>\\s*(?:⚠️|⚠)\\s*Warning\\s*(.*?)</p>\\s*</blockquote>",
             Pattern.DOTALL);
 
-    private final Parser parser = Parser.builder().build();
-    private final HtmlRenderer renderer = HtmlRenderer.builder().build();
+    private static final Pattern H2_HEADING = Pattern.compile(
+            "<h2[^>]*\\bid=\"([^\"]+)\"[^>]*>(.*?)</h2>",
+            Pattern.DOTALL);
+
+    private static final Pattern STRIP_TAGS = Pattern.compile("<[^>]+>");
+
+    private final List<Extension> extensions = List.of(HeadingAnchorExtension.create());
+    private final Parser parser = Parser.builder().extensions(extensions).build();
+    private final HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
     private final CodeExampleResolver codeExampleResolver;
 
     public MarkdownService(CodeExampleResolver codeExampleResolver) {
@@ -51,11 +67,11 @@ public class MarkdownService {
      * @param topicSlug {{...}} örneklerini bulmak için hangi konunun examples/ klasörüne
      *                  bakılacağını belirler
      */
-    public String render(String markdown, String topicSlug) {
+    public MarkdownRenderResult render(String markdown, String topicSlug) {
         String withExamples = injectCodeExamples(markdown, topicSlug);
         Node document = parser.parse(withExamples);
-        String html = renderer.render(document);
-        return applyCallouts(html);
+        String html = applyCallouts(renderer.render(document));
+        return new MarkdownRenderResult(html, extractToc(html));
     }
 
     private String injectCodeExamples(String markdown, String topicSlug) {
@@ -79,5 +95,24 @@ public class MarkdownService {
         return WARNING_BLOCKQUOTE.matcher(withTips)
                 .replaceAll(m -> "<div class=\"alert alert-warning\" role=\"alert\">"
                         + "<p class=\"mb-0\">" + m.group(1).strip() + "</p></div>");
+    }
+
+    private List<TocEntry> extractToc(String html) {
+        List<TocEntry> toc = new ArrayList<>();
+        Matcher matcher = H2_HEADING.matcher(html);
+        while (matcher.find()) {
+            String id = matcher.group(1);
+            String text = STRIP_TAGS.matcher(matcher.group(2)).replaceAll("").strip();
+            toc.add(new TocEntry(id, text));
+        }
+        return toc;
+    }
+
+    /** Sağdaki "Bu sayfada" navigasyonunda bir satır: çapa id'si ve görünen başlık. */
+    public record TocEntry(String id, String text) {
+    }
+
+    /** Render edilmiş HTML ile ondan çıkarılan başlık listesi bir arada. */
+    public record MarkdownRenderResult(String html, List<TocEntry> toc) {
     }
 }

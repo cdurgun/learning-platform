@@ -61,6 +61,13 @@
             <artifactId>commonmark</artifactId>
             <version>${commonmark.version}</version>
         </dependency>
+        <!-- h2 başlıklarına otomatik id vermek için — sağdaki "Bu sayfada" TOC'unun linkleri
+             bu id'lere gidiyor (bkz. MarkdownService). -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-heading-anchor</artifactId>
+            <version>${commonmark.version}</version>
+        </dependency>
 
         <!-- Boilerplate azaltma -->
         <dependency>
