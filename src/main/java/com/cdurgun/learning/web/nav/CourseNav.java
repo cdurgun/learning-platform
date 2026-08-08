@@ -11,6 +11,6 @@ public record CourseNav(String name, String slug, List<CategoryNav> categories) 
     public record CategoryNav(String name, String slug, List<TopicNavItem> topics) {
     }
 
-    public record TopicNavItem(String slug, String title, String summary) {
+    public record TopicNavItem(String slug, String title, String summary, String difficulty, Integer estimatedMinutes) {
     }
 }

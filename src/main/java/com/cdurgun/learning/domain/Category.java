@@ -38,4 +38,7 @@ public class Category {
 
     @Column(nullable = false)
     private String slug;
+
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder;
 }

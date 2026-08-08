@@ -26,6 +26,7 @@
             <ul class="nav flex-column">
                 <li class="nav-item" th:each="topicItem : ${category.topics()}">
                     <a class="nav-link py-1 px-2"
+                       th:classappend="${activeTopicSlug != null and activeTopicSlug == topicItem.slug()} ? 'fw-bold text-primary' : ''"
                        th:href="@{/topics/{slug}(slug=${topicItem.slug()}, lang=${language.code})}"
                        th:text="${topicItem.title()}">Konu</a>
                 </li>

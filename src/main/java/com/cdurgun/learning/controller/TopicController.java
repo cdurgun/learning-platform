@@ -8,6 +8,7 @@ import com.cdurgun.learning.repository.TopicTranslationRepository;
 import com.cdurgun.learning.service.ContentResolver;
 import com.cdurgun.learning.service.MarkdownService;
 import com.cdurgun.learning.service.NavigationService;
+import com.cdurgun.learning.web.nav.SequencedTopic;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -50,8 +52,10 @@ public class TopicController {
     public String show(@PathVariable String slug,
                         @RequestParam(defaultValue = "tr") String lang,
                         Model model) {
-        // Konu gerçekten yoksa bu gerçek bir 404'tür.
-        Topic topic = topicRepository.findBySlug(slug)
+        // Konu gerçekten yoksa bu gerçek bir 404'tür. Category + Course'u join fetch ile
+        // birlikte getiriyoruz — breadcrumb ve prev/next bunlara ihtiyaç duyuyor, ve bunu
+        // lazy-loading'e/open-in-view'a bırakmak yerine tek sorguda açıkça çözmek istiyoruz.
+        Topic topic = topicRepository.findBySlugWithCategoryAndCourse(slug)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: " + slug));
 
         Language language;
@@ -69,6 +73,12 @@ public class TopicController {
         model.addAttribute("otherLanguage", otherLanguage);
         model.addAttribute("otherLanguageAvailable", otherLanguageAvailable);
         model.addAttribute("nav", navigationService.buildNavigation(language));
+        model.addAttribute("activeTopicSlug", slug);
+
+        // Breadcrumb: Ana Sayfa > Kategori > Konu (Kurs crumb'ını bilerek eklemedik —
+        // şu an tek kurs var ve o zaten "Ana Sayfa" ile aynı adrese gidiyor, iki crumb'ın
+        // aynı linke gitmesi kafa karıştırırdı).
+        model.addAttribute("categoryName", topic.getCategory().getName());
 
         Optional<TopicTranslation> translation = topicTranslationRepository
                 .findByTopicIdAndLanguage(topic.getId(), language)
@@ -93,7 +103,34 @@ public class TopicController {
         model.addAttribute("translation", translation.get());
         model.addAttribute("contentHtml", markdownService.render(rawMarkdown.get(), slug));
 
+        addPreviousAndNext(model, topic, slug, language);
+
         return "topic";
+    }
+
+    /**
+     * Kursun tüm (bu dilde yayınlanmış) konularını sırayla tarayıp mevcut konunun bir
+     * öncekini/sonrakini bulur. Kategori sınırını geçmek otomatik olur çünkü sıra zaten
+     * kategori sort_order + konu sort_order'a göre kurulu — bkz. buildCourseSequence.
+     */
+    private void addPreviousAndNext(Model model, Topic topic, String slug, Language language) {
+        List<SequencedTopic> sequence = navigationService.buildCourseSequence(
+                topic.getCategory().getCourse().getId(), language);
+
+        int currentIndex = -1;
+        for (int i = 0; i < sequence.size(); i++) {
+            if (sequence.get(i).slug().equals(slug)) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        SequencedTopic previous = currentIndex > 0 ? sequence.get(currentIndex - 1) : null;
+        SequencedTopic next = (currentIndex != -1 && currentIndex < sequence.size() - 1)
+                ? sequence.get(currentIndex + 1) : null;
+
+        model.addAttribute("previousTopic", previous);
+        model.addAttribute("nextTopic", next);
     }
 
     private boolean isPublished(Long topicId, Language language) {

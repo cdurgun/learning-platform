@@ -12,18 +12,19 @@ import com.cdurgun.learning.repository.TopicTranslationRepository;
 import com.cdurgun.learning.web.nav.CourseNav;
 import com.cdurgun.learning.web.nav.CourseNav.CategoryNav;
 import com.cdurgun.learning.web.nav.CourseNav.TopicNavItem;
+import com.cdurgun.learning.web.nav.SequencedTopic;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Sidebar ve anasayfa için, seçilen dilde YALNIZCA yayınlanmış konuları içeren bir
- * kurs/kategori/konu ağacı üretir. Boş kalan kategori/kurslar ağaçtan elenir.
+ * Sidebar, anasayfa ve Prev/Next navigasyonu için, seçilen dilde YALNIZCA yayınlanmış
+ * konuları içeren görünümler üretir. Boş kalan kategori/kurslar ağaçtan elenir.
  *
  * <p><b>Not (ölçeklenme):</b> Bu implementasyon, her kategori/konu için ayrı sorgu
  * çalıştırır (N+1). İçerik onlarca/yüzlerce konuya çıktığında, tek bir fetch-join
- * sorgusu ya da projection ile optimize edilmesi gerekir — Faz 1/2 hacminde
+ * sorgusu ya da projection ile optimize edilmesi gerekir — Faz 1/2/3 hacminde
  * (tek kurs, tek kategori, tek konu) bir sorun teşkil etmez.</p>
  */
 @Service
@@ -50,7 +51,7 @@ public class NavigationService {
         for (Course course : courseRepository.findAll()) {
             List<CategoryNav> categoryNavs = new ArrayList<>();
 
-            for (Category category : categoryRepository.findByCourseIdOrderById(course.getId())) {
+            for (Category category : categoryRepository.findByCourseIdOrderBySortOrderAsc(course.getId())) {
                 List<TopicNavItem> topicItems = new ArrayList<>();
 
                 for (Topic topic : topicRepository.findByCategoryIdOrderBySortOrderAsc(category.getId())) {
@@ -58,7 +59,11 @@ public class NavigationService {
                             .filter(TopicTranslation::isPublished)
                             .ifPresent(translation ->
                                     topicItems.add(new TopicNavItem(
-                                            topic.getSlug(), translation.getTitle(), translation.getSummary())));
+                                            topic.getSlug(),
+                                            translation.getTitle(),
+                                            translation.getSummary(),
+                                            topic.getDifficulty().name(),
+                                            topic.getEstimatedMinutes())));
                 }
 
                 if (!topicItems.isEmpty()) {
@@ -72,5 +77,26 @@ public class NavigationService {
         }
 
         return nav;
+    }
+
+    /**
+     * Bir kursun, verilen dilde yayınlanmış tüm konularını kategori sort_order + konu
+     * sort_order sırasına göre TEK bir düz listede döner. Prev/Next navigasyonu, bu
+     * listede konumu bulup bir öncekini/sonrakini almakla çalışır — bu sayede kategori
+     * sınırını geçmek (bir kategorinin son konusundan diğerinin ilk konusuna) otomatik
+     * olur, ekstra bir özel durum kodu gerekmez.
+     */
+    public List<SequencedTopic> buildCourseSequence(Long courseId, Language language) {
+        List<SequencedTopic> sequence = new ArrayList<>();
+
+        for (Category category : categoryRepository.findByCourseIdOrderBySortOrderAsc(courseId)) {
+            for (Topic topic : topicRepository.findByCategoryIdOrderBySortOrderAsc(category.getId())) {
+                topicTranslationRepository.findByTopicIdAndLanguage(topic.getId(), language)
+                        .filter(TopicTranslation::isPublished)
+                        .ifPresent(translation -> sequence.add(new SequencedTopic(topic.getSlug(), translation.getTitle())));
+            }
+        }
+
+        return sequence;
     }
 }

@@ -35,6 +35,13 @@
                                 <div class="card-body">
                                     <h6 class="card-title" th:text="${topicItem.title()}">Konu</h6>
                                     <p class="card-text small text-muted" th:text="${topicItem.summary()}">Özet</p>
+                                    <div class="mb-2">
+                                        <span class="badge text-bg-secondary"
+                                              th:text="#{${'difficulty.' + topicItem.difficulty()}}">Zorluk</span>
+                                        <span class="text-muted small ms-1"
+                                              th:if="${topicItem.estimatedMinutes() != null}"
+                                              th:text="${topicItem.estimatedMinutes()} + ' ' + #{time.minutesShort}">15 dk</span>
+                                    </div>
                                     <a class="stretched-link small"
                                        th:href="@{/topics/{slug}(slug=${topicItem.slug()}, lang=${language.code})}"
                                        th:text="#{home.explore}">

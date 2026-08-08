@@ -21,6 +21,17 @@
 
         <main class="col-12 col-md-9 col-lg-10 p-4">
 
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/(lang=${language.code})}" th:text="#{breadcrumb.home}">Ana Sayfa</a>
+                    </li>
+                    <li class="breadcrumb-item" th:text="${categoryName}">Kategori</li>
+                    <li class="breadcrumb-item active" aria-current="page"
+                        th:text="${contentAvailable} ? ${translation.title} : ${topic.slug}">Konu</li>
+                </ol>
+            </nav>
+
             <!-- Konu var ama bu dilde yayında değil: 404 yerine dostane bir mesaj.
                  unavailableMessage, TopicController'da MessageSource ile hazırlanıyor —
                  çünkü Türkçe/İngilizce cümle yapısı farklı ("X dilde ... değil" vs.
@@ -58,6 +69,23 @@
                 <article class="markdown-content" th:utext="${contentHtml}">
                     İçerik
                 </article>
+
+                <nav class="d-flex justify-content-between mt-5 pt-3 border-top" aria-label="Konu navigasyonu">
+                    <a th:if="${previousTopic != null}"
+                       class="btn btn-outline-secondary text-start"
+                       th:href="@{/topics/{slug}(slug=${previousTopic.slug()}, lang=${language.code})}">
+                        <div class="small text-muted">&larr; <span th:text="#{nav.previous}">Önceki</span></div>
+                        <div th:text="${previousTopic.title()}">Başlık</div>
+                    </a>
+                    <span th:unless="${previousTopic != null}"></span>
+
+                    <a th:if="${nextTopic != null}"
+                       class="btn btn-outline-secondary text-end ms-auto"
+                       th:href="@{/topics/{slug}(slug=${nextTopic.slug()}, lang=${language.code})}">
+                        <div class="small text-muted"><span th:text="#{nav.next}">Sonraki</span> &rarr;</div>
+                        <div th:text="${nextTopic.title()}">Başlık</div>
+                    </a>
+                </nav>
             </div>
 
         </main>
