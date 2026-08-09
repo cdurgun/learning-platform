@@ -51,7 +51,7 @@ docker compose up -d
 ```
 
 Uygulama http://localhost:8080 adresinde açılır. Flyway, uygulama başlarken şemayı ve
-demo (Enum, Record, Reflection) verisini otomatik oluşturur/günceller.
+demo (Enum, Record, Reflection, Interface) verisini otomatik oluşturur/günceller.
 
 > **Not:** `docker-compose.yml`, host tarafında **5433** portunu kullanır (container'ın
 > kendi içi hâlâ 5432). Bunun sebebi, birçok geliştirme makinesinde 5432'de zaten native bir
@@ -90,6 +90,12 @@ demo (Enum, Record, Reflection) verisini otomatik oluşturur/günceller.
 | `V18` | Reflection 11-17. bölümler + 2 mini proje eki için örnek metadata'sı (Annotation'lar, Gerçek Dünya Kullanım Alanları, Performans, Güvenlik, Best Practices, Yaygın Hatalar, Özet, DI Container, Object Inspector) |
 | `V19` | `estimated_minutes` son güncellemesi (Reflection içeriği tamamlandığı için 20 → 50) |
 | `V20` | İngilizce Reflection çevirisini yayına alır (`published = true`) |
+| `V21` | Interface konusunun iskeleti: `slug='interface'`, `INTERMEDIATE`, java-basics kategorisi, TR yayında / EN taslak (yalnızca iskelet) |
+| `V22` | Interface 1-8. bölümler için örnek metadata'sı (İlk Interface, Soyut Metotlar, Constant Alanlar, Implement Etmek, Çoklu Implement, Interface Genişletme, Default/Static Metotlar) |
+| `V23` | `estimated_minutes` ara güncellemesi (Interface, içerik yarıya ulaştığı için 5 → 20) |
+| `V24` | Interface 9-20. bölümler + 2 mini proje eki için örnek metadata'sı (Private Metotlar, Diamond Problem, Functional Interface, Sealed Interface, Gerçek Dünya, Best Practices, Yaygın Hatalar, Özet, Plugin Registry, Event Bus) |
+| `V25` | `estimated_minutes` son güncellemesi (Interface içeriği tamamlandığı için 20 → 50) |
+| `V26` | İngilizce Interface çevirisini yayına alır (`published = true`) |
 
 ## Proje yapısı
 
@@ -130,6 +136,12 @@ src/main/resources/
   constructor introspection'ı, dinamik oluşturma/çağırma, private erişim, annotation'lar,
   MethodHandle/VarHandle performans karşılaştırması, JPMS güvenlik kısıtlamaları, DI
   Container ve Object Inspector mini projeleri dahil.
-- **Faz 7 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
-  yeni konular (Interface, Generics, Streams...), CI'da örnek `.java` dosyalarının
-  otomatik derleme kontrolü.
+- **Faz 7 — Java Content (Interface):** ✅ Interface konusunun tamamı (20 ana + 2 mini
+  proje eki), TR ve EN, 17 kod örneğiyle birlikte — soyut metotlar, interface sabitleri,
+  çoklu implement/genişletme, Java 8 default/static metotlar, Java 9 private metotlar,
+  diamond problem, Interface vs Abstract Class, functional interface & lambda, Java 17
+  sealed interface, Comparable/Runnable/koleksiyon hiyerarşisi gerçek dünya örnekleri,
+  Plugin Registry ve Event Bus mini projeleri dahil.
+- **Faz 8 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
+  yeni konular (Generics, Streams...), CI'da örnek `.java` dosyalarının otomatik derleme
+  kontrolü.
