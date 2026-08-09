@@ -6,9 +6,9 @@ enum Planet {
     private final double massKg;
     private final double radiusM;
 
-    // Constructor her zaman private (ya da paket-private) olmak zorunda —
-    // enum sabitleri yalnızca yukarıdaki tanım satırında, enum'un kendisi
-    // tarafından "inşa edilir".
+    // The constructor must always be private (or package-private) — enum
+    // constants are only ever "constructed" on the definition line above,
+    // by the enum itself.
     Planet(double massKg, double radiusM) {
         this.massKg = massKg;
         this.radiusM = radiusM;
