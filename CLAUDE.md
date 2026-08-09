@@ -45,7 +45,8 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
 
 ## İçerik Yazım Formatı (Her Yeni Konu İçin)
 
-Enum → Record → Reflection → Interface → Abstract Class konularında oturmuş kalıp:
+Enum → Record → Reflection → Interface → Abstract Class → Inheritance konularında oturmuş
+kalıp:
 
 1. Başlıksız bir giriş paragrafı, sonra `## Konu Nedir?`, `## Neden Var?`, `## Tarihçe`
    ile açılış (ilk üç bölüm genelde inline kod snippet'i kullanır, `{{}}` dosyası değil).
@@ -78,9 +79,10 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 6 | Reflection (17 ana + 2 ek, 15 örnek, ADVANCED) | ✅ TR+EN |
 | 7 | Interface (20 ana + 2 ek, 17 örnek) | ✅ TR+EN |
 | 8 | Abstract Class (19 ana + 2 ek, 15 örnek) | ✅ TR+EN |
+| 9 | Inheritance (19 ana + 2 ek, 17 örnek) | ✅ TR+EN |
 
-Migration'lar V1'den V32'ye kadar uygulandı. `topic.sort_order`: enum=1, records=2,
-reflection=3, interface=4, abstract-class=5.
+Migration'lar V1'den V38'e kadar uygulandı. `topic.sort_order`: enum=1, records=2,
+reflection=3, interface=4, abstract-class=5, inheritance=6.
 
 ## Proje Yapısı
 
@@ -97,23 +99,23 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/                 Flyway migration'ları (V1..V32)
+    db/migration/                 Flyway migration'ları (V1..V38)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     messages*.properties          Arayüz metni çevirileri
 ```
 
 ## Bilinen Kısıtlar / Dikkat Edilecekler
 
-- Bu ortamda `javac` yoktu, örnekler yalnızca elle satır satır gözden geçirilerek
-  doğrulandı — IntelliJ'de gerçek derleme kontrolü yapabileceğin için, yeni yazılan
-  `.java` dosyalarını **mutlaka gerçekten derle**.
+- `javac` bu ortamda mevcut (Faz 9'dan itibaren doğrulandı) — yeni yazılan `.java`
+  dosyalarını elle gözden geçirmekle yetinme, `javac`/`java` ile **gerçekten derleyip
+  çalıştır**.
 - Çok satırlı `//` yorumlarında her satırın başına `//` tekrar yazılmalı — daha önce bir
   örnekte (`ModifierRulesExample.java`) bunu unutup gerçek bir derleme hatası bırakmıştım,
   yazarken kontrol et.
 - Markdown tablosu **yazma** — proje bunu render edemiyor, karşılaştırmalar için madde
   işaretli liste kullan.
 
-## Sıradaki Adım (Faz 9 önerileri)
+## Sıradaki Adım (Faz 10 önerileri)
 
 Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine), yeni konular
 (Generics, Streams...), CI'da örnek `.java` dosyalarının otomatik derleme kontrolü —
