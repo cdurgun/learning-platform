@@ -51,7 +51,8 @@ docker compose up -d
 ```
 
 Uygulama http://localhost:8080 adresinde açılır. Flyway, uygulama başlarken şemayı ve
-demo (Enum, Record, Reflection, Interface) verisini otomatik oluşturur/günceller.
+demo (Enum, Record, Reflection, Interface, Abstract Class) verisini otomatik oluşturur/
+günceller.
 
 > **Not:** `docker-compose.yml`, host tarafında **5433** portunu kullanır (container'ın
 > kendi içi hâlâ 5432). Bunun sebebi, birçok geliştirme makinesinde 5432'de zaten native bir
@@ -96,6 +97,12 @@ demo (Enum, Record, Reflection, Interface) verisini otomatik oluşturur/güncell
 | `V24` | Interface 9-20. bölümler + 2 mini proje eki için örnek metadata'sı (Private Metotlar, Diamond Problem, Functional Interface, Sealed Interface, Gerçek Dünya, Best Practices, Yaygın Hatalar, Özet, Plugin Registry, Event Bus) |
 | `V25` | `estimated_minutes` son güncellemesi (Interface içeriği tamamlandığı için 20 → 50) |
 | `V26` | İngilizce Interface çevirisini yayına alır (`published = true`) |
+| `V27` | Abstract Class konusunun iskeleti: `slug='abstract-class'`, `INTERMEDIATE`, java-basics kategorisi, TR yayında / EN taslak (yalnızca iskelet) |
+| `V28` | Abstract Class 1-8. bölümler için örnek metadata'sı (İlk Abstract Class, Abstract vs Concrete Class, Abstract Metotlar, Concrete Metotlar, Alanlar, Constructor'lar, Override/Polimorfizm, Modifier Kuralları) |
+| `V29` | `estimated_minutes` ara güncellemesi (Abstract Class, içerik yarıya ulaştığı için 5 → 20) |
+| `V30` | Abstract Class 9-19. bölümler + 2 mini proje eki için örnek metadata'sı (Interface Implement Etmesi, Template Method Pattern, Gerçek Dünya Örnekleri, Rapor Pipeline'ı, Ödeme İşleyici) |
+| `V31` | `estimated_minutes` son güncellemesi (Abstract Class içeriği tamamlandığı için 20 → 50) |
+| `V32` | İngilizce Abstract Class çevirisini yayına alır (`published = true`) |
 
 ## Proje yapısı
 
@@ -142,6 +149,12 @@ src/main/resources/
   diamond problem, Interface vs Abstract Class, functional interface & lambda, Java 17
   sealed interface, Comparable/Runnable/koleksiyon hiyerarşisi gerçek dünya örnekleri,
   Plugin Registry ve Event Bus mini projeleri dahil.
-- **Faz 8 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
+- **Faz 8 — Java Content (Abstract Class):** ✅ Abstract Class konusunun tamamı (19 ana
+  + 2 mini proje eki), TR ve EN, 15 kod örneğiyle birlikte — soyut/concrete metotlar,
+  instance alanları, constructor'ın rolü, çok seviyeli abstract hiyerarşiler, override/
+  polimorfizm, modifier kuralları, abstract class'ın interface implement etmesi, Abstract
+  Class vs Interface karşılaştırması, Template Method Pattern, `AbstractList` gerçek
+  dünya örneği, Rapor Pipeline'ı ve Ödeme İşleyici mini projeleri dahil.
+- **Faz 9 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
   yeni konular (Generics, Streams...), CI'da örnek `.java` dosyalarının otomatik derleme
   kontrolü.
