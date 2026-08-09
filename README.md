@@ -51,7 +51,7 @@ docker compose up -d
 ```
 
 Uygulama http://localhost:8080 adresinde açılır. Flyway, uygulama başlarken şemayı ve
-demo (Enum) verisini otomatik oluşturur/günceller.
+demo (Enum, Record) verisini otomatik oluşturur/günceller.
 
 > **Not:** `docker-compose.yml`, host tarafında **5433** portunu kullanır (container'ın
 > kendi içi hâlâ 5432). Bunun sebebi, birçok geliştirme makinesinde 5432'de zaten native bir
@@ -76,6 +76,14 @@ demo (Enum) verisini otomatik oluşturur/günceller.
 | `V4` | Kalan bölümler için örnek metadata'sı (Methods, Interface, Abstract Method, EnumSet, EnumMap, Singleton, Strategy Pattern, Real World) |
 | `V5` | `estimated_minutes` güncellemesi (içerik tamamlandığı için 15 → 35) |
 | `V6` | İngilizce Enum çevirisini yayına alır (`published = true`) |
+| `V7` | `category.sort_order` eklenir (Prev/Next Topic navigasyonu kategori sınırlarını doğru sırayla geçebilsin diye) |
+| `V8` | Record konusunun iskeleti: `slug='records'`, TR yayında / EN taslak (yalnızca 1. bölüm) |
+| `V9` | Record 2. bölüm ("İlk Record'unu Yazmak") için örnek metadata'sı (Point, PointUsage) |
+| `V10` | Record 3-11. bölümler için örnek metadata'sı (Record vs Class, Bileşenler, Üretilen Üyeler, Immutability, Constructors, Özel Metotlar, Static Üyeler, Arayüz İmplementasyonu, Nested Records) |
+| `V11` | `estimated_minutes` ara güncellemesi (Record, içerik yarıya ulaştığı için 5 → 20) |
+| `V12` | Record 12-17. bölümler + 2 ek bölüm için örnek metadata'sı (Serialization & Reflection, Best Practices, Yaygın Hatalar, Gerçek Dünya Örnekleri, Mülakat Soruları, Özet, Record vs Lombok, Record Patterns) |
+| `V13` | `estimated_minutes` son güncellemesi (Record içeriği tamamlandığı için 20 → 45) |
+| `V14` | İngilizce Record çevirisini yayına alır (`published = true`) |
 
 ## Proje yapısı
 
@@ -103,6 +111,14 @@ src/main/resources/
   Markdown → HTML hattı, kod örneği gömme, highlight.js.
 - **Faz 2 — Java Content (Enum):** ✅ Enum konusunun tamamı (~19 bölüm), TR ve EN, ilgili
   kod örnekleriyle birlikte; arayüz metinleri için tam i18n.
-- **Faz 3 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
+- **Faz 3 — Navigasyon:** ✅ Breadcrumb, prev/next topic navigasyonu, sidebar'da aktif konu
+  vurgusu, `category.sort_order`, anasayfa kartlarında zorluk/süre rozeti.
+- **Faz 4 — TOC:** ✅ Sağda "Bu sayfada" içindekiler sütunu (lg+ ekranlarda, sticky),
+  CommonMark heading-anchor extension'ından türetiliyor.
+- **Faz 5 — Java Content (Record):** ✅ Record konusunun tamamı (17 ana + 2 ek bölüm), TR
+  ve EN, 21 kod örneğiyle birlikte — Record vs Class, Immutability, Constructors,
+  Serialization & Reflection, Spring Boot DTO örnekleri, Record vs Lombok, Record Patterns
+  (Java 21) dahil.
+- **Faz 6 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
   yeni konular (Interface, Generics, Streams...), CI'da örnek `.java` dosyalarının
   otomatik derleme kontrolü.
