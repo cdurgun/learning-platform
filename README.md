@@ -51,7 +51,7 @@ docker compose up -d
 ```
 
 Uygulama http://localhost:8080 adresinde açılır. Flyway, uygulama başlarken şemayı ve
-demo (Enum, Record) verisini otomatik oluşturur/günceller.
+demo (Enum, Record, Reflection) verisini otomatik oluşturur/günceller.
 
 > **Not:** `docker-compose.yml`, host tarafında **5433** portunu kullanır (container'ın
 > kendi içi hâlâ 5432). Bunun sebebi, birçok geliştirme makinesinde 5432'de zaten native bir
@@ -84,6 +84,12 @@ demo (Enum, Record) verisini otomatik oluşturur/günceller.
 | `V12` | Record 12-17. bölümler + 2 ek bölüm için örnek metadata'sı (Serialization & Reflection, Best Practices, Yaygın Hatalar, Gerçek Dünya Örnekleri, Mülakat Soruları, Özet, Record vs Lombok, Record Patterns) |
 | `V13` | `estimated_minutes` son güncellemesi (Record içeriği tamamlandığı için 20 → 45) |
 | `V14` | İngilizce Record çevirisini yayına alır (`published = true`) |
+| `V15` | Reflection konusunun iskeleti: `slug='reflection'`, `ADVANCED`, java-basics kategorisi, TR yayında / EN taslak (yalnızca 1. bölüm) |
+| `V16` | Reflection 3-10. bölümler için örnek metadata'sı (Class Nesnesi Elde Etmek, Sınıf Bilgisini İnceleme, Alan/Metot/Constructor Okuma, Dinamik Oluşturma/Çağırma, Private Erişim) |
+| `V17` | `estimated_minutes` ara güncellemesi (Reflection, içerik yarıya ulaştığı için 5 → 20) |
+| `V18` | Reflection 11-17. bölümler + 2 mini proje eki için örnek metadata'sı (Annotation'lar, Gerçek Dünya Kullanım Alanları, Performans, Güvenlik, Best Practices, Yaygın Hatalar, Özet, DI Container, Object Inspector) |
+| `V19` | `estimated_minutes` son güncellemesi (Reflection içeriği tamamlandığı için 20 → 50) |
+| `V20` | İngilizce Reflection çevirisini yayına alır (`published = true`) |
 
 ## Proje yapısı
 
@@ -119,6 +125,11 @@ src/main/resources/
   ve EN, 21 kod örneğiyle birlikte — Record vs Class, Immutability, Constructors,
   Serialization & Reflection, Spring Boot DTO örnekleri, Record vs Lombok, Record Patterns
   (Java 21) dahil.
-- **Faz 6 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
+- **Faz 6 — Java Content (Reflection):** ✅ Reflection konusunun tamamı (17 ana + 2 mini
+  proje eki), TR ve EN, 15 kod örneğiyle birlikte — Class nesnesi elde etme, alan/metot/
+  constructor introspection'ı, dinamik oluşturma/çağırma, private erişim, annotation'lar,
+  MethodHandle/VarHandle performans karşılaştırması, JPMS güvenlik kısıtlamaları, DI
+  Container ve Object Inspector mini projeleri dahil.
+- **Faz 7 (öneri):** Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine),
   yeni konular (Interface, Generics, Streams...), CI'da örnek `.java` dosyalarının
   otomatik derleme kontrolü.
