@@ -93,11 +93,12 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 10 | Polymorphism (16 ana + 2 ek, 14 örnek — Inheritance'la kasıtlı çakışmasız) | ✅ TR+EN |
 | 11 | Threads (18 ana + 2 ek, 16 örnek, ADVANCED — yeni "Concurrency" kategorisinin ilk konusu) | ✅ TR+EN |
 
-Migration'lar V1'den V50'ye kadar uygulandı. `java-basics` kategorisinde `topic.sort_order`:
-enum=1, records=2, reflection=3, interface=4, abstract-class=5, inheritance=6,
-polymorphism=7. `concurrency` kategorisinde (sort_order=2): threads=1 — ExecutorService/
-CompletableFuture ve Modern Concurrency (virtual threads) ayrı, sonraki konular olarak
-planlanıyor.
+Migration'lar V1'den V51'e kadar uygulandı. Üç kategori var (`category.sort_order`):
+`java-basics`(1) — enum=1, records=2, reflection=3; `oop`(2, "Object-Oriented
+Programming") — interface=1, abstract-class=2, inheritance=3, polymorphism=4 (V51'de
+java-basics'ten taşındı); `concurrency`(3) — threads=1. ExecutorService/CompletableFuture
+ve Modern Concurrency (virtual threads), concurrency kategorisinde ayrı, sonraki konular
+olarak planlanıyor.
 
 ## Proje Yapısı
 
@@ -114,7 +115,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V50)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V51)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     messages*.properties          Arayüz metni çevirileri
 ```
