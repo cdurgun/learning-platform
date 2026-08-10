@@ -38,7 +38,12 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   verirken, o bölümün H2 başlığıyla **birebir aynı metni** tırnak içinde kullan — TR ve
   EN dosyaları ayrı ayrı doğrulanmalı.
 - **i18n:** `?lang=tr|en`. UI metinleri `messages*.properties`'de, içerik çevirisi
-  (`content/{lang}/*.md` + `TopicTranslation`) tamamen ayrı bir katman.
+  (`content/{lang}/*.md` + `TopicTranslation`) tamamen ayrı bir katman. **Varsayılan dil
+  İngilizce** (`LangParamLocaleResolver.DEFAULT_LOCALE`) — `lang` parametresi yoksa/
+  bozuksa arayüz de içerik de İngilizce'ye düşer. `HomeController`/`TopicController`,
+  `lang` verilmediğinde `LocaleContextHolder.getLocale()`'i (yani bu resolver'ın
+  sonucunu) kullanır — kendi başına ayrı bir varsayılan **tanımlama**; aksi halde arayüz
+  ile içerik dili birbirinden sapar (Faz 12'de yaşanan gerçek bir hataydı).
 - **Flyway migration numaraları sıralı ve geçmişe dönük asla değiştirilmez** — her
   değişiklik yeni bir `V{n}__aciklama.sql` dosyası. SQL string literal'lerinde Türkçe
   apostrof geçen metinlerde (`Interface'in` gibi) SQL escaping'i (`''`) unutma.
@@ -56,7 +61,7 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
 ## İçerik Yazım Formatı (Her Yeni Konu İçin)
 
 Enum → Record → Reflection → Interface → Abstract Class → Inheritance → Polymorphism →
-Threads konularında oturmuş kalıp:
+Threads → Date & Time API konularında oturmuş kalıp:
 
 1. Başlıksız bir giriş paragrafı, sonra `## Konu Nedir?`, `## Neden Var?`, `## Tarihçe`
    ile açılış (ilk üç bölüm genelde inline kod snippet'i kullanır, `{{}}` dosyası değil).
@@ -92,13 +97,14 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 9 | Inheritance (19 ana + 2 ek, 17 örnek) | ✅ TR+EN |
 | 10 | Polymorphism (16 ana + 2 ek, 14 örnek — Inheritance'la kasıtlı çakışmasız) | ✅ TR+EN |
 | 11 | Threads (18 ana + 2 ek, 16 örnek, ADVANCED — yeni "Concurrency" kategorisinin ilk konusu) | ✅ TR+EN |
+| 12 | Date & Time API (21 ana + 2 ek, 19 örnek, INTERMEDIATE — java.time paketi) | ✅ TR+EN |
 
-Migration'lar V1'den V51'e kadar uygulandı. Üç kategori var (`category.sort_order`):
-`java-basics`(1) — enum=1, records=2, reflection=3; `oop`(2, "Object-Oriented
-Programming") — interface=1, abstract-class=2, inheritance=3, polymorphism=4 (V51'de
-java-basics'ten taşındı); `concurrency`(3) — threads=1. ExecutorService/CompletableFuture
-ve Modern Concurrency (virtual threads), concurrency kategorisinde ayrı, sonraki konular
-olarak planlanıyor.
+Migration'lar V1'den V57'ye kadar uygulandı. Üç kategori var (`category.sort_order`):
+`java-basics`(1) — enum=1, records=2, reflection=3, date-time=4; `oop`(2,
+"Object-Oriented Programming") — interface=1, abstract-class=2, inheritance=3,
+polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) — threads=1.
+ExecutorService/CompletableFuture ve Modern Concurrency (virtual threads), concurrency
+kategorisinde ayrı, sonraki konular olarak planlanıyor.
 
 ## Proje Yapısı
 
@@ -115,7 +121,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V51)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V57)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     messages*.properties          Arayüz metni çevirileri
 ```
@@ -131,7 +137,7 @@ src/main/resources/
 - Markdown tablosu **yazma** — proje bunu render edemiyor, karşılaştırmalar için madde
   işaretli liste kullan.
 
-## Sıradaki Adım (Faz 12 önerileri)
+## Sıradaki Adım (Faz 13 önerileri)
 
 Concurrency kategorisinde ikinci konu: Executor Framework ve CompletableFuture
 (ExecutorService, thread pool türleri, Callable/Future, CompletableFuture, concurrent
