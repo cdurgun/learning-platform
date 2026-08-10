@@ -128,9 +128,13 @@ src/main/resources/
 
 ## Bilinen Kısıtlar / Dikkat Edilecekler
 
-- `javac` bu ortamda mevcut (Faz 9'dan itibaren doğrulandı) — yeni yazılan `.java`
-  dosyalarını elle gözden geçirmekle yetinme, `javac`/`java` ile **gerçekten derleyip
-  çalıştır**.
+- `javac` bu ortamda mevcut ama **Faz 12'den itibaren kullanıcı kararıyla artık
+  yazıldıktan sonra derlenip çalıştırılmıyor** (`mvn`/`javac` derlemeleri gözle
+  görülür oturum maliyeti/limit tüketiyor) — yeni `.java` dosyalarını yazarken elle
+  dikkatli gözden geçir (özellikle çok satırlı `//` yorumları, parantez/noktalı virgül),
+  ama artık gerçek bir derleyici doğrulaması **yapma**. Kullanıcı özellikle isterse ya da
+  bir dosya sıra dışı derecede riskliyse (deadlock/timeout içeren thread örnekleri gibi)
+  istisna olarak derleyebilirsin.
 - Çok satırlı `//` yorumlarında her satırın başına `//` tekrar yazılmalı — daha önce bir
   örnekte (`ModifierRulesExample.java`) bunu unutup gerçek bir derleme hatası bırakmıştım,
   yazarken kontrol et.
