@@ -98,13 +98,25 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 10 | Polymorphism (16 ana + 2 ek, 14 örnek — Inheritance'la kasıtlı çakışmasız) | ✅ TR+EN |
 | 11 | Threads (18 ana + 2 ek, 16 örnek, ADVANCED — yeni "Concurrency" kategorisinin ilk konusu) | ✅ TR+EN |
 | 12 | Date & Time API (21 ana + 2 ek, 19 örnek, INTERMEDIATE — java.time paketi) | ✅ TR+EN |
+| 13 | Dependency Injection & IoC (17 ana + 2 ek, 14 örnek, INTERMEDIATE — yeni "Spring Boot" kursunun, "Spring Core" kategorisinin ilk konusu; Spring'e değinmeden saf Java ile) | ✅ TR+EN |
+| 14 | Spring IoC Container & Bean Lifecycle (20 ana + 2 ek, 16 örnek, ADVANCED — Spring Core'un ikinci konusu; gerçek `AnnotationConfigApplicationContext` kullanan ilk konu) | ✅ TR+EN |
+| 15 | Component Scanning & Configuration (17 ana + 2 ek, 14 örnek, INTERMEDIATE — Spring Core'un üçüncü konusu; `@Component`/`@Service`/`@Repository`/`@Controller`, `@Autowired`, `@Qualifier`/`@Primary`) | ✅ TR+EN |
+| 16 | Spring Boot Auto-Configuration & Properties (22 ana + 2 ek, 14 örnek, ADVANCED — Spring Core'un dördüncü ve planlanan son konusu; `@SpringBootApplication`, `@Conditional` ailesi, `@Value`/`@ConfigurationProperties`, `@Profile`, `ApplicationEvent`) | ✅ TR+EN |
 
-Migration'lar V1'den V57'ye kadar uygulandı. Üç kategori var (`category.sort_order`):
-`java-basics`(1) — enum=1, records=2, reflection=3, date-time=4; `oop`(2,
-"Object-Oriented Programming") — interface=1, abstract-class=2, inheritance=3,
-polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) — threads=1.
-ExecutorService/CompletableFuture ve Modern Concurrency (virtual threads), concurrency
-kategorisinde ayrı, sonraki konular olarak planlanıyor.
+Migration'lar V1'den V81'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+(`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
+date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
+inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
+threads=1. `spring-boot` kursunda (V58'de eklendi) bir kategori: `spring-core`(1) —
+dependency-injection=1, spring-ioc-container=2 (V64'te eklendi), component-scanning=3
+(V70'te eklendi, EN'i V75'te yayına alındı), autoconfiguration-properties=4 (V76'da
+eklendi, EN'i V81'de yayına alındı). ExecutorService/CompletableFuture ve Modern
+Concurrency (virtual threads), concurrency kategorisinde ayrı, sonraki konular olarak
+planlanıyor. Spring Core kategorisi 4 topic'e bölünmüş durumda (bkz. Faz 13
+tartışması) — Dependency Injection & IoC (TR+EN), Spring IoC Container & Bean Lifecycle
+(TR+EN), Component Scanning & Configuration (TR+EN) ve Spring Boot Auto-Configuration
+& Properties (TR+EN) tamamlandı — Spring Core kategorisinin ilk planlanan dörtlüsü
+artık tamamen kapandı.
 
 ## Proje Yapısı
 
@@ -121,7 +133,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V57)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V81)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     messages*.properties          Arayüz metni çevirileri
 ```
@@ -140,13 +152,39 @@ src/main/resources/
   yazarken kontrol et.
 - Markdown tablosu **yazma** — proje bunu render edemiyor, karşılaştırmalar için madde
   işaretli liste kullan.
+- `Course` tablosunda `sort_order` **yok** — `NavigationService.buildNavigation()`,
+  `courseRepository.findAll()`'ın döndürdüğü sıraya güveniyor (pratikte id/insert sırası).
+  Tek kurs varken bu hiç sorun değildi; artık `java` + `spring-boot` iki kurs olduğu için,
+  üçüncü bir kurs eklenecekse ya da kurs sırası değişecekse bu, `Category`/`Topic`'teki
+  gibi gerçek bir `sort_order` kolonu gerektirebilir — şimdilik id sırası (java=1,
+  spring-boot=2) istenen sırayla aynı olduğu için dokunmadık.
+- Spring örnekleri (`examples/dependency-injection/` gibi), OOP/Enum örneklerinin aksine
+  bazen birbirine gerçekten bağımlı sınıflar içerebilir (aynı dosya içinde interface +
+  implementasyon + kullanan sınıf) — hâlâ **default package**'ta ve dosyalar birbirinden
+  bağımsız derlenir, ama "her `.java` dosyası kendi başına anlamlı bir demo olsun" kuralı
+  gevşetildi; gerçek Spring annotation'ları (`@Component`, `@Service`, `@Autowired`)
+  projenin kendi `spring-boot-starter-web` bağımlılığından geldiği için import olarak
+  geçerli, ama container olmadan elbette çalıştırılamazlar (bkz. `SpringPreviewExample`).
+- Projede `spring-boot-starter-validation` **yok** — `autoconfiguration-properties`
+  konusundaki `ConfigurationPropertiesValidationExample.java`, gerçek projelerde
+  kullanılan `jakarta.validation`/`@Validated` yerine elle yazılmış bir
+  `@PostConstruct` doğrulaması kullanıyor (bkz. içerikteki "Validating
+  @ConfigurationProperties" bölümü). `@ConditionalOnClass`/`@ConditionalOnMissingBean`/
+  `@ConditionalOnProperty` gibi `org.springframework.boot.autoconfigure.condition`
+  sınıfları ise `spring-boot-starter-web`'in taşıdığı `spring-boot-autoconfigure`
+  üzerinden geçerli.
 
-## Sıradaki Adım (Faz 13 önerileri)
+## Sıradaki Adım (Faz 17 önerileri)
 
-Concurrency kategorisinde ikinci konu: Executor Framework ve CompletableFuture
-(ExecutorService, thread pool türleri, Callable/Future, CompletableFuture, concurrent
-koleksiyonlar) — Threads dersinin "Tarihçe" ve "Thread Communication" bölümlerinde bu
-konuya zaten ileri referans verildi. Bunun yanında: Testcontainers ile test altyapısı,
-markdown→HTML cache (Caffeine), java-basics'te yeni konular (Generics, Streams...),
-CI'da örnek `.java` dosyalarının otomatik derleme kontrolü — ya da kullanıcının
-belirleyeceği başka bir yön.
+Faz 16 (Spring Boot Auto-Configuration & Properties) artık **TR+EN tamamlandı** (V81'de
+EN yayına alındı, kullanıcı kararıyla aynı oturumda TR'nin hemen ardından) — Spring Core
+kategorisinin planlanan dört topic'i (Dependency Injection & IoC, Spring IoC Container &
+Bean Lifecycle, Component Scanning & Configuration, Spring Boot Auto-Configuration &
+Properties) artık hepsi TR+EN tamamlanmış durumda; "Spring Core" kategorisi bu haliyle
+kapandı. Sıradaki adım için net bir plan yok, kullanıcının yönlendirmesi bekleniyor.
+Olası yönler: Concurrency kategorisinde Executor Framework/CompletableFuture, Modern
+Concurrency (virtual threads); Spring Boot kursuna yeni bir kategori (Spring MVC/Web,
+Spring Data JPA derinlemesine, Testing gibi); Testcontainers ile test altyapısı;
+markdown→HTML cache (Caffeine); java-basics'te yeni konular (Generics, Streams...);
+CI'da örnek `.java` dosyalarının otomatik derleme kontrolü; `Course` tablosuna gerçek
+`sort_order` eklemek (bkz. "Bilinen Kısıtlar").
