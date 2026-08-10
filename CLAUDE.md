@@ -42,6 +42,11 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
 - **Flyway migration numaraları sıralı ve geçmişe dönük asla değiştirilmez** — her
   değişiklik yeni bir `V{n}__aciklama.sql` dosyası. SQL string literal'lerinde Türkçe
   apostrof geçen metinlerde (`Interface'in` gibi) SQL escaping'i (`''`) unutma.
+- **Migration dosyaları `db/migration/{konu-slug}/` alt klasörlerinde tutulur**
+  (`core/`, `enum/`, `record/`, ... `polymorphism/`) — Flyway, `classpath:db/migration`
+  konumunu recursive taradığı için alt klasör derinliği versiyon sırasını etkilemez, bu
+  yalnızca dosya sistemi düzeyinde bir organizasyon. Yeni bir konu eklerken migration'ları
+  o konunun kendi alt klasörüne koy.
 
 ## İçerik Yazım Formatı (Her Yeni Konu İçin)
 
@@ -100,7 +105,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/                 Flyway migration'ları (V1..V44)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V44)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     messages*.properties          Arayüz metni çevirileri
 ```
