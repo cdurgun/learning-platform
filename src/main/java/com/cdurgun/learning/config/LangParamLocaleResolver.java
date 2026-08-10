@@ -15,7 +15,7 @@ import java.util.Locale;
  */
 public class LangParamLocaleResolver implements LocaleResolver {
 
-    private static final Locale DEFAULT_LOCALE = Locale.forLanguageTag("tr");
+    private static final Locale DEFAULT_LOCALE = Locale.forLanguageTag("en");
 
     @Override
     public Locale resolveLocale(HttpServletRequest request) {

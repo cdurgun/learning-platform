@@ -10,6 +10,7 @@ import com.cdurgun.learning.service.MarkdownService;
 import com.cdurgun.learning.service.NavigationService;
 import com.cdurgun.learning.web.nav.SequencedTopic;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -50,7 +51,7 @@ public class TopicController {
 
     @GetMapping("/{slug}")
     public String show(@PathVariable String slug,
-                        @RequestParam(defaultValue = "tr") String lang,
+                        @RequestParam(required = false) String lang,
                         Model model) {
         // Konu gerçekten yoksa bu gerçek bir 404'tür. Category + Course'u join fetch ile
         // birlikte getiriyoruz — breadcrumb ve prev/next bunlara ihtiyaç duyuyor, ve bunu
@@ -58,11 +59,18 @@ public class TopicController {
         Topic topic = topicRepository.findBySlugWithCategoryAndCourse(slug)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: " + slug));
 
+        // `lang` verilmemişse LangParamLocaleResolver'ın çözdüğü varsayılan locale'i
+        // kullan (arayüz metinleriyle aynı kaynak); açıkça verilmiş ama bozuk bir `lang`
+        // için ise (Anasayfa'nın aksine) burada bilerek 400 döndürüyoruz.
         Language language;
-        try {
-            language = Language.fromCode(lang);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bilinmeyen dil: " + lang);
+        if (lang == null) {
+            language = Language.fromCode(LocaleContextHolder.getLocale().getLanguage());
+        } else {
+            try {
+                language = Language.fromCode(lang);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bilinmeyen dil: " + lang);
+            }
         }
 
         Language otherLanguage = language.other();
