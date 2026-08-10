@@ -43,15 +43,20 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   değişiklik yeni bir `V{n}__aciklama.sql` dosyası. SQL string literal'lerinde Türkçe
   apostrof geçen metinlerde (`Interface'in` gibi) SQL escaping'i (`''`) unutma.
 - **Migration dosyaları `db/migration/{konu-slug}/` alt klasörlerinde tutulur**
-  (`core/`, `enum/`, `record/`, ... `polymorphism/`) — Flyway, `classpath:db/migration`
+  (`core/`, `enum/`, `record/`, ... `threads/`) — Flyway, `classpath:db/migration`
   konumunu recursive taradığı için alt klasör derinliği versiyon sırasını etkilemez, bu
   yalnızca dosya sistemi düzeyinde bir organizasyon. Yeni bir konu eklerken migration'ları
   o konunun kendi alt klasörüne koy.
+- **Birden fazla `Category` olabilir** (Faz 11'den itibaren: `java-basics` +
+  `concurrency`) — `category.sort_order` kategoriler arası sırayı, `topic.sort_order` ise
+  **yalnızca kendi kategorisi içinde** sırayı belirler (`TopicRepository` sorgusu
+  `WHERE category_id = ?` ile scoped'dır). Yeni bir kategori açarken `topic.sort_order`'ı
+  1'den başlat, önceki kategorilerin numaralarını devam ettirme.
 
 ## İçerik Yazım Formatı (Her Yeni Konu İçin)
 
-Enum → Record → Reflection → Interface → Abstract Class → Inheritance → Polymorphism
-konularında oturmuş kalıp:
+Enum → Record → Reflection → Interface → Abstract Class → Inheritance → Polymorphism →
+Threads konularında oturmuş kalıp:
 
 1. Başlıksız bir giriş paragrafı, sonra `## Konu Nedir?`, `## Neden Var?`, `## Tarihçe`
    ile açılış (ilk üç bölüm genelde inline kod snippet'i kullanır, `{{}}` dosyası değil).
@@ -86,9 +91,13 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 8 | Abstract Class (19 ana + 2 ek, 15 örnek) | ✅ TR+EN |
 | 9 | Inheritance (19 ana + 2 ek, 17 örnek) | ✅ TR+EN |
 | 10 | Polymorphism (16 ana + 2 ek, 14 örnek — Inheritance'la kasıtlı çakışmasız) | ✅ TR+EN |
+| 11 | Threads (18 ana + 2 ek, 16 örnek, ADVANCED — yeni "Concurrency" kategorisinin ilk konusu) | ✅ TR+EN |
 
-Migration'lar V1'den V44'e kadar uygulandı. `topic.sort_order`: enum=1, records=2,
-reflection=3, interface=4, abstract-class=5, inheritance=6, polymorphism=7.
+Migration'lar V1'den V50'ye kadar uygulandı. `java-basics` kategorisinde `topic.sort_order`:
+enum=1, records=2, reflection=3, interface=4, abstract-class=5, inheritance=6,
+polymorphism=7. `concurrency` kategorisinde (sort_order=2): threads=1 — ExecutorService/
+CompletableFuture ve Modern Concurrency (virtual threads) ayrı, sonraki konular olarak
+planlanıyor.
 
 ## Proje Yapısı
 
@@ -105,7 +114,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V44)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V50)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     messages*.properties          Arayüz metni çevirileri
 ```
@@ -121,8 +130,12 @@ src/main/resources/
 - Markdown tablosu **yazma** — proje bunu render edemiyor, karşılaştırmalar için madde
   işaretli liste kullan.
 
-## Sıradaki Adım (Faz 11 önerileri)
+## Sıradaki Adım (Faz 12 önerileri)
 
-Testcontainers ile test altyapısı, markdown→HTML cache (Caffeine), yeni konular
-(Generics, Streams...), CI'da örnek `.java` dosyalarının otomatik derleme kontrolü —
-ya da kullanıcının belirleyeceği başka bir yön.
+Concurrency kategorisinde ikinci konu: Executor Framework ve CompletableFuture
+(ExecutorService, thread pool türleri, Callable/Future, CompletableFuture, concurrent
+koleksiyonlar) — Threads dersinin "Tarihçe" ve "Thread Communication" bölümlerinde bu
+konuya zaten ileri referans verildi. Bunun yanında: Testcontainers ile test altyapısı,
+markdown→HTML cache (Caffeine), java-basics'te yeni konular (Generics, Streams...),
+CI'da örnek `.java` dosyalarının otomatik derleme kontrolü — ya da kullanıcının
+belirleyeceği başka bir yön.
