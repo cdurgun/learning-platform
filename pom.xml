@@ -32,6 +32,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
+        <!-- spring-mvc kategorisi, Validation & Exception Handling konusu için: jakarta.validation
+             (@NotBlank, @Email, @Valid) gerçek mekanizmayla anlatılsın diye eklendi. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
 
         <!-- Persistence -->
         <dependency>

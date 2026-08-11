@@ -2,6 +2,12 @@
 
 Türkçe ve İngilizce içerik sunan, Java odaklı bir öğrenim platformu.
 
+Kaynak kod: [github.com/cdurgun/learning-platform](https://github.com/cdurgun/learning-platform)
+
+```bash
+git clone https://github.com/cdurgun/learning-platform.git
+```
+
 ## Mimari
 
 - **Veritabanı (PostgreSQL):** sadece metadata — kurs/kategori/konu hiyerarşisi, çeviri
