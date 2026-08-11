@@ -29,3 +29,27 @@ body {
 .navbar-brand {
     font-weight: 600;
 }
+
+/* Sidebar accordion: collapsible category groups (bkz. fragments/layout.html :: sidebar).
+   Konu sayısı arttıkça menünün sürekli uzamasını önlemek için, yalnızca aktif konuyu
+   içeren kategori varsayılan olarak açık gelir; diğerleri kapalı başlar. */
+.sidebar-nav .sidebar-toggle {
+    color: inherit;
+    border-radius: 0.25rem;
+}
+
+.sidebar-nav .sidebar-toggle:hover,
+.sidebar-nav .sidebar-toggle:focus {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.sidebar-nav .chevron {
+    display: inline-block;
+    transition: transform 0.15s ease-in-out;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.sidebar-nav .sidebar-toggle[aria-expanded="true"] .chevron {
+    transform: rotate(90deg);
+}

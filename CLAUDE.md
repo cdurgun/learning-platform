@@ -137,6 +137,7 @@ src/main/resources/
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
     db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V87)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
+    static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     messages*.properties          Arayüz metni çevirileri
 ```
 
@@ -188,6 +189,21 @@ src/main/resources/
   yok -- kavramsal (Kısa Bakış) ya da bu projenin gerçek kaynak koduna (`TopicRepository.
   findBySlugWithCategoryAndCourse`, `@ManyToOne(FetchType.LAZY)` alanları) referansla
   anlatılıyor.
+- Sidebar (`fragments/layout.html :: sidebar`) artık kategori bazlı açılır/kapanır
+  (accordion) — konu sayısı arttıkça menünün sürekli uzamasını önlemek için, yalnızca
+  aktif konuyu içeren kategori (`CategoryNav.topics().?[#this.slug() == #vars.activeTopicSlug]`
+  SpringEL selection'ı ile) varsayılan olarak açık gelir, diğerleri kapalı başlar.
+  Not: `.?[...]` seçim ifadesi içinde `#this`, kapsamı TopicNavItem'a çeviriyor —
+  dıştaki Thymeleaf context değişkenine (`activeTopicSlug`) önekiz erişmeye çalışmak
+  `SpelEvaluationException: Property or field 'activeTopicSlug' cannot be found on
+  object of type '...TopicNavItem'` hatası veriyordu; `#vars.activeTopicSlug` ile
+  düzeltildi — seçim/projection ifadeleri içinde dış değişkenlere her zaman `#vars.`
+  ile eriş.
+  Bootstrap'in `data-bs-toggle="collapse"` mekanizmasını kullanıyor — bu yüzden
+  `bootstrap.bundle.min.js` artık hem `index.html` hem `topic.html`'de yükleniyor
+  (önceden hiçbir sayfa Bootstrap JS yüklemiyordu, yalnızca CSS). Kurs seviyesi
+  (JAVA/SPRING BOOT) kasıtlı olarak collapse'siz bırakıldı — büyümenin asıl kaynağı
+  kategori içindeki konu sayısı, kurs sayısı değil.
 
 ## Sıradaki Adım (Faz 18 önerileri)
 

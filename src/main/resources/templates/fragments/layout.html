@@ -18,19 +18,32 @@
     </div>
 </nav>
 
-<aside th:fragment="sidebar" class="col-12 col-md-3 col-lg-2 bg-light border-end p-3">
+<aside th:fragment="sidebar" class="col-12 col-md-3 col-lg-2 bg-light border-end p-3 sidebar-nav">
     <div th:each="course : ${nav}" class="mb-4">
         <h6 class="text-uppercase text-muted small fw-bold" th:text="${course.name()}">Kurs</h6>
-        <div th:each="category : ${course.categories()}" class="mb-3">
-            <div class="fw-semibold small mb-1" th:text="${category.name()}">Kategori</div>
-            <ul class="nav flex-column">
-                <li class="nav-item" th:each="topicItem : ${category.topics()}">
-                    <a class="nav-link py-1 px-2"
-                       th:classappend="${activeTopicSlug != null and activeTopicSlug == topicItem.slug()} ? 'fw-bold text-primary' : ''"
-                       th:href="@{/topics/{slug}(slug=${topicItem.slug()}, lang=${language.code})}"
-                       th:text="${topicItem.title()}">Konu</a>
-                </li>
-            </ul>
+        <div th:each="category : ${course.categories()}"
+             th:with="categoryId=${'cat-' + course.slug() + '-' + category.slug()},
+                      categoryIsActive=${activeTopicSlug != null and !category.topics().?[#this.slug() == #vars.activeTopicSlug].isEmpty()}"
+             class="mb-1">
+            <button class="sidebar-toggle btn btn-sm d-flex align-items-center justify-content-between w-100 px-2 py-1 fw-semibold small text-start border-0 bg-transparent"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    th:data-bs-target="'#' + ${categoryId}"
+                    th:aria-expanded="${categoryIsActive}"
+                    th:aria-controls="${categoryId}">
+                <span th:text="${category.name()}">Kategori</span>
+                <span class="chevron" aria-hidden="true">&rsaquo;</span>
+            </button>
+            <div class="collapse" th:classappend="${categoryIsActive} ? 'show' : ''" th:id="${categoryId}">
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item" th:each="topicItem : ${category.topics()}">
+                        <a class="nav-link py-1 px-2"
+                           th:classappend="${activeTopicSlug != null and activeTopicSlug == topicItem.slug()} ? 'fw-bold text-primary' : ''"
+                           th:href="@{/topics/{slug}(slug=${topicItem.slug()}, lang=${language.code})}"
+                           th:text="${topicItem.title()}">Konu</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
     <p th:if="${#lists.isEmpty(nav)}" class="text-muted small" th:text="#{nav.noContent}">Henüz yayınlanmış içerik yok.</p>
