@@ -53,3 +53,27 @@ body {
 .sidebar-nav .sidebar-toggle[aria-expanded="true"] .chevron {
     transform: rotate(90deg);
 }
+
+/* Topic başlığı satırı (bkz. topic.html): başlık/özet bloğu ile dil değiştirme
+   butonu ("TR"/"EN") aynı satırda, buton her zaman sağda kalacak şekilde. İlk
+   denemede Bootstrap'in d-flex/justify-content-between/flex-wrap utility'leriyle
+   kuruldu, ama flex-wrap'in "satıra sığmıyorsa yeni satıra geç" kararı, min-width:0
+   olsa bile bazı tarayıcı/içerik kombinasyonlarında (uzun özet metni + h1 gibi
+   kırılmayan büyük başlık) güvenilir çalışmadı -- buton yine de yeni bir satıra,
+   sola düşebiliyordu. Bunun yerine CSS Grid'e geçildi: iki sütunlu bir grid
+   (1fr + auto) satır KIRILMAZ, ikinci sütun (buton) her zaman kendi hücresinde,
+   sağda kalır; birinci sütun (başlık/özet) mevcut alana göre daralır, İÇİNDEKİ
+   METİN normal şekilde satır içi kırılır -- flex-wrap'teki gibi tüm satırın
+   kırılıp kırılmayacağına dair belirsizlik ortadan kalkar. Grid item'lar da flex
+   item'lar gibi varsayılan min-width: auto'ya sahip olduğu için min-width: 0 hâlâ
+   gerekli (aynı tuzak, grid'de de var). */
+.topic-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    column-gap: 0.5rem;
+}
+
+.topic-header-info {
+    min-width: 0;
+}

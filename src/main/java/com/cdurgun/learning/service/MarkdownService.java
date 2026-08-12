@@ -16,9 +16,10 @@ import java.util.regex.Pattern;
  * Markdown -> HTML dönüşüm hattı. Sırasıyla:
  *
  * <ol>
- *   <li><b>Preprocess:</b> {@code {{ExampleName.java}}} yer tutucularını, ilgili konunun
+ *   <li><b>Preprocess:</b> {@code {{ExampleName.ext}}} yer tutucularını, ilgili konunun
  *       {@code examples/} klasöründeki gerçek dosyasının içeriğiyle, fenced code block
- *       olarak değiştirir.</li>
+ *       olarak değiştirir -- uzantı (ör. {@code .java}, {@code .jsx}) serbesttir, hem
+ *       dosya yolunu hem üretilen code block'un dil etiketini belirler.</li>
  *   <li><b>Parse + render:</b> CommonMark ile, {@code HeadingAnchorExtension} sayesinde her
  *       başlığa otomatik {@code id} vererek, standart HTML üretir.</li>
  *   <li><b>Callout post-process:</b> {@code > 💡 Tip ...} ve {@code > ⚠️ Warning ...}
@@ -37,7 +38,14 @@ import java.util.regex.Pattern;
 @Service
 public class MarkdownService {
 
-    private static final Pattern EXAMPLE_PLACEHOLDER = Pattern.compile("\\{\\{(\\w+)\\.java}}");
+    // Faz 27'ye kadar yalnızca "\\{\\{(\\w+)\\.java}}" idi (uzantı hardcoded). React
+    // kategorisi için .jsx (ve gerekirse .js/.tsx) dosyalarını da gömebilmek üzere
+    // genelleştirildi: ikinci bir yakalama grubu artık uzantıyı taşıyor ve hem
+    // CodeExampleResolver'a hem üretilen fenced code block'un dil etiketine besleniyor.
+    // Geriye dönük uyumluluk otomatik: mevcut TÜM içerik zaten "{{Ad.java}}" yazıyor,
+    // bu yüzden extension grubu onlar için her zaman "java" olarak çözülüyor ve üretilen
+    // çıktı birebir öncekiyle aynı.
+    private static final Pattern EXAMPLE_PLACEHOLDER = Pattern.compile("\\{\\{(\\w+)\\.(\\w+)}}");
 
     private static final Pattern TIP_BLOCKQUOTE = Pattern.compile(
             "<blockquote>\\s*<p>\\s*💡\\s*Tip\\s*(.*?)</p>\\s*</blockquote>",
@@ -79,9 +87,13 @@ public class MarkdownService {
         StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String exampleName = matcher.group(1);
-            String code = codeExampleResolver.resolve(topicSlug, exampleName)
-                    .orElse("// Örnek bulunamadı: " + exampleName + ".java");
-            String replacement = "```java\n" + code + "\n```";
+            String extension = matcher.group(2);
+            String code = codeExampleResolver.resolve(topicSlug, exampleName, extension)
+                    .orElse("// Örnek bulunamadı: " + exampleName + "." + extension);
+            // Fenced code block'un dil etiketi, dosyanın gerçek uzantısından geliyor --
+            // "java" için önceki davranışla birebir aynı, "jsx"/"js"/"tsx" için de
+            // highlight.js'in ilgili grammar'ını (tam bundle CDN'den yükleniyor) tetikler.
+            String replacement = "```" + extension + "\n" + code + "\n```";
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);

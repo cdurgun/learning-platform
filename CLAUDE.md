@@ -22,9 +22,18 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   markdown da aynı dosyaları paylaşır). Aynı topic klasöründe farklı dosyalarda aynı
   sınıf adının (`Book`, `Animal`, `Duck` gibi) tekrar tekrar kullanılması **normaldir**
   — her `.java` dosyası bağımsız bir derleme birimi, birlikte derlenmezler.
+- **Embed sistemi Faz 27'den itibaren uzantıdan bağımsız:** `{{DosyaAdi.ext}}` söz
+  dizimi artık genel — `MarkdownService`'teki `EXAMPLE_PLACEHOLDER` regex'i uzantıyı
+  ikinci bir yakalama grubu olarak okuyor, `CodeExampleResolver.resolve(slug, name,
+  extension)` bu uzantıyla dosya yolunu kuruyor, ve üretilen fenced code block'un dil
+  etiketi (` ```jsx ` gibi) doğrudan bu uzantıdan geliyor. React kategorisi için
+  `.jsx` dosyaları bu sayede Java örnekleriyle **birebir aynı mekanizmayla** gömülebilir
+  — yeni bir "React embed sistemi" yazmaya gerek yok. `highlight.js@11.9.0`'ın "jsx"i
+  "javascript" grammar'ının bir alias'ı olarak tanıdığı, bağımsız olarak doğrulandı
+  (bkz. "Bilinen Kısıtlar").
 - **DB ↔ dosya bağlantısı yalnızca slug convention ile kurulur**, path hiçbir zaman
   DB'de saklanmaz: `content/{language}/{topic.slug}.md` ve
-  `examples/{topic.slug}/{example_name}.java`.
+  `examples/{topic.slug}/{example_name}.{ext}`.
 - **Yayın durumu çeviri seviyesindedir:** `Topic`'te `published` yok,
   `TopicTranslation`'da var — bir dil yayında, diğeri taslak olabilir (örn. TR yayında,
   EN henüz taslak). Yeni bir konu eklerken önce TR'yi `published = true`, EN'i
@@ -134,8 +143,11 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 24 | Advanced Spring MVC (18 ana + 2 ek, 16 örnek, ADVANCED — Spring MVC kategorisinin yedinci ve ilk ADVANCED konusu; `HandlerInterceptor` (`preHandle`/`postHandle`/`afterCompletion`), Filter vs Interceptor, `WebMvcConfigurer` ile interceptor kaydı ve global CORS, same-origin policy/preflight/`@CrossOrigin`, `MultipartFile` ile dosya yükleme ve boyut sınırları — gerçek Spring API'lerini (`HandlerInterceptor`, `WebMvcConfigurer`, `CorsConfiguration`, `MultipartFile`) container olmadan, `java.lang.reflect.Proxy` ile sahte Servlet nesneleri üreterek kullanan konu; V108'de yaşanan Flyway `${...}` placeholder hatasından sonra ilk konu, migration'larda literal dolar-süslü-parantez yazılmadı) | ✅ TR+EN |
 | 25 | REST API Tasarımı (17 ana + 2 ek, 15 örnek, ADVANCED — Spring MVC kategorisinin sekizinci konusu; entity'yi doğrudan dışarı vermenin riskleri ve DTO deseni (record ile istek/yanıt ayrımı), gerçek `Pageable`/`Page<T>`/`Sort` (bu projenin `TopicRepository`'sinin de miras aldığı `JpaRepository` ailesinden) ile sayfalama/sıralama, query parametreleriyle filtreleme, `Page<T>`'i doğrudan dönmek yerine kararlı bir `PagedResponse<T>` DTO'suna sarmalama (Spring Data'nın kendi tavsiyesi), URI vs header API versioning, idempotency ve `Idempotency-Key` header'ı ile `POST`'u idempotent yapma, HATEOAS (kısa bakış — `spring-hateoas` projede yok, elle kurulmuş bir `links` map'iyle anlatıldı)) | ✅ TR+EN |
 | 26 | Spring MVC'de Test Yazmak (17 ana + 2 ek, 14 örnek, ADVANCED — Spring MVC kategorisinin dokuzuncu ve planlanan son konusu; `MockMvc`/`@WebMvcTest` ile web katmanı slice testleri, `MockMvcBuilders.standaloneSetup(...)` ile Spring context'siz `main()`-çalıştırılabilir testler, `@MockitoBean` ile bağımlılık sahteleme (`@MockBean`'in Spring Boot 4.1.0'da kaldırılan yerine), `model()`/`view()`/`jsonPath()`/`content()`/`header()` matcher aileleri, `MockMultipartFile` (test-scope, `InMemoryMultipartFile`'ın aksine gerçek sınıf kullanıldı), bu projenin gerçek `HomeController`'ı ve altı bağımlılıklı `TopicController`'ı için gerçek `@WebMvcTest` testleri (`TopicTestFixtures` ile Lombok `@Builder` fixture'ları) — bu migration'la Spring MVC kategorisinin planlanan dokuz topic'i tamamlandı) | ✅ TR+EN |
+| 27 | Embed sisteminin `.jsx` desteği için genelleştirilmesi (kod değişikliği, yeni içerik değil — bkz. "Bilinen Kısıtlar") | ✅ |
+| 28 | React Fundamentals kategorisi — What Is React? (8 ana, embed yok, BEGINNER), Creating a React Application (7 ana, embed yok, BEGINNER), JSX (7 ana, 5 örnek, BEGINNER) — yeni "React" course'unun ilk kategorisi; kullanıcı kararıyla **bilinçli olarak sade bir dille**, mini proje eki olmadan yazıldı (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
+| 29 | Components & Props kategorisi — Components (6 ana, 4 örnek, BEGINNER), Props (7 ana, 4 örnek, BEGINNER), Component Composition (5 ana + 1 ek, 5 örnek, BEGINNER) — React course'unun ikinci kategorisi; sade dil kararı devam ediyor, ama bu kategoriden itibaren gerçek mini projeler başladı (Component Composition'daki tek "## Ek: Mini Proje" — yeniden kullanılabilir bir Card component'i, `CardBase.jsx`+`CardDemo.jsx`) | ✅ TR+EN |
 
-Migration'lar V1'den V123'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+Migration'lar V1'den V131'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
@@ -165,6 +177,22 @@ Dokuz topic'lik planı (bkz. "Sıradaki Adım") için `spring-boot-starter-valid
 bağımlılığı `pom.xml`'e eklendi, validation-exception-handling konusuyla birlikte
 gerçek `jakarta.validation`/Hibernate Validator kullanıma girdi.
 
+**Faz 28'de üçüncü bir Course eklendi: `react`** (course.slug = 'react', V124'te
+oluşturuldu). İlk kategorisi `react-fundamentals`(1) — what-is-react=1,
+creating-a-react-application=2, jsx=3 (üçü de V124'te eklendi, EN'i V127'de yayına
+alındı). Kullanıcı ChatGPT'nin hazırladığı 33 topic'lik/11 kategorili bir React kurs
+planını paylaştı; kategori kategori ilerleme kararıyla (bkz. Spring MVC'deki aynı
+ritim) devam ediliyor. `Course` tablosunda `sort_order` olmadığı için (bkz. aşağıdaki
+"Bilinen Kısıtlar") React, `NavigationService.buildNavigation()`'ın listelediği
+kurslar arasında otomatik olarak üçüncü sırada (java, spring-boot, react) görünüyor.
+
+**Faz 29'da ikinci kategori eklendi: `components-props`(2)** — components=1,
+props=2, component-composition=3 (üçü de V128'de eklendi, EN'i V131'de yayına
+alındı). React course'u artık iki kategori/altı yayında topic'e sahip; kalan dokuz
+kategori (Components & Props'tan sonra ChatGPT planındaki sıradaki: State & Events,
+Hooks, Forms, Routing, API & Data Fetching, State Management, Advanced React,
+Testing, Production) henüz planlanmadı/DB'ye seed edilmedi.
+
 ## Proje Yapısı
 
 ```
@@ -180,7 +208,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V123)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V131)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     messages*.properties          Arayüz metni çevirileri
@@ -300,6 +328,65 @@ src/main/resources/
   `TopicTranslationRepository`, `ContentResolver`, `MarkdownService`, `NavigationService`,
   `MessageSource`) `@MockitoBean` ile sahteliyor ve başarılı senaryoda gerçek
   `templates/topic.html`'i (production'daki ile aynı tipte mock değerlerle) render ediyor.
+- **Faz 27 — Embed sisteminin `.jsx` desteği için genelleştirilmesi (React kategorisine
+  hazırlık).** Kullanıcı ChatGPT'nin hazırladığı bir React kurs planını (`.odt`, 33 topic /
+  11 kategori) paylaştı; içerik yazımına başlamadan önce, kullanıcı kararıyla önce
+  altyapı düzeltildi ve mevcut sistemin bozulmadığı doğrulandı. Yapılanlar:
+  `MarkdownService.EXAMPLE_PLACEHOLDER` regex'i `\{\{(\w+)\.java}}`'dan
+  `\{\{(\w+)\.(\w+)}}`'a genelleştirildi (uzantı artık ikinci yakalama grubu);
+  `CodeExampleResolver.resolve(topicSlug, exampleName)` imzası
+  `resolve(topicSlug, exampleName, extension)`'a çevrildi (tek çağıran `MarkdownService`
+  olduğu için başka bir yer etkilenmedi, `src/test`'te de referans yoktu). Bu ortamda
+  `mvn`/`javac` olmadığı için (bkz. yukarıdaki not) doğrulama iki şekilde yapıldı: (1)
+  projedeki **682 mevcut `{{...}}` embed'inin tamamı** Python'da hem eski hem yeni regex
+  ile paralel çalıştırıldı — sıfır uyuşmazlık, sıfır eksik dosya (her biri hâlâ
+  `examples/{slug}/{name}.java` yolunda fiziksel olarak mevcut) — yani mevcut içerik için
+  üretilen çıktı birebir öncekiyle aynı; (2) `highlight.js@11.9.0` (projenin CDN'den
+  yüklediği tam sürüm) npm ile ayrı bir sandbox'ta kurulup `hljs.getLanguage('jsx')` ve
+  `hljs.highlight(..., {language: 'jsx'})` ile test edildi — "jsx", "javascript"
+  grammar'ının kayıtlı bir alias'ı, örnek bir JSX snippet'i hatasız highlight edildi.
+  Sonuç: React örnekleri için ayrı bir "JS embed sistemi" ya da frontend değişikliği
+  gerekmiyor, `{{Ad.jsx}}` yazmak yeterli. Kullanıcı sonrasında kategori kategori
+  ilerlemeye karar verdi (bkz. Faz 28).
+- **Faz 28 — React Fundamentals kategorisi, bilinçli olarak sade bir dille.** Kullanıcı
+  açıkça istedi: React kursu "basite indirgenmiş bir dille, mümkün olduğunca kolay
+  örneklerle" anlatılsın — bu, Java/Spring derslerindeki yoğun, çok referanslı,
+  "neden böyle tasarlandı" tartışmalarıyla dolu üsluptan **kasıtlı bir sapma**, yeni bir
+  hata değil. Buna göre: cümleler kısa ve doğrudan, gereksiz meta yorum yok, örnekler
+  (`examples/jsx/*.jsx`) tek bir kavramı gösteren birkaç satırlık kod parçaları. İlk üç
+  konu (`what-is-react`: 8 ana başlık embed yok; `creating-a-react-application`: 7 ana
+  başlık embed yok, yalnızca inline `bash`/`json`/`text` snippet'leri; `jsx`: 7 ana
+  başlık + 5 örnek) **hiçbiri `## Ek: Mini Proje` içermiyor** — Java/Spring'deki
+  "her konu 2 mini proje ekiyle biter" kuralı burada bilinçli olarak uygulanmadı, çünkü
+  bu üç konu henüz kod yazmaya yeni başlıyor (Topic 1-2'de hiç kod yok); gerçek mini
+  projeler "Components & Props" kategorisinden itibaren gelecek. Üç konu da BEGINNER
+  işaretlendi. `examples/jsx/*.jsx` dosyaları, Node + `@babel/preset-react` (ayrı bir
+  sandbox'a npm ile kurulup) `transformSync(...)` ile syntax-doğrulandı — beşi de
+  hatasız derlendi; bu, Java örneklerinde hiç sahip olmadığımız gerçek bir derleyici
+  doğrulaması. React course'unun kalan kategorileri (bkz. kullanıcının paylaştığı
+  orijinal ChatGPT planı) sırayla, aynı ritimde (plan+örnek onayı → TR+EN → migration)
+  ele alınacak.
+- **Faz 29 — Components & Props kategorisi, ve topic.html'de bir CSS düzeltmesi.**
+  Sade dil kararı (Faz 28) bu kategoride de geçerli, ama kullanıcının onayladığı gibi
+  bu kategoriden itibaren gerçek mini projeler başladı: `component-composition`
+  konusunun TEK "## Ek: Mini Proje" bölümü (`CardBase.jsx` + `CardDemo.jsx`) --
+  Java/Spring derslerindeki "her konu 2 mini proje ekiyle biter" kuralı burada hâlâ
+  uygulanmıyor, `components` ve `props` hiç ek içermiyor. 13 örnek dosyasının tamamı
+  yine Node + `@babel/preset-react` ile syntax-doğrulandı. Ayrıca bu fazda, kullanıcının
+  bildirdiği bağımsız bir görsel hata düzeltildi: `topic.html`'deki dil değiştirme
+  butonu ("TR"/"EN"), başlık/özet bloğuyla aynı flex satırındaydı
+  (`d-flex justify-content-between ... flex-wrap`) ve `justify-content-between` ile
+  sağda durması bekleniyordu -- ama flex item'ların varsayılan `min-width: auto`
+  davranışı yüzünden, özet metni yeterince uzun olduğunda (JSX konusunda olduğu gibi)
+  başlık bloğu butona satırda yer bırakmıyor, `flex-wrap` devreye girip butonu yeni bir
+  satıra, tek başına, sola düşürüyordu -- kısa özetli konularda hiç görünmeyen, yalnızca
+  uzun özetlerde ortaya çıkan bir hataydı. Düzeltme: başlık/özet bloğuna
+  `.topic-header-info { min-width: 0; }` (yeni, `custom.css`'e eklendi) ve
+  `flex-grow-1` class'ı, dil butonuna da `flex-shrink-0` eklendi -- böylece blok
+  gerektiğinde küçülüp metin normal kırılıyor, buton her zaman sağda kalıyor. Bu
+  ortamda gerçek bir tarayıcı olmadığı için görsel olarak koşarak doğrulanamadı,
+  yalnızca CSS akıl yürütmesiyle (flexbox'ın iyi bilinen bir "min-width: auto"
+  tuzağı) düzeltildi -- kullanıcı sonucu kendi tarayıcısında teyit etmeli.
 
 Spring Core kategorisinin beş topic'i de (Faz 13-17) TR+EN tamamlandıktan sonra,
 kullanıcı `spring-boot` kursuna ikinci bir kategori eklenmesini istedi: **Spring
