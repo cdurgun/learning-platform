@@ -75,6 +75,27 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   **yalnızca kendi kategorisi içinde** sırayı belirler (`TopicRepository` sorgusu
   `WHERE category_id = ?` ile scoped'dır). Yeni bir kategori açarken `topic.sort_order`'ı
   1'den başlat, önceki kategorilerin numaralarını devam ettirme.
+- **React course'unda her kategori, gerçek ve çalıştırılabilir bir "Pratik Proje" ile
+  biter (Faz 30'dan itibaren kalıcı kural).** Java/Spring derslerindeki `## Ek: Mini
+  Proje` (gömülü, tek başına derlenmeyen `.java` dosyaları) React kategorileri için
+  kullanılmaz — bunun yerine, kategori bittiğinde ayrı bir repo'da
+  (`react-course-projects`, GitHub'da `cdurgun/react-course-projects`) o kategorinin
+  tüm kavramlarını birleştiren küçük, gerçek bir Vite/React uygulaması yazılır,
+  `npm run build` ile derlemesi doğrulanır, `main` branch'ine commit edilip
+  `{kategori-slug}-v1` gibi bir tag ile "dondurulur". İlgili konunun markdown'ında
+  (genelde son ana konunun, örn. `jsx`'in EN kategorinin son topic'i olduğu React
+  Fundamentals'ta olduğu gibi) bir `## Pratik Proje` bölümü açılıp bu tag'in GitHub
+  linkine ve `git clone` + `npm install` + `npm run dev` talimatına yer verilir. Bu
+  proje **yalnızca o kategoriye kadar öğretilmiş kavramları kullanır** — state, hook,
+  `.map()` ile liste render'ı gibi henüz işlenmemiş kavramlara asla atıfta bulunmaz.
+  Ayrı, uzun ömürlü branch'ler **kullanılmaz** — tüm kategori projeleri `main` üzerinde,
+  yalnızca tag'lerle versiyonlanır (bkz. Faz 30, "Bilinen Kısıtlar"). `react-course-
+  projects` repo kökünde bir **npm workspaces** kurulumu var (`package.json`'da
+  `"workspaces": ["projects/*"]`) — yeni bir kategori projesi eklerken `projects/`
+  altına yeni bir klasör (kendi `package.json`'ıyla) koymak yeterli, ayrıca bir kurulum
+  adımı gerekmez; workspaces otomatik olarak onu da kapsar. Amaç, her proje klasöründe
+  ayrı `node_modules` birikmesini önlemek — `npm install` yalnızca repo kökünde bir kez
+  çalıştırılır.
 
 ## Örnek Yazım İlkeleri (Faz 18'den itibaren, tüm konular için geçerli)
 
@@ -145,9 +166,10 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 26 | Spring MVC'de Test Yazmak (17 ana + 2 ek, 14 örnek, ADVANCED — Spring MVC kategorisinin dokuzuncu ve planlanan son konusu; `MockMvc`/`@WebMvcTest` ile web katmanı slice testleri, `MockMvcBuilders.standaloneSetup(...)` ile Spring context'siz `main()`-çalıştırılabilir testler, `@MockitoBean` ile bağımlılık sahteleme (`@MockBean`'in Spring Boot 4.1.0'da kaldırılan yerine), `model()`/`view()`/`jsonPath()`/`content()`/`header()` matcher aileleri, `MockMultipartFile` (test-scope, `InMemoryMultipartFile`'ın aksine gerçek sınıf kullanıldı), bu projenin gerçek `HomeController`'ı ve altı bağımlılıklı `TopicController`'ı için gerçek `@WebMvcTest` testleri (`TopicTestFixtures` ile Lombok `@Builder` fixture'ları) — bu migration'la Spring MVC kategorisinin planlanan dokuz topic'i tamamlandı) | ✅ TR+EN |
 | 27 | Embed sisteminin `.jsx` desteği için genelleştirilmesi (kod değişikliği, yeni içerik değil — bkz. "Bilinen Kısıtlar") | ✅ |
 | 28 | React Fundamentals kategorisi — What Is React? (8 ana, embed yok, BEGINNER), Creating a React Application (7 ana, embed yok, BEGINNER), JSX (7 ana, 5 örnek, BEGINNER) — yeni "React" course'unun ilk kategorisi; kullanıcı kararıyla **bilinçli olarak sade bir dille**, mini proje eki olmadan yazıldı (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
-| 29 | Components & Props kategorisi — Components (6 ana, 4 örnek, BEGINNER), Props (7 ana, 4 örnek, BEGINNER), Component Composition (5 ana + 1 ek, 5 örnek, BEGINNER) — React course'unun ikinci kategorisi; sade dil kararı devam ediyor, ama bu kategoriden itibaren gerçek mini projeler başladı (Component Composition'daki tek "## Ek: Mini Proje" — yeniden kullanılabilir bir Card component'i, `CardBase.jsx`+`CardDemo.jsx`) | ✅ TR+EN |
+| 29 | Components & Props kategorisi — Components (6 ana, 4 örnek, BEGINNER), Props (7 ana, 4 örnek, BEGINNER), Component Composition (5 ana + 1 ek, 5 örnek, BEGINNER) — React course'unun ikinci kategorisi; sade dil kararı devam ediyor. Component Composition'daki `## Ek: Mini Proje` (`CardBase.jsx`+`CardDemo.jsx`) Faz 30'da kaldırıldı (bkz. aşağısı) | ✅ TR+EN |
+| 30 | "Pratik Proje" standardı: ayrı `react-course-projects` repo'su kuruldu, React Fundamentals (7 ana + Pratik Proje, embed yok değişikliği) ve Components & Props (Component Composition'daki gömülü mini proje kaldırılıp linkle değiştirildi) için gerçek, `npm run build` ile doğrulanmış Vite/React demo projeleri retroaktif olarak yazıldı; bu, tüm gelecek React kategorileri için kalıcı bir kural oldu (bkz. "Mimari" ve "Bilinen Kısıtlar") | ✅ |
 
-Migration'lar V1'den V131'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+Migration'lar V1'den V132'ye kadar uygulandı. İki kurs var: `java` kursunda üç kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
@@ -193,6 +215,29 @@ kategori (Components & Props'tan sonra ChatGPT planındaki sıradaki: State & Ev
 Hooks, Forms, Routing, API & Data Fetching, State Management, Advanced React,
 Testing, Production) henüz planlanmadı/DB'ye seed edilmedi.
 
+**Faz 30'da "Pratik Proje" standardı kuruldu ve retroaktif olarak uygulandı.**
+Kullanıcı, kendi fikrini ve ChatGPT'nin buna verdiği yanıtı paylaştı: her React
+kategorisi, o kategorideki kavramları birleştiren gerçek, çalıştırılabilir bir
+proje ile bitmeli, ayrı bir GitHub reposunda tutulmalı. Üç açık soru
+`AskUserQuestion` ile soruldu, kullanıcı üçünde de önerilen seçeneği onayladı:
+(1) ayrı yeni bir repo (`react-course-projects`, `learning-platform`'dan bağımsız);
+(2) gömülü, tek başına çalışmayan `## Ek: Mini Proje` deseni tamamen terk edilip
+gerçek proje + link ile değiştirilsin; (3) bu, yalnızca bundan sonraki kategoriler
+için değil, zaten tamamlanmış React Fundamentals ve Components & Props için de
+retroaktif olarak şimdi yazılsın. Yapılanlar: `react-course-projects` reposu
+(bkz. "Bilinen Kısıtlar") iki proje ile kuruldu (`react-fundamentals`,
+`components-props`), ikisi de `npm run build` ile gerçek bir production build
+olarak doğrulandı; `component-composition.md`'deki (TR+EN) `## Ek: Mini Proje`
+bölümü kaldırılıp yerine Components & Props Demo'ya link veren bir
+`## Pratik Proje` bölümü kondu (başlık sayısı 5→5, embed sayısı 5→3); `jsx.md`'ye
+(TR+EN) React Fundamentals Demo'ya link veren yeni bir `## Pratik Proje` bölümü
+eklendi (başlık sayısı 7→8); V132 migration'ı ile artık kullanılmayan
+`CardBase`/`CardDemo` `code_example` satırları silindi, `examples/
+component-composition/CardBase.jsx` ve `CardDemo.jsx` dosyaları da diskten
+kaldırıldı. Bu artık kalıcı bir mimari kural (bkz. "Mimari" bölümü) — React
+course'undaki her yeni kategori, kendi Pratik Proje'siyle birlikte teslim
+edilecek.
+
 ## Proje Yapısı
 
 ```
@@ -208,7 +253,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V131)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V132)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     messages*.properties          Arayüz metni çevirileri
@@ -373,20 +418,82 @@ src/main/resources/
   Java/Spring derslerindeki "her konu 2 mini proje ekiyle biter" kuralı burada hâlâ
   uygulanmıyor, `components` ve `props` hiç ek içermiyor. 13 örnek dosyasının tamamı
   yine Node + `@babel/preset-react` ile syntax-doğrulandı. Ayrıca bu fazda, kullanıcının
-  bildirdiği bağımsız bir görsel hata düzeltildi: `topic.html`'deki dil değiştirme
-  butonu ("TR"/"EN"), başlık/özet bloğuyla aynı flex satırındaydı
-  (`d-flex justify-content-between ... flex-wrap`) ve `justify-content-between` ile
-  sağda durması bekleniyordu -- ama flex item'ların varsayılan `min-width: auto`
-  davranışı yüzünden, özet metni yeterince uzun olduğunda (JSX konusunda olduğu gibi)
-  başlık bloğu butona satırda yer bırakmıyor, `flex-wrap` devreye girip butonu yeni bir
-  satıra, tek başına, sola düşürüyordu -- kısa özetli konularda hiç görünmeyen, yalnızca
-  uzun özetlerde ortaya çıkan bir hataydı. Düzeltme: başlık/özet bloğuna
-  `.topic-header-info { min-width: 0; }` (yeni, `custom.css`'e eklendi) ve
-  `flex-grow-1` class'ı, dil butonuna da `flex-shrink-0` eklendi -- böylece blok
-  gerektiğinde küçülüp metin normal kırılıyor, buton her zaman sağda kalıyor. Bu
-  ortamda gerçek bir tarayıcı olmadığı için görsel olarak koşarak doğrulanamadı,
-  yalnızca CSS akıl yürütmesiyle (flexbox'ın iyi bilinen bir "min-width: auto"
-  tuzağı) düzeltildi -- kullanıcı sonucu kendi tarayıcısında teyit etmeli.
+  bildirdiği bağımsız bir görsel hata İKİ turda düzeltildi: `topic.html`'deki dil
+  değiştirme butonu ("TR"/"EN"), başlık/özet bloğuyla aynı satırdaydı ve sağda durması
+  bekleniyordu, ama özet metni yeterince uzun olduğunda (JSX, sonra Component
+  Composition konusunda olduğu gibi) buton yeni bir satıra, sola düşüyordu. **1. tur**
+  (başarısız): satır `d-flex justify-content-between ... flex-wrap` ile kuruluydu;
+  bunu `.topic-header-info { min-width: 0; }` + `flex-grow-1`/`flex-shrink-0`
+  class'larıyla düzeltmeye çalıştım (flex item'ların varsayılan `min-width: auto`
+  davranışı, flex-wrap'in ne zaman devreye gireceğini etkiliyor) -- ama kullanıcı bunun
+  hâlâ olduğunu bildirdi; flex-wrap'in "satıra sığmıyorsa yeni satıra geç" kararı bu
+  min-width ayarına rağmen güvenilir çalışmadı. **2. tur:** satır tamamen CSS Grid'e
+  çevrildi -- `.topic-header { display: grid; grid-template-columns: 1fr auto; }` (yeni
+  class, Bootstrap'in d-flex/justify-content-between/flex-wrap utility'leri kaldırıldı).
+  Grid, flexbox'tan farklı olarak "satır kırılsın mı" diye bir karar vermez -- 2 sütunluk
+  bir grid'de 2 item her zaman kendi sütununda kalır, ikinci sütun (buton) asla ilk
+  sütunun altına düşemez; yalnızca ilk sütunun genişliği daralır/metin içeride kırılır
+  (`min-width: 0` burada da hâlâ gerekli, grid item'ların da aynı varsayılan davranışı
+  var). Bu, yapısal olarak flex-wrap'teki belirsizliği ortadan kaldıran daha sağlam bir
+  çözüm. Bu ortamda gerçek bir tarayıcı yok (Puppeteer/Playwright denendi, Chromium
+  indirmesi `storage.googleapis.com`'a erişim olmadığı için başarısız oldu) -- bu yüzden
+  2. tur da görsel olarak koşarak doğrulanamadı, yalnızca CSS Grid'in spesifikasyon
+  düzeyinde garantisiyle (flexbox'taki gibi bir "satır kırılması" mekanizması yok)
+  düzeltildi. **Doğrulandı (kullanıcı geri bildirimi):** CSS Grid çözümü doğru --
+  kullanıcı ilk seferde hâlâ eski görünümü gördü, ama bunun sebebi CSS'in kendisi değil,
+  `target/classes/static/custom.css`'in `src/main/resources`'taki güncel dosyayı
+  yansıtmaması (Spring Boot statik dosyaları classpath'ten sunar; kaynak dosya
+  değişince uygulamayı **tam olarak rebuild etmeden** -- `mvn clean install` gibi --
+  eski dosya sunulmaya devam eder) -- projeyi rebuild edince buton beklendiği gibi
+  sağda sabit kaldı. Bu, `docker compose up -d`'nin eski container'ı port eşlemesi
+  güncellenmeden başlatması (Faz öncesindeki DB bağlantı hatası) ile aynı kökten bir
+  ders: bu projede kaynak dosya değişiklikleri, ilgili katman (Docker container,
+  Maven classpath) **yeniden oluşturulmadan** çalışan uygulamaya yansımıyor.
+
+- **Faz 30 — `react-course-projects` reposu ve "Pratik Proje" standardı.**
+  `learning-platform`'dan ayrı, yeni bir repo olarak `react-course-projects/`
+  hazırlandı (henüz GitHub'a push edilmedi — bu ortamda GitHub MCP connector'ı yok,
+  `mcp__mcp-registry__search_mcp_registry` ile `["github","git","repository"]`
+  anahtar kelimeleriyle arandı, sonuç bulunamadı; repo yerel olarak `git init` +
+  commit + tag ile hazırlandı, push işlemi kullanıcının kendisi tarafından
+  yapılmalı). Yapı: `projects/{kategori-slug}/` altında her biri bağımsız bir Vite
+  uygulaması, hepsi `main` branch'inde; ayrı, uzun ömürlü branch'ler **yok** — bunun
+  yerine her proje kategori "donduğunda" bir tag alır (`react-fundamentals-v1`,
+  `components-props-v1`). Bu, kullanıcının ChatGPT'den aldığı branch-tabanlı öneriye
+  göre bilinçli bir sapma: uzun ömürlü branch'ler zamanla `main`'den sapar ve
+  birleştirme karmaşası yaratabilir, oysa "tag ile donan, hepsi main'de duran
+  klasörler" hem daha basit hem de ders içeriğinin belirli bir tag'e sabit link
+  vermesini kolaylaştırıyor. Her iki proje de (`react-fundamentals`,
+  `components-props`) gerçek `npm install` + `npm run build` (Vite production
+  build, esbuild/rollup tabanlı) ile derlendi — bu ortamda tarayıcı olmadığı için
+  (bkz. Faz 29'daki Puppeteer notu) daha önce yalnızca Babel ile syntax
+  doğrulaması yapılıyordu, `npm run build` bundan daha güçlü bir doğrulama: gerçek
+  import/bundling hatalarını da yakalar. Build sonrası `node_modules`/`dist`/
+  `package-lock.json` silindi (outputs klasöründeki dosyalar normalde
+  silinemiyor/yeniden adlandırılamıyor — `allow_cowork_file_delete` ile özel izin
+  istendi). Her iki proje de, o kategoriye kadar öğretilen kavramların **dışına
+  hiç çıkmıyor** (`react-fundamentals`: yalnızca JSX/ifadeler/attribute/ternary
+  önizleme, state/hook/event yok; `components-props`: component'ler + props
+  (destructuring/default) + composition (`children`), yine state/hook/`.map()`
+  yok) — bu kısıt kod yorumlarında da açıkça belirtiliyor. `component-composition.md`
+  (TR+EN) ve `jsx.md` (TR+EN) güncellendi (bkz. yukarıdaki Faz 30 paragrafı),
+  V132 migration'ı ile `CardBase`/`CardDemo` `code_example` satırları silindi.
+  **Ek not (aynı fazın devamı):** kullanıcı, her proje klasöründe ayrı `npm install`
+  yapılırsa disk üzerinde birden fazla `node_modules` biriktiğini fark etti;
+  `react-course-projects` repo köküne bir `package.json` (`"workspaces":
+  ["projects/*"]`) eklenerek **npm workspaces**'e geçildi — artık `npm install`
+  yalnızca repo kökünde bir kez çalıştırılır, tüm projeler ortak bir kök
+  `node_modules`'ü paylaşır. Alt klasöre girip doğrudan `npm run dev` çalıştırmak
+  hâlâ çalışır (Node'un modül çözümlemesi klasör ağacında yukarı doğru arar), ya da
+  kökten çıkmadan `npm run dev -w projects/{proje}` kullanılabilir — her ikisi de
+  gerçek `npm install` + workspace-level `npm run build` ile bu ortamda test edildi.
+  Repo henüz push edilmediği için bu değişiklik doğrudan `main`'e commit'lendi,
+  var olan tag'ler (`react-fundamentals-v1`, `components-props-v1`) **taşınmadı** —
+  onlar hâlâ kendi kategorilerinin o anki (workspaces öncesi, bağımsız
+  `npm install`'lı) donmuş halini gösteriyor; ders içeriğindeki `git clone` +
+  `cd react-course-projects && npm install` talimatları her zaman `main`'in en
+  güncel halini (yani workspaces akışını) klonlar, tag linkleri yalnızca GitHub'da
+  o kategorinin kod hâlini taramak için kullanılıyor.
 
 Spring Core kategorisinin beş topic'i de (Faz 13-17) TR+EN tamamlandıktan sonra,
 kullanıcı `spring-boot` kursuna ikinci bir kategori eklenmesini istedi: **Spring

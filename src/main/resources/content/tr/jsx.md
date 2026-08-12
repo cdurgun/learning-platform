@@ -104,3 +104,29 @@ fazla element'i tek bir kökte toplamaya yarayan JSX aracı.
 
 **Root Element (Kök Element)** — Bir JSX bloğundaki en dıştaki, tek
 element -- her JSX bloğunun tam olarak bir tane olmalıdır.
+
+## Pratik Proje
+
+Bu kategoride (What Is React?, Creating a React Application, JSX)
+öğrendiğimiz kavramları bir arada kullanan, gerçek ve çalıştırılabilir bir
+örnek proje var: **[React Fundamentals Demo](https://github.com/cdurgun/react-course-projects/tree/react-fundamentals-v1/projects/react-fundamentals)**.
+
+Proje; JSX, süslü parantez `{ }` ile JavaScript ifadeleri, attribute'lar ve
+ternary ile kısa bir conditional rendering önizlemesini bir arada
+gösteriyor. Bilgisayarına indirip çalıştırabilir, kodunu satır satır
+inceleyebilirsin:
+
+```bash
+git clone https://github.com/cdurgun/react-course-projects.git
+cd react-course-projects
+npm install
+cd projects/react-fundamentals
+npm run dev
+```
+
+`react-course-projects` deposu **npm workspaces** kullanır -- `npm install`
+yalnızca bir kez, depo kökünde çalıştırılır ve tüm proje klasörleri ortak
+bağımlılıkları paylaşır (her klasörde ayrı bir `node_modules` oluşmaz). Kök
+dizinde `npm install`'ı daha önce çalıştırdıysan, doğrudan
+`cd react-course-projects/projects/react-fundamentals` yapıp `npm run dev`
+demen yeterli.

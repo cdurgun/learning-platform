@@ -60,18 +60,27 @@ daha büyük bir arayüz kurma yöntemi.
 **Inheritance (Kalıtım)** — Bir sınıfın başka bir sınıftan özellik
 devraldığı, React'in component'ler arasında KULLANMADIĞI bir yöntem.
 
-## Ek: Mini Proje — Yeniden Kullanılabilir Bir Card Component'i
+## Pratik Proje
 
-Bu dersteki üç fikri (`children`, iç içe component'ler, composition) tek
-bir örnekte birleştiriyoruz:
+Bu kategoride (Components, Props, Component Composition) öğrendiğimiz
+kavramları bir arada kullanan, gerçek ve çalıştırılabilir bir örnek proje
+var: **[Components & Props Demo](https://github.com/cdurgun/react-course-projects/tree/components-props-v1/projects/components-props)**.
 
-{{CardBase.jsx}}
+Proje; birden çok component'i, props'u (destructuring ve default değerlerle)
+ve `children` ile composition'ı bir arada gösteriyor. Bilgisayarına indirip
+çalıştırabilir, kodunu satır satır inceleyebilirsin:
 
-{{CardDemo.jsx}}
+```bash
+git clone https://github.com/cdurgun/react-course-projects.git
+cd react-course-projects
+npm install
+cd projects/components-props
+npm run dev
+```
 
-`CardBase.jsx`, üç küçük component tanımlıyor: `Card` (dış çerçeve),
-`CardTitle` ve `CardText`. `CardDemo.jsx`, bunları composition ile
-birleştirerek İKİ FARKLI kart oluşturuyor -- ikisi de aynı parçaları
-kullanıyor, ama `children` olarak verdiğimiz içerik farklı olduğu için
-sonuç da farklı. Bu, tek bir component'i defalarca yazmak yerine, küçük
-parçaları yeniden birleştirerek çeşitlilik yaratmanın gerçek bir örneği.
+`react-course-projects` deposu **npm workspaces** kullanır -- `npm install`
+yalnızca bir kez, depo kökünde çalıştırılır ve tüm proje klasörleri ortak
+bağımlılıkları paylaşır (her klasörde ayrı bir `node_modules` oluşmaz). Kök
+dizinde `npm install`'ı daha önce çalıştırdıysan, doğrudan
+`cd react-course-projects/projects/components-props` yapıp `npm run dev`
+demen yeterli.

@@ -58,18 +58,26 @@ component's opening and closing tags.
 **Inheritance** — A class inheriting behavior from another class -- a
 pattern React does NOT use between components.
 
-## Appendix: Mini Project — A Reusable Card Component
+## Practical Project
 
-Bringing this lesson's three ideas (`children`, nested components,
-composition) together in one example:
+There's a real, runnable example project that brings together the concepts
+from this category (Components, Props, Component Composition): **[Components & Props Demo](https://github.com/cdurgun/react-course-projects/tree/components-props-v1/projects/components-props)**.
 
-{{CardBase.jsx}}
+It shows multiple components, props (with destructuring and default
+values), and composition via `children`, all working together. You can
+download it and run it yourself, and read through the code line by line:
 
-{{CardDemo.jsx}}
+```bash
+git clone https://github.com/cdurgun/react-course-projects.git
+cd react-course-projects
+npm install
+cd projects/components-props
+npm run dev
+```
 
-`CardBase.jsx` defines three small components: `Card` (the outer frame),
-`CardTitle`, and `CardText`. `CardDemo.jsx` combines them through
-composition to build TWO DIFFERENT cards -- both use the same pieces, but
-since the `children` content we give them is different, the result is
-different too. This is a real example of creating variety by recombining
-small pieces, instead of writing one component over and over.
+The `react-course-projects` repo uses **npm workspaces** -- `npm install`
+only needs to run once, at the repo root, and every project folder shares
+the same dependencies (no separate `node_modules` per folder). If you've
+already run `npm install` at the root, you can just
+`cd react-course-projects/projects/components-props` and run
+`npm run dev`.

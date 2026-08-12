@@ -104,3 +104,29 @@ a single root without adding an extra HTML element.
 
 **Root Element** — The single, outermost element in a JSX block -- every
 JSX block must have exactly one.
+
+## Practical Project
+
+There's a real, runnable example project that brings together the concepts
+from this category (What Is React?, Creating a React Application, JSX):
+**[React Fundamentals Demo](https://github.com/cdurgun/react-course-projects/tree/react-fundamentals-v1/projects/react-fundamentals)**.
+
+It shows JSX, JavaScript expressions with curly braces `{ }`, attributes,
+and a short conditional-rendering preview with a ternary, all working
+together. You can download it and run it yourself, and read through the
+code line by line:
+
+```bash
+git clone https://github.com/cdurgun/react-course-projects.git
+cd react-course-projects
+npm install
+cd projects/react-fundamentals
+npm run dev
+```
+
+The `react-course-projects` repo uses **npm workspaces** -- `npm install`
+only needs to run once, at the repo root, and every project folder shares
+the same dependencies (no separate `node_modules` per folder). If you've
+already run `npm install` at the root, you can just
+`cd react-course-projects/projects/react-fundamentals` and run
+`npm run dev`.
