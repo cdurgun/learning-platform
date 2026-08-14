@@ -172,8 +172,11 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 32 | Hooks kategorisi — What Are Hooks? (5 ana, 2 örnek, INTERMEDIATE), useEffect (7 ana, 5 örnek, INTERMEDIATE), useRef (5 ana, 4 örnek, INTERMEDIATE), useMemo & useCallback (6 ana, 4 örnek, INTERMEDIATE), Custom Hooks (6 ana + Pratik Proje, 3 örnek, INTERMEDIATE) — React course'unun dördüncü kategorisi; kullanıcı onayıyla zorluk seviyesi bu kategoriden itibaren INTERMEDIATE'e çekildi; `react-course-projects`'e dördüncü proje (`hooks`, tur kaydı yapan bir kronometre demosu) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 | 33 | Forms kategorisi — Controlled Components (6 ana, 5 örnek, INTERMEDIATE), Form Handling (7 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun beşinci kategorisi; ChatGPT planındaki üçüncü topic (Form Libraries) kullanıcı kararıyla atlandı; önceki kategorilerde bilinçli kaçınılan "controlled input" deseni burada ilk kez tam işlendi; `react-course-projects`'e beşinci proje (`forms`, bir kayıt formu demosu) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 | 34 | Routing kategorisi — React Router Basics (7 ana, 5 örnek, INTERMEDIATE), Route Parameters & Navigation (7 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun altıncı kategorisi; ChatGPT planındaki tek bir büyük topic (Topic 19 — React Router, 8 kavram) kullanıcı kararıyla ikiye bölündü; `react-router-dom` yerine yeni birleşik `react-router` v8 paketi kullanıldı (bkz. "Bilinen Kısıtlar"); `react-course-projects`'e altıncı proje (`routing`, `/courses`/`/courses/java`/`/courses/java/enum` şemalı bir kurs gezinme demosu) eklendi | ✅ TR+EN |
+| 35 | API & Data Fetching kategorisi — Fetching Data (6 ana, 5 örnek, INTERMEDIATE), React + REST API (8 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun yedinci kategorisi; ChatGPT planındaki üçüncü topic (API Data Management / TanStack Query) kullanıcı kararıyla şimdilik atlandı; backend olarak gerçek Spring Boot yerine `json-server` (gerçek bir sunucu başlatılıp GET/POST/PUT/DELETE + CORS doğrulanarak) kullanıldı (bkz. "Bilinen Kısıtlar"); `react-course-projects`'e yedinci proje (`api-data-fetching`, json-server'a bağlanan bir kurs CRUD demosu) eklendi | ✅ TR+EN |
+| 36 | State Management kategorisi — Sharing State (6 ana, 5 örnek, INTERMEDIATE), Context API (7 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun sekizinci kategorisi; ChatGPT planındaki üçüncü topic (State Management Libraries / Redux Toolkit, Zustand) Forms ve API & Data Fetching'teki aynı desenle (planın kendi "daha sonra ekleyebiliriz" notuyla) şimdilik atlandı, bu kez ayrıca sorulmadı; `react-course-projects`'e sekizinci proje (`state-management`, lifting state up + Context API'yi birleştiren bir kurs listesi/favoriler demosu) eklendi | ✅ TR+EN |
+| 37 | Advanced React kategorisi — React Performance (6 ana, 5 örnek), Error Boundaries (6 ana, 5 örnek), Lazy Loading & Code Splitting (5 ana, 4 örnek), Suspense (5 ana, 4 örnek), Portals (6 ana + Pratik Proje, 4 örnek) — React course'unun dokuzuncu kategorisi; kategori adı ve içerik karmaşıklığı gerekçesiyle zorluk seviyesi ADVANCED'a yükseltildi; kursun İLK class component'i (Error Boundaries, hook karşılığı yok) burada tanıtıldı; `react-course-projects`'e dokuzuncu proje (`advanced-react`, memo+error boundary+lazy/Suspense+portal'ı birleştiren bir demo) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 
-Migration'lar V1'den V148'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+Migration'lar V1'den V160'a kadar uygulandı. İki kurs var: `java` kursunda üç kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
@@ -294,6 +297,56 @@ platformunun kendi kurs yapısına benzeyen bir kurs gezinme uygulaması
 `route-parameters-navigation.md`'ye (TR+EN) bu projeye link veren bir
 `## Pratik Proje` bölümü kondu (başlık sayısı 6→7).
 
+**Faz 35'te yedinci kategori eklendi: `api-data-fetching`(7)** —
+fetching-data=1, react-rest-api=2 (ikisi de V149'da eklendi, EN'i
+V152'de yayına alındı). ChatGPT'nin orijinal planındaki üçüncü topic
+(Topic 22 — API Data Management, TanStack Query: caching, refetching,
+mutations) `AskUserQuestion` ile soruldu, kullanıcı "Şimdilik bırak
+(2 topic)" seçti -- Forms'taki Form Libraries kararına benzer şekilde,
+yeni bir npm bağımlılığı gerektiren bu konu şimdilik ertelendi.
+**Backend kararı:** Topic 21'in "React → HTTP → Spring Boot →
+PostgreSQL" şeması `AskUserQuestion` ile soruldu (json-server / gerçek
+Spring Boot endpoint'i / public test API seçenekleriyle), kullanıcı
+"json-server ile sahte API" seçti -- gerçek üretim Java koduna
+dokunulmadı. Zorluk seviyesi Routing'ten (Faz 34) devam ederek
+INTERMEDIATE. `react-course-projects`'e yedinci proje
+(`api-data-fetching`, json-server'a bağlanan bir kurs CRUD demosu)
+eklendi, `react-rest-api.md`'ye (TR+EN) bu projeye link veren bir
+`## Pratik Proje` bölümü kondu (başlık sayısı 7→8).
+
+**Faz 36'da sekizinci kategori eklendi: `state-management`(8)** —
+sharing-state=1, context-api=2 (ikisi de V153'te eklendi, EN'i V156'da
+yayına alındı). ChatGPT'nin orijinal planındaki üçüncü topic (Topic 25
+— State Management Libraries: Redux Toolkit, Zustand) atlandı --
+planın kendisi bu konuyu "Bunları ayrı ayrı daha sonra ekleyebiliriz"
+notuyla işaretlemişti, Forms'taki (Faz 33) ve API & Data Fetching'teki
+(Faz 35) aynı desenle birebir örtüştüğü için bu kez ayrıca
+`AskUserQuestion` sorulmadı, doğrudan kararla ilerlendi. Zorluk seviyesi
+API & Data Fetching'ten devam ederek INTERMEDIATE. `react-course-projects`'e
+sekizinci proje (`state-management`, lifting state up ile arama + Context
+API ile favoriler'i birleştiren bir kurs listesi demosu) eklendi,
+`context-api.md`'ye (TR+EN) bu projeye link veren bir `## Pratik Proje`
+bölümü kondu (başlık sayısı 6→7).
+
+**Faz 37'de dokuzuncu kategori eklendi: `advanced-react`(9)** —
+react-performance=1, error-boundaries=2, lazy-loading-code-splitting=3,
+suspense=4, portals=5 (beşi de V157'de eklendi, EN'i V160'ta yayına
+alındı). ChatGPT'nin planındaki beş topic'in (React Performance, Error
+Boundaries, Lazy Loading & Code Splitting, Suspense, Portals) HİÇBİRİ
+"sonraya bırakılabilir" notuyla işaretlenmemişti -- önceki üç
+kategorinin aksine, hepsi olduğu gibi alındı (Hooks'la aynı büyüklükte,
+5 topic). **Zorluk kararı:** kategori adının kendisi "Advanced React"
+olduğu ve içerik gerçekten daha karmaşık olduğu için (kursun İLK class
+component'i -- error boundary'ler hook'larla yazılamıyor --, dynamic
+import(), Suspense, Portal'lar) zorluk seviyesi INTERMEDIATE'den
+ADVANCED'a yükseltildi; bu, Java kursundaki "Advanced Spring MVC"
+kategorisinin aynı isim-bazlı gerekçeyle ADVANCED olmasıyla tutarlı,
+`AskUserQuestion` sorulmadı. `react-course-projects`'e dokuzuncu proje
+(`advanced-react`, `React.memo` + bir Error Boundary + `React.lazy`/
+`Suspense` ile code splitting + bir Portal modal'ı birleştiren bir
+demo) eklendi, `portals.md`'ye (TR+EN) bu projeye link veren bir
+`## Pratik Proje` bölümü kondu (başlık sayısı 5→6).
+
 ## Proje Yapısı
 
 ```
@@ -309,7 +362,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V148)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V160)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     messages*.properties          Arayüz metni çevirileri
@@ -697,6 +750,209 @@ src/main/resources/
   (TR+EN) bu projeye link veren bir `## Pratik Proje` bölümü eklendi.
   Zip paketleme, Faz 33'teki standing instruction gereği onay
   beklenmeden yapıldı.
+- **Faz 35 — API & Data Fetching kategorisi, backend olarak gerçek
+  Spring Boot yerine json-server kullanıldı; TanStack Query topic'i
+  ertelendi.** Kullanıcı, ChatGPT planındaki 7. bölümü ("API & Data
+  Fetching ⭐", Topic 20-22) paylaştı. İki genuine karar noktası vardı,
+  ikisi de `AskUserQuestion` ile soruldu: (1) Topic 21'in "React → HTTP
+  → Spring Boot → PostgreSQL" şeması için hangi backend kullanılacağı --
+  üç seçenek sunuldu (json-server, learning-platform'un kendi Spring
+  Boot'una gerçek `@RestController` eklemek, ya da public bir test API),
+  kullanıcı "json-server ile sahte API (Önerilen)" seçti; gerçek üretim
+  Java koduna hiç dokunulmadı, React tarafındaki kod (`src/api.js`)
+  gerçek bir Spring Boot API'sine bağlanırken de birebir aynı olacak
+  şekilde yazıldı. (2) Topic 22 (API Data Management / TanStack Query)
+  -- Forms'taki Form Libraries kararına benzer şekilde, yeni bir npm
+  bağımlılığı gerektirdiği için soruldu, kullanıcı "Şimdilik bırak
+  (2 topic)" seçti, TanStack Query şimdilik dışarıda bırakıldı.
+  **json-server araştırması:** npm registry'den güncel sürüm
+  (1.0.0-beta.15) doğrulandı; bu sürümün CLI'ı eski v0.17'den FARKLI
+  olduğu için (`--watch` flag'i yok, `--help` çıktısı çok daha sade)
+  `npx json-server --help` ile gerçek CLI incelendi, ardından gerçek bir
+  sunucu başlatılıp `curl` ile GET/POST/PUT/DELETE'in tam bir round-trip'i
+  ve CORS header'ları (`Access-Control-Allow-Origin: *`, varsayılan
+  olarak açık) doğrulandı -- POST'ta id'nin sunucu tarafından
+  otomatik/rastgele üretildiği (sıralı tamsayı DEĞİL) fark edildi ve
+  örnek/proje koduna bu şekilde yansıtıldı. `fetching-data.md`, saf
+  `fetch`+`.then()` zinciriyle GET/loading/error/POST/PUT-DELETE'i tek
+  tek işliyor; `react-rest-api.md`, bunları `async`/`await` + bir
+  `api.js` modülü deseniyle birleştirip gerçek bir CRUD akışına
+  (listeleme, oluşturma, silme, mutasyon sonrası immutability ile
+  state güncelleme) genişletiyor, ilk bölümünde React→HTTP→Backend→
+  Veritabanı akışını Spring Boot'a referansla (kavramsal olarak, kod
+  olmadan) anlatıyor. Zorluk seviyesi Routing'ten devam ederek
+  INTERMEDIATE. 10 örnek dosyasının tamamı Node + `@babel/preset-react`
+  ile syntax-doğrulandı (async/await, Babel'in preset-react'i tek
+  başına -- preset-env olmadan -- de doğru parse ediyor); TR/EN başlık
+  ve embed parity kontrolleri (6/6 ve 8/8 başlık, 5/5 ve 5/5 embed)
+  sorunsuz geçti; migration'larda literal `${` ve apostrof parity
+  kontrolleri temiz çıktı. `react-course-projects`'e yedinci proje
+  (`api-data-fetching`) eklendi -- `db.json`'dan beslenen bir json-server
+  (`npm run server`, port 3000) ve ayrı bir Vite dev sunucusu (`npm run
+  dev`, port 5173) gerektiren iki-süreçli bir kurulum; `src/api.js`,
+  `getCourses`/`createCourse`/`deleteCourse` fonksiyonlarını dışa
+  aktarıyor (gerçek bir proje olduğu için, embed örneklerinin aksine,
+  component'ler bu modülü GERÇEKTEN import ediyor). Proje `npm run
+  build` ile doğrulandı, ayrıca json-server GERÇEKTEN başlatılıp tam bir
+  GET→POST→DELETE round-trip'i `curl` ile test edildi (üretim JS
+  bundle'ında Türkçe karakter taraması da temiz çıktı), `api-data-
+  fetching-v1` tag'i atandı, `react-rest-api.md`'ye (TR+EN) bu projeye
+  link veren bir `## Pratik Proje` bölümü eklendi. Zip paketleme, Faz
+  33'teki standing instruction gereği onay beklenmeden yapıldı.
+- **Faz 36 — State Management kategorisi, Redux Toolkit/Zustand topic'i
+  artık üçüncü kez tekrarlanan bir desenle (soru sorulmadan) atlandı.**
+  Kullanıcı "Olur devam edebilirsin" dedi; ChatGPT'nin planındaki üçüncü
+  topic'in (Topic 25 — State Management Libraries) kendi notu "Bunları
+  ayrı ayrı daha sonra ekleyebiliriz" -- bu, Forms'taki Form Libraries
+  (Faz 33) ve API & Data Fetching'teki TanStack Query (Faz 35) ile
+  BİREBİR aynı "ileri seviye/opsiyonel kütüphane, sonraya bırakılabilir"
+  çerçevesi. Üç kategoridir aynı tercih tutarlı olduğu için, bu kez
+  `AskUserQuestion` sorulmadı -- doğrudan 2 topic'le (Sharing State,
+  Context API) ilerlendi, karar CLAUDE.md'de şeffaf şekilde belgelendi.
+  `sharing-state.md`, iki kardeş component'in aynı state'e ihtiyaç
+  duyduğu "sorunu" (ayrı state'ler, birbirini göremiyor) göstererek
+  başlıyor, `LiftingStateUpExample`+`SyncedSiblingsExample` ile "state'i
+  ortak ataya taşımak" çözümünü iki farklı senaryoda (liste filtreleme +
+  senkron kardeş input'lar) pekiştiriyor, sonra `PropsDrillingExample`+
+  `WhyPropsDrillingHurtsExample` ile bir sonraki dersi motive eden
+  problemi (derin ağaçta zorunlu prop aktarımı) gösteriyor.
+  `context-api.md`, aynı derin-ağaç örneğini Context ile YENİDEN YAZARAK
+  (`AvoidingPropsDrillingExample`) çözümü somutlaştırıyor,
+  `ContextWithStateExample` ile Context'in yalnızca sabit değer değil
+  state+updater çiftini de taşıyabildiğini, `CustomContextHookExample`
+  ile de Hooks dersindeki custom hook deseniyle birleşen "professional"
+  kalıbı (`useTheme()` gibi, Provider dışında kullanılırsa hata
+  fırlatan) gösteriyor; `DefaultValueExample`, Provider olmadığında
+  `createContext`'e verilen varsayılan değerin kullanıldığı gotcha'yı
+  ayrıca ele alıyor. Zorluk seviyesi API & Data Fetching'ten devam
+  ederek INTERMEDIATE. 10 örnek dosyasının tamamı Node +
+  `@babel/preset-react` ile syntax-doğrulandı; TR/EN başlık ve embed
+  parity kontrolleri (6/6 ve 7/7 başlık, 5/5 ve 5/5 embed) sorunsuz
+  geçti; migration'larda literal `${` ve apostrof parity kontrolleri
+  temiz çıktı. `react-course-projects`'e sekizinci proje
+  (`state-management`) eklendi -- iki topic'i TEK bir uygulamada
+  birleştiren bir kurs listesi: arama metni `App`'te tutulup
+  (lifting state up) `SearchBar`+`CourseList`'e props ile aktarılıyor;
+  favori kurslar bir `FavoritesContext` (`createContext`+`Provider`+
+  `useFavorites()` custom hook) ile yönetiliyor, hem başlıktaki
+  `FavoritesBadge` hem listenin İÇİNDEKİ her `CourseItem` bu context'i
+  hiçbir props drilling olmadan okuyor/güncelliyor. Proje `npm run
+  build` ile doğrulandı (üretim JS bundle'ında Türkçe karakter
+  taraması da temiz çıktı), `state-management-v1` tag'i atandı,
+  `context-api.md`'ye (TR+EN) bu projeye link veren bir
+  `## Pratik Proje` bölümü eklendi. Zip paketleme, Faz 33'teki standing
+  instruction gereği onay beklenmeden yapıldı. **Sandbox notu:** bu faz
+  sırasında `react-course-projects` klasörü `react-course-projects 2`
+  olarak (muhtemelen kullanıcının bilgisayarındaki bir dosya
+  senkronizasyon çakışması nedeniyle) yeniden adlandırılmış halde
+  bulundu -- orijinal isimdeki klasör hiç yoktu, yalnızca " 2" soneki
+  olan kopya vardı, ama git geçmişi (tüm commit'ler ve tag'ler) eksiksiz
+  ve doğruydu. Çalışmaya bu yeni yoldan devam edildi, klasör yeniden
+  adlandırılmaya ÇALIŞILMADI (kullanıcının kendi dosya sisteminde neye
+  sebep olacağı belirsiz olduğu için). Kullanıcıya bu durum ayrıca
+  bildirilmedi çünkü iş akışını etkilemedi, ama ileride benzer bir
+  " 2"/" 3" soneki fark edilirse aynı şekilde davranılmalı: klasörü
+  yeniden adlandırmaya çalışmadan, mevcut olan yolda çalışmaya devam et.
+- **Faz 37 — Advanced React kategorisi, kursun İLK class component'i
+  (Error Boundaries) ve zorluk seviyesinin ADVANCED'a yükselmesi.**
+  Kullanıcı "olur devam edebilirsin" dedi; ChatGPT'nin planındaki beş
+  topic'in (Topic 26-30) HİÇBİRİ "sonraya bırakılabilir" notu
+  içermiyordu, hepsi olduğu gibi alındı. **Zorluk kararı** kendiliğinden
+  verildi (AskUserQuestion sorulmadan) -- kategori adının kendisi
+  "Advanced React" olması VE içeriğin gerçekten daha karmaşık olması
+  (bkz. aşağı) yeterince açık bir sinyaldi; bu, Java kursundaki "Advanced
+  Spring MVC" kategorisinin (Faz 24) aynı isim-bazlı gerekçeyle ADVANCED
+  olmasıyla tutarlı bir karar.
+  **Araştırma/doğrulama:** Error Boundaries dersini yazmadan önce
+  WebSearch'te "React 19'da useErrorBoundary hook'u eklendi" diye YANLIŞ
+  bir iddiayla karşılaşıldı (bir GitHub demo reposunun kendi
+  başlığından kaynaklanıyordu, resmi bir React özelliği DEĞİL) -- bu,
+  gerçek `react@19.2.8` paketi npm'den indirilip
+  `react.development.js`'teki TÜM `exports.use*` satırları grep'lenerek
+  çürütüldü: böyle bir hook yok, error boundary'ler hâlâ yalnızca class
+  component + `static getDerivedStateFromError` ile yazılabiliyor. Aynı
+  doğrulamada `use`, `Profiler`, `Suspense`, `lazy`, `Component`
+  (react'te) ve `createPortal` (react-dom'da) gerçek export'lar olarak
+  teyit edildi -- bu oturumdaki diğer her teknik iddianın (react-router
+  v8, json-server v1beta) doğrulandığı gibi, ders içeriği yazılmadan
+  ÖNCE gerçek paket incelendi.
+  `react-performance.md`, State & Events/Hooks'ta öğrenilen `useMemo`/
+  `useCallback`'i doğrudan performans bağlamında tekrar ele alıp yeni
+  `React.memo`'yu ekliyor -- `memo` + `useCallback` kombinasyonunun
+  (fonksiyon prop'ları için) gerekliliği ayrı bir örnekte gösteriliyor;
+  gerçek React export'u olan `<Profiler>` component'i de (React
+  DevTools Profiler sekmesinin arkasındaki mekanizma) bir örnekte
+  kullanıldı. `error-boundaries.md`, açıkça "bu, kursun İLK class
+  component'i" uyarısıyla başlıyor; `getDerivedStateFromError`,
+  `componentDidCatch`, birden fazla küçük boundary kullanmanın faydası,
+  ve error boundary'lerin YAKALAMADIĞI hata türleri (event handler'lar,
+  async kod, boundary'nin kendisi) ayrı ayrı işleniyor.
+  `lazy-loading-code-splitting.md`, Routing dersindeki route'ları
+  `React.lazy` ile bölmeyi (route-based code splitting), named
+  export'larla lazy kullanmanın küçük uyarlamasını, ve koşullu lazy
+  loading'i gösteriyor. `suspense.md`, Lazy Loading'te yalnızca
+  `lazy()`'yle görülen Suspense'i derinleştiriyor -- iç içe Suspense
+  sınırları, React 19'un `use()` hook'uyla (KOŞULLU çağrılabilen tek
+  hook) bir Promise'i Suspense'e entegre etmek, ve ÖNEMLİ bir gotcha:
+  API & Data Fetching'teki `useEffect`+`fetch` deseninin Suspense'i
+  OTOMATİK tetiklemediği açıkça vurgulanıyor. `portals.md`,
+  `createPortal` ile modal'lar, ve Portal'ların en şaşırtıcı davranışı
+  olan event bubbling'in gerçek DOM'a değil React'in component ağacına
+  göre işlemesini gösteriyor.
+  22 örnek dosyasının tamamı Node + `@babel/preset-react` ile
+  syntax-doğrulandı; TR/EN başlık ve embed parity kontrolleri (5 topic,
+  hepsi eşleşti) sorunsuz geçti; migration'larda literal `${` ve
+  apostrof parity kontrolleri temiz çıktı.
+  `react-course-projects`'e dokuzuncu proje (`advanced-react`) eklendi
+  -- dört ana deseni birleştiren tek bir uygulama: `CourseList`
+  (`memo` ile sarmalı), `ErrorBoundary` (kursun tek class component'i,
+  `BuggyWidget`'ın fırlattığı hatayı yakalıyor), `CourseDetails`
+  (`React.lazy` ile yüklenen, `Suspense` fallback'li bir modal içeriği),
+  `Modal` (`createPortal` ile `document.body`'ye render edilen).
+  `npm run build` çıktısında `CourseDetails`'in GERÇEKTEN ayrı bir chunk
+  (`CourseDetails-*.js`) olarak üretildiği doğrulandı -- code
+  splitting'in yalnızca teoride değil, gerçek build çıktısında da
+  çalıştığının somut kanıtı. Proje `npm run build` ile doğrulandı
+  (üretim JS bundle'ında Türkçe karakter taraması da temiz çıktı),
+  `advanced-react-v1` tag'i atandı, `portals.md`'ye (TR+EN) bu projeye
+  link veren bir `## Pratik Proje` bölümü eklendi. Zip paketleme, Faz
+  33'teki standing instruction gereği onay beklenmeden yapıldı.
+  **Sandbox notu:** bu fazda HEM `react-course-projects` HEM
+  `learning-platform` için dosya senkronizasyon çakışmaları yaşandı --
+  `react-course-projects` ve `react-course-projects 2` birlikte var
+  oldu (ikisi de aynı, güncel git geçmişine sahipti, " 2" olan
+  working tree'si daha güncel olduğu için o kullanıldı); daha ciddi
+  olarak, `learning-platform` (git'siz, düz bir klasör) tarafında
+  **tek bir dosya değil, tüm working directory** bozulmuş çıktı:
+  `project/learning-platform/learning-platform/` yalnızca Faz 37'de
+  yazılan 5 Advanced React örnek/içerik klasörü ve migration'ları
+  içeriyordu -- o faza kadarki TÜM önceki Java/Spring ve React
+  kategorileri (46 TR + 46 EN içerik dosyası, 32 migration klasörü,
+  44 örnek klasörü) o kopyada YOKTU. Asıl tam ve güncel kopya ayrı bir
+  sync-çakışma klasöründe (`project 2/learning-platform/learning-platform/`)
+  bulundu -- Faz 36 sonuna kadar her şey sağlamdı, sadece Faz 37'nin
+  (Advanced React) yeni dosyaları eksikti. Kurtarma: Faz 37'nin 5 örnek
+  klasörü, 10 içerik dosyası (TR+EN), `advanced-react` migration
+  klasörü ve güncel CLAUDE.md, `project`'ten `project 2`'ye kopyalanarak
+  birleştirildi; `diff -rq` ile iki klasör karşılaştırılıp `project`'te
+  olup `project 2`'de olmayan hiçbir dosya kalmadığı doğrulandı. Ayrıca
+  bu birleştirme sırasında `project 2` içinde daha eski bir sandbox
+  hatasından kalma iki boş "brace expansion" klasörü bulundu (muhtemelen
+  geçmişte `mkdir -p .../{a,b,c}` gibi bir komutun kabuk tarafından
+  genişletilmeden literal çalışmasından kalma): `resources/{db` ve
+  `java/.../learning/{domain,repository,service,controller}` -- ikisi
+  de içi boş olduğu (0 dosya) doğrulanıp silindi, gerçek `db/` ve
+  `domain/repository/service/controller/` klasörleri zaten ayrıca ve
+  doğru şekilde mevcuttu. **Öğrenilen ders:** `learning-platform`
+  git'siz olduğu için (yalnızca `react-course-projects`'in bir güvenlik
+  ağı var), dosya kaybı riski daha yüksek ve daha geniş kapsamlı olabilir
+  -- ileride benzer bir "dosya eksik" durumu fark edilirse, (1) önce
+  olası " 2"/" 3" sonekli kopya klasörlerde aynı dosyanın daha yeni/tam
+  bir sürümü olup olmadığı kontrol edilmeli, (2) `diff -rq` ile iki aday
+  klasör karşılaştırılıp hangi tarafın gerçekten eksiksiz olduğu
+  doğrulanmalı, (3) paketleme öncesi olası boş "brace expansion" artefakt
+  klasörleri için (`{...,...}` içeren isimler) bir tarama yapılmalı --
+  komple yeniden yazmaya girişilmeden önce.
 
 Spring Core kategorisinin beş topic'i de (Faz 13-17) TR+EN tamamlandıktan sonra,
 kullanıcı `spring-boot` kursuna ikinci bir kategori eklenmesini istedi: **Spring
