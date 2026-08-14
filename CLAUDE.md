@@ -168,8 +168,12 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 28 | React Fundamentals kategorisi — What Is React? (8 ana, embed yok, BEGINNER), Creating a React Application (7 ana, embed yok, BEGINNER), JSX (7 ana, 5 örnek, BEGINNER) — yeni "React" course'unun ilk kategorisi; kullanıcı kararıyla **bilinçli olarak sade bir dille**, mini proje eki olmadan yazıldı (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 | 29 | Components & Props kategorisi — Components (6 ana, 4 örnek, BEGINNER), Props (7 ana, 4 örnek, BEGINNER), Component Composition (5 ana + 1 ek, 5 örnek, BEGINNER) — React course'unun ikinci kategorisi; sade dil kararı devam ediyor. Component Composition'daki `## Ek: Mini Proje` (`CardBase.jsx`+`CardDemo.jsx`) Faz 30'da kaldırıldı (bkz. aşağısı) | ✅ TR+EN |
 | 30 | "Pratik Proje" standardı: ayrı `react-course-projects` repo'su kuruldu, React Fundamentals (7 ana + Pratik Proje, embed yok değişikliği) ve Components & Props (Component Composition'daki gömülü mini proje kaldırılıp linkle değiştirildi) için gerçek, `npm run build` ile doğrulanmış Vite/React demo projeleri retroaktif olarak yazıldı; bu, tüm gelecek React kategorileri için kalıcı bir kural oldu (bkz. "Mimari" ve "Bilinen Kısıtlar") | ✅ |
+| 31 | State & Events kategorisi — Events (7 ana, 5 örnek, BEGINNER), State (7 ana, 5 örnek, BEGINNER), Conditional Rendering (5 ana, 4 örnek, BEGINNER), Lists & Keys (6 ana + Pratik Proje, 4 örnek, BEGINNER) — React course'unun üçüncü kategorisi; kullanıcının "React'in en önemli bölümü" dediği kısım, ilk kez `useState`/state kullanan ve `.map()` ile liste render eden konular; `react-course-projects`'e üçüncü proje (`state-events`, bir görev listesi demosu) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
+| 32 | Hooks kategorisi — What Are Hooks? (5 ana, 2 örnek, INTERMEDIATE), useEffect (7 ana, 5 örnek, INTERMEDIATE), useRef (5 ana, 4 örnek, INTERMEDIATE), useMemo & useCallback (6 ana, 4 örnek, INTERMEDIATE), Custom Hooks (6 ana + Pratik Proje, 3 örnek, INTERMEDIATE) — React course'unun dördüncü kategorisi; kullanıcı onayıyla zorluk seviyesi bu kategoriden itibaren INTERMEDIATE'e çekildi; `react-course-projects`'e dördüncü proje (`hooks`, tur kaydı yapan bir kronometre demosu) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
+| 33 | Forms kategorisi — Controlled Components (6 ana, 5 örnek, INTERMEDIATE), Form Handling (7 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun beşinci kategorisi; ChatGPT planındaki üçüncü topic (Form Libraries) kullanıcı kararıyla atlandı; önceki kategorilerde bilinçli kaçınılan "controlled input" deseni burada ilk kez tam işlendi; `react-course-projects`'e beşinci proje (`forms`, bir kayıt formu demosu) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
+| 34 | Routing kategorisi — React Router Basics (7 ana, 5 örnek, INTERMEDIATE), Route Parameters & Navigation (7 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun altıncı kategorisi; ChatGPT planındaki tek bir büyük topic (Topic 19 — React Router, 8 kavram) kullanıcı kararıyla ikiye bölündü; `react-router-dom` yerine yeni birleşik `react-router` v8 paketi kullanıldı (bkz. "Bilinen Kısıtlar"); `react-course-projects`'e altıncı proje (`routing`, `/courses`/`/courses/java`/`/courses/java/enum` şemalı bir kurs gezinme demosu) eklendi | ✅ TR+EN |
 
-Migration'lar V1'den V132'ye kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+Migration'lar V1'den V148'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
@@ -210,10 +214,7 @@ kurslar arasında otomatik olarak üçüncü sırada (java, spring-boot, react) 
 
 **Faz 29'da ikinci kategori eklendi: `components-props`(2)** — components=1,
 props=2, component-composition=3 (üçü de V128'de eklendi, EN'i V131'de yayına
-alındı). React course'u artık iki kategori/altı yayında topic'e sahip; kalan dokuz
-kategori (Components & Props'tan sonra ChatGPT planındaki sıradaki: State & Events,
-Hooks, Forms, Routing, API & Data Fetching, State Management, Advanced React,
-Testing, Production) henüz planlanmadı/DB'ye seed edilmedi.
+alındı).
 
 **Faz 30'da "Pratik Proje" standardı kuruldu ve retroaktif olarak uygulandı.**
 Kullanıcı, kendi fikrini ve ChatGPT'nin buna verdiği yanıtı paylaştı: her React
@@ -236,7 +237,62 @@ eklendi (başlık sayısı 7→8); V132 migration'ı ile artık kullanılmayan
 component-composition/CardBase.jsx` ve `CardDemo.jsx` dosyaları da diskten
 kaldırıldı. Bu artık kalıcı bir mimari kural (bkz. "Mimari" bölümü) — React
 course'undaki her yeni kategori, kendi Pratik Proje'siyle birlikte teslim
-edilecek.
+edilecek. Aynı fazın devamında iki küçük iyileştirme daha yapıldı (bkz.
+"Bilinen Kısıtlar"): `react-course-projects` npm workspaces'e geçirildi
+(kullanıcının fark ettiği, her proje klasöründe ayrı `node_modules`
+birikmesi sorununu çözmek için), ve iki demo projedeki (`react-fundamentals`,
+`components-props`) ekrana basılan tüm metinler Türkçe'den İngilizce'ye
+çevrildi (kod yorumları Türkçe kaldı).
+
+**Faz 31'de üçüncü kategori eklendi: `state-events`(3)** — events=1, state=2,
+conditional-rendering=3, lists-and-keys=4 (dördü de V133'te eklendi, EN'i
+V136'da yayına alındı). `react-course-projects`'e üçüncü proje
+(`state-events`, `state-events-v1` tag'i) eklendi, `lists-and-keys.md`'ye
+(TR+EN) bu projeye link veren bir `## Pratik Proje` bölümü kondu (başlık
+sayısı 5→6).
+
+**Faz 32'de dördüncü kategori eklendi: `hooks`(4)** — what-are-hooks=1,
+use-effect=2, use-ref=3, use-memo-use-callback=4, custom-hooks=5 (beşi de
+V137'de eklendi, EN'i V140'ta yayına alındı). Kullanıcı onayıyla, bu
+kategoriden itibaren zorluk seviyesi **INTERMEDIATE**'e çekildi -- önceki
+üç kategori (React Fundamentals, Components & Props, State & Events) hep
+BEGINNER'dı. `react-course-projects`'e dördüncü proje (`hooks`, `hooks-v1`
+tag'i) eklendi, `custom-hooks.md`'ye (TR+EN) bu projeye link veren bir
+`## Pratik Proje` bölümü kondu (başlık sayısı 5→6).
+
+**Faz 33'te beşinci kategori eklendi: `forms`(5)** — controlled-components=1,
+form-handling=2 (ikisi de V141'de eklendi, EN'i V144'te yayına alındı).
+ChatGPT'nin orijinal planındaki üçüncü topic (Form Libraries — React Hook
+Form, Zod) kullanıcı kararıyla atlandı; `AskUserQuestion` ile soruldu,
+planın kendisinin de "ilk React öğreniminde şart değil" dediği bu konu
+şimdilik dışarıda bırakıldı. Zorluk seviyesi Hooks'tan (Faz 32) devam
+ederek INTERMEDIATE. React course'u artık beş kategori/23 yayında topic'e
+sahip; kalan altı kategori (Forms'tan sonra ChatGPT planındaki sıradaki:
+Routing, API & Data Fetching, State Management, Advanced React, Testing,
+Production) henüz planlanmadı/DB'ye seed edilmedi. `react-course-projects`'e
+beşinci proje (`forms`, `forms-v1` tag'i) eklendi, `form-handling.md`'ye
+(TR+EN) bu projeye link veren bir `## Pratik Proje` bölümü kondu (başlık
+sayısı 6→7).
+
+**Faz 34'te altıncı kategori eklendi: `routing`(6)** — react-router-basics=1,
+route-parameters-navigation=2 (ikisi de V145'te eklendi, EN'i V148'de
+yayına alındı). ChatGPT'nin orijinal planındaki tek bir topic (Topic 19 —
+React Router; Routes, Route parameters, Nested routes, Navigation, Link,
+NavLink, useNavigate, useParams — 8 kavram, diğer topic'lerin genelde
+4-5 kavramına kıyasla belirgin şekilde büyük) `AskUserQuestion` ile
+soruldu, kullanıcı "2 topic'e böl" seçeneğini onayladı: React Router
+Basics (BrowserRouter, Routes, Route, Link, NavLink, Not Found) ve Route
+Parameters & Navigation (useParams, Outlet ile nested route'lar,
+useNavigate). Zorluk seviyesi Forms'tan (Faz 33) devam ederek
+INTERMEDIATE. **Paket kararı:** `react-router-dom` yerine, Temmuz 2026'da
+yayınlanan birleşik `react-router` v8 paketi kullanıldı — bu, npm
+registry'den doğrudan indirilip incelenerek VE gerçek bir Vite build'i
+çalıştırılarak doğrulandı (bkz. "Bilinen Kısıtlar"). `react-course-projects`'e
+altıncı proje (`routing`, `routing-v1` tag'i) eklendi — öğrenme
+platformunun kendi kurs yapısına benzeyen bir kurs gezinme uygulaması
+(`/courses`, `/courses/:courseSlug`, `/courses/:courseSlug/:topicSlug`),
+`route-parameters-navigation.md`'ye (TR+EN) bu projeye link veren bir
+`## Pratik Proje` bölümü kondu (başlık sayısı 6→7).
 
 ## Proje Yapısı
 
@@ -253,7 +309,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V132)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V148)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     messages*.properties          Arayüz metni çevirileri
@@ -494,6 +550,153 @@ src/main/resources/
   `cd react-course-projects && npm install` talimatları her zaman `main`'in en
   güncel halini (yani workspaces akışını) klonlar, tag linkleri yalnızca GitHub'da
   o kategorinin kod hâlini taramak için kullanılıyor.
+  **İkinci ek not (aynı fazın devamı):** kullanıcı, React örneklerinin ekranda
+  gösterdiği metinlerin İngilizce olmasını istedi ("Sadece React course
+  projects'i vermen yeterli" -- yalnızca `react-course-projects` teslim edildi,
+  `learning-platform` zip'i bu adımda paylaşılmadı). `react-fundamentals` ve
+  `components-props` projelerindeki ekrana basılan tüm metinler (başlıklar,
+  mesajlar, badge etiketleri, `alt` attribute'ları, `<html lang>`) İngilizce'ye
+  çevrildi -- kod yorumları (Türkçe anlatım, ekrana yansımıyor) kasıtlı olarak
+  değiştirilmedi. Her iki proje de `npm run build` ile yeniden doğrulandı, build
+  çıktısındaki JS bundle'ları Türkçe kelimeler için grep'lenerek hiç Türkçe metin
+  kalmadığı teyit edildi. Bu, State & Events'teki (Faz 31) `state-events` projesi
+  için de baştan geçerli -- yeni projeler artık ekran metni İngilizce yazılarak
+  oluşturuluyor.
+- **Faz 31 — State & Events kategorisi, ilk kez state/hook ve liste render'ı.**
+  Kullanıcının "React'in en önemli bölümü" dediği kategori: Events, State,
+  Conditional Rendering, Lists & Keys (ChatGPT planındaki Topic 7-8-9-10).
+  Kavram sırası kasıtlı ve dikkatle korundu: `events.md`'deki örnekler yalnızca
+  `console.log` kullanıyor, `useState` YOK -- state kavramı henüz tanıtılmadı.
+  `state.md` ilk kez gerçek `useState` kullanıyor (React Fundamentals ve
+  Components & Props'ta bilinçli olarak kaçınılan kavram, bkz. Faz 28/29 notları).
+  `conditional-rendering.md`, `jsx.md`'deki kısa ternary önizlemesini (`if`/`&&`
+  dahil) derinleştiriyor. `lists-and-keys.md`, ilk kez `.map()` ile liste render
+  ediyor. Sade dil kararı devam ediyor, hiçbir topic'te `## Ek: Mini Proje` yok.
+  18 örnek dosyasının tamamı yine Node + `@babel/preset-react` ile
+  syntax-doğrulandı. `react-course-projects`'e üçüncü proje (`state-events`,
+  basit bir görev listesi/task list uygulaması) eklendi -- bu proje ilk kez
+  gerçek `useState` kullanan pratik proje, ve kasıtlı olarak henüz işlenmemiş
+  "Forms" kategorisinin controlled component deseninden (input'u `value={state}`
+  ile bağlamak) kaçınıyor: yeni görev input'u yalnızca `onChange` ile okunuyor,
+  `value` prop'una geri bağlanmıyor, form `event.target.reset()` ile (plain DOM
+  API, hook gerektirmez) temizleniyor. Görev tamamlama/tamamlamama toggle'ı da
+  bir checkbox'ın `checked` prop'u yerine `<li onClick={...}>` ile yapıldı --
+  aynı "Forms'a henüz değinme" kısıtı nedeniyle. Proje `npm run build` ile
+  doğrulandı, `state-events-v1` tag'i atandı, `lists-and-keys.md`'ye (TR+EN)
+  bu projeye link veren bir `## Pratik Proje` bölümü eklendi.
+- **Faz 32 — Hooks kategorisi, zorluk seviyesi INTERMEDIATE'e geçti.**
+  ChatGPT'nin kendi planında "bunu ayrı bir kategori yapardım" dediği kısım:
+  What Are Hooks?, useEffect, useRef, useMemo & useCallback, Custom Hooks
+  (ChatGPT planındaki Topic 11-15). Kullanıcıya `AskUserQuestion` ile
+  zorluk seviyesi soruldu, "INTERMEDIATE
+  (Önerilen)" seçildi -- React Fundamentals/Components & Props/State &
+  Events hep BEGINNER'dı, hooks bir seviye daha karmaşık olduğu için
+  bilinçli bir yükseliş. Sade dil kuralı yine geçerli, yalnızca zorluk
+  rozeti değişti. Kavram sırası kasıtlı: `what-are-hooks.md`, State &
+  Events'te zaten kullanılan `useState`'i "hook" olarak yeniden çerçeveliyor;
+  `use-effect.md` ilk kez side effect/dependency array/cleanup işliyor;
+  `use-ref.md`'nin son bölümü `useRef`'i `useEffect` ile birlikte kullanan
+  bir örnek de içeriyor (önceki derste öğrenileni pekiştirmek için);
+  `use-memo-use-callback.md`, memoization'ı VE -- kritik biçimde -- ne
+  zaman KULLANILMAMASI gerektiğini (erken optimizasyon) anlatıyor;
+  `custom-hooks.md`, ChatGPT'nin önerdiği `useFetch` örneğini basitleştirilmiş
+  haliyle kullanıyor, hata yönetimi gibi konuların ileride "API & Data
+  Fetching" kategorisinde işleneceği açıkça belirtiliyor. 18 örnek dosyasının
+  tamamı yine Node + `@babel/preset-react` ile syntax-doğrulandı.
+  `react-course-projects`'e dördüncü proje (`hooks`, tur/lap kaydı yapan bir
+  kronometre uygulaması) eklendi -- bir custom hook (`useStopwatch`) içinde
+  `useEffect`+cleanup ile `setInterval` yönetimi, `useRef` ile hem bir DOM
+  elementine erişip otomatik kaydırma yapmak hem de render'ı tetiklemeyen
+  kalıcı bir tur-id sayacı tutmak, `useMemo` ile en iyi turu yalnızca liste
+  değiştiğinde hesaplamak, `useCallback` ile bir fonksiyon referansını sabit
+  tutmak kullanılıyor. Tur listesi, Lists & Keys dersindeki kurala bilinçli
+  şekilde uyularak `key` olarak index DEĞİL, her tura verilen kalıcı bir id
+  ile render ediliyor (State & Events'teki `state-events` projesinin de
+  aynı kurala uyduğu gibi). Proje `npm run build` ile doğrulandı, `hooks-v1`
+  tag'i atandı, `custom-hooks.md`'ye (TR+EN) bu projeye link veren bir
+  `## Pratik Proje` bölümü eklendi.
+- **Faz 33 — Forms kategorisi, kullanıcı kararıyla önceki iki kategoride
+  bilinçli kaçınılan controlled input deseni ilk kez tam işlendi.**
+  Kullanıcı "Forms konusuna devam edebilirsin" dedi; ChatGPT'nin planındaki
+  üç topic'ten (Controlled Components, Form Handling, Form Libraries)
+  üçüncüsü hakkında `AskUserQuestion` ile soru soruldu, çünkü planın
+  kendisi bile bu konuyu "daha sonra eklenebilir, ilk React öğreniminde
+  şart değil" notuyla işaretlemişti -- kullanıcı "Yalnızca 2 konu
+  (Önerilen)" seçti, Form Libraries (React Hook Form, Zod) şimdilik
+  atlandı. `controlled-components.md`, State & Events'teki `state-events`
+  projesinde ve Hooks'taki `hooks` projesinde BİLİNÇLİ OLARAK kaçınılan
+  "`value={state}` ile input'u kontrol etmek" desenini ilk kez tam bir
+  derste işliyor (her iki projenin kod yorumlarında da bu kısıtın
+  açıkça belirtildiğini hatırlat -- artık bu kısıt kalktı, çünkü konu
+  şimdi resmi olarak işlendi). `form-handling.md`, bunu gerçek bir forma
+  (gönderim, çoklu alan, validation, hata mesajları) genişletiyor. Zorluk
+  seviyesi Hooks'tan devam ederek INTERMEDIATE. 10 örnek dosyasının
+  tamamı yine Node + `@babel/preset-react` ile syntax-doğrulandı; bir
+  migration'da (`V141`) apostrof kaçışı ("...&& ile conditional
+  rendering'le...") SQL string'ini erken kapatıyordu, apostrof parity
+  kontrolüyle (çift sayı kontrolü) fark edilip düzeltildi -- yazarken
+  dikkat edilmesi gereken bir örnek daha. `react-course-projects`'e
+  beşinci proje (`forms`, bir kayıt/sign-up formu) eklendi -- controlled
+  input'lar, tek state nesnesinde çoklu alan yönetimi, gönderim öncesi
+  tam form validation'ı, ve geçerli gönderimde Conditional Rendering'den
+  öğrenilen "koşula göre farklı component döndürme" deseniyle tamamen
+  farklı bir ekran (hoş geldin mesajı) gösteriliyor. Proje `npm run build`
+  ile doğrulandı, `forms-v1` tag'i atandı, `form-handling.md`'ye (TR+EN)
+  bu projeye link veren bir `## Pratik Proje` bölümü eklendi. Kullanıcı bu
+  fazdan itibaren zip paketleme adımı için onay istenmesine gerek
+  olmadığını belirtti -- bundan sonraki fazlarda içerik onayı hâlâ
+  gerektiğinde soruluyor (bkz. bu fazın başındaki AskUserQuestion), ama
+  iş bitince zip'ler otomatik paketlenip paylaşılıyor.
+- **Faz 34 — Routing kategorisi, react-router-dom yerine yeni birleşik
+  react-router v8 paketi kullanıldı; tek büyük ChatGPT topic'i ikiye
+  bölündü.** Kullanıcı "Tamamdır, başlayabilirsin yeni konuya" dedi;
+  ChatGPT'nin planındaki Topic 19 — React Router tek bir topic olarak
+  8 kavram listeliyordu (Routes, Route parameters, Nested routes,
+  Navigation, Link, NavLink, useNavigate, useParams) -- diğer
+  topic'lerin genelde 4-5 kavramına kıyasla belirgin şekilde büyüktü,
+  bu yüzden `AskUserQuestion` ile soruldu, kullanıcı "2 topic'e böl
+  (Önerilen)" seçti: React Router Basics (Routes, Link, NavLink) ve
+  Route Parameters & Navigation (route parametreleri, useParams, nested
+  routes, useNavigate). **Paket araştırması:** eğitim içeriği yazılmadan
+  ÖNCE, canlı tarihe göre (~Ağustos 2026) güncel React Router paketi
+  doğrulandı -- `WebSearch` ile Temmuz 2026'da react-router v8'in
+  react-router-dom paketini TAMAMEN KALDIRDIĞI (birleşik `react-router`
+  paketine geçildiği, React >=19.2.7 peer dependency'si gerektirdiği)
+  öğrenildi; `reactrouter.com/changelog` ve `npmjs.com` sayfalarını
+  `web_fetch` ile çekme denemeleri başarısız oldu (token limiti aşımı,
+  timeout), bunun yerine `registry.npmjs.org`'un ham JSON API'sine
+  doğrudan `curl` atılarak react-router@8.3.0'ın (react-router-dom
+  hâlâ npm'de mevcut ama artık güncel olmayan 7.18.2'de) doğru sürüm
+  olduğu doğrulandı. Ardından `/tmp` altında gerçek bir Vite projesi
+  kurulup `npm install react-router@8.3.0` ile paket indirildi,
+  `BrowserRouter`/`Routes`/`Route`/`Link`/`NavLink`/`useParams`/
+  `useNavigate`/`Outlet`'i doğrudan `"react-router"`'dan import eden
+  (react-router-dom'a HİÇ ihtiyaç duymayan) bir test App.jsx yazılıp
+  gerçek bir `npm run build` ile derlendi -- yalnızca `.d.ts` dosyasını
+  okumak yerine gerçek bir build çalıştırılarak doğrulandı, tıpkı bu
+  oturumdaki diğer her teknik iddianın (highlight.js, Babel syntax,
+  önceki her pratik proje) doğrulandığı gibi. 10 örnek dosyasının
+  tamamı Node + `@babel/preset-react` ile syntax-doğrulandı; TR/EN
+  başlık ve embed parity kontrolleri (7/7 ve 7/7 başlık, 5/5 ve 5/5
+  embed) sorunsuz geçti; migration'larda literal `${` ve apostrof
+  parity kontrolleri temiz çıktı. Zorluk seviyesi Forms'tan devam
+  ederek INTERMEDIATE. `react-course-projects`'e altıncı proje
+  (`routing`) eklendi -- öğrenme platformunun kendi kurs yapısına
+  benzeyen bir kurs gezinme uygulaması: `/`, `/courses`, `/courses/new`
+  (bir "kurs ekle" formu; gönderilince `useNavigate` ile `/courses`'a
+  yönlendiriyor), `/courses/:courseSlug` (bir kursun konu listesi,
+  `Outlet` içeriyor), `/courses/:courseSlug/:topicSlug` (nested route,
+  `useNavigate(-1)` ile "Back" butonu). Yalnızca bu iki topic'te
+  öğretilen react-router kavramları kullanıldı -- örneğin "index route"
+  ya da üst seviye bir `Layout`+`Outlet` sarmalayıcısı (derslerde
+  öğretilmedi) yerine, `NavBar` doğrudan `Routes`'un yanında render
+  edildi (React Router Basics dersindeki `MultiPageNavExample` ile
+  aynı desen). Proje `npm run build` ile doğrulandı (üretim JS
+  bundle'ında Türkçe karakter taraması da yapıldı, temiz çıktı),
+  `routing-v1` tag'i atandı, `route-parameters-navigation.md`'ye
+  (TR+EN) bu projeye link veren bir `## Pratik Proje` bölümü eklendi.
+  Zip paketleme, Faz 33'teki standing instruction gereği onay
+  beklenmeden yapıldı.
 
 Spring Core kategorisinin beş topic'i de (Faz 13-17) TR+EN tamamlandıktan sonra,
 kullanıcı `spring-boot` kursuna ikinci bir kategori eklenmesini istedi: **Spring

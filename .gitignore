@@ -2,7 +2,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 
 *.class
-*.log
+*.log   
 
 .idea/
 *.iml
