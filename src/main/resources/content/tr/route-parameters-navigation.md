@@ -98,7 +98,7 @@ Route.
 Bu kategoride (React Router Basics, Route Parameters & Navigation)
 öğrendiğimiz kavramları bir arada kullanan, gerçek ve çalıştırılabilir
 bir örnek proje var:
-**[Routing Demo](https://github.com/cdurgun/react-course-projects/tree/routing-v1/projects/routing)**
+**[Routing Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/routing)**
 -- öğrenme platformunun kendi kurs yapısına benzeyen küçük bir kurs
 gezinme uygulaması (`/courses`, `/courses/java`, `/courses/java/enum`
 gibi).

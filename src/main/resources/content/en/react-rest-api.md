@@ -107,7 +107,7 @@ result we already have directly into state.
 
 There's a real, runnable example project that brings together the
 concepts from this category (Fetching Data, React + REST API):
-**[API & Data Fetching Demo](https://github.com/cdurgun/react-course-projects/tree/api-data-fetching-v1/projects/api-data-fetching)**
+**[API & Data Fetching Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/api-data-fetching)**
 -- a course list application connected to a fake REST API running on
 json-server.
 

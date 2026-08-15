@@ -86,7 +86,7 @@ entire subtree beneath it.
 
 There's a real, runnable example project that brings together the
 concepts from this category (Sharing State, Context API):
-**[State Management Demo](https://github.com/cdurgun/react-course-projects/tree/state-management-v1/projects/state-management)**
+**[State Management Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/state-management)**
 -- a course list that can be filtered by search and have courses added
 to favorites.
 

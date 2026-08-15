@@ -87,7 +87,7 @@ anahtarını bir değişkenden dinamik olarak belirleme söz dizimi.
 
 Bu kategoride (Controlled Components, Form Handling) öğrendiğimiz
 kavramları bir arada kullanan, gerçek ve çalıştırılabilir bir örnek
-proje var: **[Forms Demo](https://github.com/cdurgun/react-course-projects/tree/forms-v1/projects/forms)** --
+proje var: **[Forms Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/forms)** --
 basit bir kayıt (sign up) formu.
 
 Proje; `value`+`onChange` ile controlled input'ları, birden fazla alanı

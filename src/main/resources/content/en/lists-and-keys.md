@@ -83,7 +83,7 @@ correctly.
 
 There's a real, runnable example project that brings together the
 concepts from this category (Events, State, Conditional Rendering,
-Lists & Keys): **[State & Events Demo](https://github.com/cdurgun/react-course-projects/tree/state-events-v1/projects/state-events)** --
+Lists & Keys): **[State & Events Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/state-events)** --
 a simple task list app.
 
 It shows event handlers (`onClick`/`onChange`/`onSubmit`), `useState`,

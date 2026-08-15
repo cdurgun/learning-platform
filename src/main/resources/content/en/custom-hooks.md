@@ -68,7 +68,7 @@ hook) instead of rewriting it in multiple places.
 
 There's a real, runnable example project that brings together the
 concepts from this category (What Are Hooks?, useEffect, useRef,
-useMemo & useCallback, Custom Hooks): **[Hooks Demo](https://github.com/cdurgun/react-course-projects/tree/hooks-v1/projects/hooks)** --
+useMemo & useCallback, Custom Hooks): **[Hooks Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/hooks)** --
 a simple stopwatch app with lap tracking.
 
 It shows managing `setInterval` with `useEffect`+cleanup inside a

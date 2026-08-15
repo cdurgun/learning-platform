@@ -108,7 +108,7 @@ dosyası.
 
 Bu kategoride (Fetching Data, React + REST API) öğrendiğimiz kavramları
 bir arada kullanan, gerçek ve çalıştırılabilir bir örnek proje var:
-**[API & Data Fetching Demo](https://github.com/cdurgun/react-course-projects/tree/api-data-fetching-v1/projects/api-data-fetching)**
+**[API & Data Fetching Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/api-data-fetching)**
 -- json-server ile çalışan sahte bir REST API'ye bağlanan bir kurs
 listesi uygulaması.
 

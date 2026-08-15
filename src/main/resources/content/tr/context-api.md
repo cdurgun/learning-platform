@@ -87,7 +87,7 @@ belirleyen component.
 
 Bu kategoride (Sharing State, Context API) öğrendiğimiz kavramları bir
 arada kullanan, gerçek ve çalıştırılabilir bir örnek proje var:
-**[State Management Demo](https://github.com/cdurgun/react-course-projects/tree/state-management-v1/projects/state-management)**
+**[State Management Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/state-management)**
 -- arama ile filtrelenebilen, favorilere eklenebilen bir kurs listesi
 uygulaması.
 

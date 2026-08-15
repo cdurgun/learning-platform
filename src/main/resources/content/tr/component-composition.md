@@ -64,7 +64,7 @@ devraldığı, React'in component'ler arasında KULLANMADIĞI bir yöntem.
 
 Bu kategoride (Components, Props, Component Composition) öğrendiğimiz
 kavramları bir arada kullanan, gerçek ve çalıştırılabilir bir örnek proje
-var: **[Components & Props Demo](https://github.com/cdurgun/react-course-projects/tree/components-props-v1/projects/components-props)**.
+var: **[Components & Props Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/components-props)**.
 
 Proje; birden çok component'i, props'u (destructuring ve default değerlerle)
 ve `children` ile composition'ı bir arada gösteriyor. Bilgisayarına indirip

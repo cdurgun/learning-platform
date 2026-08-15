@@ -175,8 +175,9 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 35 | API & Data Fetching kategorisi — Fetching Data (6 ana, 5 örnek, INTERMEDIATE), React + REST API (8 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun yedinci kategorisi; ChatGPT planındaki üçüncü topic (API Data Management / TanStack Query) kullanıcı kararıyla şimdilik atlandı; backend olarak gerçek Spring Boot yerine `json-server` (gerçek bir sunucu başlatılıp GET/POST/PUT/DELETE + CORS doğrulanarak) kullanıldı (bkz. "Bilinen Kısıtlar"); `react-course-projects`'e yedinci proje (`api-data-fetching`, json-server'a bağlanan bir kurs CRUD demosu) eklendi | ✅ TR+EN |
 | 36 | State Management kategorisi — Sharing State (6 ana, 5 örnek, INTERMEDIATE), Context API (7 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun sekizinci kategorisi; ChatGPT planındaki üçüncü topic (State Management Libraries / Redux Toolkit, Zustand) Forms ve API & Data Fetching'teki aynı desenle (planın kendi "daha sonra ekleyebiliriz" notuyla) şimdilik atlandı, bu kez ayrıca sorulmadı; `react-course-projects`'e sekizinci proje (`state-management`, lifting state up + Context API'yi birleştiren bir kurs listesi/favoriler demosu) eklendi | ✅ TR+EN |
 | 37 | Advanced React kategorisi — React Performance (6 ana, 5 örnek), Error Boundaries (6 ana, 5 örnek), Lazy Loading & Code Splitting (5 ana, 4 örnek), Suspense (5 ana, 4 örnek), Portals (6 ana + Pratik Proje, 4 örnek) — React course'unun dokuzuncu kategorisi; kategori adı ve içerik karmaşıklığı gerekçesiyle zorluk seviyesi ADVANCED'a yükseltildi; kursun İLK class component'i (Error Boundaries, hook karşılığı yok) burada tanıtıldı; `react-course-projects`'e dokuzuncu proje (`advanced-react`, memo+error boundary+lazy/Suspense+portal'ı birleştiren bir demo) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
+| 38 | Testing kategorisi — Component Testing (6 ana, 4 örnek, INTERMEDIATE), User Interaction Testing (7 ana + Pratik Proje, 4 örnek, INTERMEDIATE) — React course'unun onuncu kategorisi; ChatGPT planındaki tek bir topic (Topic 31 — React Testing: Vitest, RTL, component testing, user interaction testing) kendi alt-madde başlıklarına göre ikiye bölündü; Vitest 4.1.10 + React Testing Library 16.3.2 + user-event 14.6.4 + jest-dom 7.0.1 gerçek npm install ile doğrulandı; embed regex'inin (`\{\{(\w+)\.(\w+)}}`) çok-noktalı dosya adlarını (`Component.test.jsx`) desteklemediği keşfedildi, örnek dosyaları tek-nokta convention'ıyla (component+test aynı dosyada) yazıldı; `react-course-projects`'e onuncu proje (`testing`, arama+kayıt demosu + dört gerçek `.test.jsx` dosyası, `npm test` ile doğrulandı) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 
-Migration'lar V1'den V160'a kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+Migration'lar V1'den V164'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
@@ -347,6 +348,43 @@ kategorisinin aynı isim-bazlı gerekçeyle ADVANCED olmasıyla tutarlı,
 demo) eklendi, `portals.md`'ye (TR+EN) bu projeye link veren bir
 `## Pratik Proje` bölümü kondu (başlık sayısı 5→6).
 
+**Faz 38'de onuncu kategori eklendi: `testing`(10)** — component-testing=1,
+user-interaction-testing=2 (ikisi de V161'de eklendi, EN'i V164'te yayına
+alındı). ChatGPT'nin planındaki tek bir topic (Topic 31 — React Testing:
+Vitest, React Testing Library, Component testing, User interaction
+testing) önceki "sonraya bırakma" kararlarından farklı bir karar
+türüyle -- içerik azaltılmadan, planın kendi alt-madde başlıkları
+esas alınarak -- ikiye bölündü: `component-testing` (kurulum, render+
+screen, getByRole/getByLabelText, jest-dom matcher'ları, koşullu render
+testi) ve `user-interaction-testing` (user-event, tıklama/yazma/form
+gönderimi, asenkron UI güncellemeleri). `AskUserQuestion` sorulmadı --
+bölünme planın kendi metnindeki iki doğal gruba birebir karşılık
+geliyordu. **Doğrulama:** `/tmp/testingcheck` adlı bir scratch projede
+gerçek npm install ile Vitest 4.1.10, @testing-library/react 16.3.2,
+@testing-library/user-event 14.6.4, @testing-library/jest-dom 7.0.1
+kuruldu; render/screen/getByText/getByRole/getByLabelText/
+toBeInTheDocument/toBeDisabled/toBeEnabled/userEvent.setup().click/type/
+vi.fn()/toHaveBeenCalledWith/findByText kalıplarının HEPSİ gerçek
+`npx vitest run` ile ÇALIŞTIRILIP geçirildi (12/12 test). **Önemli
+teknik keşif:** `MarkdownService`'teki embed regex'i
+(`\{\{(\w+)\.(\w+)}}`) exampleName grubunda nokta karakterine izin
+vermediği için, gerçek dünyada yaygın "Component.test.jsx"
+isimlendirmesi `{{Component.test.jsx}}` olarak GÖMÜLEMEZ (Python'da
+doğrudan test edilip doğrulandı) -- bu yüzden `examples/` altındaki 8
+dosya, kursun geri kalanıyla aynı tek-nokta convention'ını (component
+ve testi AYNI dosyada birleştirerek, ör. `UserEventClickExample.jsx`)
+kullanıyor; `react-course-projects`'teki GERÇEK pratik proje bu
+kısıtlamaya tabi değil, orada idiomatik `Component.test.jsx`
+isimlendirmesi kullanıldı. `react-course-projects`'e onuncu proje
+(`testing`, arama+kayıt uygulaması + `SearchBar`/`CourseList`/
+`EnrollForm`'un her biri için birer `.test.jsx` + App'i bütün olarak
+test eden bir integration testi, `npm test` ve `npm run build` ile
+doğrulandı) eklendi, `user-interaction-testing.md`'ye (TR+EN) bu
+projeye link veren bir `## Pratik Proje` bölümü kondu (başlık sayısı
+6→7) -- kurs genelindeki kuralla tutarlı olarak, kategorinin İLK
+topic'inde (`component-testing`) Pratik Proje bölümü YOK, yalnızca
+SON topic'te var.
+
 ## Proje Yapısı
 
 ```
@@ -362,7 +400,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V160)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V164)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     messages*.properties          Arayüz metni çevirileri

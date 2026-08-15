@@ -84,7 +84,7 @@ sağlar.
 
 Bu kategoride (Events, State, Conditional Rendering, Lists & Keys)
 öğrendiğimiz kavramları bir arada kullanan, gerçek ve çalıştırılabilir
-bir örnek proje var: **[State & Events Demo](https://github.com/cdurgun/react-course-projects/tree/state-events-v1/projects/state-events)** --
+bir örnek proje var: **[State & Events Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/state-events)** --
 basit bir görev listesi (task list) uygulaması.
 
 Proje; event handler'ları (`onClick`/`onChange`/`onSubmit`), `useState`'i,

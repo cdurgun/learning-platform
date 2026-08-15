@@ -96,7 +96,7 @@ event handler) with `useNavigate()`, instead of clicking a link.
 There's a real, runnable example project that brings together the
 concepts from this category (React Router Basics, Route Parameters &
 Navigation):
-**[Routing Demo](https://github.com/cdurgun/react-course-projects/tree/routing-v1/projects/routing)**
+**[Routing Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/routing)**
 -- a small course-browsing app that mirrors the learning platform's own
 course structure (`/courses`, `/courses/java`, `/courses/java/enum`,
 and similar).

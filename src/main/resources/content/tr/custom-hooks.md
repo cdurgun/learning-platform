@@ -67,7 +67,7 @@ tekrar yazmak yerine, tek bir yerden (burada bir custom hook'tan) paylaşma.
 
 Bu kategoride (What Are Hooks?, useEffect, useRef, useMemo & useCallback,
 Custom Hooks) öğrendiğimiz kavramları bir arada kullanan, gerçek ve
-çalıştırılabilir bir örnek proje var: **[Hooks Demo](https://github.com/cdurgun/react-course-projects/tree/hooks-v1/projects/hooks)** --
+çalıştırılabilir bir örnek proje var: **[Hooks Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/hooks)** --
 tur (lap) kaydı yapabilen basit bir kronometre uygulaması.
 
 Proje; bir custom hook (`useStopwatch`) içinde `useEffect`+cleanup ile

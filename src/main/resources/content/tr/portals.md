@@ -76,7 +76,7 @@ elemandan başlayıp ağaçtaki üst elemanlara doğru yayılması.
 Bu kategoride (React Performance, Error Boundaries, Lazy Loading & Code
 Splitting, Suspense, Portals) öğrendiğimiz kavramları bir arada
 kullanan, gerçek ve çalıştırılabilir bir örnek proje var:
-**[Advanced React Demo](https://github.com/cdurgun/react-course-projects/tree/advanced-react-v1/projects/advanced-react)**
+**[Advanced React Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/advanced-react)**
 -- `React.memo` ile optimize edilmiş bir kurs listesi, bir Error
 Boundary, `React.lazy` + `Suspense` ile code splitting yapılan bir
 detay paneli, ve bir Portal modal'ı bir arada gösteren bir uygulama.

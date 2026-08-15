@@ -74,7 +74,7 @@ was triggered on, through its ancestor elements.
 There's a real, runnable example project that brings together the
 concepts from this category (React Performance, Error Boundaries, Lazy
 Loading & Code Splitting, Suspense, Portals):
-**[Advanced React Demo](https://github.com/cdurgun/react-course-projects/tree/advanced-react-v1/projects/advanced-react)**
+**[Advanced React Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/advanced-react)**
 -- an application showing a course list optimized with `React.memo`, an
 Error Boundary, a detail panel code-split with `React.lazy` +
 `Suspense`, and a Portal modal, all working together.

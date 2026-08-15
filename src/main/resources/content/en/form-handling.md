@@ -88,7 +88,7 @@ you set an object's key dynamically from a variable.
 
 There's a real, runnable example project that brings together the
 concepts from this category (Controlled Components, Form Handling):
-**[Forms Demo](https://github.com/cdurgun/react-course-projects/tree/forms-v1/projects/forms)** --
+**[Forms Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/forms)** --
 a simple sign-up form.
 
 It shows controlled inputs with `value`+`onChange`, managing multiple

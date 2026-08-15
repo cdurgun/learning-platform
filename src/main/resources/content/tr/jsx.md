@@ -109,7 +109,7 @@ element -- her JSX bloğunun tam olarak bir tane olmalıdır.
 
 Bu kategoride (What Is React?, Creating a React Application, JSX)
 öğrendiğimiz kavramları bir arada kullanan, gerçek ve çalıştırılabilir bir
-örnek proje var: **[React Fundamentals Demo](https://github.com/cdurgun/react-course-projects/tree/react-fundamentals-v1/projects/react-fundamentals)**.
+örnek proje var: **[React Fundamentals Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/react-fundamentals)**.
 
 Proje; JSX, süslü parantez `{ }` ile JavaScript ifadeleri, attribute'lar ve
 ternary ile kısa bir conditional rendering önizlemesini bir arada

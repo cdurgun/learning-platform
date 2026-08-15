@@ -61,7 +61,7 @@ pattern React does NOT use between components.
 ## Practical Project
 
 There's a real, runnable example project that brings together the concepts
-from this category (Components, Props, Component Composition): **[Components & Props Demo](https://github.com/cdurgun/react-course-projects/tree/components-props-v1/projects/components-props)**.
+from this category (Components, Props, Component Composition): **[Components & Props Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/components-props)**.
 
 It shows multiple components, props (with destructuring and default
 values), and composition via `children`, all working together. You can

@@ -109,7 +109,7 @@ JSX block must have exactly one.
 
 There's a real, runnable example project that brings together the concepts
 from this category (What Is React?, Creating a React Application, JSX):
-**[React Fundamentals Demo](https://github.com/cdurgun/react-course-projects/tree/react-fundamentals-v1/projects/react-fundamentals)**.
+**[React Fundamentals Demo](https://github.com/cdurgun/react-course-projects/tree/main/projects/react-fundamentals)**.
 
 It shows JSX, JavaScript expressions with curly braces `{ }`, attributes,
 and a short conditional-rendering preview with a ternary, all working
