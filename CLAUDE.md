@@ -176,8 +176,9 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 36 | State Management kategorisi — Sharing State (6 ana, 5 örnek, INTERMEDIATE), Context API (7 ana + Pratik Proje, 5 örnek, INTERMEDIATE) — React course'unun sekizinci kategorisi; ChatGPT planındaki üçüncü topic (State Management Libraries / Redux Toolkit, Zustand) Forms ve API & Data Fetching'teki aynı desenle (planın kendi "daha sonra ekleyebiliriz" notuyla) şimdilik atlandı, bu kez ayrıca sorulmadı; `react-course-projects`'e sekizinci proje (`state-management`, lifting state up + Context API'yi birleştiren bir kurs listesi/favoriler demosu) eklendi | ✅ TR+EN |
 | 37 | Advanced React kategorisi — React Performance (6 ana, 5 örnek), Error Boundaries (6 ana, 5 örnek), Lazy Loading & Code Splitting (5 ana, 4 örnek), Suspense (5 ana, 4 örnek), Portals (6 ana + Pratik Proje, 4 örnek) — React course'unun dokuzuncu kategorisi; kategori adı ve içerik karmaşıklığı gerekçesiyle zorluk seviyesi ADVANCED'a yükseltildi; kursun İLK class component'i (Error Boundaries, hook karşılığı yok) burada tanıtıldı; `react-course-projects`'e dokuzuncu proje (`advanced-react`, memo+error boundary+lazy/Suspense+portal'ı birleştiren bir demo) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 | 38 | Testing kategorisi — Component Testing (6 ana, 4 örnek, INTERMEDIATE), User Interaction Testing (7 ana + Pratik Proje, 4 örnek, INTERMEDIATE) — React course'unun onuncu kategorisi; ChatGPT planındaki tek bir topic (Topic 31 — React Testing: Vitest, RTL, component testing, user interaction testing) kendi alt-madde başlıklarına göre ikiye bölündü; Vitest 4.1.10 + React Testing Library 16.3.2 + user-event 14.6.4 + jest-dom 7.0.1 gerçek npm install ile doğrulandı; embed regex'inin (`\{\{(\w+)\.(\w+)}}`) çok-noktalı dosya adlarını (`Component.test.jsx`) desteklemediği keşfedildi, örnek dosyaları tek-nokta convention'ıyla (component+test aynı dosyada) yazıldı; `react-course-projects`'e onuncu proje (`testing`, arama+kayıt demosu + dört gerçek `.test.jsx` dosyası, `npm test` ile doğrulandı) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
+| 39 | Production kategorisi — Build & Deployment (7 ana, 2 örnek, INTERMEDIATE), React + Spring Boot Deployment (7 ana + Pratik Proje, 3 örnek, INTERMEDIATE) — React course'unun on birinci ve SON kategorisi (ChatGPT'nin orijinal 11 kategorilik planı tamamlandı); kullanıcının "Vercel'e deploy adımı koyalım mı?" önerisi araştırılıp (Vercel'in Spring Boot'u zero-config desteklemediği doğrulandı) iki ayrı pratik projeye dönüştürüldü: statik bir React app (Vercel) + gerçek bir Spring Boot REST API (Render, Docker) + React (Vercel), CORS + ortam değişkenleriyle bağlı; kullanıcı KENDİ Vercel/Render hesabıyla GERÇEKTEN deploy etti, canlı URL'ler WebFetch ile doğrulandı; bu fazın ortasında `react-course-projects`'teki git tag kullanımı da terk edildi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 
-Migration'lar V1'den V164'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+Migration'lar V1'den V168'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
@@ -385,6 +386,58 @@ projeye link veren bir `## Pratik Proje` bölümü kondu (başlık sayısı
 topic'inde (`component-testing`) Pratik Proje bölümü YOK, yalnızca
 SON topic'te var.
 
+**Faz 39'da on birinci ve SON kategori eklendi: `production`(11)** --
+build-deployment=1, react-spring-boot-deployment=2 (ikisi de V165'te
+eklendi, EN'i V168'de yayına alındı). Kullanıcı "projeyi Vercel'e nasıl
+deploy edebileceğimizi gösteren bir adım koyabilir miyiz?" diye sordu --
+bu, ChatGPT'nin orijinal planındaki son kategoriye (Topic 32 — Build &
+Deployment, Topic 33 — React + Spring Boot Deployment) tam denk düştü.
+**Araştırma:** Vercel'in resmi "Backends on Vercel" dokümantasyonu
+(`vercel.com/docs/frameworks/backend`) WebFetch ile çekildi -- zero-config
+backend listesinde (Express, FastAPI, Flask, NestJS, Hono vb.) Java/Spring
+Boot YOK, bir GitHub topluluk tartışması da bunu doğruluyordu. Bu bulgu
+kullanıcıya sunulup birlikte karar verildi: kullanıcının kendi önerisiyle
+("iki ayrı proje olsun, birincisi Vercel'de statik backend'siz, ikincisinde
+Render kullan") kategori iki topic/pratik projeye ayrıldı.
+**Mimari:** `build-deployment` -- tamamen statik bir React app (backend
+yok), `npm run build`/ortam değişkenleri (`VITE_APP_VERSION` ile bir rozet,
+`VITE_SHOW_BETA_BANNER` ile bir feature flag) anlatıyor. `react-spring-boot-
+deployment` -- gerçek bir Spring Boot REST API'si (`backend/fullstack-
+deployment`, `react-course-projects`'in npm workspaces glob'unun DIŞINDA,
+Java/Maven, Spring Boot 4.1.0, Java 21) + ona `fetch` ile bağlanan bir React
+app; CORS, Advanced Spring MVC'deki `addCorsMappings` deseninin bir
+`CORS_ALLOWED_ORIGIN` ortam değişkeniyle production'a uyarlanmış hali.
+Render'a Docker ile deploy için repo köküne bir `render.yaml` (Blueprint)
+eklendi -- syntax'ı (`runtime: docker`, `dockerfilePath`/`dockerContext`,
+`healthCheckPath`, `envVars`+`sync: false`) WebFetch ile Render'ın güncel
+Blueprint dokümantasyonundan doğrulandı.
+**Sandbox kısıtı:** bu fazda sandbox'ta yalnızca Java 11 vardı; JDK 21/Maven
+kurmak için gereken hiçbir domain (download.java.net, api.adoptium.net,
+GitHub release-assets, ports.ubuntu.com) proxy allowlist'inden geçmedi --
+Spring Boot mini-backend'i burada GERÇEKTEN derleyip çalıştıramadım. Bunun
+yerine kod, kursun zaten doğrulanmış `@RestController`/`addCorsMappings`
+örneklerine birebir dayanarak dikkatle yazıldı, kullanıcıya deploy öncesi
+yerel `mvn spring-boot:run` denemesi önerildi. **Operasyonel karar:**
+gerçek Vercel/Render hesaplarına erişimim olmadığı için, `AskUserQuestion`
+ile soruldu, kullanıcı "sen kendi hesabınla deploy et, bana adımları söyle"
+yerine (bu seçenek metninde ben zaten "kullanıcı kendi hesabıyla deploy
+eder" anlamını kastetmiştim) tam da bu şekilde ilerledi: ben config
+dosyalarını ve tam deploy adımlarını (README'lerde) hazırladım, kullanıcı
+KENDİ Vercel/Render hesabıyla gerçekten deploy etti. **Doğrulama:**
+kullanıcının paylaştığı canlı URL'ler WebFetch ile test edildi --
+`/api/health` → `{"status":"ok"}`, `/api/courses` → gerçek JSON (Java/
+React/Spring Boot), Vercel sayfalarının HTML `<title>`'ları doğru projeyle
+eşleşiyordu; tarayıcı erişimim olmadığı için CORS'un uçtan uca çalıştığını
+(React'in Render'daki backend'den veri çekip ekranda gösterdiğini) kullanıcı
+bir ekran görüntüsüyle doğruladı. `react-course-projects`'e on birinci ve
+on ikinci proje (`build-deployment`, `fullstack-deployment` + `backend/
+fullstack-deployment`) eklendi, canlı URL'ler `build-deployment.md` ve
+`react-spring-boot-deployment.md`'ye (TR+EN) işlendi.
+**Ayrı karar (bu fazın ortasında):** kullanıcı, benim attığım bir git
+tag'inin (`production-v1`) kendi GERÇEK GitHub reposuna hiç yansımadığını
+fark edip sorguladı -- bu, `react-course-projects`'teki git tag kullanımının
+TAMAMEN terk edilmesine yol açtı (ayrıntı için bkz. "Bilinen Kısıtlar").
+
 ## Proje Yapısı
 
 ```
@@ -400,7 +453,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V164)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V168)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     messages*.properties          Arayüz metni çevirileri
@@ -1067,3 +1120,23 @@ konu mu -- bkz. Faz 17'deki Transaction Management örneği).
 onay beklemeden yazılıyor** -- Faz 13'teki ilk dörtlü hariç, önceki fazlarda TR/EN
 arasında ayrı onay istenen ritim Faz 21'den itibaren terk edildi; her topic tek bir
 fazda TR+EN tamamlanmış olarak teslim ediliyor.
+
+- **`react-course-projects`'te git tag kullanımı, Testing kategorisinden (dahil)
+  sonra kullanıcı kararıyla TERK EDİLDİ.** Gerekçe: benim bu repoda yaptığım
+  `git tag` işlemi yalnızca KENDİ sandbox'ımdaki yerel git geçmişine uygulanıyor
+  -- kullanıcının gerçek GitHub reposuna (`github.com/cdurgun/react-course-projects`)
+  hiçbir zaman doğrudan erişimim/push yetkim olmadı. Kullanıcı her fazda paylaştığım
+  zip'i açıp KENDİSİ push ediyor; normal `git push` tag'leri GÖNDERMEZ, `git push
+  --tags` gibi ekstra bir adım gerekir -- bu adım hem kafa karıştırıcıydı hem de
+  Production kategorisinde ("Vercel'e nasıl deploy ederiz?" tartışması sırasında)
+  kullanıcı tarafından fark edilip sorgulandı. Kullanıcıyla konuşulup karar verildi:
+  Testing'e kadar (dahil, `react-fundamentals-v1`...`testing-v1`) atılmış tag'ler
+  DOKUNULMADAN repoda bırakıldı (tarihsel referans, silinmesi veri kaybı riski
+  taşımıyordu ama gerek de yoktu); ama Production kategorisi için önce yanlışlıkla
+  atılan `production-v1` tag'i SİLİNDİ, ve TÜM kategorilerin (Testing ve öncesi
+  dahil, 10 kategori × TR+EN = 20 dosya) `## Pratik Proje` linkleri, tag'e değil
+  `main` branch'ine işaret edecek şekilde güncellendi (`.../tree/{slug}-v1/...`
+  → `.../tree/main/...`). Bundan sonra: YENİ bir React kategorisi/proje eklendiğinde
+  artık `git tag` ATILMAYACAK, `## Pratik Proje` linkleri doğrudan
+  `.../tree/main/projects/{proje}` formatında yazılacak. `react-course-projects/README.md`
+  bu değişikliği açıklayan bir not içeriyor.
