@@ -1,0 +1,19 @@
+<svg viewBox="0 0 340 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LearnForgeX">
+  <defs>
+    <linearGradient id="lfxBg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="lfxBracket3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#lfxBg3)"/>
+  <path d="M26,16 L14,32 L26,48" fill="none" stroke="url(#lfxBracket3)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38,16 L50,32 L38,48" fill="none" stroke="url(#lfxBracket3)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32,25 L34.5,29.5 L39,32 L34.5,34.5 L32,39 L29.5,34.5 L25,32 L29.5,29.5 Z" fill="#fde68a"/>
+  <text x="76" y="43" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="32" letter-spacing="-0.5">
+    <tspan fill="#f8fafc">Learn</tspan><tspan fill="#fbbf24">Forge</tspan><tspan fill="#f8fafc">X</tspan>
+  </text>
+</svg>

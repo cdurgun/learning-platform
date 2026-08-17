@@ -1,0 +1,16 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LearnForgeX">
+  <defs>
+    <linearGradient id="lfxBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="lfxBracket" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#lfxBg)"/>
+  <path d="M26,16 L14,32 L26,48" fill="none" stroke="url(#lfxBracket)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38,16 L50,32 L38,48" fill="none" stroke="url(#lfxBracket)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32,25 L34.5,29.5 L39,32 L34.5,34.5 L32,39 L29.5,34.5 L25,32 L29.5,29.5 Z" fill="#fde68a"/>
+</svg>

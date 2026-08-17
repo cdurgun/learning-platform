@@ -182,10 +182,17 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 42 | Kullanıcı, Faz 41'de yazılan iki topic'in (`lambda-expressions`, `built-in-functional-interfaces`) TR/EN ders metninin ilk paragrafında yer alan "Örnekler gerçekten derlenip çalıştırılarak doğrulandı." / "Examples were actually compiled and run to verify them." cümlesini fark edip çıkarılmasını istedi — içerik dosyalarından kaldırıldı; migration'lardaki (V179, V182) `summary` alanları da İLK ÖNCE (YANLIŞLIKLA) elle düzenlendi, bu hatanın düzeltmesi Faz 43'te (bkz. aşağısı) yapıldı; bundan sonraki topic'lerde bu tür bir cümle hiç yazılmayacak (kullanıcı isteği, kalıcı kural). Aynı fazda üçüncü topic `stream-fundamentals` (13 ana bölüm, 6 örnek, INTERMEDIATE, sort_order=3) TR+EN yazıldı — orijinal 7 topic'lik plandaki "Stream API" ve "Intermediate Operations" maddeleri tek topic'te birleştirildi (gerekçe: ikisi kavramsal olarak ayrılamayacak kadar iç içe); Stream nedir (veri saklamayan tek geçişlik pipeline), source (`stream()`/`Stream.of()`/`Arrays.stream()`/`Stream.iterate()`), pipeline'ın üç aşaması, `filter()`/`map()`/`flatMap()`, `distinct()`/`sorted()`/`peek()`, `limit()`/`skip()`, lazy evaluation, ve stream'in tek kullanımlık doğası (`IllegalStateException` gerçek olarak yakalanıp gösterildi); kullanıcının paylaştığı `names.stream().filter(...).map(...).toList()` örneği "Neden Var?" bölümünde `interface`/`lambda-expressions`/`built-in-functional-interfaces`'in bir araya geldiği nokta olarak doğrudan kullanıldı; 6 örnek yine sandbox-compile süreciyle gerçekten doğrulandı (bu doğrulama artık yalnızca migration yorumlarında belgeleniyor, ders metninde değil) | ✅ TR+EN |
 | 43 | HATA DÜZELTMESİ: kullanıcı uygulamayı çalıştırınca gerçek bir Flyway hatası aldı — "Migration checksum mismatch for migration version 179/182" — Faz 42'de V179/V182'nin yerinde (in-place) düzenlenmesi YANLIŞTI, bu migration'lar kullanıcının kendi veritabanında ÇOKTAN uygulanmıştı (CLAUDE.md'nin "asla uygulanmış migration'ı düzenleme" kuralının tam olarak uyarmaya çalıştığı durum); `V179`/`V182` orijinal haline (cümle geri eklenerek) döndürüldü, checksum'lar eski haline döndü; asıl düzeltme (cümlenin `summary` alanından kaldırılması) yeni bir migration'la (`V188`, dört `topic_translation` satırına UPDATE) doğru şekilde uygulandı; ders metninin kendisi bu hatadan etkilenmedi (DB'de değil dosya sisteminde tutuluyor); kullanıcı düzeltmeyi kendi ortamında çalıştırıp hatasız olduğunu doğruladı | ✅ Düzeltildi |
 | 44 | Kategorinin dördüncü topic'i `terminal-operations` (V189-V191, sort_order=4, INTERMEDIATE, 14 ana bölüm, 6 örnek) TR+EN yazıldı — `forEach()`, `reduce()` (üç overload), `count()`, `min()`/`max()`, `findFirst()`/`findAny()`, `anyMatch()`/`allMatch()`/`noneMatch()`, `toList()`/`toArray()`; `collect()`'in asıl gücü (Collectors) bilinçli olarak DAHIL EDİLMEDİ, bir sonraki topic'e (`collectors`) ayrıldı; `stream-fundamentals`'daki "Stream Pipeline: Source, Intermediate, Terminal" bölümüne ve `built-in-functional-interfaces`'teki `Class::new`'e çapraz referans verildi. GERÇEK BİR KEŞİF: `ShortCircuitExample.java` ilk yazımda "count() her elemanı işler, kısa devre yapmaz" varsayımıyla yazılmıştı; sandbox'ta gerçekten çalıştırılınca bunun YANLIŞ olduğu ortaya çıktı — `Stream.of(1,2,3).peek(...).count()` çalıştırıldığında `peek()`'in içindeki yazdırma satırı HİÇ ÇALIŞMADI, çünkü JDK source'un boyutu bilindiğinde `count()`'u pipeline'ı hiç çalıştırmadan doğrudan hesaplayabiliyor (Stream.count() javadoc'unda belgelenen kasıtlı bir optimizasyon); örnek kod ve ders metni bu gerçek gözlemi yansıtacak şekilde yazıldı — sandbox-compile sürecinin (Faz 41'den beri) tam olarak bunun için var olduğunu gösteren bir örnek. Kullanıcı isteğiyle (Faz 42) ders metninde "derlenip doğrulandı" cümlesi yok, doğrulama yalnızca migration yorumunda | ✅ TR+EN |
+| 45 | Kategorinin beşinci topic'i `collectors` (V192-V194, sort_order=5, INTERMEDIATE, 13 ana bölüm, 6 örnek) TR+EN yazıldı — bir `Collector`'ın üç bileşeni (supplier/accumulator/combiner, kavramsal giriş), `Collectors.toList()`/`toSet()` (`toList()`'in `Stream.toList()`'in aksine MUTABLE olduğu vurgulandı), `joining()` (3 overload), `groupingBy()` (+ downstream collector olarak `counting()`/`mapping()`), `partitioningBy()` (her iki anahtarın da her zaman var olması, `groupingBy()`'dan farkı), `toMap()` (iki argümanlı hali çakışan anahtarda gerçek bir `IllegalStateException` fırlatıp yakalanarak gösterildi, üç argümanlı merge fonksiyonu hali); `terminal-operations`'taki "toList() ve toArray(): Basit Koleksiyona Dönüştürme" bölümüne çapraz referans verildi — `Stream.toList()` (immutable) ile `collect(Collectors.toList())` (mutable) farkı iki dersi birbirine bağlayan ana nokta oldu. 6 örnek sandbox-compile süreciyle gerçekten doğrulandı (yalnızca migration yorumunda belgeleniyor, ders metninde değil) | ✅ TR+EN |
+| 46 | Kategorinin altıncı topic'i `optional` (V195-V197, sort_order=6, INTERMEDIATE, 13 ana bölüm, 6 örnek) TR+EN yazıldı — `Optional<T>`'ın var olma sebebi, `of()`/`ofNullable()`/`empty()`, `isPresent()`/`isEmpty()`/`get()`, `orElse()` vs `orElseGet()` (eager vs lazy — gerçek çalıştırma çıktısıyla doğrulandı: `orElse()`'in argümanı Optional DOLU olsa bile her zaman hesaplanıyor, `orElseGet()`'in Supplier'ı yalnızca BOŞSA çağrılıyor), `orElseThrow()` (iki biçim), `map()`/`flatMap()` (Stream'deki aynı iç içelik probleminin Optional karşılığı), `ifPresent()`/`ifPresentOrElse()`, `filter()`; `terminal-operations`'taki Optional dönen beş metoda çapraz referans verildi. 6 örnek sandbox-compile süreciyle gerçekten doğrulandı (yalnızca migration yorumunda belgeleniyor) | ✅ TR+EN |
+| 47 | Kategorinin yedinci ve SON topic'i `primitive-parallel-streams` (V198-V200, sort_order=7, INTERMEDIATE, 15 ana bölüm, 6 örnek) TR+EN yazıldı — bu, kullanıcının "kalan 2 topiği bitirebilirsin" onayıyla `functional-interfaces-streams` kategorisinin PLANLANAN 7 TOPIC'İNİN TAMAMINI tamamlıyor. Kapsam: `IntStream`/`LongStream`/`DoubleStream` (autoboxing maliyeti), `range()`/`rangeClosed()`/`of()`, `sum()`/`average()`/`max()`/`min()`, `boxed()`/`mapToObj()` ve `mapToInt()`/`mapToLong()`/`mapToDouble()` köprüleri, `parallelStream()`/`.parallel()`, `forEach()` vs `forEachOrdered()`, thread-safe olmayan paylaşılan durum tuzağı, ne zaman kullanılmalı, neden her zaman daha hızlı olmadığı. ÜÇ GERÇEK GÖZLEM: (1) `ParallelOrderingExample.java` — aynı 10 elemanlı listede paralel `forEach()` sırayı gerçekten bozdu, `forEachOrdered()` korudu; (2) `ParallelPitfallExample.java` — 100.000 elemanlı listede thread-safe olmayan bir `ArrayList`'e paralel yazmak, hiçbir istisna fırlatmadan, çalıştırmadan çalıştırmaya 96.901-100.000 arası değişen boyutlar üretti (gerçek, sessiz bir veri yarışı); (3) EN ÖNEMLİSİ: `ParallelOverheadExample.java`'nın İLK YAZIMI, ısıtmasız (no-warmup) tek seferlik bir `nanoTime()` karşılaştırmasıyla YANLIŞ bir sonuç verdi — sıralı yol, sırf ilk çalışan yol olduğu için (JIT henüz devrede değilken) paralelden defalarca daha yavaş çıktı, beklenenin tam tersi; örnek her iki yolu da 10.000 kez ısıtıp SONRA ölçecek şekilde yeniden yazıldı, ısıtılmış ölçümle sonuç beklenen yöne döndü (sıralı ~15ms, paralel ~41ms) — sandbox-compile sürecinin tam olarak önlemeye çalıştığı türden bir hataydı, gerçek çalıştırma olmasaydı ders yanlış bir iddiayla yayınlanabilirdi. 6 örnek sandbox-compile süreciyle gerçekten doğrulandı. **KATEGORİ TAMAMLANDI: `functional-interfaces-streams` artık 7/7 topic TR+EN tamamlanmış durumda** | ✅ TR+EN, KATEGORİ TAMAMLANDI |
+| 48 | Marka/kimlik eklendi: kullanıcı `learnforgex.com` domain'ini satın aldı (ChatGPT'nin önerdiği "learnforge" alınmış olduğu için "learnforgex" alınmış), site adının nereye konacağını sordu ve bir ikon istedi. Bir SVG ikon tasarlandı (64x64 viewBox, koyu lacivert/slate gradient köşeli kare zemin üzerinde, turuncu/amber gradient'li iki köşeli parantez `<` `>` -- kod/geliştirici temasını temsil ediyor -- ortadaki boşlukta küçük bir 4 uçlu kıvılcım/yıldız, "forge" (dövmek/işlemek) temasına gönderme) -- Playwright ile (bu sandbox'ta headless Chromium kurulu) gerçek bir HTML sayfasına render edilip ekran görüntüsü alınarak 16px/32px/64px'te ve hem açık hem koyu zeminde görsel olarak doğrulandı, ilk tasarım onaylandı (iterasyon gerekmedi). Üretilen dosyalar (`static/img/`): `favicon.svg` (yalnızca ikon), `logo.svg`/`logo-dark.svg` (ikon + "LearnForgeX" kelime markası, sırasıyla açık/koyu zemin için, `<text>` elemanıyla taşınabilir tek SVG), `favicon.ico`/`favicon-16.png`/`favicon-32.png`/`apple-touch-icon.png` (ImageMagick `convert` ile SVG'den PNG/ICO'ya çevrilerek üretildi -- `rsvg-convert` kurulu değildi, bu yüzden önce Playwright ile şeffaf arka planlı 512x512 PNG render edilip oradan küçültüldü). Site adı üç yere kondu: (1) navbar (`fragments/layout.html` :: navbar) -- ikon + "Learn**Forge**X" kelime markası, "Forge" hecesi `.brand-accent` (#fbbf24, ikondaki amber gradient'le eşleşen düz renk, `custom.css`'e eklendi) ile vurgulanıyor; (2) footer -- aynı kelime markası, "Learning Platform" yerine; (3) her iki sayfanın `<title>` etiketi -- anasayfada `'LearnForgeX — ' + #{home.heading}`, konu sayfalarında mevcut SEO title/topic title'a `' | LearnForgeX'` soneki eklendi (SEO/browser-tab tutarlılığı için yaygın pratik). `home.heading`'deki ("Java Öğrenim Platformu"/"Java Learning Platform") açıklayıcı slogan BİLİNÇLİ OLARAK değiştirilmedi -- marka adı (LearnForgeX) ile açıklayıcı slogan ayrı, tamamlayıcı roller (çoğu gerçek sitede olduğu gibi). `favicon.svg`/`favicon-32.png`/`favicon-16.png`/`apple-touch-icon.png` her iki `<head>`'e (`index.html`, `topic.html`) `<link rel="icon">`/`<link rel="apple-touch-icon">` olarak eklendi; `favicon.ico` ayrıca `static/` kökününe de kopyalandı (tarayıcıların `<link>` etiketini görmeden önce varsayılan olarak istediği `/favicon.ico` için). `README.md`'nin başlığı da "Learning Platform"dan "LearnForgeX"e güncellendi, canlı adres notu eklendi | ✅ Uygulandı |
+| 49 | HATA DÜZELTMESİ: kullanıcı uygulamayı çalıştırınca `V198__primitive_parallel_streams_topic.sql`'de gerçek bir Flyway hatası aldı -- `ERROR: value too long for type character varying(500)`. Kök neden: `topic_translation.seo_description` sütunu `VARCHAR(500)` (bkz. `V1__init_schema.sql`), ama TR `seo_description` 542, EN `seo_description` 504 karakterdi -- her iki dilde de sınırı aşıyordu (`title`/`seo_title` VARCHAR(255) sınırları içindeydi, `summary` zaten TEXT/sınırsız). Bu, Faz 43'teki checksum-mismatch hatasından FARKLI bir durum: migration script hata fırlatıp transaction rollback olduğu (PostgreSQL'de DDL/DML transactional) için flyway_schema_history'e HİÇ satır yazılmadı -- yani V198 kullanıcının veritabanında hiçbir zaman "uygulanmış" sayılmadı, bu yüzden immutability kuralını ihlal etmeden DOĞRUDAN V198'i düzenlemek güvenliydi (yeni bir düzeltme migration'ı gerekmedi). İki `seo_description` metni anlam kaybı olmadan kısaltıldı (TR 482, EN 463 karaktere indirildi), apostrof-ikileme kontrolü tekrar yapıldı. Kategorideki TÜM diğer migration'lar (V179-V200) aynı script ile taranıp `title`/`seo_title`/`seo_description` sınırları için kontrol edildi, başka ihlal bulunmadı. **KALICI KURAL:** bundan sonra yazılacak her migration'da `seo_description` alanı için (Python ile) karakter sayısı 500'ü (idealde ~480'i) aşmadığından emin olunacak -- bu VARCHAR(500) sınırı artık standart doğrulama adımlarından biri (apostrof-ikileme kontrolüyle aynı anda yapılabilir) | ✅ Düzeltildi |
 
-Migration'lar V1'den V191'e kadar uygulandı (V188, Faz 42'deki checksum mismatch
+Migration'lar V1'den V200'e kadar uygulandı (V188, Faz 42'deki checksum mismatch
 hatasını düzeltmek için V179/V182'yi orijinal haline döndürüp asıl düzeltmeyi doğru
-şekilde UPDATE olarak uyguluyor -- bkz. Faz 42/43 notu). İki kurs var: `java` kursunda dört kategori
+şekilde UPDATE olarak uyguluyor -- bkz. Faz 42/43 notu; V198, Faz 49'da `seo_description`
+VARCHAR(500) sınır aşımı için doğrudan düzeltildi -- bu migration hiç uygulanmamıştı,
+bkz. Faz 49 notu). İki kurs var: `java` kursunda dört kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
@@ -193,8 +200,12 @@ threads=1; `functional-interfaces-streams`(4, "Functional Interfaces & Streams",
 eklendi) — lambda-expressions=1 (V179'da eklendi, EN'i V181'de yayına alındı),
 built-in-functional-interfaces=2 (V182'de eklendi, EN'i V184'te yayına alındı),
 stream-fundamentals=3 (V185'te eklendi, EN'i V187'de yayına alındı),
-terminal-operations=4 (V189'da eklendi, EN'i V191'de yayına alındı; planlanan üç
-topic daha var, bkz. Faz 41/42/44). `spring-boot` kursunda (V58'de eklendi) bir kategori: `spring-core`(1) —
+terminal-operations=4 (V189'da eklendi, EN'i V191'de yayına alındı),
+collectors=5 (V192'de eklendi, EN'i V194'te yayına alındı),
+optional=6 (V195'te eklendi, EN'i V197'de yayına alındı),
+primitive-parallel-streams=7 (V198'de eklendi, EN'i V200'de yayına alındı). **Kategori
+TAMAMLANDI — planlanan 7/7 topic TR+EN tamam** (bkz. Faz 41/42/44/45/46/47).
+`spring-boot` kursunda (V58'de eklendi) bir kategori: `spring-core`(1) —
 dependency-injection=1, spring-ioc-container=2 (V64'te eklendi), component-scanning=3
 (V70'te eklendi, EN'i V75'te yayına alındı), autoconfiguration-properties=4 (V76'da
 eklendi, EN'i V81'de yayına alındı), transaction-management=5 (V82'de eklendi, EN'i
@@ -800,8 +811,93 @@ hiç çalıştırmadan doğrudan hesaplanabilir. Kod yorumu ve "Kısa Devre ve c
 yansıtacak şekilde yazıldı. Kullanıcı isteğiyle (Faz 42) ders metninde bir
 "derlenip doğrulandı" cümlesi yok, bu doğrulama yalnızca migration yorumunda
 belgeleniyor. TR+EN aynı fazda yazıldı. Durum: `terminal-operations` **TR+EN
-tamamlandı**; kategorinin kalan 3 topic'i (Collectors, Optional, Primitive &
-Parallel Streams) henüz yazılmadı.
+tamamlandı**.
+
+**Aynı fazda (Faz 45) beşinci topic `collectors`** yazıldı (V192-V194, sort_order=5,
+INTERMEDIATE, 13 ana bölüm + 6 örnek). Kapsam: bir `Collector`'ın üç bileşeni
+(supplier/accumulator/combiner, kavramsal bir giriş -- kendi `Collector`'ınızı
+yazmayı öğretmiyor, yalnızca `Collectors` sınıfının bunu nasıl sizin için hazır
+kurduğunu anlatıyor), `Collectors.toList()`/`toSet()`, `joining()` (3 overload:
+argümansız, ayraçlı, ayraç+önek/sonek'li), `groupingBy()` (+ downstream collector
+olarak `counting()`/`mapping()`), `partitioningBy()` (her iki anahtarın da her zaman
+var olması, `groupingBy()`'dan bu farkı), `toMap()` (iki argümanlı hali çakışan
+anahtarda gerçek bir `IllegalStateException` fırlatıp yakalanarak gösterildi, üç
+argümanlı `BinaryOperator` ile merge fonksiyonu hali). `terminal-operations`'taki
+"toList() ve toArray(): Basit Koleksiyona Dönüştürme" bölümüne çapraz referans
+verildi -- `Stream.toList()`'in (immutable) `collect(Collectors.toList())`'ten
+(mutable) farkı, bu iki dersi birbirine bağlayan ana nokta oldu (`ToListToSetExample.java`
+bu farkı gerçekten `mutableList.add(...)`'in başarılı olmasıyla gösteriyor). 6 örnek
+yine aynı sandbox-compile süreciyle (`/tmp/work/scratch/collectors/`) gerçekten
+`javac`+`java` ile derlenip çalıştırılarak doğrulandı -- bu doğrulama yalnızca
+migration yorumunda belgeleniyor, ders metninde değil (Faz 42 kararı). TR+EN aynı
+fazda yazıldı. Durum: `collectors` **TR+EN tamamlandı**.
+
+**Kullanıcının "çabuk bitiriyorsun :) kalan 2 topiği bitirebilirsin" onayıyla, aynı
+fazda kategorinin son iki topic'i de arka arkaya yazıldı.**
+
+**Altıncı topic `optional`** (V195-V197, sort_order=6, INTERMEDIATE, 13 ana bölüm + 6
+örnek). Kapsam: `Optional<T>`'ın var olma sebebi (null güvenliğini tip sistemine
+taşımak), `of()`/`ofNullable()`/`empty()` ile oluşturma, `isPresent()`/`isEmpty()`/
+`get()`, `orElse()` vs `orElseGet()`, `orElseThrow()` (iki biçim), `map()`/`flatMap()`
+(Stream'deki aynı iç içelik probleminin Optional karşılığı), `ifPresent()`/
+`ifPresentOrElse()`, `filter()`. `terminal-operations`'taki `Optional<T>` dönen beş
+metoda (`reduce(accumulator)`/`min()`/`max()`/`findFirst()`/`findAny()`) çapraz
+referans verildi. **Gerçek gözlem:** `OrElseExample.java`, `orElse()`'in argümanının
+Optional DOLU olsa bile her zaman hesaplandığını, `orElseGet()`'in `Supplier`'ının ise
+yalnızca Optional BOŞSA çağrıldığını, her çağrıdan önce bir `System.out.println` ile
+gerçek çalıştırma çıktısıyla doğruladı (`"computing default: orElse, present"` satırı
+gerçekten yazdırıldı, `"computing default: orElseGet, present"` satırı ise hiç
+yazdırılmadı) -- varsayımla değil, gözlemle. Durum: `optional` **TR+EN tamamlandı**.
+
+**Yedinci ve SON topic `primitive-parallel-streams`** (V198-V200, sort_order=7,
+INTERMEDIATE, 15 ana bölüm + 6 örnek) -- bu, `functional-interfaces-streams`
+kategorisinin planlanan 7 topic'inin TAMAMINI tamamlıyor. Kapsam: `IntStream`/
+`LongStream`/`DoubleStream` (autoboxing maliyetinden kaçınmak), `range()`/
+`rangeClosed()`/`of()`, primitive'e özel `sum()`/`average()`/`max()`/`min()`,
+`boxed()`/`mapToObj()` ve `mapToInt()`/`mapToLong()`/`mapToDouble()` köprüleri,
+`parallelStream()`/`.parallel()`, `forEach()` vs `forEachOrdered()` sıralama farkı,
+thread-safe olmayan paylaşılan durum tuzağı, ne zaman kullanılmalı, ve neden her
+zaman daha hızlı olmadığı.
+
+**Bu topic'te ÜÇ ayrı gerçek gözlem yapıldı, üçü de sandbox-compile sürecinin tam
+olarak var olma sebebini gösterdi:**
+
+1. `ParallelOrderingExample.java`: aynı 10 elemanlı listede `parallelStream().forEach()`
+   sırayı GERÇEKTEN bozdu (`unordered.equals(numbers)` çalıştırmada `false` çıktı),
+   `forEachOrdered()` ise korudu (`true`) -- dokümantasyondaki iddia gerçek
+   çalıştırmayla doğrulandı.
+2. `ParallelPitfallExample.java`: 100.000 elemanlı bir listede, thread-safe olmayan bir
+   `ArrayList`'e paralel `forEach()` ile yazmak, HİÇBİR İSTİSNA FIRLATMADAN, farklı
+   çalıştırmalarda 96.901 ile 100.000 arasında değişen boyutlar üretti (bazı
+   çalıştırmalarda şans eseri doğru bile çıktı) -- gerçek, sessiz bir veri yarışı,
+   ders metninde tam olarak gözlemlenen sayılarla anlatıldı.
+3. **En önemlisi:** `ParallelOverheadExample.java`'nın İLK YAZIMI, ısıtmasız
+   (no-warmup) tek seferlik bir `nanoTime()` karşılaştırmasıyla YANLIŞ bir sonuç
+   verdi -- sıralı yol, sırf İLK çalışan yol olduğu için (JIT henüz devreye
+   girmemişken yorumlanarak/interpreted çalıştığı için), paralelden defalarca daha
+   yavaş çıktı; bu, beklenen "küçük veride sıralı kazanır" anlatısının TAM TERSİYDİ.
+   Aynı ölçüm 4 kez tekrarlandı, hepsinde aynı (yanlış) sonuç çıktı -- rastgele bir
+   gürültü değil, sistematik bir warmup artefaktıydı. Örnek, her iki yolu da 10.000
+   kez önce ısıtıp SONRA ölçecek şekilde yeniden yazıldı; ısıtılmış ölçümle sonuç
+   beklenen yöne döndü (sıralı ~15ms, paralel ~41ms, birden fazla çalıştırmada
+   tutarlı). Bu, sandbox-compile sürecinin ("gerçekten çalıştır, gözlemle, varsayımla
+   yazma") tam olarak önlemeye çalıştığı türden bir hataydı -- gerçek çalıştırma
+   olmasaydı bu ders, yanlış bir performans iddiasıyla yayınlanabilirdi.
+
+`built-in-functional-interfaces`'e ve `collectors`'a (`Collectors.toList()` ile
+thread-safe toplama, `ParallelPitfallExample.java`'daki doğru çözüm) çapraz referans
+verildi. Kullanıcı isteğiyle (Faz 42) ders metninde genel bir "derlenip doğrulandı"
+cümlesi yok, ama bu topic'teki SPESİFİK gözlemler (ms değerleri, gözlemlenen boyut
+aralığı) doğrudan ders metninde kullanıldı -- bunlar genelleme değil, somut veri
+noktaları olduğu için kullanıcının itirazının kapsamına girmiyor. TR+EN aynı fazda
+yazıldı. Durum: `primitive-parallel-streams` **TR+EN tamamlandı**.
+
+**KATEGORİ TAMAMLANDI:** `functional-interfaces-streams` kategorisi, ChatGPT'nin
+orijinal 11 maddelik planından türetilen 7 topic'in TAMAMIYLA (`lambda-expressions`,
+`built-in-functional-interfaces`, `stream-fundamentals`, `terminal-operations`,
+`collectors`, `optional`, `primitive-parallel-streams`) TR+EN tamamlanmış durumda.
+Microservices kategorisi hâlâ ARA VERİLMİŞ durumda (bkz. yukarısı, kalan 9 aday konu),
+kullanıcı istediğinde devam edilecek.
 
 ## Proje Yapısı
 
@@ -821,6 +917,8 @@ src/main/resources/
     db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V168)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
+    static/img/                   LearnForgeX marka varlıkları (favicon.svg/logo.svg/logo-dark.svg,
+                                   favicon.ico/-16.png/-32.png, apple-touch-icon.png -- Faz 48)
     messages*.properties          Arayüz metni çevirileri
 ```
 
