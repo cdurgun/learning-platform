@@ -30,6 +30,25 @@ body {
     font-weight: 600;
 }
 
+/* LearnForgeX marka rengi -- favicon.svg/logo.svg'deki turuncu/amber gradient'in
+   (bkz. static/img/) düz CSS karşılığı; navbar ve footer'daki "Forge" hecesi için. */
+.brand-accent {
+    color: #fbbf24;
+}
+
+/* Navbar'da logo/marka adının altındaki slogan (Faz 50, kullanıcı onayı: "Forge
+   your skills" -- marka adındaki "Forge" ile kelime oyunu kurduğu ve kısa olduğu
+   için "Build your software skills" yerine tercih edildi). Bilinçli olarak
+   çevrilmedi -- kelime oyunu Türkçede kaybolacağından, kısa marka sloganlarının
+   yerelleştirilmeden bırakılması yaygın bir pratik (Nike'ın "Just Do It"i gibi). */
+.navbar-tagline {
+    font-size: 0.65rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+}
+
 /* Sidebar accordion: collapsible category groups (bkz. fragments/layout.html :: sidebar).
    Konu sayısı arttıkça menünün sürekli uzamasını önlemek için, yalnızca aktif konuyu
    içeren kategori varsayılan olarak açık gelir; diğerleri kapalı başlar. */

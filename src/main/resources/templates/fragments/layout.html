@@ -9,7 +9,10 @@
 <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
     <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/}">
         <img th:src="@{/img/favicon.svg}" alt="" width="30" height="30"/>
-        <span>Learn<span class="brand-accent">Forge</span>X</span>
+        <span class="d-flex flex-column lh-1">
+            <span>Learn<span class="brand-accent">Forge</span>X</span>
+            <small class="navbar-tagline">Forge your skills</small>
+        </span>
     </a>
     <div class="ms-auto d-flex gap-2">
         <a class="btn btn-sm btn-outline-light"
