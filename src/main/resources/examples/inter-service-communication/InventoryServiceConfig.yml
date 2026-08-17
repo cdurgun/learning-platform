@@ -1,0 +1,24 @@
+# inventory-service's own application.yml -- its own port, its own identity, its own
+# database, none of it shared with order-service. inventory-service knows NOTHING about
+# order-service's existence: it just exposes a plain REST endpoint and has no idea who
+# calls it. In this lesson, knowledge flows one way -- order-service calls inventory-service,
+# never the other way around.
+
+server:
+  port: 8082                          # never 8081 (order-service) or 8080 (learning-platform)
+
+spring:
+  application:
+    name: inventory-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/inventory_db   # its OWN database -- order-service
+                                                            # never connects to this URL
+                                                            # (Database per Service)
+    username: inventory_user
+    password: ${INVENTORY_DB_PASSWORD}   # read from the environment, never hardcoded
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

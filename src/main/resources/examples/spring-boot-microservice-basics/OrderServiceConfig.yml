@@ -1,0 +1,27 @@
+# order-service's own application.yml -- completely separate from any other service's
+# configuration file. Nothing in here is shared with inventory-service or any other
+# service; each one ships with (and owns) a file exactly like this.
+
+server:
+  port: 8081                          # order-service's own port -- inventory-service would
+                                       # use a different one (e.g. 8082), never this one
+
+spring:
+  application:
+    name: order-service               # this service's identity -- shows up in every log
+                                       # line and, later, is how other services find it
+                                       # (Service Discovery / Eureka)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders_db   # its OWN database -- no other
+                                                        # service ever connects to this URL
+                                                        # (see the Microservices Fundamentals
+                                                        # lesson's "Database per Service"
+                                                        # section)
+    username: orders_user
+    password: ${ORDERS_DB_PASSWORD}   # read from the environment, never hardcoded
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health              # exposes GET /actuator/health (see "Sağlık Kontrolü")

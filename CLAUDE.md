@@ -177,12 +177,24 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 | 37 | Advanced React kategorisi — React Performance (6 ana, 5 örnek), Error Boundaries (6 ana, 5 örnek), Lazy Loading & Code Splitting (5 ana, 4 örnek), Suspense (5 ana, 4 örnek), Portals (6 ana + Pratik Proje, 4 örnek) — React course'unun dokuzuncu kategorisi; kategori adı ve içerik karmaşıklığı gerekçesiyle zorluk seviyesi ADVANCED'a yükseltildi; kursun İLK class component'i (Error Boundaries, hook karşılığı yok) burada tanıtıldı; `react-course-projects`'e dokuzuncu proje (`advanced-react`, memo+error boundary+lazy/Suspense+portal'ı birleştiren bir demo) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 | 38 | Testing kategorisi — Component Testing (6 ana, 4 örnek, INTERMEDIATE), User Interaction Testing (7 ana + Pratik Proje, 4 örnek, INTERMEDIATE) — React course'unun onuncu kategorisi; ChatGPT planındaki tek bir topic (Topic 31 — React Testing: Vitest, RTL, component testing, user interaction testing) kendi alt-madde başlıklarına göre ikiye bölündü; Vitest 4.1.10 + React Testing Library 16.3.2 + user-event 14.6.4 + jest-dom 7.0.1 gerçek npm install ile doğrulandı; embed regex'inin (`\{\{(\w+)\.(\w+)}}`) çok-noktalı dosya adlarını (`Component.test.jsx`) desteklemediği keşfedildi, örnek dosyaları tek-nokta convention'ıyla (component+test aynı dosyada) yazıldı; `react-course-projects`'e onuncu proje (`testing`, arama+kayıt demosu + dört gerçek `.test.jsx` dosyası, `npm test` ile doğrulandı) eklendi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
 | 39 | Production kategorisi — Build & Deployment (7 ana, 2 örnek, INTERMEDIATE), React + Spring Boot Deployment (7 ana + Pratik Proje, 3 örnek, INTERMEDIATE) — React course'unun on birinci ve SON kategorisi (ChatGPT'nin orijinal 11 kategorilik planı tamamlandı); kullanıcının "Vercel'e deploy adımı koyalım mı?" önerisi araştırılıp (Vercel'in Spring Boot'u zero-config desteklemediği doğrulandı) iki ayrı pratik projeye dönüştürüldü: statik bir React app (Vercel) + gerçek bir Spring Boot REST API (Render, Docker) + React (Vercel), CORS + ortam değişkenleriyle bağlı; kullanıcı KENDİ Vercel/Render hesabıyla GERÇEKTEN deploy etti, canlı URL'ler WebFetch ile doğrulandı; bu fazın ortasında `react-course-projects`'teki git tag kullanımı da terk edildi (bkz. "Bilinen Kısıtlar") | ✅ TR+EN |
+| 40 | Microservices kategorisi (spring-boot kursu, 3. kategori) açıldı — `microservices-fundamentals` (17 ana bölüm, 0 örnek/kod yok — bilinçli karar, INTERMEDIATE, title sonradan "Microservices Temelleri"/"Microservices Fundamentals" olarak düzeltildi — kullanıcı sidebar'da başlığın 3 kez tekrarlandığını fark etti) — monolit vs mikroservis, servis sınırları (bounded context), database per service, dağıtık sistemlerin getirdiği yeni zorluklar, CAP teoremi, Conway Yasası, "modüler monolith", karar kriterleri; `spring-boot-microservice-basics` (13 ana bölüm, 5 örnek — kategorinin İLK kod içeren topic'i, INTERMEDIATE) — tek bir mikroservisin (`order-service`) yapılandırılması: `@SpringBootApplication` giriş noktası, kendi `application.yml`'i (port/uygulama adı/veritabanı, Twelve-Factor App'e kısa bakışla), REST controller/service/domain model üçlüsü, `spring-boot-starter-actuator` ile health check; ChatGPT'nin 12 topic'lik planı wave'lere bölündü, ilk dalganın (3 topic) ilk ikisi yazıldı, kalan 11 aday konu henüz DB'ye seed edilmedi; pratik proje ayrı, izole bir repoda (`microservices-course-projects`, öneri onaylandı) olacak, wave'in son topic'inde (`inter-service-communication`) teslim edilecek; sandbox'ta artık Java 21/Maven kurulu ama Maven Central proxy'den engelli (bkz. "Bilinen Kısıtlar"); kullanıcı kendi ortamında uygulamayı çalıştırıp `spring-boot-microservice-basics`/EN'de canlı bir HTTP 500 hatası buldu ve raporladı — `MarkdownService.applyCallouts`, `Matcher.replaceAll(Function)`'ın replacement'ı `quoteReplacement` ile sarmaması yüzünden callout içindeki `${ORDERS_DB_PASSWORD}` metnini named-group referansı sanıp patlıyordu; `injectCodeExamples`'taki güvenli manuel `appendReplacement` deseniyle düzeltildi (bu kategoride bulunan ilk gerçek uygulama kodu hatası, kullanıcının kendi ortamında yeniden derleme/restart gerektiriyor); wave'in üçüncü ve son topic'i `inter-service-communication` (13 ana bölüm + Pratik Proje, 8 örnek, INTERMEDIATE) yazıldı — `order-service`'in yanına ikinci bir mikroservis (`inventory-service`, port 8082) eklenip Spring 6.1'in `RestClient`'ıyla senkron bir REST çağrısı kuruldu (404 ile bağlantı hatasının ayrıştırılması, `InventoryServiceUnavailableException`, servisler arası DTO ayrımı — `StockCheckResponse` vs `InventoryItem`, `@Value` ile yapılandırılan base URL); React kategorilerindeki "Pratik Proje" standardının Maven karşılığı ilk kez uygulandı — ayrı, izole `microservices-course-projects` reposu (npm workspaces yerine kardeş klasörler, `projects/inter-service-communication/{order-service,inventory-service}/`) gerçek, çalıştırılabilir iki servisle kuruldu, git tag KULLANILMADI (react-course-projects'teki güncel kuralla tutarlı); **wave 1 (3 topic) TR+EN tamamlandı**, kalan 9 aday konu için devam kararı kullanıcıyla birlikte verilecek | ✅ TR+EN |
+| 41 | Microservices'e ARA VERİLDİ (wave 1 tamamlanmış durumda, istendiğinde devam edilecek); `java` kursuna dördüncü kategori açıldı — `functional-interfaces-streams` ("Functional Interfaces & Streams", sort_order=4) — kullanıcının ChatGPT'nin 11 maddelik planını ikiye (Functional Interfaces / Streams) bölme sorusuna karşı TEK kategori önerildi ve onaylandı (gerekçe: "Functional Interface → Lambda → Stream → Intermediate → Terminal" zincirini sürekli gösterme hedefi, 9 topic'e kadar çıkmış precedent — Spring MVC, ikiye bölünseydi "Functional Interfaces" kategorisinin yalnızca 2 topic'ten oluşacak olması); 7 topic'lik plan çıkarıldı, ilk topic `lambda-expressions` (11 ana bölüm, 4 örnek, INTERMEDIATE) yazıldı — parametre yazım kuralları (sıfır/tek/çoklu), expression vs block body, target typing, effectively final değişken yakalama, anonymous inner class'a karşı `this` farkı; `oop` kategorisindeki `interface` dersinin zaten var olan "Functional Interface ve Lambda" bölümüne çapraz referans verilip TEKRAR anlatılmadı, doğrudan derinleşildi; kullanıcının onayıyla Faz 12'den beri geçerli "derleme yok" kuralına istisna yapıldı — bu kategori saf JDK olduğu için (Spring Boot'un aksine Maven Central'a bağımlı değil) 4 örnek de gerçekten `javac`+`java` ile derlenip çalıştırılarak çıktıları doğrulandı (bu arada `Class.getSimpleName()`'in anonymous class'larda boş string döndüğü keşfedildi, `getName()`'e çevrildi); aynı fazda ikinci topic `built-in-functional-interfaces` (13 ana bölüm, 6 örnek, INTERMEDIATE, başlık sidebar için "Mikroservis Yapılandırma" precedent'iyle kısaltıldı) da TR+EN birlikte yazıldı — `Predicate<T>`, `Function<T,R>`, `Consumer<T>`/`Supplier<T>`, `UnaryOperator<T>`/`BinaryOperator<T>` ve dört method reference biçimi (`Class::staticMethod`, `object::instanceMethod` bound, `Class::instanceMethod` unbound, `Class::new` constructor reference — bir `record Point` ile); `lambda-expressions`'daki target typing bölümüne ve `interface`'teki functional interface bölümüne çapraz referans verildi; aynı sandbox-compile süreciyle 6 örnek de gerçekten `javac`+`java` ile doğrulandı | ✅ TR+EN |
+| 42 | Kullanıcı, Faz 41'de yazılan iki topic'in (`lambda-expressions`, `built-in-functional-interfaces`) TR/EN ders metninin ilk paragrafında yer alan "Örnekler gerçekten derlenip çalıştırılarak doğrulandı." / "Examples were actually compiled and run to verify them." cümlesini fark edip çıkarılmasını istedi — içerik dosyalarından kaldırıldı; migration'lardaki (V179, V182) `summary` alanları da İLK ÖNCE (YANLIŞLIKLA) elle düzenlendi, bu hatanın düzeltmesi Faz 43'te (bkz. aşağısı) yapıldı; bundan sonraki topic'lerde bu tür bir cümle hiç yazılmayacak (kullanıcı isteği, kalıcı kural). Aynı fazda üçüncü topic `stream-fundamentals` (13 ana bölüm, 6 örnek, INTERMEDIATE, sort_order=3) TR+EN yazıldı — orijinal 7 topic'lik plandaki "Stream API" ve "Intermediate Operations" maddeleri tek topic'te birleştirildi (gerekçe: ikisi kavramsal olarak ayrılamayacak kadar iç içe); Stream nedir (veri saklamayan tek geçişlik pipeline), source (`stream()`/`Stream.of()`/`Arrays.stream()`/`Stream.iterate()`), pipeline'ın üç aşaması, `filter()`/`map()`/`flatMap()`, `distinct()`/`sorted()`/`peek()`, `limit()`/`skip()`, lazy evaluation, ve stream'in tek kullanımlık doğası (`IllegalStateException` gerçek olarak yakalanıp gösterildi); kullanıcının paylaştığı `names.stream().filter(...).map(...).toList()` örneği "Neden Var?" bölümünde `interface`/`lambda-expressions`/`built-in-functional-interfaces`'in bir araya geldiği nokta olarak doğrudan kullanıldı; 6 örnek yine sandbox-compile süreciyle gerçekten doğrulandı (bu doğrulama artık yalnızca migration yorumlarında belgeleniyor, ders metninde değil) | ✅ TR+EN |
+| 43 | HATA DÜZELTMESİ: kullanıcı uygulamayı çalıştırınca gerçek bir Flyway hatası aldı — "Migration checksum mismatch for migration version 179/182" — Faz 42'de V179/V182'nin yerinde (in-place) düzenlenmesi YANLIŞTI, bu migration'lar kullanıcının kendi veritabanında ÇOKTAN uygulanmıştı (CLAUDE.md'nin "asla uygulanmış migration'ı düzenleme" kuralının tam olarak uyarmaya çalıştığı durum); `V179`/`V182` orijinal haline (cümle geri eklenerek) döndürüldü, checksum'lar eski haline döndü; asıl düzeltme (cümlenin `summary` alanından kaldırılması) yeni bir migration'la (`V188`, dört `topic_translation` satırına UPDATE) doğru şekilde uygulandı; ders metninin kendisi bu hatadan etkilenmedi (DB'de değil dosya sisteminde tutuluyor); kullanıcı düzeltmeyi kendi ortamında çalıştırıp hatasız olduğunu doğruladı | ✅ Düzeltildi |
+| 44 | Kategorinin dördüncü topic'i `terminal-operations` (V189-V191, sort_order=4, INTERMEDIATE, 14 ana bölüm, 6 örnek) TR+EN yazıldı — `forEach()`, `reduce()` (üç overload), `count()`, `min()`/`max()`, `findFirst()`/`findAny()`, `anyMatch()`/`allMatch()`/`noneMatch()`, `toList()`/`toArray()`; `collect()`'in asıl gücü (Collectors) bilinçli olarak DAHIL EDİLMEDİ, bir sonraki topic'e (`collectors`) ayrıldı; `stream-fundamentals`'daki "Stream Pipeline: Source, Intermediate, Terminal" bölümüne ve `built-in-functional-interfaces`'teki `Class::new`'e çapraz referans verildi. GERÇEK BİR KEŞİF: `ShortCircuitExample.java` ilk yazımda "count() her elemanı işler, kısa devre yapmaz" varsayımıyla yazılmıştı; sandbox'ta gerçekten çalıştırılınca bunun YANLIŞ olduğu ortaya çıktı — `Stream.of(1,2,3).peek(...).count()` çalıştırıldığında `peek()`'in içindeki yazdırma satırı HİÇ ÇALIŞMADI, çünkü JDK source'un boyutu bilindiğinde `count()`'u pipeline'ı hiç çalıştırmadan doğrudan hesaplayabiliyor (Stream.count() javadoc'unda belgelenen kasıtlı bir optimizasyon); örnek kod ve ders metni bu gerçek gözlemi yansıtacak şekilde yazıldı — sandbox-compile sürecinin (Faz 41'den beri) tam olarak bunun için var olduğunu gösteren bir örnek. Kullanıcı isteğiyle (Faz 42) ders metninde "derlenip doğrulandı" cümlesi yok, doğrulama yalnızca migration yorumunda | ✅ TR+EN |
 
-Migration'lar V1'den V168'e kadar uygulandı. İki kurs var: `java` kursunda üç kategori
+Migration'lar V1'den V191'e kadar uygulandı (V188, Faz 42'deki checksum mismatch
+hatasını düzeltmek için V179/V182'yi orijinal haline döndürüp asıl düzeltmeyi doğru
+şekilde UPDATE olarak uyguluyor -- bkz. Faz 42/43 notu). İki kurs var: `java` kursunda dört kategori
 (`category.sort_order`): `java-basics`(1) — enum=1, records=2, reflection=3,
 date-time=4; `oop`(2, "Object-Oriented Programming") — interface=1, abstract-class=2,
 inheritance=3, polymorphism=4 (V51'de java-basics'ten taşındı); `concurrency`(3) —
-threads=1. `spring-boot` kursunda (V58'de eklendi) bir kategori: `spring-core`(1) —
+threads=1; `functional-interfaces-streams`(4, "Functional Interfaces & Streams", V179'da
+eklendi) — lambda-expressions=1 (V179'da eklendi, EN'i V181'de yayına alındı),
+built-in-functional-interfaces=2 (V182'de eklendi, EN'i V184'te yayına alındı),
+stream-fundamentals=3 (V185'te eklendi, EN'i V187'de yayına alındı),
+terminal-operations=4 (V189'da eklendi, EN'i V191'de yayına alındı; planlanan üç
+topic daha var, bkz. Faz 41/42/44). `spring-boot` kursunda (V58'de eklendi) bir kategori: `spring-core`(1) —
 dependency-injection=1, spring-ioc-container=2 (V64'te eklendi), component-scanning=3
 (V70'te eklendi, EN'i V75'te yayına alındı), autoconfiguration-properties=4 (V76'da
 eklendi, EN'i V81'de yayına alındı), transaction-management=5 (V82'de eklendi, EN'i
@@ -438,6 +450,359 @@ tag'inin (`production-v1`) kendi GERÇEK GitHub reposuna hiç yansımadığını
 fark edip sorguladı -- bu, `react-course-projects`'teki git tag kullanımının
 TAMAMEN terk edilmesine yol açtı (ayrıntı için bkz. "Bilinen Kısıtlar").
 
+**Faz 40'ta `spring-boot` kursuna üçüncü bir kategori açıldı: `microservices`(3)**
+(spring-core=1, spring-mvc=2'den sonra). Kullanıcı, ChatGPT'nin hazırladığı 12
+topic'lik bir mikroservis planını (Microservices Nedir, Spring Boot Microservice,
+Service Discovery/Eureka, API Gateway, Inter-service Communication, Resilience4j,
+Configuration Management, Event-Driven/Kafka, Distributed Transactions,
+Observability, Security, Deployment) paylaştı; ayrı bir Claude oturumunda
+değerlendirilip şu kararlara varıldı ve bu fazda onaylandı: (1) 12 topic'i baştan
+taahhüt etmeden, küçük dalgalar (wave) hâlinde ilerlenecek -- ilk dalga yalnızca
+üç topic: `microservices-fundamentals` (teori, kod yok), `spring-boot-microservice-
+basics` (tek servis yapılandırması, ilk kod örnekleri), `inter-service-
+communication` (senkron REST çağrıları + kategori sonu Pratik Proje); kalan dokuz
+aday konu (Eureka, Gateway, Resilience4j, Config Mgmt, Kafka, Distributed Tx,
+Observability, Security, Deployment) henüz DB'ye seed edilmedi, ilk dalga
+bittiğinde birlikte karar verilecek; (2) pratik proje, `react-course-projects`
+deseninin birebir aynısıyla, `learning-platform`'dan tamamen ayrı, izole bir repo
+olacak: `microservices-course-projects` (öneri onaylandı) -- `projects/{topic-
+slug}/` altında her biri kendi `pom.xml`'iyle bağımsız Maven projeleri (npm
+workspaces'in Maven karşılığı yok, bu yüzden kardeş klasörler kullanılacak); (3)
+sandbox kısıtı erkenden doğrulandı -- bkz. "Bilinen Kısıtlar"daki güncellenmiş
+Faz 40 notu; (4) altyapı ağırlıklı konularda (Kafka/Eureka/Docker Compose/
+Kubernetes) test ritmi `AskUserQuestion` ile soruldu, kullanıcı "her topic
+bitince" seçeneğini onayladı -- her yeni altyapı konusu yazılır yazılmaz somut
+doğrulama adımları verilip kullanıcıdan hemen test istenecek.
+
+İlk topic **`microservices-fundamentals`** (V169, INTERMEDIATE, estimated_minutes
+tahmini 20) yazıldı -- monolit vs mikroservis, monolitin sınırları, servis
+sınırlarının (business capability / Domain-Driven Design'ın bounded context'i)
+nasıl belirlendiği, database per service ve "distributed monolith" anti-pattern'i,
+dağıtık sistemlerin getirdiği yeni zorluklar (ağ güvenilmezliği, partial failure,
+eventual consistency), CAP teoremine kısa bakış, Conway Yasası, "modüler
+monolith" ara yolu, monolith/mikroservis karar kriterleri. Kullanıcı kararıyla
+bilinçli olarak **kod yok** -- React Fundamentals'ın ilk konularındaki (Faz 28)
+"teori ağırlıklı, henüz kod yazmaya başlamıyoruz" desenine bilinçli bir referansla,
+ama Java/Spring kursunun genel kapanış yapısına (Best Practices/Yaygın Hatalar/
+Özet ve Terimler Sözlüğü) uygun şekilde; bu yüzden `## Ek: Mini Proje` yok (pratik
+proje kategori sonunda, ayrı repoda gelecek) ve migration'da `code_example` satırı
+yok (0 embed, `what-is-react`/`creating-a-react-application` ile aynı desen).
+Kullanıcı bu fazda önce yalnızca **TR** içeriğin yazılmasını istedi (Faz 20
+öncesi ritme -- TR tamamlanınca ayrı onayla EN'e geçmek -- bilinçli bir dönüş,
+yeni ve daha yüksek riskli bir kategori olduğu için); `topic_translation`'ın EN
+satırı V169'da YOK. Kullanıcı TR'yi onayladıktan ("devam edebilirsin") sonra EN
+çevirisi de aynı fazda tamamlandı -- `content/en/microservices-fundamentals.md`
+TR ile birebir aynı yapı (17/17 başlık, 0/0 embed) ile yazıldı, `bkz.`/`see`
+çapraz referanslarının ilgili H2 başlığıyla birebir eşleştiği bir Python
+scriptiyle hem TR hem EN için ayrı ayrı doğrulandı (CLAUDE.md kuralı gereği).
+V170 EN çevirisini `published=false` ekliyor, V171 yayına alıyor (react-
+fundamentals/V124+V127 ile aynı iki adımlı desen). **Faz 40 küçük düzeltme:**
+kullanıcı kendi ortamında sayfayı görüntüleyip bir ekran görüntüsü paylaştı --
+`topic.title` (breadcrumb + H1) ile markdown'ın ilk H2'si aynı metni
+("Microservices Nedir?") üç kez art arda gösteriyordu. `title`,
+`spring-mvc-fundamentals`'taki (V88) TR/EN desenine uyacak şekilde "Microservices
+Temelleri"/"Microservices Fundamentals" olarak değiştirildi (slug'la da tutarlı
+hâle geldi), ilk H2 olduğu gibi kaldı; `summary`/`seo_title`/`seo_description`
+bilinçli olarak değişmedi (spring-mvc-fundamentals'ta da aynı "title Temelleri,
+seo_title Nedir" farkı var). V169 kullanıcının kendi ortamında ZATEN
+UYGULANMIŞ olduğu için (ekran görüntüsüyle doğrulandı), "Flyway migration'ları
+asla geriye dönük değiştirilmez" kuralı gereği V169 doğrudan düzenlenmedi --
+ayrı bir `V172__update_microservices_fundamentals_title.sql` eklendi. Durum:
+`microservices-fundamentals` **TR+EN tamamlandı**.
+
+**Wave 1'in ikinci topic'i: `spring-boot-microservice-basics`** (V173-V175, TR+EN
+aynı fazda -- kullanıcı bu kez "geçebilirsin, türkçe ve ingilizcesini
+tamamlayabilirsin" dedi, topic 1'deki temkinli "önce yalnızca TR" ritmi
+tekrarlanmadı). TR başlık kararı önce `AskUserQuestion` ile netleştirildi:
+"Mikroservis Yapılandırma" (24 karakter) seçildi -- ilk öneri olan "Spring Boot
+ile Tek Bir Mikroservis Yapılandırmak" (49 karakter) kullanıcı tarafından
+sidebar için "çok uzun" bulunup reddedildi (mevcut en uzun TR başlık 46
+karakter, sidebar'da ellipsis/truncate YOK, uzun başlıklar satır satır
+kırılıyor -- bu proje için yeni bir öğrenilen ders, gelecekte başlık
+önerirken göz önünde bulundurulmalı). EN karşılığı "Microservice
+Configuration" (27 karakter). Kategorinin İLK KOD içeren topic'i -- tek bir
+mikroservisin (`order-service`) baştan sona yapılandırılması: `@SpringBootApplication`
+giriş noktası (`learning-platform`'un kendi ana sınıfıyla yapısal olarak
+aynı), kendi `application.yml`'i (server.port, spring.application.name,
+spring.datasource -- Twelve-Factor App'e (2011, Heroku) kısa bir tarihçe
+bakışıyla motive edildi), REST controller/service/domain model üçlüsü
+(`OrderController`/`OrderService`/`Order` -- dependency-injection'daki
+`NotificationDispatcher`/`NotificationDispatcherDemo` çiftiyle aynı "birbirine
+bağımlı, birlikte okunacak dosya grubu" deseninde), ve `spring-boot-starter-actuator`
+ile health check (`GET /actuator/health`). 5 örnek (4 `.java` + 1 `.yml` --
+embed sisteminin gördüğü üçüncü farklı uzantı, `.jsx`'ten sonra); highlight.js'in
+"yml"i ayrı bir dil olarak tanıdığı npm ile ayrıca doğrulandı (Faz 27'deki jsx
+doğrulamasıyla aynı yöntem). `ResponseEntity`/`HttpStatus` kullanımı, projenin
+`request-response-handling`/`rest-api-design` konularındaki gerçek kullanımla
+birebir aynı desende yazıldı (tutarlılık için bilerek kontrol edildi). Kod bu
+sandbox'ta gerçek `mvn`/`spring-boot:run` ile derlenip çalıştırılamadı (Maven
+Central engelli, bkz. "Bilinen Kısıtlar") -- kullanıcının kendi ortamında
+doğrulaması istenecek (kullanıcının onayladığı "her topic bitince test" ritmi).
+`## Ek: Mini Proje` yine YOK -- kategori kuralı gereği (bkz. Mimari), pratik
+proje yalnızca wave'in son topic'inde (`inter-service-communication`), ayrı
+`microservices-course-projects` reposunda gelecek.
+
+**Faz 40 -- gerçek bir uygulama hatası bulundu ve düzeltildi (`MarkdownService`
+`applyCallouts` bug'ı):** kullanıcı kendi ortamında uygulamayı gerçekten
+çalıştırıp `spring-boot-microservice-basics`'in EN sayfasını açtığında
+`Whitelabel Error Page` (HTTP 500) aldı; stack trace
+`IllegalArgumentException: named capturing group is missing trailing '}'`,
+`MarkdownService.applyCallouts(MarkdownService.java:108)` ← `render` ←
+`TopicController.show`. Kök neden: `applyCallouts`,
+`Matcher.replaceAll(Function<MatchResult,String>)` (Java 9+ shorthand
+overload) kullanıyordu; bu overload'ın JDK implementasyonu, replacer
+fonksiyonunun döndürdüğü metni `appendReplacement`'a
+`Matcher.quoteReplacement(...)` ile SARMADAN geçiriyor -- oysa birkaç satır
+yukarısındaki `injectCodeExamples` bunu zaten doğru yapıyordu. EN Warning
+callout'unun gövdesinde geçen `` `password: ${ORDERS_DB_PASSWORD}` `` metni,
+`appendReplacement`'ın regex-backreference/named-group parser'ı tarafından
+yakalandı; Java'nın named-group söz dizimi alt tireye izin vermediği için
+istisna fırlatıldı. Düzeltme: `applyCallouts` artık `TIP_BLOCKQUOTE` ve
+`WARNING_BLOCKQUOTE` için ortak, güvenli bir `replaceCallouts` yardımcı
+metodunu kullanıyor -- `injectCodeExamples` ile birebir aynı desende, manuel
+`Matcher.find()` / `appendReplacement(result, Matcher.quoteReplacement(...))`
+/ `appendTail(result)` döngüsü. Kodda `Matcher.replaceAll(Function)`
+kullanılan başka bir yer olmadığı grep ile doğrulandı. Bu, kategori boyunca
+bulunan ilk **gerçek uygulama kodu hatası** -- önceki notlar (sandbox
+kısıtları, başlık uzunluğu) içerik/ortam sorunlarıydı, bu ise
+`src/main/java`'da bir defect. Bu yüzden kullanıcının kendi ortamında projeyi
+**yeniden derleyip** (`mvn clean install` veya IDE rebuild) uygulamayı
+**yeniden başlatması** gerekiyor -- Faz 29'daki "eski derlenmiş sınıflar
+kaynak değişikliğini yansıtmaz" dersiyle aynı kategoriden bir hatırlatma.
+İçerikteki `${ORDERS_DB_PASSWORD}` metni bilerek DEĞİŞTİRİLMEDİ (kod
+seviyesinde düzeltildi, içerik zaten doğru ve pedagojik olarak gerekli --
+gerçek bir ortam değişkeni referansı örneği); ama gelecekte benzer bir
+callout yazılırken `${...}` içeren örnek metinlerin bu hatayı tetikleyebileceği
+akılda tutulmalı (artık kod düzeltildiği için tetiklemeyecek, ama not
+edilmeye değer bir örnek). Durum: `spring-boot-microservice-basics`
+**TR+EN tamamlandı VE canlı hata düzeltildi**.
+
+**Wave 1'in üçüncü ve son topic'i: `inter-service-communication`** (V176-V178, TR+EN
+aynı fazda). `order-service`'in yanına ikinci bir mikroservis (`inventory-service`,
+port `8082`, kendi `inventory_db`'si) eklenip, `order-service`'ten `inventory-service`'e
+Spring Framework 6.1'in senkron istemcisi `RestClient` ile bir çağrı kuruldu (ek
+bağımlılık gerekmedi, `spring-boot-starter-web` zaten `RestClient`'ı sağlıyor -- eski
+`RestTemplate`/reaktif `WebClient` yerine bilinçli tercih, gerekçesi dersin "Tarihçe"
+bölümünde). 13 ana bölüm + Pratik Proje, 8 örnek (7 `.java` + 1 `.yml`) -- kategorinin
+en yoğun topic'i. Öne çıkan tasarım kararları: (1) `StockClient`, HTTP 404
+(`HttpClientErrorException.NotFound`, "üretim tanınmıyor" -- servis ayakta, düzgün bir
+"hayır") ile bağlantı hatasını (`ResourceAccessException`, servise hiç ulaşılamıyor)
+bilerek iki ayrı `catch` bloğunda ayırıyor, ikincisini kendi anlamlı istisnasına
+(`InventoryServiceUnavailableException`) çeviriyor; (2) `order-service`, `inventory-service`'in
+`InventoryItem`'ını değil kendi `StockCheckResponse` DTO'sunu kullanıyor -- REST API
+Tasarımı dersindeki DTO mantığının servisler arası hâli, iki servisin domain modelini
+kod seviyesinde birbirinden bağımsız tutuyor; (3) base URL sabit kodlanmadı,
+`@Value("${services.inventory-service.url}")` ile `application.yml`'den okunuyor
+(Autoconfiguration & Properties dersine çapraz referans). Ders bilinçli olarak yalnızca
+SENKRON iletişimi kapsıyor (CAP teoreminin Tutarlılık/Consistency tarafı) -- asenkron
+(Event-Driven/Kafka, Availability tarafı) kursun ilerleyen olası bir konusu olarak
+ayrıca işaretlendi, karıştırılmadı.
+
+Bu topic, kategori kuralı gereği `## Ek: Mini Proje` içermiyor -- bunun yerine, React
+kategorilerindeki "Pratik Proje" standardının (bkz. Faz 30) birebir Java/Maven karşılığı
+ilk kez burada uygulandı: ayrı, izole bir repo (`microservices-course-projects`) gerçek,
+çalıştırılabilir `order-service`+`inventory-service` projeleriyle kuruldu --
+`react-course-projects`'ten TEK farkı, Maven'de npm workspaces karşılığı olmadığı için
+her projenin kendi bağımsız `pom.xml`'iyle kardeş klasörler (sibling folders) hâlinde
+tutulması (`projects/inter-service-communication/{order-service,inventory-service}/`).
+Pratik proje, ders koduna bilerek küçük bir ekleme yaptı: `GlobalExceptionHandler`
+(`@RestControllerAdvice`), `IllegalArgumentException`'ı 400'e,
+`InventoryServiceUnavailableException`'ı 503'e çeviriyor -- ders örneklerinde
+odağı dağıtmamak için yoktu, ama "gerçek, çalıştırılabilir" bir demo için eklendi (bkz.
+projenin kendi `README.md`'si). **Teslimden sonra, kullanıcı IntelliJ'de projeyi
+incelerken** her iki controller'da da bir `findAll` endpoint'i eksik olduğunu fark edip
+istedi: `InventoryController`/`InventoryService`'e `GET /inventory` (tüm ürünlerin stok
+durumu, `productName`'e göre sıralı), `OrderController`/`OrderService`'e `GET /orders`
+(tüm siparişler) eklendi -- yalnızca pratik projede, ders içeriğine (markdown +
+migration'lar) DOKUNULMADI, çünkü ders kasıtlı olarak yalnızca `POST`/`GET /{id}`
+çiftini işliyor ve `findAll` pedagojik olarak gerekli değildi. Projenin `README.md`'si
+yeni endpoint'lerin `curl` örnekleriyle güncellendi, `.gitignore` de (repo kökünde,
+Maven/IntelliJ/VS Code/OS/log/`.env` kalıplarıyla) bu fazda genişletildi.
+`react-course-projects`'teki güncel kural (Testing
+kategorisinden sonra git tag TERK EDİLDİ, bkz. aşağıdaki madde) baştan uygulandı: hiç tag
+atılmadı, `## Pratik Proje` linki doğrudan
+`.../tree/main/projects/inter-service-communication` biçiminde. **Sandbox kısıtı burada
+da geçerli:** Maven Central engelli olduğu için bu proje de gerçek bir `mvn
+spring-boot:run` ile derlenip çalıştırılamadı -- kod, `learning-platform`'un ve dersin
+zaten dikkatle yazılmış örneklerine dayanarak yazıldı, kullanıcının kendi ortamında
+doğrulaması gerekiyor (projenin `README.md`'sinde hazır `curl` komutları var). **Ayrıca,
+`react-course-projects` ile aynı kısıt burada da geçerli:** bu sandbox'ın gerçek
+`github.com/cdurgun/microservices-course-projects` reposuna push yetkisi/erişimi yok --
+kullanıcı, paylaşılan zip'i açıp bu reposunu (henüz yoksa) kendisi GitHub'da oluşturup
+push etmeli (`react-course-projects` ile aynı operasyonel model, bkz. "Bilinen
+Kısıtlar").
+
+**Durum: wave 1 (3 topic: `microservices-fundamentals`, `spring-boot-microservice-basics`,
+`inter-service-communication`) TR+EN tamamlandı.** Kalan 9 aday konu (Service
+Discovery/Eureka, API Gateway, Resilience4j, Configuration Management, Event-Driven/Kafka,
+Distributed Transactions, Observability, Security, Deployment) hâlâ DB'ye seed edilmedi --
+orijinal kararın (bkz. yukarısı, madde 1) gereği, devam etmeden önce kullanıcıyla birlikte
+hangi topic'lerin/hangi sırayla bir sonraki dalgayı oluşturacağına karar verilecek.
+
+**Faz 41'de kullanıcı isteğiyle Microservices'e ARA VERİLDİ** (wave 1 tamamlanmış
+durumda, istendiğinde geri dönülecek) ve `java` kursuna yeni, dördüncü bir kategori
+açıldı: **`functional-interfaces-streams`** ("Functional Interfaces & Streams",
+V179'da, `java-basics`/`oop`/`concurrency`'den sonra sort_order=4). Kullanıcı
+ChatGPT'nin hazırladığı 11 maddelik bir planı ("Functional Interface", "Built-in
+Functional Interfaces", "Method References", "Lambda Expressions", "Stream API",
+"Intermediate/Terminal Operations", "Collectors", "Optional", "Primitive Streams",
+"Parallel Streams") paylaşıp bunun tek bir kategori mi yoksa "Functional Interfaces" ve
+"Streams" diye ikiye mi bölünmesi gerektiğini sordu. Önerim (**tek kategori**, kullanıcı
+onayladı), gerekçesi: (1) kullanıcının vurguladığı "Functional Interface -> Lambda ->
+Stream -> Intermediate -> Terminal" zincirini sürekli gösterme hedefi bir kategori
+sınırıyla bölünmeden daha iyi korunuyor; (2) precedent'te tek kategoride 9 topic'e kadar
+çıkılmış (Spring MVC), planlanan 7 topic bunun altında; (3) ikiye bölünseydi
+"Functional Interfaces" kategorisi yalnızca 2 topic'ten oluşurdu, mevcut kategorilerin
+hepsi 3+ topic içeriyor. Planlanan 7 topic (ChatGPT'nin 11 maddesi, bu projenin "bir
+topic = 5-9 kavram" büyüklüğüne göre gruplandı): 1) `lambda-expressions` (yazıldı), 2)
+built-in functional interfaces + method references, 3) Stream API fundamentals +
+intermediate operations, 4) terminal operations, 5) collectors, 6) optional, 7)
+primitive + parallel streams.
+
+**Önemli bir bulgu, planı doğrudan etkiledi:** bu konu sıfırdan başlamıyor -- `oop`
+kategorisindeki `interface` dersinde zaten bir "Functional Interface ve Lambda"
+bölümü var (functional interface tanımı, `@FunctionalInterface`, lambda'nın bağlantısı,
+`java.util.function`'a kısa referans, `FunctionalInterfaceExample.java` örneği). Yeni
+kategorinin ilk topic'i (`lambda-expressions`) bunu TEKRARLAMIYOR -- kısa bir tanıtım
+paragrafıyla `interface` dersinin "Functional Interface ve Lambda" bölümüne çapraz
+referans verip oradan derinleşiyor (parametre yazım kuralları, expression/block body
+ayrımı, target typing, effectively final, anonymous class farkı -- hiçbiri `interface`
+dersinde yoktu).
+
+**Sandbox avantajı, kullanıcı onayıyla kullanıldı:** bu kategori Spring Boot'un aksine
+hiçbir dış bağımlılığa ihtiyaç duymuyor (`java.util.function`/`java.util.stream` saf
+JDK) -- Microservices'te Maven Central engelliyken burada hiç sorun değil. Kullanıcı
+"derleyebilirsin" dedi -- Faz 12'den beri geçerli olan "yazıldıktan sonra derleme yok"
+varsayılan kuralına BİLİNÇLİ bir istisna: `lambda-expressions`'ın 4 örneği
+(`LambdaSyntaxAndReturnExample`, `TargetTypingExample`, `EffectivelyFinalExample`,
+`AnonymousClassVsLambdaExample`) önce ayrı bir scratch klasöründe yazılıp gerçekten
+`javac`+`java` ile derlenip çalıştırıldı, çıktılar (`AYSE!`, `[item, item]`,
+`[Al, Ayse, Ahmet]`, `AnonymousClassVsLambdaExample$1` gibi) doğrudan gözlemlenip
+ders metnine/yorumlara işlendi -- tahmin değil, gerçek doğrulama. (Bu arada bir
+detay bulundu: `Class.getSimpleName()` anonymous class'lar için boş string döner --
+örnek `getName()`'e çevrildi, `AnonymousClassVsLambdaExample$1` gibi okunabilir bir
+çıktı versin diye.) TR+EN aynı fazda yazıldı (Faz 20 sonundaki standart ritim), 11
+ana bölüm + 4 örnek. Durum: `lambda-expressions` **TR+EN tamamlandı**.
+
+**Aynı fazda, kullanıcının "olur devam edebilirsin" onayıyla ikinci topic
+`built-in-functional-interfaces`** de yazıldı (V182-V184, sort_order=2, INTERMEDIATE,
+13 ana bölüm + 6 örnek). `java.util.function` paketindeki hazır interface'leri kapsıyor:
+`Predicate<T>` (`test`, `negate()`/`and()`/`or()`), `Function<T,R>` (`apply`,
+`andThen()`/`compose()`), `Consumer<T>` ve `Supplier<T>` (yan etki vs. tembel üretim),
+`UnaryOperator<T>`/`BinaryOperator<T>` (Function/BiFunction'ın aynı-tip özel halleri,
+`BinaryOperator.maxBy()`/`minBy()` dahil), ve dört method reference biçimi
+(`Class::staticMethod`, `object::instanceMethod` "bound", `Class::instanceMethod`
+"unbound", `Class::new` constructor reference -- bu sonuncusu bir `record Point` ile
+gösterildi). İçerik hem `interface` dersinin "Functional Interface ve Lambda"
+bölümüne hem de `lambda-expressions`'ın "Lambda'nın Functional Interface ile
+Bağlantısı: Target Typing" bölümüne çapraz referans veriyor, hiçbirini tekrarlamıyor.
+Sidebar başlığı, içerik "Built-in Functional Interfaces & Method References"i
+kapsasa da, "Mikroservis Yapılandırma" precedent'iyle tutarlı olarak kısaca
+"Built-in Functional Interfaces" bırakıldı (TR ve EN'de aynı -- bu kursta Java'ya
+özgü teknik terimler zaten "Interface"/"Record"/"Enum" gibi TR başlıklarda da
+İngilizce bırakılıyor). Aynı sandbox-compile süreciyle 6 örnek de
+`/tmp/work/scratch/builtin-fi/` altında gerçekten `javac`+`java` ile derlenip
+çalıştırıldı, çıktılar (`true`/`false`/`true`/`true`/`false`, `5`/`25`/`3`,
+`hi`/`HI`/`[a]`, `HI!`/`HEY!`/`9`/`hello`, `42`/`Hello, world`/`true`,
+`[]`/`hi`/`Point[x=3, y=4]`) doğrudan gözlemlenip ders metnine işlendi, sonra
+`examples/built-in-functional-interfaces/` altına kopyalandı. TR+EN aynı fazda
+yazıldı. Durum: `built-in-functional-interfaces` **TR+EN tamamlandı**.
+
+**Faz 42'de kullanıcı bir stil düzeltmesi istedi:** Faz 41'de yazılan iki dersin (TR ve
+EN) ilk paragrafında "Örnekler gerçekten derlenip çalıştırılarak doğrulandı."/"Examples
+were actually compiled and run to verify them." cümlesi vardı -- kullanıcı bunun ders
+metninde gereksiz olduğunu belirtip çıkarılmasını, bundan sonraki topic'lerde de hiç
+yazılmamasını istedi. İçerik dosyalarından (`lambda-expressions.md` TR+EN, ders metni
+DB'de değil dosya sisteminde tutulduğu için bu değişiklik sorunsuz) kaldırıldı.
+
+**HATA VE DÜZELTME:** aynı cümlenin tekrar ettiği `V179`/`V182` migration'larının
+`summary` alanları da İLK ÖNCE yanlışlıkla yerinde (in-place) düzenlenmişti -- "bu
+migration'lar henüz kullanıcıya uygulanmamıştır" varsayımıyla. Bu varsayım YANLIŞTI:
+kullanıcı uygulamayı çalıştırınca gerçek bir Flyway hatası aldı -- "Migration checksum
+mismatch for migration version 179/182" -- yani bu migration'lar kullanıcının kendi
+veritabanında ÇOKTAN uygulanmıştı, tam da CLAUDE.md'nin "asla uygulanmış migration'ı
+düzenleme" kuralının uyarmaya çalıştığı durum. Düzeltme: `V179` ve `V182` orijinal
+haline (cümle geri eklenerek, checksum'lar eski haline dönecek şekilde) geri
+döndürüldü; asıl düzeltme (cümlenin `summary` alanından kaldırılması) doğru şekilde
+yeni bir migration'la (`V188`, iki topic'in dört `topic_translation` satırına UPDATE)
+uygulandı. Ders: bu kategori aynı oturumda yazılıyor olsa bile, kullanıcı zip'i alıp
+KENDİ ortamında bir kez `mvn`/uygulamayı çalıştırdıysa migration UYGULANMIŞ sayılır --
+"aynı oturumda yazıldı" kesinlik ifade etmez, migration immutability kuralı
+şüpheli durumda da geçerli sayılmalı, mutlaka yeni migration tercih edilmeli.
+Migration yorumlarındaki (`-- ... doğrulandı` gibi) iç süreç notları bilinçli olarak
+dokunulmadan bırakıldı -- kullanıcının itirazı ders metnindeki/summary'deki kullanıcıya
+görünen cümleyeydi, geliştirici yorumlarına değil. Sandbox-compile süreci (bkz.
+yukarısı, "Sandbox avantajı") kalıcı bir uygulama olarak devam ediyor, yalnızca artık
+ders metninde bundan bahsedilmiyor.
+
+**Aynı fazda üçüncü topic `stream-fundamentals`** de yazıldı (V185-V187, sort_order=3,
+INTERMEDIATE, 13 ana bölüm + 6 örnek). Orijinal 7 topic'lik plandaki 5. ve 6. maddeler
+("Stream API" ve "Intermediate Operations") tek topic'te birleştirildi -- ikisi
+kavramsal olarak ayrılmayacak kadar iç içe (Stream'in ne olduğu ile filter/map gibi
+intermediate operation'lar aynı derste doğal olarak akıyor). Kapsam: Stream'in veri
+saklamayan, tek geçişlik bir pipeline olması; source (`stream()`, `Stream.of()`,
+`Arrays.stream()`, `Stream.iterate()`); pipeline'ın üç aşaması (source/intermediate/
+terminal); `filter()`/`map()`/`flatMap()` (`flatMap()`'in `map()`'in ürettiği
+"stream'lerin stream'i" tuzağını nasıl çözdüğü dahil); `distinct()`/`sorted()`/`peek()`;
+`limit()`/`skip()` (sayfalama örneğiyle); lazy evaluation; ve stream'in tek kullanımlık
+doğası -- `LazyEvaluationExample.java`, gerçek bir `IllegalStateException`'ı yakalayıp
+mesajını (`stream has already been operated upon or closed`) yazdırarak bunu somut
+gösteriyor. Kullanıcının paylaştığı `names.stream().filter(name -> name.startsWith("A"))
+.map(String::toUpperCase).toList()` örneği, "Neden Var?" bölümünde `interface`
+(functional interface temeli), `lambda-expressions` (lambda ve method reference
+sözdizimi) ve `built-in-functional-interfaces` (`Predicate`/`Function`) derslerinin bir
+araya geldiği somut nokta olarak birebir kullanıldı. 6 örnek yine aynı sandbox-compile
+süreciyle (`/tmp/work/scratch/stream-fundamentals/`) gerçekten `javac`+`java` ile
+derlenip çalıştırılarak doğrulandı -- bu doğrulama artık (Faz 42 kararıyla) yalnızca
+migration yorumlarında belgeleniyor, ders metninde değil. TR+EN aynı fazda yazıldı.
+Durum: `stream-fundamentals` **TR+EN tamamlandı**.
+
+**Faz 43'te, kullanıcının Faz 42 zip'ini kendi ortamında çalıştırmasıyla gerçek bir
+Flyway hatası ortaya çıktı:** "Migration checksum mismatch for migration version
+179/182". Faz 42'de V179/V182'nin summary alanları yerinde (in-place) düzenlenmişti --
+bu, bu migration'ların kullanıcının veritabanında henüz uygulanmadığı YANLIŞ
+varsayımıyla yapılmıştı; gerçekte kullanıcı bunları çoktan uygulamıştı. Düzeltme:
+V179/V182 tamamen orijinal haline (cümle geri eklenerek) döndürüldü, checksum'lar eski
+haline döndü; asıl istenen değişiklik (cümlenin `summary` alanından kaldırılması) yeni
+bir migration'la (`V188`) doğru şekilde `UPDATE` olarak uygulandı. Ders metninin
+kendisi bu hatadan hiç etkilenmedi çünkü DB'de değil dosya sisteminde tutuluyor.
+Kullanıcı düzeltmeyi kendi ortamında çalıştırıp hatasız olduğunu doğruladı. **Kalıcı
+ders:** bir migration "bu oturumda yazıldı" diye henüz uygulanmamış SAYILAMAZ --
+kullanıcı zip'i teslim alıp kendi ortamında bir kez çalıştırdıysa migration
+UYGULANMIŞ'tır; şüpheli durumda immutability kuralı ihlal edilmemeli, her zaman yeni
+migration tercih edilmeli.
+
+**Aynı fazda (Faz 44) dördüncü topic `terminal-operations`** yazıldı (V189-V191,
+sort_order=4, INTERMEDIATE, 14 ana bölüm + 6 örnek). Kapsam: `forEach()` (yan etki),
+`reduce()` (üç overload -- identity'li/identity'siz/combiner'lı), `count()`, `min()`/
+`max()` (Comparator gerektiren, `Optional<T>` dönen), `findFirst()`/`findAny()`
+(`Optional<T>`), `anyMatch()`/`allMatch()`/`noneMatch()` (kısa devre yapan `boolean`
+kontroller), `toList()`/`toArray()`. `collect()`'in asıl gücü (özellikle
+`Collectors` sınıfı) BİLİNÇLİ OLARAK bu topic'e dahil edilmedi, bir sonraki topic'e
+(`collectors`) ayrıldı -- yalnızca `toList()`'in (Java 16, `collect(Collectors.
+toList())`'in unmodifiable kısayolu) dolaylı bir bahsi var. `stream-fundamentals`'daki
+"Stream Pipeline: Source, Intermediate, Terminal" bölümüne ve `built-in-functional-
+interfaces`'teki `Class::new`'e (toArray()'in constructor reference argümanı için)
+çapraz referans verildi.
+
+**Gerçek bir keşif, sandbox-compile sürecinin tam olarak var olma sebebini
+gösterdi:** `ShortCircuitExample.java` ilk yazımda "count() kısa devre yapmaz, her
+elemanı işlemek zorundadır" varsayımıyla yazılmıştı (`anyMatch()`/`findFirst()` gibi
+kısa devre YAPAN operation'larla karşılaştırma amacıyla). Sandbox'ta gerçekten
+derlenip çalıştırılınca bu varsayımın YANLIŞ olduğu ortaya çıktı:
+`Stream.of(1,2,3).peek(n -> System.out.println("counting: " + n)).count()`
+çalıştırıldığında `peek()`'in içindeki yazdırma satırı **hiç çalışmadı** -- `total: 3`
+doğrudan yazdırıldı, hiçbir `counting: n` satırı olmadan. Bunun sebebi JDK'nın
+`Stream.count()` javadoc'unda açıkça belgelenen, kasıtlı bir optimizasyon: source'un
+boyutu bilindiğinde (burada `Stream.of(1,2,3)`, SIZED bir source) `count()` pipeline'ı
+hiç çalıştırmadan doğrudan hesaplanabilir. Kod yorumu ve "Kısa Devre ve count()'un
+Şaşırtıcı Davranışı" bölümü, ilk (yanlış) varsayım yerine bu gerçek gözlemi
+yansıtacak şekilde yazıldı. Kullanıcı isteğiyle (Faz 42) ders metninde bir
+"derlenip doğrulandı" cümlesi yok, bu doğrulama yalnızca migration yorumunda
+belgeleniyor. TR+EN aynı fazda yazıldı. Durum: `terminal-operations` **TR+EN
+tamamlandı**; kategorinin kalan 3 topic'i (Collectors, Optional, Primitive &
+Parallel Streams) henüz yazılmadı.
+
 ## Proje Yapısı
 
 ```
@@ -470,7 +835,32 @@ src/main/resources/
   istisna olarak derleyebilirsin. Not (Faz 23): bu oturumda ortamda yalnızca bir Java 11
   JRE bulundu, `javac` **yoktu** ve Maven local repo/internet erişimi de yoktu (proxy
   allowlist'i `repo.maven.apache.org`'u engelliyor) — yani derleme zaten mümkün değildi;
-  bu satır önceki fazlardan kalma, ortam farklıysa güncel durumu bash ile doğrula.
+  bu satır önceki fazlardan kalma, ortam farklıysa güncel durumu bash ile doğrula. **Güncel
+  durum (Faz 40):** bu oturumda `java 21.0.10` ve `mvn 3.9.11` GERÇEKTEN kurulu (`java
+  -version`/`mvn -version` ile doğrulandı) -- önceki fazlardan farklı, JDK artık mevcut.
+  Ama Maven Central (`repo.maven.apache.org`, `repo1.maven.org`) proxy'den hâlâ 403 ile
+  engelleniyor, Gradle dağıtım sunucusu da aynı şekilde, ve `~/.m2` önbelleği yok (`find /
+  -iname .m2` boş döndü, `learning-platform`'un kendi bağımlılıkları da hiçbir yerde cache'li
+  değil) -- yani hiçbir Spring Boot/harici Maven bağımlılığı indirilemiyor, `mvn compile`/
+  `spring-boot:run` bu ortamda çalışmıyor. Yalnızca harici bağımlılık gerektirmeyen saf JDK
+  kodu `javac` ile gerçekten derlenebilir (bu, microservices kategorisindeki mikroservis
+  kodları için geçerli değil -- hepsi `spring-boot-starter-web` gibi bağımlılıklar
+  gerektiriyor). `registry.npmjs.org` ve `pypi.org` ise erişilebilir durumda (React
+  kursundaki gibi npm doğrulamaları hâlâ mümkün). Microservices kategorisi için sonuç:
+  Production kategorisindeki (Faz 39) ritim aynen uygulanıyor -- Spring Boot kodu kursun
+  zaten doğrulanmış örneklerine dayanarak dikkatle yazılıyor, gerçek `mvn`/`spring-
+  boot:run` doğrulaması her topic bitince kullanıcıdan isteniyor (kullanıcı
+  `AskUserQuestion` ile bu ritmi onayladı). Ortam farklıysa (özellikle Maven Central
+  erişimi) güncel durumu bash ile yeniden doğrula. **Faz 41'de bu tam olarak gerçekleşti:**
+  `functional-interfaces-streams` kategorisi (`java.util.function`/`java.util.stream`,
+  saf JDK, hiçbir Maven bağımlılığı yok) için kullanıcı "derleyebilirsin" dedi --
+  `lambda-expressions`'ın 4 örneği önce `/tmp/work/scratch/` altında yazılıp gerçek
+  `javac`+`java` ile derlenip çalıştırıldı, çıktılar gözlemlenip ders metnine işlendi,
+  SONRA `examples/lambda-expressions/`'a kopyalandı. Bu kategori için istisna kalıcı --
+  yeni topic yazılırken (built-in functional interfaces, streams, collectors vb.) aynı
+  yöntemi (önce scratch'te derle/çalıştır, doğrula, sonra asıl `examples/` klasörüne
+  kopyala) tekrarla, `javac`/`java` çıktısındaki `Picked up JAVA_TOOL_OPTIONS...` uyarı
+  satırını yok say (zararsız, proxy/truststore ortam değişkenlerinden geliyor).
 - Çok satırlı `//` yorumlarında her satırın başına `//` tekrar yazılmalı — daha önce bir
   örnekte (`ModifierRulesExample.java`) bunu unutup gerçek bir derleme hatası bırakmıştım,
   yazarken kontrol et.
@@ -1140,3 +1530,16 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   artık `git tag` ATILMAYACAK, `## Pratik Proje` linkleri doğrudan
   `.../tree/main/projects/{proje}` formatında yazılacak. `react-course-projects/README.md`
   bu değişikliği açıklayan bir not içeriyor.
+- **`microservices-course-projects` (Faz 40'ta kuruldu) aynı kısıta tabi: bu sandbox'ın
+  gerçek `github.com/cdurgun/microservices-course-projects` reposuna hiçbir zaman push
+  yetkim/erişimim olmadı** -- `react-course-projects`'teki aynı operasyonel model
+  geçerli: ben projeyi bu sandbox'ta yazıp zip'le teslim ediyorum, kullanıcı KENDİSİ bu
+  reposunu (henüz yoksa) GitHub'da oluşturup zip'in içeriğini push ediyor. Baştan
+  `react-course-projects`'in GÜNCEL kuralıyla kuruldu: hiç `git tag` atılmadı,
+  `## Pratik Proje` linkleri doğrudan `.../tree/main/projects/{proje}` formatında. Maven
+  projeleri için npm workspaces karşılığı olmadığından, `react-course-projects`'ten
+  farklı olarak proje klasörleri workspace değil, her biri kendi bağımsız `pom.xml`'iyle
+  kardeş klasörler (`projects/{proje}/{servis-adı}/`). Bu repodaki kod da (React
+  projeleri gibi) bu sandbox'ta gerçek bir derleyiciyle (`mvn spring-boot:run`, Maven
+  Central engelli) doğrulanamadı -- kullanıcının kendi ortamında çalıştırıp doğrulaması
+  gerekiyor.

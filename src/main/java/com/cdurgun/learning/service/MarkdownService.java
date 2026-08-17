@@ -101,12 +101,32 @@ public class MarkdownService {
     }
 
     private String applyCallouts(String html) {
-        String withTips = TIP_BLOCKQUOTE.matcher(html)
-                .replaceAll(m -> "<div class=\"alert alert-info\" role=\"alert\">"
-                        + "<p class=\"mb-0\">" + m.group(1).strip() + "</p></div>");
-        return WARNING_BLOCKQUOTE.matcher(withTips)
-                .replaceAll(m -> "<div class=\"alert alert-warning\" role=\"alert\">"
-                        + "<p class=\"mb-0\">" + m.group(1).strip() + "</p></div>");
+        String withTips = replaceCallouts(TIP_BLOCKQUOTE, html, "alert-info");
+        return replaceCallouts(WARNING_BLOCKQUOTE, withTips, "alert-warning");
+    }
+
+    // Bilinçli olarak Matcher.replaceAll(Function<MatchResult, String>) KULLANILMIYOR:
+    // o overload'un JDK implementasyonu, replacer'ın döndürdüğü metni appendReplacement'a
+    // Matcher.quoteReplacement(...) ile SARMADAN geçiriyor. Callout gövdesi (m.group(1))
+    // konu yazarının serbestçe yazdığı, kullanıcı içeriğinden gelen bir metin -- ve içinde
+    // "${...}" gibi bir alt dize geçerse (ör. bir application.yml örneğinden bahseden
+    // "`password: ${ORDERS_DB_PASSWORD}`" cümlesi), appendReplacement bunu regex named-group
+    // referansı sanıp parse etmeye çalışıyor; alt tire içeren isimler Java'nın named-group
+    // söz dizimine uymadığı için "named capturing group is missing trailing '}'" ile patlıyor
+    // (spring-boot-microservice-basics/EN Warning callout'unda canlı olarak yaşandı).
+    // injectCodeExamples yukarıda zaten doğru desende: manuel find()/appendReplacement(...,
+    // Matcher.quoteReplacement(...))/appendTail() döngüsü. Aynı desen burada da kullanılıyor.
+    private String replaceCallouts(Pattern pattern, String html, String alertClass) {
+        Matcher matcher = pattern.matcher(html);
+        StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
+            String body = matcher.group(1).strip();
+            String replacement = "<div class=\"alert " + alertClass + "\" role=\"alert\">"
+                    + "<p class=\"mb-0\">" + body + "</p></div>";
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     private List<TocEntry> extractToc(String html) {
