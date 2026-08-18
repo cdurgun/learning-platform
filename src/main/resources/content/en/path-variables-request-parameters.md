@@ -173,25 +173,39 @@ called, at the DispatcherServlet layer -- the method itself never runs.
 ## This Project's Own Path Variable and Query Parameter: A Real Example
 
 You can see the mechanisms from this lesson in the project's own
-`TopicController.show(...)` method:
+`TopicController`, and its real code is a good example of the distinction actually
+changing over time:
 
 ```java
-@GetMapping("/{slug}")
-public String show(@PathVariable String slug,
-                    @RequestParam(required = false) String lang,
-                    Model model) {
+@GetMapping("/{lang:en|tr}/topics/{slug}")
+public String show(@PathVariable String lang, @PathVariable String slug, Model model) {
+    ...
+}
+
+@GetMapping("/topics/{slug}")
+public ResponseEntity<Void> legacyRedirect(@PathVariable String slug,
+                                            @RequestParam(required = false) String lang) {
     ...
 }
 ```
 
 `slug` is a direct example of the distinction from "Path Variable or Query Parameter?
-Which One, When" -- a "show this topic" request has no meaning without `slug`, so
-it's a path variable (`/topics/{slug}`). `lang`, on the other hand, only determines
-**which language** to show an already-valid request in -- `/topics/dependency-injection`
-is a valid request even without `lang` (the controller falls back to the default
-locale resolved by `LocaleContextHolder`), so it's `@RequestParam(required = false)`.
-`HomeController.index(...)` takes no `@PathVariable`/`@RequestParam` at all -- with
-only one fixed path (`/`), it has no need for either.
+Which One, When" in both methods -- a "show this topic" request has no meaning
+without it, so it's always a path variable. `lang` is more interesting: in `show(...)`
+it's now **also** a path variable, because for SEO reasons every page needs a stable,
+crawlable URL per language (`/en/topics/{slug}` and `/tr/topics/{slug}` are two
+different, independently indexable pages, not one page with an optional modifier) --
+that makes `lang` part of the resource's identity too, not a filter on top of it. The
+one place `lang` is still a genuinely optional `@RequestParam` is `legacyRedirect(...)`,
+which exists only to 301-redirect the site's old `/topics/{slug}?lang=..` URLs to the
+new path -- there, a request is still perfectly meaningful without `lang` (it just
+falls back to English), which is exactly the "optional filter/modifier" case the
+distinction describes. `HomeController` mirrors the same split across its two methods: `index(...)` (the
+`/{lang:en|tr}` mapping that actually renders a page) takes only `@PathVariable String
+lang`, while `root(...)` (the bare `/` negotiator that 302-redirects to `/en` or
+`/tr`) takes the same optional `@RequestParam(required = false) String lang` as
+`legacyRedirect(...)`, for the same reason -- it's a courtesy for old
+`/?lang=..` bookmarks, not something the request strictly needs.
 
 ## Best Practices
 

@@ -24,12 +24,17 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 // Bu projenin GERÇEK TopicController'ı için @WebMvcTest -- 6 bağımlılığın TAMAMI
 // @MockitoBean ile sahtelenir (bkz. TopicController'ın constructor'ı). TopicTestFixtures
 // bu testin fixture'larını (Course/Category/Topic/TopicTranslation) üretmek için kullanılıyor.
+// Faz 64'ten beri controller'da iki mapping var: `/{lang:en|tr}/topics/{slug}` (gerçek
+// içerik) ve eski `?lang=` URL'lerini kalıcı olarak yönlendiren `/topics/{slug}` (SEO
+// gerekçesiyle path-bazlı URL yapısına geçişin bir parçası) -- ikisi de aynı
+// controller'da yaşadığı için tek @WebMvcTest slice'ı ikisini de test edebiliyor.
 @WebMvcTest(TopicController.class)
 class TopicControllerWebMvcTest {
 
@@ -57,25 +62,20 @@ class TopicControllerWebMvcTest {
         // Controller kodunda bkz: ResponseStatusException(HttpStatus.NOT_FOUND, ...) --
         // gerçek bir @ControllerAdvice olmadan bile, Spring'in varsayılan exception
         // çözümü ResponseStatusException'ı doğru HTTP durumuna çevirir.
-        mockMvc.perform(get("/topics/does-not-exist"))
+        mockMvc.perform(get("/en/topics/does-not-exist"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void invalidLangParamReturns400() throws Exception {
-        Course course = TopicTestFixtures.sampleCourse();
-        Category category = TopicTestFixtures.sampleCategory(course);
-        Topic topic = TopicTestFixtures.sampleTopic(category);
-
-        when(topicRepository.findBySlugWithCategoryAndCourse("spring-mvc-testing"))
-                .thenReturn(Optional.of(topic));
-
-        // Anasayfa'nın aksine, TopicController açıkça verilmiş ama bilinmeyen bir `lang`
-        // için kasıtlı olarak 400 döndürür (bkz. controller'daki Language.fromCode
-        // catch bloğu) -- bu davranış farkı, "Path Variable ve Query Parametrelerini
-        // Test Etmek" bölümündeki required=false senaryosundan kasıtlı olarak farklıdır.
-        mockMvc.perform(get("/topics/spring-mvc-testing").param("lang", "fr"))
-                .andExpect(status().isBadRequest());
+    void legacyQueryParamUrlRedirectsPermanentlyToPathBasedUrl() throws Exception {
+        // Faz 64 öncesinin `/topics/{slug}?lang=..` URL'leri artık render etmiyor,
+        // yeni `/{lang}/topics/{slug}` adresine 301 (kalıcı) yönlendiriyor -- bu
+        // controller metodu hiçbir repository/servise dokunmadığı için burada mock
+        // kurmaya gerek yok. `redirectedUrl(...)`, Location header'ını doğrudan
+        // doğrulayan bir matcher.
+        mockMvc.perform(get("/topics/spring-mvc-testing").param("lang", "tr"))
+                .andExpect(status().isMovedPermanently())
+                .andExpect(redirectedUrl("/tr/topics/spring-mvc-testing"));
     }
 
     @Test
@@ -98,7 +98,9 @@ class TopicControllerWebMvcTest {
         when(navigationService.buildNavigation(Language.TR)).thenReturn(List.of());
         when(navigationService.buildCourseSequence(course.getId(), Language.TR)).thenReturn(List.of());
 
-        mockMvc.perform(get("/topics/spring-mvc-testing"))
+        // Dil artık `?lang=` yerine URL path'inin bir parçası -- `/tr/...` isteği
+        // doğrudan Language.TR'yi hedefliyor, ortam/varsayılan locale'e bağlı değil.
+        mockMvc.perform(get("/tr/topics/spring-mvc-testing"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("topic"))
                 .andExpect(model().attribute("contentAvailable", true))

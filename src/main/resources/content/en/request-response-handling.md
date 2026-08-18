@@ -204,23 +204,26 @@ reason.
 ## This Project's Own Responses: A Real Example
 
 You can see the mechanisms from this lesson in `TopicController`'s own code -- since
-the project is currently a read-only HTML site, it doesn't use `@RequestBody`/
-`ResponseEntity`, but the `ResponseStatusException` we saw in "4xx Client Errors:
-400, 401, 403, 404, 409" is
-already genuinely in use:
+the project is currently a read-only HTML site, it still doesn't use `@RequestBody`,
+but it now genuinely uses both `ResponseStatusException` (from "4xx Client Errors:
+400, 401, 403, 404, 409") and `ResponseEntity` (from "Adding Headers with
+ResponseEntity"), in two different methods:
 
 ```java
 Topic topic = topicRepository.findBySlugWithCategoryAndCourse(slug)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: " + slug));
 // ...
-throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bilinmeyen dil: " + lang);
+return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
+        .location(URI.create("/" + language.getCode() + "/topics/" + slug))
+        .build();
 ```
 
 The first returns `404` when a resource identified by a path variable (recalling the
 previous lesson's "Path Variable or Query Parameter? Which One, When" distinction)
-can't be found; the second returns `400` when the `lang` query parameter was
-explicitly given but holds an invalid value -- both use the exact same class,
-the exact same mechanism, as what we've seen in this lesson.
+can't be found. The second is a real `301 Moved Permanently` with a `Location`
+header, built entirely by hand with `ResponseEntity` -- it's how the old
+`/topics/{slug}?lang=..` URLs (from before language moved into the URL path) keep
+working today, redirecting to their new address instead of breaking outright.
 
 ## Best Practices
 

@@ -29,7 +29,7 @@
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a th:href="@{/(lang=${language.code})}" th:text="#{breadcrumb.home}">Ana Sayfa</a>
+                        <a th:href="@{/{lang}(lang=${language.code})}" th:text="#{breadcrumb.home}">Ana Sayfa</a>
                     </li>
                     <li class="breadcrumb-item" th:text="${categoryName}">Kategori</li>
                     <li class="breadcrumb-item active" aria-current="page"
@@ -46,7 +46,7 @@
                 <p class="mb-2" th:text="${unavailableMessage}">Bu içerik bu dilde henüz mevcut değil.</p>
                 <a th:if="${otherLanguageAvailable}"
                    class="btn btn-sm btn-warning"
-                   th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${otherLanguage.code})}">
+                   th:href="@{/{lang}/topics/{slug}(lang=${otherLanguage.code}, slug=${topic.slug})}">
                     <span th:text="${otherLanguage.code == 'tr'} ? 'Türkçe olarak görüntüle' : 'View in English'"></span>
                 </a>
             </div>
@@ -63,7 +63,7 @@
                     </div>
                     <a th:if="${otherLanguageAvailable}"
                        class="btn btn-sm btn-outline-secondary"
-                       th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${otherLanguage.code})}"
+                       th:href="@{/{lang}/topics/{slug}(lang=${otherLanguage.code}, slug=${topic.slug})}"
                        th:text="${otherLanguage.code == 'tr'} ? 'TR' : 'EN'">Dil</a>
                 </div>
 
@@ -78,7 +78,7 @@
                 <nav class="d-flex justify-content-between mt-5 pt-3 border-top" aria-label="Konu navigasyonu">
                     <a th:if="${previousTopic != null}"
                        class="btn btn-outline-secondary text-start"
-                       th:href="@{/topics/{slug}(slug=${previousTopic.slug()}, lang=${language.code})}">
+                       th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${previousTopic.slug()})}">
                         <div class="small text-muted">&larr; <span th:text="#{nav.previous}">Önceki</span></div>
                         <div th:text="${previousTopic.title()}">Başlık</div>
                     </a>
@@ -86,7 +86,7 @@
 
                     <a th:if="${nextTopic != null}"
                        class="btn btn-outline-secondary text-end ms-auto"
-                       th:href="@{/topics/{slug}(slug=${nextTopic.slug()}, lang=${language.code})}">
+                       th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${nextTopic.slug()})}">
                         <div class="small text-muted"><span th:text="#{nav.next}">Sonraki</span> &rarr;</div>
                         <div th:text="${nextTopic.title()}">Başlık</div>
                     </a>

@@ -108,15 +108,23 @@ here and throughout the rest of this lesson.
 
 Not a made-up controller -- let's test the real `HomeController` we
 introduced in spring-mvc-fundamentals' "This Project's Own Controllers: A
-Real Spring MVC Example" section:
+Real Spring MVC Example" section. `HomeController` now has two endpoints:
+`/{lang:en|tr}` renders the actual home page, while a bare `/` is a
+language "negotiator" that 302-redirects to `/en` or `/tr` based on the
+`Accept-Language` header:
 
 {{HomeControllerTest.java}}
 
 `HomeController`'s only dependency is `NavigationService`, so a single
-`@MockitoBean` is enough. We don't care about the actual list
+`@MockitoBean` covers both tests. We don't care about the actual list
 `buildNavigation(...)` returns -- what's being tested here isn't
 `NavigationService`'s behavior, it's whether `HomeController` calls it
-correctly and puts the right attributes into the model.
+correctly and puts the right attributes into the model. The index test hits
+`/en` directly instead of relying on an ambient default locale -- the
+language is now an explicit URL segment, not implicit test-environment
+state -- and the redirect test simply confirms a bare `/` request (no
+`Accept-Language` header) lands on `/en`, matching the negotiator's
+fallback.
 
 ## Verifying the Model and View Name: model(), view()
 
@@ -299,7 +307,7 @@ class TopicControllerTest {
         when(topicRepository.findBySlugWithCategoryAndCourse("x"))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/topics/x"))
+        mockMvc.perform(get("/en/topics/x"))
                 .andExpect(status().isNotFound());
     }
 }
@@ -337,7 +345,8 @@ Bringing every technique from this lesson together, on this project's real
 `TopicTestFixtures` provides helper methods that build the real `Course`/
 `Category`/`Topic`/`TopicTranslation` entities (all using Lombok
 `@Builder`) as a consistent tree. `TopicControllerWebMvcTest` covers three
-scenarios: 404 for an unknown slug, 400 for an invalid `lang` parameter,
+scenarios: 404 for an unknown slug, a 301 redirect from the old
+query-parameter URL (`/topics/{slug}?lang=..`) to the new path-based one,
 and 200 through the real `topic.html` template for a fully published topic
 -- in that last scenario, every mocked value is the same type the
 controller receives from real services in production (a real `Topic`, a

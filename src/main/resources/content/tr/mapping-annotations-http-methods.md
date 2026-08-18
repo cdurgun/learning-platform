@@ -188,16 +188,21 @@ aldığında, path'i doğru yazdığını ama yanlış HTTP metodunu kullandığ
 ## Bu Projenin Kendi Mapping'leri: Gerçek Bir Örnek
 
 Bu dersteki mekanizmaları, projenin kendi kaynak kodunda görebilirsin.
-`HomeController`, sınıf seviyesinde hiçbir `@RequestMapping` taşımaz -- tek bir
-endpoint'i (`@GetMapping("/")`) olduğu için ortak bir öneğe ihtiyacı yok.
-`TopicController` ise "Sınıf ve Metot Seviyesinde @RequestMapping'i Birleştirmek"
-bölümünde gördüğümüz deseni birebir kullanır: sınıf seviyesinde
-`@RequestMapping("/topics")`, metot seviyesinde `@GetMapping("/{slug}")` -- ikisi
-birleşip `/topics/{slug}` tam path'ini oluşturur. Her iki controller de yalnızca
-`GET` isteklerine yanıt verir -- bu proje şu an salt-okunur bir içerik sitesi olduğu
-için `POST`/`PUT`/`PATCH`/`DELETE` hiç kullanılmıyor; bu kategorinin sonraki
-konularında (Request & Response Handling, REST API Design) bu diğer metotları
-gerektirecek bir JSON API senaryosunu ele alacağız.
+`HomeController`, sınıf seviyesinde hiçbir `@RequestMapping` taşımaz -- iki
+endpoint'i (`@GetMapping("/")` ve `@GetMapping("/{lang:en|tr}")`) ortak bir literal
+önek paylaşmadığı için zaten paylaşılacak bir şey yok. `TopicController` ise bir
+zamanlar "Sınıf ve Metot Seviyesinde @RequestMapping'i Birleştirmek" bölümünün ders
+kitabı örneğiydi -- sınıf seviyesinde `@RequestMapping("/topics")`, metot seviyesinde
+`@GetMapping("/{slug}")` -- ta ki ikinci bir mapping şekli (eski URL'leri
+yönlendiren `/topics/{slug}`, gerçek `/{lang:en|tr}/topics/{slug}`'in yanına)
+eklenip artık ilkiyle tek bir sınıf-seviyesi önek paylaşamayana kadar. O noktada
+sınıf seviyesindeki `@RequestMapping` kaldırıldı, her metot artık kendi tam path'ini
+tanımlıyor -- paylaşılan bir önekin ne zaman kendini amorti etmekten çıktığına dair
+gerçek, küçük bir örnek. Her iki controller de yalnızca `GET` isteklerine yanıt verir
+-- bu proje şu an salt-okunur bir içerik sitesi olduğu için `POST`/`PUT`/`PATCH`/
+`DELETE` hiç kullanılmıyor; bu kategorinin sonraki konularında (Request & Response
+Handling, REST API Design) bu diğer metotları gerektirecek bir JSON API senaryosunu
+ele alacağız.
 
 ## Best Practices
 

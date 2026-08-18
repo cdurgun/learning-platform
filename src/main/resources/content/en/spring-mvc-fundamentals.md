@@ -128,7 +128,7 @@ Each step corresponds to its own section in this lesson: the front controller st
 Model/response-body split to "@Controller vs. @RestController: Which One, When?", and
 the ViewResolver step to "ViewResolver: From Logical View Name to HTML".
 
-This flow actually runs on every `/topics/{slug}` request in this project:
+This flow actually runs on every `/{lang}/topics/{slug}` request in this project:
 DispatcherServlet routes the request to `TopicController.show(...)`, which populates
 the `Model` and returns the view name `"topic"` -- we'll walk through this in detail
 in "This Project's Own Controllers: A Real Spring MVC Example".
@@ -275,13 +275,13 @@ Scanning Example" (not `@RestController` -- both produce HTML pages, not JSON), 
 are found automatically thanks to `@SpringBootApplication`'s implicit component
 scanning.
 
-`HomeController.index(Model model)` puts the navigation data it gets from
-`NavigationService` into the view with `model.addAttribute("nav", ...)` and returns
-the view name `"index"` -- exactly the mechanism we saw in "Model: Carrying Data from
-Controller to View". `TopicController` carries `@RequestMapping("/topics")` at the
-class level and `@GetMapping("/{slug}")` at the method level -- we'll look in detail
-at how the two combine into a single path (`/topics/{slug}`) in the next lesson
-(Mapping Annotations & HTTP Methods). Both controllers use constructor injection
+`HomeController.index(@PathVariable String lang, Model model)` puts the navigation
+data it gets from `NavigationService` into the view with `model.addAttribute("nav",
+...)` and returns the view name `"index"` -- exactly the mechanism we saw in "Model:
+Carrying Data from Controller to View". `TopicController` maps its real content page
+to `/{lang:en|tr}/topics/{slug}` -- we'll look in detail at how a controller's mapping
+shape evolves (and when a shared class-level prefix stops making sense) in the next
+lesson (Mapping Annotations & HTTP Methods). Both controllers use constructor injection
 (exactly the pattern we saw in the Dependency Injection lesson's "Constructor
 Injection" section) -- all six of `TopicController`'s dependencies live in `final`
 fields, all injected through its one constructor.

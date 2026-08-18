@@ -115,11 +115,14 @@ Inside `@{/topics/{slug}(slug=${slug}, lang=${lang})}`, the parenthesized part
 plays two roles: if a path placeholder named `{slug}` already exists in the path,
 the matching parameter (`slug=${slug}`) is substituted into it; any remaining
 parameters (`lang=${lang}`) automatically become a query string like `?lang=en`.
-This project's own `topic.html` line,
-`th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${otherLanguage.code})}"`, is
-a direct use of that mechanism -- the view-side counterpart of the same
-path/query distinction we read on the server side with `@PathVariable`/
-`@RequestParam` in Path Variables and Request Parameters.
+This is exactly how this project's own `topic.html` used to build its links --
+`th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${otherLanguage.code})}"` --
+before an SEO-driven redesign moved language into the URL path itself. Today the
+same line reads `th:href="@{/{lang}/topics/{slug}(lang=${otherLanguage.code},
+slug=${topic.slug})}"` -- both `{lang}` and `{slug}` are now path placeholders, so
+there's nothing left over to spill into a query string; either way, it's the
+view-side counterpart of the same path/query distinction we read on the server side
+with `@PathVariable`/`@RequestParam` in Path Variables and Request Parameters.
 
 ## Displaying Text: th:text vs. th:utext
 
@@ -364,7 +367,7 @@ Quick reference:
 
 ```html
 <!-- variable + link + message -->
-<a th:href="@{/topics/{slug}(slug=${topic.slug()})}" th:text="${topic.title()}">Topic</a>
+<a th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${topic.slug()})}" th:text="${topic.title()}">Topic</a>
 <span th:text="#{time.minutesShort}">min</span>
 
 <!-- conditional + loop -->

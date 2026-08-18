@@ -128,7 +128,7 @@ ve HandlerAdapter: DispatcherServlet'in İçinde Neler Oluyor?" bölümünün, M
 body ayrımı "@Controller vs @RestController: Ne Zaman Hangisi?" bölümünün, ViewResolver
 adımı da "ViewResolver: Mantıksal View Adından HTML'e" bölümünün konusu.
 
-Bu projede bu akış, her `/topics/{slug}` isteğinde gerçekten çalışıyor:
+Bu projede bu akış, her `/{lang}/topics/{slug}` isteğinde gerçekten çalışıyor:
 `DispatcherServlet`, isteği `TopicController.show(...)`'a yönlendiriyor, o da
 `Model`'i dolduruyor ve `"topic"` view adını döndürüyor -- "Bu Projenin Kendi
 Controller'ları: Gerçek Bir Spring MVC Örneği" bölümünde bunu ayrıntısıyla
@@ -277,13 +277,14 @@ Bir Component Scanning Örneği" bölümünde gördüğümüz gibi `@Controller`
 (`@RestController` değil -- ikisi de HTML sayfası üretiyor, JSON değil) ve
 `@SpringBootApplication`'ın örtük component scanning'i sayesinde otomatik bulunuyor.
 
-`HomeController.index(Model model)`, `NavigationService`'ten aldığı navigasyon
-verisini `model.addAttribute("nav", ...)` ile View'a taşıyor ve `"index"` view adını
-döndürüyor -- tam olarak "Model: Controller'dan View'a Veri Taşımak" bölümünde
-gördüğümüz mekanizma. `TopicController`, sınıf seviyesinde `@RequestMapping("/topics")`
-ve metot seviyesinde `@GetMapping("/{slug}")` taşıyor -- ikisinin birlikte nasıl bir
-tam path oluşturduğunu (`/topics/{slug}`) bir sonraki konuda (Request Mapping & HTTP
-Methods) ayrıntısıyla göreceğiz. Her iki controller de constructor injection
+`HomeController.index(@PathVariable String lang, Model model)`, `NavigationService`'ten
+aldığı navigasyon verisini `model.addAttribute("nav", ...)` ile View'a taşıyor ve
+`"index"` view adını döndürüyor -- tam olarak "Model: Controller'dan View'a Veri
+Taşımak" bölümünde gördüğümüz mekanizma. `TopicController`, gerçek içerik sayfasını
+`/{lang:en|tr}/topics/{slug}`'e map ediyor -- bir controller'ın mapping şeklinin nasıl
+evrildiğini (ve paylaşılan bir sınıf-seviyesi önekin ne zaman anlamını yitirdiğini) bir
+sonraki konuda (Request Mapping & HTTP Methods) ayrıntısıyla göreceğiz. Her iki
+controller de constructor injection
 kullanıyor (Dependency Injection dersinin "Constructor Injection" bölümünde
 gördüğümüz desenin ta kendisi) -- `TopicController`'ın altı bağımlılığı, hepsi
 `final` alanlarda, hepsi tek constructor'da.

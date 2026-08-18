@@ -10,22 +10,21 @@ import com.cdurgun.learning.service.MarkdownService;
 import com.cdurgun.learning.service.NavigationService;
 import com.cdurgun.learning.web.nav.SequencedTopic;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/topics")
 public class TopicController {
 
     private final TopicRepository topicRepository;
@@ -49,29 +48,39 @@ public class TopicController {
         this.messageSource = messageSource;
     }
 
-    @GetMapping("/{slug}")
-    public String show(@PathVariable String slug,
-                        @RequestParam(required = false) String lang,
+    /**
+     * Eski (Faz 63'e kadar geçerli) {@code /topics/{slug}?lang=..} URL'lerine gelen
+     * istekleri yeni path-bazlı adrese kalıcı olarak (301) yönlendirir. Bu, hem
+     * kullanıcının kendi tarayıcısında/yer imlerinde kalmış eski linkleri kırmamak
+     * hem de Google zaten bu eski URL'yi taramışsa index'ini yeni adrese aktarmasını
+     * sağlamak için gerekli — bkz. Faz 64 notu. `lang` eksik/geçersizse eski
+     * `LangParamLocaleResolver`'ın varsayılanıyla (EN) aynı davranışı koruyoruz.
+     */
+    @GetMapping("/topics/{slug}")
+    public ResponseEntity<Void> legacyRedirect(@PathVariable String slug,
+                                                @RequestParam(required = false) String lang) {
+        Language language = resolveLegacyLanguage(lang);
+        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
+                .location(URI.create("/" + language.getCode() + "/topics/" + slug))
+                .build();
+    }
+
+    /**
+     * `{lang:en|tr}` regex kısıtı, `HomeController.index()`'teki aynı gerekçeyle
+     * eklendi: yalnızca gerçek dil kodları bu mapping'e düşsün, başka hiçbir tek/çok
+     * segmentli yol yanlışlıkla buraya sapmasın.
+     */
+    @GetMapping("/{lang:en|tr}/topics/{slug}")
+    public String show(@PathVariable String lang,
+                        @PathVariable String slug,
                         Model model) {
+        Language language = Language.fromCode(lang);
+
         // Konu gerçekten yoksa bu gerçek bir 404'tür. Category + Course'u join fetch ile
         // birlikte getiriyoruz — breadcrumb ve prev/next bunlara ihtiyaç duyuyor, ve bunu
         // lazy-loading'e/open-in-view'a bırakmak yerine tek sorguda açıkça çözmek istiyoruz.
         Topic topic = topicRepository.findBySlugWithCategoryAndCourse(slug)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: " + slug));
-
-        // `lang` verilmemişse LangParamLocaleResolver'ın çözdüğü varsayılan locale'i
-        // kullan (arayüz metinleriyle aynı kaynak); açıkça verilmiş ama bozuk bir `lang`
-        // için ise (Anasayfa'nın aksine) burada bilerek 400 döndürüyoruz.
-        Language language;
-        if (lang == null) {
-            language = Language.fromCode(LocaleContextHolder.getLocale().getLanguage());
-        } else {
-            try {
-                language = Language.fromCode(lang);
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bilinmeyen dil: " + lang);
-            }
-        }
 
         Language otherLanguage = language.other();
         boolean otherLanguageAvailable = isPublished(topic.getId(), otherLanguage);
@@ -142,6 +151,17 @@ public class TopicController {
 
         model.addAttribute("previousTopic", previous);
         model.addAttribute("nextTopic", next);
+    }
+
+    private Language resolveLegacyLanguage(String lang) {
+        if (lang == null) {
+            return Language.EN;
+        }
+        try {
+            return Language.fromCode(lang);
+        } catch (IllegalArgumentException e) {
+            return Language.EN;
+        }
     }
 
     private boolean isPublished(Long topicId, Language language) {

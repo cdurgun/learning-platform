@@ -204,23 +204,26 @@ Bu, Mapping Annotation'ları dersindeki "Desteklenmeyen Bir HTTP Metodu
 ## Bu Projenin Kendi Response'ları: Gerçek Bir Örnek
 
 Bu dersteki mekanizmaları, `TopicController`'ın kendi kodunda görebilirsin --
-proje şu an salt-okunur bir HTML sitesi olduğu için `@RequestBody`/`ResponseEntity`
-kullanmıyor, ama "4xx İstemci Hataları: 400, 401, 403, 404, 409" bölümünde gördüğümüz `ResponseStatusException`
-zaten gerçekten kullanılıyor:
+proje şu an salt-okunur bir HTML sitesi olduğu için hâlâ `@RequestBody` kullanmıyor,
+ama artık iki farklı metotta hem `ResponseStatusException`'ı ("4xx İstemci
+Hataları: 400, 401, 403, 404, 409" bölümü) hem de `ResponseEntity`'yi
+("ResponseEntity ile Header Eklemek" bölümü) gerçekten kullanıyor:
 
 ```java
 Topic topic = topicRepository.findBySlugWithCategoryAndCourse(slug)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: " + slug));
 // ...
-throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bilinmeyen dil: " + lang);
+return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
+        .location(URI.create("/" + language.getCode() + "/topics/" + slug))
+        .build();
 ```
 
 İlki, path variable'la (bir önceki dersin "Path Variable mi, Query Parameter mı? Ne
 Zaman Hangisi" ayrımını hatırlarsak) kimliklendirilen bir kaynak bulunamadığında
-`404`; ikincisi,
-`lang` query parametresi açıkça verilmiş ama geçersiz bir değer taşıdığında `400`
-döndürüyor -- ikisi de bu derste gördüğümüz kodlarla birebir aynı sınıfı, aynı
-mekanizmayı kullanıyor.
+`404` döndürüyor. İkincisi ise elle kurulmuş, `ResponseEntity` ile gerçek bir `301
+Moved Permanently` ve bir `Location` header'ı -- dil URL path'ine taşınmadan
+önceki eski `/topics/{slug}?lang=..` adreslerinin bugün hâlâ çalışmasının sebebi
+bu: kırılmak yerine yeni adrese yönlendiriliyorlar.
 
 ## Best Practices
 

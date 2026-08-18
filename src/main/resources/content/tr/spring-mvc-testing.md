@@ -110,15 +110,22 @@ bu dersin geri kalanında kesinlikle `@MockitoBean` kullanıyoruz.
 
 Kurgu bir controller değil, `spring-mvc-fundamentals` dersinin "Bu Projenin
 Kendi Controller'ları: Gerçek Bir Spring MVC Örneği" bölümünde tanıttığımız
-gerçek `HomeController`'ı test edelim:
+gerçek `HomeController`'ı test edelim. `HomeController`'ın artık iki
+endpoint'i var: `/{lang:en|tr}` gerçek anasayfayı render ediyor, çıplak `/`
+ise `Accept-Language` başlığına göre `/en` ya da `/tr`'ye 302 yönlendiren
+bir dil "negotiator"ı:
 
 {{HomeControllerTest.java}}
 
 `HomeController`'ın tek bağımlılığı `NavigationService` olduğu için tek bir
-`@MockitoBean` yeterli. `buildNavigation(...)`'ın döndürdüğü gerçek listeye
-(ya da içeriğine) hiç önem vermiyoruz -- burada test edilen şey
-`NavigationService`'in davranışı değil, `HomeController`'ın onu doğru
-çağırıp çağırmadığı ve model'e doğru attribute'ları koyup koymadığı.
+`@MockitoBean` her iki testi de kapsıyor. `buildNavigation(...)`'ın
+döndürdüğü gerçek listeye (ya da içeriğine) hiç önem vermiyoruz -- burada
+test edilen şey `NavigationService`'in davranışı değil, `HomeController`'ın
+onu doğru çağırıp çağırmadığı ve model'e doğru attribute'ları koyup
+koymadığı. İlk test doğrudan `/en`'i hedefliyor -- dil artık ortamın
+varsayılan locale'ine değil, açık bir URL segmentine bağlı -- ikinci test
+ise `Accept-Language` header'ı olmayan çıplak bir `/` isteğinin
+negotiator'ın varsayılanına uygun şekilde `/en`'de bittiğini doğruluyor.
 
 ## Model ve View Adını Doğrulamak: model(), view()
 
@@ -302,7 +309,7 @@ class TopicControllerTest {
         when(topicRepository.findBySlugWithCategoryAndCourse("x"))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/topics/x"))
+        mockMvc.perform(get("/en/topics/x"))
                 .andExpect(status().isNotFound());
     }
 }
@@ -341,12 +348,13 @@ bağımlılığın tamamı `@MockitoBean` ile sahtelenmiş) üzerinde birleştir
 `TopicTestFixtures`, gerçek `Course`/`Category`/`Topic`/`TopicTranslation`
 entity'lerini (hepsi Lombok `@Builder` kullanıyor) tutarlı bir ağaç olarak
 kuran yardımcı metotlar sağlıyor. `TopicControllerWebMvcTest` üç senaryoyu
-kapsıyor: bilinmeyen bir slug için 404, geçersiz bir `lang` parametresi için
-400, ve tam yayınlanmış bir konu için gerçek `topic.html` template'i
-üzerinden 200 -- son senaryoda mock'lanan her değer, controller'ın
-production'da gerçek servislerden aldığı değerlerle aynı tipte (gerçek
-`Topic`, gerçek `MarkdownService.MarkdownRenderResult`), bu yüzden template
-gerçek bir isteği işliyormuş gibi normal şekilde render ediliyor.
+kapsıyor: bilinmeyen bir slug için 404, eski query-parametreli URL'den
+(`/topics/{slug}?lang=..`) yeni path-bazlı adrese 301 yönlendirme, ve tam
+yayınlanmış bir konu için gerçek `topic.html` template'i üzerinden 200 --
+son senaryoda mock'lanan her değer, controller'ın production'da gerçek
+servislerden aldığı değerlerle aynı tipte (gerçek `Topic`, gerçek
+`MarkdownService.MarkdownRenderResult`), bu yüzden template gerçek bir
+isteği işliyormuş gibi normal şekilde render ediliyor.
 
 ## Ek: Mini Proje — Bir Interceptor'ı MockMvc ile Test Etmek
 

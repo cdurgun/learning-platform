@@ -47,7 +47,7 @@
                                               th:text="${topicItem.estimatedMinutes()} + ' ' + #{time.minutesShort}">15 dk</span>
                                     </div>
                                     <a class="stretched-link small"
-                                       th:href="@{/topics/{slug}(slug=${topicItem.slug()}, lang=${language.code})}"
+                                       th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${topicItem.slug()})}"
                                        th:text="#{home.explore}">
                                         İncele &rarr;
                                     </a>

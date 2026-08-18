@@ -5,8 +5,11 @@ import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 // @{...} is a link expression -- it builds a URL, adding the application's context
 // path automatically and turning named placeholders (path variables) and query
-// parameters into the right syntax. This project's own topic.html uses it constantly,
-// e.g. th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${language.code})}".
+// parameters into the right syntax. This is exactly how this project's own
+// topic.html built its links before an SEO-driven redesign moved language into
+// the URL path itself -- back then it read
+// th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${language.code})}", with
+// `lang` spilling over into a `?lang=..` query string exactly like below.
 class LinkExpressionExample {
 
     public static void main(String[] args) {

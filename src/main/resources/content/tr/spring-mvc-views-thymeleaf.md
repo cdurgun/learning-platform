@@ -110,11 +110,15 @@ string birleştirme yapmana gerek kalmaz:
 farklı role ayrılıyor: `{slug}` adlı bir path placeholder path'te zaten varsa,
 aynı isimli parametre (`slug=${slug}`) oraya yerleştirilir; kalan parametreler
 (`lang=${lang}`) otomatik olarak `?lang=tr` gibi bir query string'e dönüşür. Bu
-projenin `topic.html`'indeki
-`th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${otherLanguage.code})}"`
-satırı bu mekanizmanın birebir kullanımı -- Path Variable'lar ve Request
-Parametreleri dersinde `@PathVariable`/`@RequestParam` ile sunucu tarafında
-okuduğumuz aynı ayrımın, view tarafındaki karşılığı.
+projenin `topic.html`'i SEO odaklı bir yeniden tasarımla dili URL path'inin
+kendisine taşımadan önce linklerini TAM OLARAK böyle kuruyordu --
+`th:href="@{/topics/{slug}(slug=${topic.slug}, lang=${otherLanguage.code})}"`.
+Bugün aynı satır `th:href="@{/{lang}/topics/{slug}(lang=${otherLanguage.code},
+slug=${topic.slug})}"` şeklinde -- hem `{lang}` hem `{slug}` artık birer path
+placeholder, bu yüzden query string'e taşacak bir şey kalmıyor; her iki durumda
+da bu, Path Variable'lar ve Request Parametreleri dersinde `@PathVariable`/
+`@RequestParam` ile sunucu tarafında okuduğumuz aynı ayrımın view tarafındaki
+karşılığı.
 
 ## Metin Görüntüleme: th:text vs th:utext
 
@@ -359,7 +363,7 @@ Hızlı referans:
 
 ```html
 <!-- değişken + link + mesaj -->
-<a th:href="@{/topics/{slug}(slug=${topic.slug()})}" th:text="${topic.title()}">Konu</a>
+<a th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${topic.slug()})}" th:text="${topic.title()}">Konu</a>
 <span th:text="#{time.minutesShort}">dk</span>
 
 <!-- koşul + döngü -->

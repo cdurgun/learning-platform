@@ -7,7 +7,7 @@
 <body>
 
 <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-    <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/}">
+    <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/{lang}(lang=${language.code})}">
         <img th:src="@{/img/favicon.svg(v=2)}" alt="" width="30" height="30"/>
         <span class="d-flex flex-column lh-1">
             <span>Learn<span class="brand-accent">Forge</span>X</span>
@@ -17,10 +17,10 @@
     <div class="ms-auto d-flex gap-2">
         <a class="btn btn-sm btn-outline-light"
            th:classappend="${language != null and language.code == 'tr'} ? 'active' : ''"
-           th:href="@{/(lang='tr')}">TR</a>
+           th:href="@{/tr}">TR</a>
         <a class="btn btn-sm btn-outline-light"
            th:classappend="${language != null and language.code == 'en'} ? 'active' : ''"
-           th:href="@{/(lang='en')}">EN</a>
+           th:href="@{/en}">EN</a>
     </div>
 </nav>
 
@@ -45,7 +45,7 @@
                     <li class="nav-item" th:each="topicItem : ${category.topics()}">
                         <a class="nav-link py-1 px-2"
                            th:classappend="${activeTopicSlug != null and activeTopicSlug == topicItem.slug()} ? 'fw-bold text-primary' : ''"
-                           th:href="@{/topics/{slug}(slug=${topicItem.slug()}, lang=${language.code})}"
+                           th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${topicItem.slug()})}"
                            th:text="${topicItem.title()}">Konu</a>
                     </li>
                 </ul>

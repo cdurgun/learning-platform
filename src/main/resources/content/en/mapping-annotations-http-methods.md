@@ -184,15 +184,20 @@ had the right path but the wrong HTTP method; with a 404 it loses that informati
 ## This Project's Own Mappings: A Real Example
 
 You can see the mechanisms from this lesson in the project's own source code.
-`HomeController` carries no class-level `@RequestMapping` -- with only one endpoint
-(`@GetMapping("/")`), it has no need for a shared prefix. `TopicController` uses
-exactly the pattern we saw in "Combining @RequestMapping at the Class and Method
-Level": `@RequestMapping("/topics")` at the class level, `@GetMapping("/{slug}")` at
-the method level -- together they form the full path `/topics/{slug}`. Both
-controllers respond only to `GET` requests -- since this project is currently a
-read-only content site, `POST`/`PUT`/`PATCH`/`DELETE` are never used; later lessons in
-this category (Request & Response Handling, REST API Design) will work through a JSON
-API scenario that needs these other methods.
+`HomeController` carries no class-level `@RequestMapping` -- it has two endpoints
+(`@GetMapping("/")` and `@GetMapping("/{lang:en|tr}")`) that don't share a common
+literal prefix, so there'd be nothing to factor out into a shared class-level path
+anyway. `TopicController` actually used to be a textbook case of "Combining
+@RequestMapping at the Class and Method Level" -- `@RequestMapping("/topics")` at the
+class level, `@GetMapping("/{slug}")` at the method level -- until it grew a second
+mapping shape (a legacy-URL redirect, `/topics/{slug}`, alongside the real
+`/{lang:en|tr}/topics/{slug}`) that no longer shares a single class-level prefix with
+the first. At that point the class-level `@RequestMapping` was dropped and each method
+declares its own full path instead -- a real, small example of when a shared prefix
+stops paying for itself. Both controllers respond only to `GET` requests -- since this
+project is currently a read-only content site, `POST`/`PUT`/`PATCH`/`DELETE` are never
+used; later lessons in this category (Request & Response Handling, REST API Design)
+will work through a JSON API scenario that needs these other methods.
 
 ## Best Practices
 

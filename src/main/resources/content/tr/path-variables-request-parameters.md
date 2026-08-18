@@ -176,26 +176,40 @@ kendisi hiç çalışmaz.
 
 ## Bu Projenin Kendi Path Variable'ı ve Query Parametresi: Gerçek Bir Örnek
 
-Bu dersteki mekanizmaları, projenin kendi `TopicController.show(...)` metodunda
-görebilirsin:
+Bu dersteki mekanizmaları, projenin kendi `TopicController`'ında görebilirsin -- ve
+gerçek kodu, bu ayrımın zamanla nasıl değiştiğinin de güzel bir örneği:
 
 ```java
-@GetMapping("/{slug}")
-public String show(@PathVariable String slug,
-                    @RequestParam(required = false) String lang,
-                    Model model) {
+@GetMapping("/{lang:en|tr}/topics/{slug}")
+public String show(@PathVariable String lang, @PathVariable String slug, Model model) {
+    ...
+}
+
+@GetMapping("/topics/{slug}")
+public ResponseEntity<Void> legacyRedirect(@PathVariable String slug,
+                                            @RequestParam(required = false) String lang) {
     ...
 }
 ```
 
-`slug`, "Path Variable mi, Query Parameter mı? Ne Zaman Hangisi" bölümündeki ayrımın birebir örneği --
-`slug` olmadan "bu konuyu göster" isteğinin anlamı yok, bu yüzden path variable
-(`/topics/{slug}`). `lang` ise zaten geçerli olan bir isteği yalnızca **hangi dilde**
-göstereceğini belirliyor -- `lang` hiç gönderilmese de `/topics/dependency-injection`
-isteği geçerli (controller, `LocaleContextHolder`'ın çözdüğü varsayılan dile düşer),
-bu yüzden `@RequestParam(required = false)`. `HomeController.index(...)` ise hiçbir
-`@PathVariable`/`@RequestParam` almaz -- tek bir sabit path'i (`/`) olduğu için buna
-ihtiyacı yoktur.
+`slug`, her iki metotta da "Path Variable mi, Query Parameter mı? Ne Zaman Hangisi"
+bölümündeki ayrımın birebir örneği -- `slug` olmadan "bu konuyu göster" isteğinin
+anlamı yok, bu yüzden her zaman path variable. `lang` ise daha ilginç: `show(...)`'da
+artık **o da** bir path variable, çünkü SEO gerekçesiyle her sayfanın dil başına
+kararlı, taranabilir bir URL'e ihtiyacı var (`/en/topics/{slug}` ve
+`/tr/topics/{slug}`, üstüne isteğe bağlı bir değiştirici eklenmiş TEK bir sayfa değil,
+BAĞIMSIZ olarak indexlenebilen iki ayrı sayfa) -- bu da `lang`'i artık kaynağın
+kimliğinin bir parçası yapıyor, üzerine eklenen bir filtre değil. `lang`'in hâlâ
+gerçekten isteğe bağlı bir `@RequestParam` olduğu tek yer `legacyRedirect(...)` --
+bu metot yalnızca sitenin eski `/topics/{slug}?lang=..` URL'lerini yeni path'e 301
+ile yönlendirmek için var; orada `lang` olmadan da istek hâlâ tamamen anlamlı (sadece
+İngilizce'ye düşüyor), yani ayrımın tarif ettiği "isteğe bağlı filtre/değiştirici"
+durumunun ta kendisi. `HomeController` da aynı ayrımı iki metodu arasında yansıtıyor:
+gerçekten bir sayfa render eden `index(...)` (`/{lang:en|tr}` mapping'i) yalnızca
+`@PathVariable String lang` alıyor; çıplak `/`'i `/en` ya da `/tr`'ye 302 ile
+yönlendiren `root(...)` ise `legacyRedirect(...)` ile aynı gerekçeyle aynı isteğe
+bağlı `@RequestParam(required = false) String lang`'i alıyor -- eski `/?lang=..` yer
+imlerine bir nezaket, isteğin kesinlikle ihtiyaç duyduğu bir şey değil.
 
 ## Best Practices
 
