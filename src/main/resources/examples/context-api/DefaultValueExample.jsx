@@ -8,9 +8,9 @@ function ThemedButton() {
 }
 
 function DefaultValueExample() {
-  // Burada HİÇ Provider yok -- ThemedButton, useContext(ThemeContext)
-  // çağırdığında, createContext("light") ile verilen VARSAYILAN değeri
-  // ("light") alır. Provider yalnızca, o değeri EZMEK (override etmek)
-  // istediğimizde gerekli.
+  // There's NO Provider here at all -- when ThemedButton calls
+  // useContext(ThemeContext), it gets the DEFAULT value ("light") given
+  // by createContext("light"). A Provider is only needed when we want to
+  // OVERRIDE that value.
   return <ThemedButton />;
 }

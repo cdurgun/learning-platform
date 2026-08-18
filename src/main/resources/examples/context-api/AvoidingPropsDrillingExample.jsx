@@ -15,9 +15,9 @@ function Level3() {
 }
 
 function Level4() {
-  // Sharing State dersindeki örneğin aksine, Level1/Level2/Level3'ün
-  // HİÇBİRİ `user` prop'unu bilmiyor bile -- yalnızca Level4, en dipte,
-  // UserContext'ten DOĞRUDAN okuyor.
+  // Unlike the example in the Sharing State lesson, NONE of Level1/Level2/
+  // Level3 even knows about the `user` prop -- only Level4, at the bottom,
+  // reads DIRECTLY from UserContext.
   const user = useContext(UserContext);
   return <p>Logged in as {user}</p>;
 }

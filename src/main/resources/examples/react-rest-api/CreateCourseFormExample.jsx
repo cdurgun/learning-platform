@@ -8,10 +8,11 @@ function CreateCourseFormExample({ onCreated }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    // Forms dersindeki controlled input + onSubmit deseni, burada bir POST
-    // isteğiyle birleşiyor. Spring Boot tarafında bu, `@RequestBody` ile
-    // JSON'ı bir Java nesnesine çeviren bir `@PostMapping` metoduna karşılık
-    // gelir (bkz. REST API Tasarımı dersi, Java kursunda).
+    // The controlled input + onSubmit pattern from the Forms lesson is
+    // combined here with a POST request. On the Spring Boot side, this
+    // corresponds to a `@PostMapping` method that uses `@RequestBody` to
+    // convert the JSON into a Java object (see the REST API Design lesson
+    // in the Java course).
     const response = await fetch(`${BASE_URL}/courses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

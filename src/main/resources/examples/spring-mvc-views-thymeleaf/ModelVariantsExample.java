@@ -10,7 +10,7 @@ class ModelVariantsExample {
 
     // 1) Model: the interface you see most often as a controller method parameter.
     //    DispatcherServlet creates and injects it automatically (see the Spring MVC
-    //    Fundamentals lesson's "Model: Controller'dan View'a Veri Taşımak" section).
+    //    Fundamentals lesson's "Model: Passing Data from Controller to View" section).
     static Model buildWithModel() {
         Model model = new ExtendedModelMap();
         model.addAttribute("title", "Spring MVC Views & Thymeleaf");

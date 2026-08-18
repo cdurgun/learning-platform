@@ -21,10 +21,9 @@ class ErrorBoundary extends Component {
 
 function EventHandlerExample() {
   function handleClick() {
-    // Error boundary'ler yalnızca RENDER sırasındaki hataları yakalar --
-    // bir event handler İÇİNDE (bir onClick gibi) fırlatılan bir hata,
-    // error boundary tarafından YAKALANMAZ. Bunun için normal try/catch
-    // kullanmak gerekir.
+    // Error boundaries only catch errors during RENDER -- an error thrown
+    // INSIDE an event handler (like an onClick) is NOT CAUGHT by an error
+    // boundary. A regular try/catch is needed for that.
     try {
       throw new Error("Button click failed!");
     } catch (error) {
@@ -40,9 +39,9 @@ function WhatErrorBoundariesDontCatchExample() {
 
   return (
     <div>
-      {/* ErrorBoundary burada EventHandlerExample'ı sarmalıyor -- ama
-          içindeki onClick hatası yine de YAKALANMAYACAK, çünkü o bir
-          event handler'da oluyor, render sırasında değil. */}
+      {/* The ErrorBoundary here wraps EventHandlerExample -- but the onClick
+          error inside it will still NOT BE CAUGHT, because it happens in
+          an event handler, not during render. */}
       <ErrorBoundary>
         <EventHandlerExample />
       </ErrorBoundary>

@@ -46,6 +46,6 @@ class MessageExpressionExample {
         //   <p th:text="#{topic.unavailable(${languageName})}">...</p>
         // -- no key found for the current locale falls back to "??key??" by default,
         // which is exactly the kind of silent-looking bug worth watching for
-        // (see "Yaygın Hatalar").
+        // (see "Common Mistakes").
     }
 }

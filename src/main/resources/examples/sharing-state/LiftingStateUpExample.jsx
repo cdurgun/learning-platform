@@ -28,10 +28,9 @@ function ResultsList({ query }) {
 }
 
 function LiftingStateUpExample() {
-  // `query` state'i artık SearchBox'ın İÇİNDE değil, ikisinin de ORTAK
-  // atası olan bu component'te yaşıyor -- "state'i yukarı taşımak"
-  // (lifting state up) dediğimiz şey bu. Her iki child da bu state'i
-  // props ile alıyor.
+  // The `query` state no longer lives INSIDE SearchBox -- it now lives in
+  // this component, the COMMON ancestor of both. This is what we call
+  // "lifting state up". Both children receive this state via props.
   const [query, setQuery] = useState("");
 
   return (

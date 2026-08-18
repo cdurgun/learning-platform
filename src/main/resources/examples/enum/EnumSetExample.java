@@ -5,7 +5,7 @@ class EnumSetExample {
         EnumSet<DayWithMethod> weekend = EnumSet.of(DayWithMethod.SATURDAY, DayWithMethod.SUNDAY);
         EnumSet<DayWithMethod> weekdays = EnumSet.complementOf(weekend);
 
-        System.out.println("Hafta sonu: " + weekend);
-        System.out.println("Hafta içi: " + weekdays);
+        System.out.println("Weekend: " + weekend);
+        System.out.println("Weekdays: " + weekdays);
     }
 }

@@ -15,10 +15,10 @@ function Level4({ user }) {
 }
 
 function WhyPropsDrillingHurtsExample() {
-  // Level1, Level2, Level3'ün HİÇBİRİ `user`'ı kullanmıyor -- yalnızca bir
-  // sonraki seviyeye AKTARIYORLAR. Yalnızca en dipteki Level4 gerçekten
-  // kullanıyor. Ağaç derinleştikçe (ya da her seviyeye yeni prop'lar
-  // eklendikçe) bu, hem yazması yorucu hem de hataya açık bir hal alır --
-  // bir sonraki derste (Context API), bunu çözen bir yöntem göreceğiz.
+  // NONE of Level1, Level2, or Level3 use `user` -- they just PASS IT
+  // ALONG to the next level. Only Level4, at the very bottom, actually
+  // uses it. As the tree gets deeper (or new props are added at every
+  // level) this becomes tedious to write and error-prone -- in the next
+  // lesson (Context API) we'll see an approach that solves this.
   return <Level1 user="Ada" />;
 }

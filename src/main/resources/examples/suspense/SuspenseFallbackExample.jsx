@@ -4,11 +4,10 @@ const CourseDetails = lazy(() => import("./CourseDetails.jsx"));
 
 function SuspenseFallbackExample() {
   return (
-    // `fallback`, herhangi bir JSX olabilir -- yalnızca bir metin değil,
-    // bir spinner, bir iskelet (skeleton) ekran, ya da başka bir
-    // component de olabilir. Lazy Loading dersinde Suspense'i YALNIZCA
-    // lazy() ile birlikte gördük -- bu ders, Suspense'in kendisine daha
-    // yakından bakıyor.
+    // `fallback` can be any JSX -- not just text, but also a spinner, a
+    // skeleton screen, or another component. In the Lazy Loading lesson
+    // we only saw Suspense used together with lazy() -- this lesson
+    // takes a closer look at Suspense itself.
     <Suspense fallback={<p className="spinner">Loading course...</p>}>
       <CourseDetails />
     </Suspense>

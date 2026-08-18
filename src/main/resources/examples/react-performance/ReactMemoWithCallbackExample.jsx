@@ -1,7 +1,7 @@
 import { memo, useCallback, useState } from "react";
 
 const SearchButton = memo(function SearchButton({ onSearch }) {
-  console.log("SearchButton render edildi");
+  console.log("SearchButton rendered");
   return <button onClick={onSearch}>Search</button>;
 });
 
@@ -9,11 +9,10 @@ function ReactMemoWithCallbackExample() {
   const [count, setCount] = useState(0);
   const [query, setQuery] = useState("");
 
-  // useCallback OLMADAN, her render'da `handleSearch` YENİ bir fonksiyon
-  // olurdu -- fonksiyonlar da birer değer olduğu için, memo bunu "props
-  // değişti" sayar ve SearchButton'ı yine de yeniden render ederdi.
-  // useCallback, `query` değişmediği sürece AYNI fonksiyon referansını
-  // korur.
+  // WITHOUT useCallback, `handleSearch` would be a NEW function on every
+  // render -- since functions are values too, memo would treat this as
+  // "props changed" and re-render SearchButton anyway. useCallback keeps
+  // the SAME function reference as long as `query` doesn't change.
   const handleSearch = useCallback(() => {
     console.log("Searching for:", query);
   }, [query]);

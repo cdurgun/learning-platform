@@ -14,9 +14,9 @@ function SearchBox() {
 }
 
 function ResultsList() {
-  // Sorun: bu component'in, kullanıcının SearchBox'a ne yazdığını bilmesi
-  // gerekiyor -- ama `query` state'i SearchBox'ın İÇİNDE hapsolmuş, buraya
-  // hiçbir şekilde ulaşamıyor.
+  // Problem: this component needs to know what the user typed into
+  // SearchBox -- but the `query` state is trapped INSIDE SearchBox and
+  // there is no way to reach it from here.
   return <p>Type in the search box above -- but this list has no way to know what you typed.</p>;
 }
 

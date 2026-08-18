@@ -24,8 +24,8 @@ describe("SignupForm submission", () => {
   it("calls onSubmitted with the typed email when the form is submitted", async () => {
     const user = userEvent.setup();
 
-    // vi.fn(), gerçek bir prop yerine geçen SAHTE bir fonksiyondur -- hangi
-    // argümanlarla, kaç kez çağrıldığını sonradan sorgulayabiliriz.
+    // vi.fn() is a FAKE function that stands in for a real prop -- we can
+    // later query what arguments it was called with and how many times.
     const handleSubmitted = vi.fn();
     render(<SignupForm onSubmitted={handleSubmitted} />);
 

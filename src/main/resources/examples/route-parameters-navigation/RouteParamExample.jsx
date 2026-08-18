@@ -11,8 +11,8 @@ function CourseList() {
 }
 
 function CourseDetail() {
-  // ":courseSlug" olarak tanımlanan URL parçası, useParams() ile bir
-  // nesne olarak okunur -- anahtar, Route'taki isimle (courseSlug) aynı.
+  // The URL segment defined as ":courseSlug" is read as an object via
+  // useParams() -- the key matches the name used in the Route (courseSlug).
   const { courseSlug } = useParams();
 
   return <h1>Course: {courseSlug}</h1>;

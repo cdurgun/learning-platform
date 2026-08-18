@@ -9,11 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-// model()/view(): sadece HTTP durumuna ve gövdesine değil, controller'ın Model'e
-// hangi attribute'ları koyduğuna ve hangi view adını döndürdüğüne bakar -- klasik
-// (JSON döndürmeyen, Thymeleaf ile render edilen) bir @Controller için bu genelde
-// content()'ten daha anlamlıdır, çünkü render edilmiş HTML'i değil, controller'ın
-// SÖZLEŞMESİNİ (hangi view, hangi veriyle) doğrular.
+// model()/view(): looks not just at the HTTP status and body, but at which attributes
+// the controller put into the Model and which view name it returned -- for a classic
+// @Controller (rendered with Thymeleaf, not returning JSON), this is usually more
+// meaningful than content(), because it verifies the controller's CONTRACT (which
+// view, with what data) rather than the rendered HTML.
 public class ModelAndViewAssertionExample {
 
     @Controller
@@ -31,17 +31,17 @@ public class ModelAndViewAssertionExample {
 
         mockMvc.perform(get("/profile"))
                 .andExpect(status().isOk())
-                // view().name(): dönen mantıksal view adını doğrular (fiziksel
-                // profile.html dosyasının render edilip edilmediğini DEĞİL --
-                // standaloneSetup'ta bir ViewResolver/template motoru yok).
+                // view().name(): verifies the returned logical view name (NOT whether
+                // the physical profile.html file was actually rendered --
+                // standaloneSetup has no ViewResolver/template engine).
                 .andExpect(view().name("profile"))
-                // model().attribute(...): bir attribute'ın DEĞERİNİ doğrular.
+                // model().attribute(...): verifies the VALUE of an attribute.
                 .andExpect(model().attribute("username", "cdurgun"))
                 .andExpect(model().attribute("topicCount", 25))
-                // model().attributeExists(...): sadece VARLIĞINI doğrular, değerini değil --
-                // değeri test edip etmeyeceğinize önem vermediğiniz durumlarda kullanışlı.
+                // model().attributeExists(...): verifies only its PRESENCE, not its value --
+                // useful when you don't care about testing the value itself.
                 .andExpect(model().attributeExists("username", "topicCount"));
 
-        System.out.println("Model ve view dogrulamalari basarili.");
+        System.out.println("Model and view assertions passed.");
     }
 }

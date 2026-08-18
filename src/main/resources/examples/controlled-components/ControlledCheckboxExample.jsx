@@ -3,8 +3,8 @@ import { useState } from "react";
 function ControlledCheckboxExample() {
   const [isSubscribed, setIsSubscribed] = useState(false);
 
-  // Checkbox'larda value yerine checked kullanılır -- mantık aynı:
-  // checkbox'ın işaretli olup olmadığını React'in state'i belirliyor.
+  // Checkboxes use checked instead of value -- the logic is the same:
+  // React's state decides whether the checkbox is checked or not.
   function handleChange(event) {
     setIsSubscribed(event.target.checked);
   }
@@ -13,9 +13,9 @@ function ControlledCheckboxExample() {
     <div>
       <label>
         <input type="checkbox" checked={isSubscribed} onChange={handleChange} />
-        Bültene abone ol
+        Subscribe to newsletter
       </label>
-      <p>{isSubscribed ? "Abonesin." : "Abone değilsin."}</p>
+      <p>{isSubscribed ? "You are subscribed." : "You are not subscribed."}</p>
     </div>
   );
 }

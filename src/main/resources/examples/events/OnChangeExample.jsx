@@ -1,7 +1,7 @@
 function OnChangeExample() {
   function handleChange(event) {
-    console.log("Yazılan değer:", event.target.value);
+    console.log("Typed value:", event.target.value);
   }
 
-  return <input type="text" onChange={handleChange} placeholder="Bir şey yaz..." />;
+  return <input type="text" onChange={handleChange} placeholder="Type something..." />;
 }

@@ -7,11 +7,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// MockMvcBuilders.standaloneSetup(...) inşa eder MockMvc'yi bir Spring ApplicationContext
-// OLMADAN -- sadece verilen controller(lar)ı DispatcherServlet benzeri bir pipeline'a
-// elle bağlar. Bu yüzden bu dosya, projenin main()-ile-çalıştırılabilir kuralına uyarak
-// plain main() ile çalışabilir; gerçek @WebMvcTest/@SpringBootTest testleri (aşağıdaki
-// diğer örneklerde) bir JUnit runner + Spring TestContext gerektirir.
+// MockMvcBuilders.standaloneSetup(...) builds MockMvc WITHOUT a Spring ApplicationContext --
+// it just wires the given controller(s) into a DispatcherServlet-like pipeline by hand.
+// That's why this file, following the project's runnable-via-main() convention, can run
+// as a plain main(); the real @WebMvcTest/@SpringBootTest tests (in the other examples
+// below) require a JUnit runner + Spring TestContext.
 public class FirstMockMvcTestExample {
 
     @Controller
@@ -19,26 +19,26 @@ public class FirstMockMvcTestExample {
         @GetMapping("/greeting")
         @org.springframework.web.bind.annotation.ResponseBody
         String greeting() {
-            return "Merhaba, MockMvc!";
+            return "Hello, MockMvc!";
         }
     }
 
     public static void main(String[] args) throws Exception {
         MockMvc mockMvc = MockMvcBuilders.standaloneSetup(new GreetingController()).build();
 
-        // perform(): sahte bir HTTP isteği gönderir (gerçek soket açılmaz, gerçek port
-        // dinlenmez -- her şey aynı JVM içinde, servlet API'sinin sahte implementasyonlarıyla
-        // çalışır). andExpect(): zincirlenebilir doğrulamalar; biri başarısız olursa
-        // AssertionError fırlatır ve zincirin geri kalanı çalışmaz.
+        // perform(): sends a fake HTTP request (no real socket is opened, no real port
+        // is listened on -- everything runs inside the same JVM, using fake implementations
+        // of the servlet API). andExpect(): chainable assertions; if one fails it throws
+        // an AssertionError and the rest of the chain does not run.
         mockMvc.perform(get("/greeting"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Merhaba, MockMvc!"));
+                .andExpect(content().string("Hello, MockMvc!"));
 
-        System.out.println("Tum andExpect() dogrulamalari basarili -- gercek bir HTTP");
-        System.out.println("sunucusu hic acilmadi.");
+        System.out.println("All andExpect() assertions passed -- no real HTTP");
+        System.out.println("server was ever opened.");
 
-        // status(): HTTP durum kodunu doğrular -- isOk() (200), isNotFound() (404),
-        // isBadRequest() (400) gibi okunabilir yardımcı metotlarla.
-        // content(): yanıt gövdesini doğrular -- string(), contentType(), json() vb.
+        // status(): verifies the HTTP status code -- via readable helper methods like
+        // isOk() (200), isNotFound() (404), isBadRequest() (400).
+        // content(): verifies the response body -- via string(), contentType(), json(), etc.
     }
 }

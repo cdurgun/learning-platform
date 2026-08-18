@@ -10,16 +10,16 @@ function FullFormValidationExample() {
   }
 
   function validate() {
-    // Her alan için ayrı bir hata mesajı üretip, hataların HEPSİNİ tek bir
-    // nesnede topluyoruz -- her alanın kendi hatasını göstermesini sağlar.
+    // We build a separate error message for each field and collect ALL
+    // errors in a single object -- this lets each field show its own error.
     const newErrors = {};
 
     if (formData.name.trim() === "") {
-      newErrors.name = "İsim boş bırakılamaz.";
+      newErrors.name = "Name cannot be empty.";
     }
 
     if (formData.email.trim() === "") {
-      newErrors.email = "E-posta boş bırakılamaz.";
+      newErrors.email = "Email cannot be empty.";
     }
 
     return newErrors;
@@ -31,9 +31,9 @@ function FullFormValidationExample() {
     const newErrors = validate();
     setErrors(newErrors);
 
-    // Nesnenin hiç anahtarı yoksa, hiç hata yok demektir.
+    // If the object has no keys at all, there are no errors.
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form geçerli, gönderiliyor:", formData);
+      console.log("Form is valid, submitting:", formData);
     }
   }
 
@@ -45,7 +45,7 @@ function FullFormValidationExample() {
           name="name"
           value={formData.name}
           onChange={handleChange}
-          placeholder="İsim"
+          placeholder="Name"
         />
         {errors.name && <p className="error">{errors.name}</p>}
       </div>
@@ -56,12 +56,12 @@ function FullFormValidationExample() {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          placeholder="E-posta"
+          placeholder="Email"
         />
         {errors.email && <p className="error">{errors.email}</p>}
       </div>
 
-      <button type="submit">Gönder</button>
+      <button type="submit">Submit</button>
     </form>
   );
 }

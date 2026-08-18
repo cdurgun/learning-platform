@@ -3,12 +3,12 @@ import { useState, useMemo } from "react";
 function WhenNotToUseMemoExample() {
   const [count, setCount] = useState(0);
 
-  // GEREKSİZ: Bu toplama işlemi zaten çok hızlı -- useMemo'nun kendi
-  // maliyeti (karşılaştırma yapmak, sonucu hafızada tutmak), kazandırdığından
-  // daha pahalı olabilir.
+  // UNNECESSARY: This addition is already very fast -- useMemo's own
+  // overhead (doing the comparison, keeping the result in memory) can be
+  // more expensive than what it saves.
   // const doubled = useMemo(() => count * 2, [count]);
 
-  // DAHA İYİ: Basit, hızlı hesaplamalar için useMemo'ya gerek yok.
+  // BETTER: useMemo isn't needed for simple, fast calculations.
   const doubled = count * 2;
 
   return (

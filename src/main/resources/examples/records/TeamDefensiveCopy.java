@@ -22,7 +22,7 @@ class TeamDefensiveCopyUsage {
         try {
             team.members().add("Dennis"); // UnsupportedOperationException
         } catch (UnsupportedOperationException e) {
-            System.out.println("members() üzerinden değiştirilemez: " + e.getClass().getSimpleName());
+            System.out.println("cannot be modified via members(): " + e.getClass().getSimpleName());
         }
     }
 }

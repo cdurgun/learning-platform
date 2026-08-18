@@ -1,27 +1,27 @@
-// JSX'in birkaç basit ama kesin kuralı var:
+// JSX has a few simple but strict rules:
 
-// 1) Bir JSX bloğu, TEK bir kök (root) elemente sahip olmalı.
-// Bu ÇALIŞMAZ: <h1>Başlık</h1><p>Metin</p>  (iki kardeş element, tek kök yok)
-// Bunun yerine bir <div> ile (ya da aşağıdaki gibi <> </> ile) sarmalanır:
+// 1) A JSX block must have a SINGLE root element.
+// This does NOT WORK: <h1>Title</h1><p>Text</p>  (two sibling elements, no single root)
+// Instead, wrap it with a <div> (or with <> </> as below):
 const withDiv = (
   <div>
-    <h1>Başlık</h1>
-    <p>Metin</p>
+    <h1>Title</h1>
+    <p>Text</p>
   </div>
 );
 
-// <> </> ("Fragment"), fazladan bir <div> eklemeden aynı işi yapar --
-// DOM'a görünmeyen, yalnızca JSX kuralını karşılamak için var olan bir sarmalayıcı.
+// <> </> ("Fragment") does the same job without adding an extra <div> --
+// a wrapper invisible to the DOM, existing only to satisfy the JSX rule.
 const withFragment = (
   <>
-    <h1>Başlık</h1>
-    <p>Metin</p>
+    <h1>Title</h1>
+    <p>Text</p>
   </>
 );
 
-// 2) Attribute isimleri camelCase yazılır: "onclick" değil "onClick",
-// "tabindex" değil "tabIndex".
+// 2) Attribute names are written in camelCase: "onClick" not "onclick",
+// "tabIndex" not "tabindex".
 
-// 3) JavaScript'te "class" bir anahtar kelime olduğu için "className" kullanılır.
+// 3) "className" is used because "class" is a keyword in JavaScript.
 
 console.log(withDiv, withFragment);

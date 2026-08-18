@@ -1,18 +1,18 @@
 import { Component } from "react";
 
-// ÖNEMLİ: Error boundary'ler, bu kursta gördüğümüz İLK class component.
-// React'te error boundary'leri hook'larla (fonksiyon component'lerle)
-// yazmanın bir yolu YOK -- yalnızca class component'ler
-// `static getDerivedStateFromError` ile bunu yapabiliyor. Bu yüzden bu
-// TEK konuda, istisnai olarak bir class component kullanıyoruz.
+// IMPORTANT: Error boundaries are the FIRST class component we've seen in
+// this course. There is NO way to write error boundaries with hooks
+// (function components) in React -- only class components can do this,
+// via `static getDerivedStateFromError`. That's why, for this ONE topic,
+// we use a class component as an exception.
 class BasicErrorBoundaryExample extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
   }
 
-  // Bir child component render sırasında hata FIRLATTIĞINDA, React bu
-  // metodu çağırır -- döndürdüğü değer, yeni state olur.
+  // WHEN a child component THROWS an error during render, React calls
+  // this method -- the value it returns becomes the new state.
   static getDerivedStateFromError() {
     return { hasError: true };
   }

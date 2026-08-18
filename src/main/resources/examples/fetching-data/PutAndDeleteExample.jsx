@@ -1,7 +1,7 @@
 function PutAndDeleteExample({ courseId }) {
   function handleRename(newName) {
-    // PUT, var olan bir kaydı TAMAMEN günceller -- yeni değeri gönderiyoruz,
-    // sunucu ilgili kaydı bununla değiştiriyor.
+    // PUT COMPLETELY updates an existing record -- we send the new value,
+    // and the server replaces the record with it.
     fetch(`/api/courses/${courseId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -10,8 +10,8 @@ function PutAndDeleteExample({ courseId }) {
   }
 
   function handleDelete() {
-    // DELETE, genellikle bir body göndermeden, yalnızca URL'deki id ile
-    // hangi kaydın silineceğini belirtir.
+    // DELETE usually specifies which record to delete via the id in the
+    // URL, without sending a body.
     fetch(`/api/courses/${courseId}`, { method: "DELETE" });
   }
 

@@ -3,12 +3,12 @@ import { Suspense, useEffect, useState } from "react";
 function CourseListWithEffect() {
   const [courses, setCourses] = useState(null);
 
-  // ÖNEMLİ: useEffect + fetch (API & Data Fetching dersindeki desen),
-  // Suspense'i OTOMATİK OLARAK TETİKLEMEZ -- Suspense yalnızca use() gibi,
-  // React'in DOĞRUDAN tanıdığı bir Promise kaynağıyla çalışır. Bu yüzden
-  // burada `courses` state'i null'ken, dışarıdaki Suspense'in fallback'i
-  // GÖRÜNMEZ -- component `null` render eder, Suspense'in haberi bile
-  // olmaz.
+  // IMPORTANT: useEffect + fetch (the pattern from the API & Data
+  // Fetching lesson) does NOT AUTOMATICALLY TRIGGER Suspense -- Suspense
+  // only works with a Promise source that React DIRECTLY recognizes,
+  // like use(). That's why, while the `courses` state is null here, the
+  // outer Suspense's fallback does NOT show -- the component renders
+  // `null`, and Suspense never even finds out.
   useEffect(() => {
     fetch("http://localhost:3000/courses")
       .then((response) => response.json())
@@ -16,7 +16,7 @@ function CourseListWithEffect() {
   }, []);
 
   if (!courses) {
-    // Suspense'in fallback'i değil, kendi manuel loading kontrolümüz.
+    // Not Suspense's fallback -- our own manual loading check.
     return null;
   }
 

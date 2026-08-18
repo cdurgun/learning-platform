@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 // A preview only -- this file will not do anything useful on its own, since
 // there is no container here to create these objects. It shows the same
-// OrderService design from "Spring Olmadan Elle Bağımlılık Enjeksiyonu",
+// OrderService design from "Manual Dependency Injection Without Spring",
 // now annotated so that a Spring container could build the composition root
 // FOR us.
 interface NotificationSender {

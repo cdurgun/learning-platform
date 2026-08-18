@@ -16,12 +16,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-// Bu projenin GERÇEK HomeController'ının gerçek bir @WebMvcTest testi -- kurgu bir
-// controller değil. HomeController'ın tek bağımlılığı NavigationService, bu yüzden
-// tek bir @MockitoBean yeterli. JUnit test sınıfı, `mvn test` ile çalışır. Faz 64'ten
-// beri HomeController iki endpoint'e sahip: `/{lang:en|tr}` gerçek anasayfayı render
-// eder, çıplak `/` ise bir dil "negotiator"ı -- `Accept-Language` başlığına göre
-// `/en` ya da `/tr`'ye 302 yönlendirir. Aşağıdaki iki test ikisini de kapsıyor.
+// A real @WebMvcTest test for this project's ACTUAL HomeController -- not a made-up
+// controller. HomeController's only dependency is NavigationService, so a single
+// @MockitoBean is enough. This is a JUnit test class, run via `mvn test`. Since Phase 64,
+// HomeController has had two endpoints: `/{lang:en|tr}` renders the real home page,
+// while the bare `/` acts as a language "negotiator" -- it 302-redirects to `/en` or
+// `/tr` based on the `Accept-Language` header. The two tests below cover both.
 @WebMvcTest(HomeController.class)
 class HomeControllerTest {
 
@@ -33,14 +33,14 @@ class HomeControllerTest {
 
     @Test
     void indexReturnsIndexViewWithNavigationModel() throws Exception {
-        // buildNavigation gerçek DB'ye gitmiyor -- boş liste dönmesi bile yeterli,
-        // çünkü burada test edilen şey NavigationService'in DAVRANIŞI değil,
-        // HomeController'ın onu nasıl ÇAĞIRDIĞI ve model'e nasıl koyduğu.
+        // buildNavigation does not hit a real DB -- returning even an empty list is enough,
+        // because what's being tested here is not NavigationService's BEHAVIOR, but
+        // HOW HomeController CALLS it and puts the result into the model.
         when(navigationService.buildNavigation(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
 
-        // Dil artık isteğin kendi varsayılan locale'ine (test ortamında genelde
-        // Locale.getDefault()) değil, doğrudan URL path'ine ({en|tr}) bağlı --
-        // `/en` isteği her zaman ve her ortamda aynı sonucu verir.
+        // Language now depends directly on the URL path ({en|tr}), not on the request's
+        // own default locale (usually Locale.getDefault() in a test environment) --
+        // an `/en` request always produces the same result, in any environment.
         mockMvc.perform(get("/en"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"))
@@ -52,10 +52,9 @@ class HomeControllerTest {
 
     @Test
     void bareRootRedirectsToDefaultLanguage() throws Exception {
-        // Accept-Language header'ı olmayan bir istek (bu testteki gibi) EN'e düşer --
-        // bkz. HomeController.resolveRootLanguage'ın varsayılan davranışı. Bu metot
-        // hiçbir bağımlılığa dokunmadığı için navigationService'i hiç stub'lamaya
-        // gerek yok.
+        // A request with no Accept-Language header (like this test) falls back to EN --
+        // see HomeController.resolveRootLanguage's default behavior. This method doesn't
+        // touch any dependency, so there's no need to stub navigationService at all.
         mockMvc.perform(get("/"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/en"));

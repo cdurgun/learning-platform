@@ -2,7 +2,7 @@ import java.util.Objects;
 
 // A second, different domain to show the same ideas hold generally -- not
 // just for notifications. PaymentProcessor requires a PaymentGateway
-// (constructor injection, see "Neden Constructor Injection Öneriliyor?"),
+// (constructor injection, see "Why Is Constructor Injection Recommended?"),
 // and accepts an OPTIONAL FraudChecker that may legitimately be null -- a
 // reminder that not every collaborator needs Objects.requireNonNull.
 interface PaymentGateway {

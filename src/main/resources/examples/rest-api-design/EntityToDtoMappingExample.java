@@ -1,6 +1,6 @@
 // The DTO pattern only pays off once something actually converts between entity and
 // DTO. The simplest version is a plain static method -- no mapping library needed
-// for a shape this small (see this lesson's "Örnek Yazım İlkeleri" -- don't add
+// for a shape this small (see this lesson's "Example Writing Principles" -- don't add
 // infrastructure a small example doesn't need).
 class EntityToDtoMappingExample {
 

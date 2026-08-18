@@ -1,8 +1,8 @@
-// Bir component'in en büyük faydası: BİR KEZ yazıp İSTEDİĞİN KADAR kullanmak.
-// Aynı Button component'ini, farklı yerlerde tekrar tekrar kullanabiliriz --
-// aynı HTML/CSS'i her seferinde yeniden yazmaya gerek yok.
+// The biggest benefit of a component: write it ONCE, use it AS MANY TIMES
+// AS YOU WANT. We can reuse the same Button component in different places
+// over and over -- no need to rewrite the same HTML/CSS each time.
 function Button() {
-  return <button>Tıkla</button>;
+  return <button>Click</button>;
 }
 
 function Toolbar() {

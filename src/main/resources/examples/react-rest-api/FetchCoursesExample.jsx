@@ -6,11 +6,11 @@ function FetchCoursesExample() {
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    // useEffect'in callback'i doğrudan async OLAMAZ -- bu yüzden içeride
-    // ayrı bir async fonksiyon tanımlayıp hemen çağırıyoruz. Gerçek bir
-    // projede burası (Spring Boot ile) GET /api/courses'a karşılık gelir --
-    // React, HTTP üzerinden backend'e istek atar, backend veritabanından
-    // (PostgreSQL) okuyup JSON döner.
+    // The callback of useEffect CANNOT be async directly -- so we define a
+    // separate async function inside and call it right away. In a real
+    // project this corresponds to GET /api/courses (with Spring Boot) --
+    // React sends a request to the backend over HTTP, the backend reads
+    // from the database (PostgreSQL) and returns JSON.
     async function loadCourses() {
       const response = await fetch(`${BASE_URL}/courses`);
       const data = await response.json();

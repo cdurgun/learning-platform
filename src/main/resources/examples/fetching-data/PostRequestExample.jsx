@@ -6,9 +6,8 @@ function PostRequestExample() {
   function handleSubmit(event) {
     event.preventDefault();
 
-    // POST isteklerinde, gönderilecek veriyi `body`'ye JSON string olarak
-    // yazarız -- ve sunucuya bunun JSON olduğunu `Content-Type` header'ıyla
-    // bildiririz.
+    // For POST requests, we write the data to send into `body` as a JSON
+    // string -- and tell the server it's JSON via the `Content-Type` header.
     fetch("/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -22,10 +22,10 @@ function RefreshAfterMutationExample() {
     });
     const newCourse = await response.json();
 
-    // Sunucu yeni kaydı oluşturduktan sonra, listeyi baştan çekmek yerine
-    // (bir istek daha atmak yerine) State dersindeki immutability kuralına
-    // uyarak yeni kaydı doğrudan mevcut listeye ekliyoruz -- ekran anında
-    // güncellenir.
+    // After the server creates the new record, instead of re-fetching the
+    // whole list (instead of making another request), we follow the
+    // immutability rule from the State lesson and add the new record
+    // directly to the existing list -- the screen updates instantly.
     setCourses([...courses, newCourse]);
     setName("");
   }

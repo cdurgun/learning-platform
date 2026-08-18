@@ -2,10 +2,10 @@
 // th:field belong to Thymeleaf's Spring-specific form dialect, which needs a real
 // @ModelAttribute-backed BindingResult and Spring's RequestDataValueProcessor wired
 // through an actual request -- infrastructure this focused example intentionally
-// does NOT stand up (see CLAUDE.md's "Örnek Yazım İlkeleri": no unrelated
+// does NOT stand up (see CLAUDE.md's "Example Writing Principles": no unrelated
 // infrastructure just to make something independently runnable). Instead, this shows
 // what th:object/th:field expand into, so the mechanism is clear if this project
-// ever adds a form (e.g. a future "Ek: Mini Proje" comment submission).
+// ever adds a form (e.g. a future "Appendix: Mini Project" comment submission).
 class FormBindingExample {
 
     // The @ModelAttribute-backed object a real controller would put on the Model,

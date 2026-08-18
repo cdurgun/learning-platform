@@ -28,10 +28,10 @@ function ResultsList({ query }) {
 }
 
 function ResultsPanel({ query }) {
-  // ResultsPanel, `query`'i KENDİSİ hiç kullanmıyor -- yalnızca
-  // ResultsList'e ULAŞTIRMAK için alıyor. Bu, "props drilling" (props'u
-  // zorunlu olarak ara katmanlardan geçirmek) dediğimiz durumun basit
-  // bir örneği.
+  // ResultsPanel never uses `query` ITSELF -- it only receives it to
+  // PASS IT ALONG to ResultsList. This is a simple example of what we
+  // call "props drilling" (passing props through intermediate layers
+  // that don't need them).
   return (
     <div className="panel">
       <ResultsList query={query} />

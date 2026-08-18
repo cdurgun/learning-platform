@@ -5,11 +5,11 @@ import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Topic;
 import com.cdurgun.learning.domain.TopicTranslation;
 
-// Bu projenin gerçek entity'leri (Topic, Category, Course, TopicTranslation) Lombok
-// @Builder kullanıyor -- ekstra bir test kütüphanesi gerekmeden, okunabilir "fixture"
-// (test verisi) üretmek için doğrudan kullanılabilirler. Bu sınıf, TR/EN çeviri ve
-// tüm ManyToOne ilişkileriyle birlikte KENDİ İÇİNDE TUTARLI bir Topic ağacı kurar --
-// aşağıdaki TopicControllerWebMvcTest bu yardımcıları kullanır.
+// This project's real entities (Topic, Category, Course, TopicTranslation) use Lombok
+// @Builder -- they can be used directly to produce readable "fixtures" (test data)
+// without needing an extra test library. This class builds a SELF-CONSISTENT Topic
+// tree, complete with a TR/EN translation and all its ManyToOne relationships -- the
+// TopicControllerWebMvcTest below uses these helpers.
 public class TopicTestFixtures {
 
     public static Course sampleCourse() {
@@ -58,8 +58,9 @@ public class TopicTestFixtures {
         Topic topic = sampleTopic(category);
         TopicTranslation translation = sampleTranslation(topic, Language.TR, true);
 
-        // Zincirleme ilişkinin gerçekten kurulduğunu doğrula -- entity'lerin builder'la
-        // üretilmesi, aralarındaki referansları ELLE bağlamayı ortadan kaldırmaz.
+        // Verify that the chained relationship was actually established -- producing
+        // entities with a builder doesn't eliminate the need to wire the references
+        // between them BY HAND.
         System.out.println(translation.getTopic().getCategory().getCourse().getName());
         // Java
         System.out.println(translation.getTopic().getSlug() + " -> " + translation.getTitle());

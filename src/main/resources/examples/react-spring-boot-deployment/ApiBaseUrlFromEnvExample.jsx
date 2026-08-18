@@ -1,7 +1,8 @@
-// Build & Deployment dersindeki desenin aynısı -- ama bu kez değer, deploy
-// edilmiş bir Spring Boot API'sinin GERÇEK adresi. Yerelde (localhost:8080'de
-// çalışan backend'e karşı) ve production'da (Render'ın verdiği adrese karşı)
-// AYNI kod, farklı bir .env / Vercel ortam değişkeni değeriyle çalışır.
+// The same pattern as in the Build & Deployment lesson -- except this time
+// the value is the REAL address of a deployed Spring Boot API. Locally
+// (against the backend running on localhost:8080) and in production
+// (against the address Render provides), the SAME code works with a
+// different .env / Vercel environment variable value.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 function ApiAddress() {

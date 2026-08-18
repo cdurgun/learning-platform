@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
-// Hooks dersindeki useEffect deseni -- component mount olduktan bir süre
-// sonra kendi state'ini güncelliyor (gerçek bir uygulamada bu, bir fetch
-// isteğinin tamamlanması olurdu; burada basit tutmak için setTimeout).
+// The useEffect pattern from the Hooks lesson -- the component updates its
+// own state a while after mounting (in a real app this would be a fetch
+// request completing; here we use setTimeout to keep it simple).
 function DelayedGreeting() {
   const [ready, setReady] = useState(false);
 
@@ -21,13 +21,14 @@ describe("DelayedGreeting async update", () => {
   it("shows loading first, then the greeting once ready", async () => {
     render(<DelayedGreeting />);
 
-    // İlk render'da hâlâ "Loading..." görünüyor.
+    // On the first render, "Loading..." is still shown.
     expect(screen.getByText("Loading...")).toBeInTheDocument();
 
-    // findByText, getByText'in ASENKRON hâlidir: eleman hemen yoksa hata
-    // fırlatmaz, belirli bir süre (varsayılan 1000ms) boyunca tekrar tekrar
-    // dener. DOM'u zamanla değişen (fetch, timer, animasyon sonrası) her şeyi
-    // test etmenin doğru yolu budur -- waitFor de aynı amaçla kullanılabilir.
+    // findByText is the ASYNC version of getByText: if the element isn't
+    // there right away, it doesn't throw immediately -- it keeps retrying
+    // for a given period (1000ms by default). This is the right way to test
+    // anything in the DOM that changes over time (fetch, timers, after an
+    // animation) -- waitFor can be used for the same purpose.
     const greeting = await screen.findByText("Welcome!");
     expect(greeting).toBeInTheDocument();
   });

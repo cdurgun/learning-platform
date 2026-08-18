@@ -1,18 +1,18 @@
 import { useState } from "react";
 
 function RulesOfHooksExample({ showExtra }) {
-  // DOĞRU: Hook'lar HER ZAMAN component'in EN ÜST seviyesinde çağrılır.
+  // CORRECT: Hooks are ALWAYS called at the TOP level of the component.
   const [count, setCount] = useState(0);
 
-  // YANLIŞ: Bir hook'u koşullu çağırmak (bunu asla yapma).
+  // WRONG: Calling a hook conditionally (never do this).
   // if (showExtra) {
-  //   const [extra, setExtra] = useState(0); // Kurallara aykırı!
+  //   const [extra, setExtra] = useState(0); // Breaks the rules!
   // }
   //
-  // Neden? React, hook'ların HER RENDER'DA AYNI SIRADA çağrıldığını
-  // varsayarak her birini takip eder. Koşullu bir hook, bazı render'larda
-  // çağrılıp bazılarında çağrılmayarak bu sırayı bozar -- React hangi
-  // state'in hangi hook'a ait olduğunu şaşırır.
+  // Why? React tracks each hook by assuming they're called in the SAME
+  // ORDER on EVERY RENDER. A conditional hook breaks this order by being
+  // called on some renders and not others -- React gets confused about
+  // which state belongs to which hook.
 
-  return <p>Sayaç: {count}</p>;
+  return <p>Count: {count}</p>;
 }

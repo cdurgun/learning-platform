@@ -4,15 +4,15 @@ function DomReferenceExample() {
   const inputRef = useRef(null);
 
   function focusInput() {
-    // inputRef.current, gerçek DOM elementinin kendisi -- input'un
-    // sahip olduğu tarayıcı metotlarını (focus() gibi) doğrudan çağırabiliriz.
+    // inputRef.current is the actual DOM element itself -- we can call the
+    // browser methods the input has (like focus()) directly.
     inputRef.current.focus();
   }
 
   return (
     <div>
-      <input ref={inputRef} type="text" placeholder="Butona basınca odaklanır" />
-      <button onClick={focusInput}>Input'a Odaklan</button>
+      <input ref={inputRef} type="text" placeholder="Focuses when the button is clicked" />
+      <button onClick={focusInput}>Focus Input</button>
     </div>
   );
 }

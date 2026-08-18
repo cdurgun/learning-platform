@@ -4,9 +4,9 @@ function CourseList() {
   const navigate = useNavigate();
 
   function handleSelect(courseSlug) {
-    // Link her zaman bir tıklama gerektirir -- useNavigate() ise, bir
-    // fonksiyon İÇİNDEN (örneğin bir event handler'dan) URL'i
-    // DEĞİŞTİRMEMİZİ sağlar.
+    // Link always requires a click -- useNavigate(), on the other hand,
+    // lets us CHANGE the URL from INSIDE a function (e.g. an event
+    // handler).
     navigate(`/courses/${courseSlug}`);
   }
 

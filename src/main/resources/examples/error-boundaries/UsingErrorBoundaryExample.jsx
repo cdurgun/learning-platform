@@ -21,9 +21,8 @@ class ErrorBoundary extends Component {
 
 function BuggyCounter({ count }) {
   if (count === 3) {
-    // Render sırasında bilinçli olarak bir hata fırlatıyoruz -- gerçek bir
-    // uygulamada bu, beklenmedik bir `undefined.someProperty` gibi bir hata
-    // olurdu.
+    // We deliberately throw an error during render -- in a real app this
+    // would be an unexpected error, like `undefined.someProperty`.
     throw new Error("Count reached 3!");
   }
 
@@ -36,10 +35,10 @@ function UsingErrorBoundaryExample() {
   return (
     <div>
       <button onClick={() => setCount(count + 1)}>Increment</button>
-      {/* ErrorBoundary, İÇİNDEKİ herhangi bir component render sırasında
-          hata fırlatırsa, o hatayı YAKALAR ve normal render'ı fallback
-          UI'la DEĞİŞTİRİR -- BuggyCounter'ın kendisi hatayı yönetmek
-          zorunda değil. */}
+      {/* If any component INSIDE it throws an error during render, the
+          ErrorBoundary CATCHES that error and REPLACES the normal render
+          with the fallback UI -- BuggyCounter itself doesn't have to
+          handle the error. */}
       <ErrorBoundary>
         <BuggyCounter count={count} />
       </ErrorBoundary>

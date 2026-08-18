@@ -1,9 +1,10 @@
 import { Profiler, useState } from "react";
 
 function onRenderCallback(id, phase, actualDuration) {
-  // React, her render'dan sonra bu fonksiyonu çağırır -- `id`, Profiler'a
-  // verdiğimiz isim; `phase`, "mount" (ilk render) mı yoksa "update" (yeniden
-  // render) mı olduğu; `actualDuration`, render'ın kaç milisaniye sürdüğü.
+  // React calls this function after every render -- `id` is the name we
+  // gave the Profiler; `phase` is whether it was a "mount" (initial render)
+  // or an "update" (re-render); `actualDuration` is how many milliseconds
+  // the render took.
   console.log(`${id} (${phase}) took ${actualDuration.toFixed(2)}ms`);
 }
 
@@ -24,11 +25,11 @@ function ProfilerComponentExample() {
   return (
     <div>
       <button onClick={() => setCount(count + 1)}>Count: {count}</button>
-      {/* React'in yerleşik <Profiler> component'i, sarmaladığı ağacın render
-          süresini ÖLÇER -- React DevTools'taki "Profiler" sekmesinin
-          arkasındaki mekanizma budur. Gerçek uygulamalarda genellikle
-          kalıcı kod olarak değil, performans sorununu ARAŞTIRIRKEN geçici
-          olarak eklenir. */}
+      {/* React's built-in <Profiler> component MEASURES the render time of
+          the tree it wraps -- this is the mechanism behind the "Profiler"
+          tab in React DevTools. In real apps it's usually added
+          temporarily while INVESTIGATING a performance issue, not left in
+          as permanent code. */}
       <Profiler id="CourseList" onRender={onRenderCallback}>
         <CourseList items={items} />
       </Profiler>

@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 function ExpensiveList({ items }) {
-  // Bu component'in her render'ı "pahalı" olsun diye console.log koyduk --
-  // gerçek bir uygulamada bu, büyük bir liste ya da karmaşık bir hesaplama
-  // olabilir.
-  console.log("ExpensiveList render edildi");
+  // We added this console.log to make every render of this component
+  // "expensive" -- in a real app this could be a large list or a complex
+  // calculation.
+  console.log("ExpensiveList rendered");
 
   return (
     <ul>
@@ -22,10 +22,10 @@ function UnnecessaryRerenderExample() {
 
   return (
     <div>
-      {/* `count` her arttığında, UnnecessaryRerenderExample yeniden render
-          olur -- ve React, varsayılan olarak, parent'ı render olan HER
-          child'ı da yeniden render eder. ExpensiveList'in props'u (`items`)
-          hiç DEĞİŞMEDİĞİ halde, o da gereksiz yere yeniden render olur. */}
+      {/* Every time `count` increases, UnnecessaryRerenderExample
+          re-renders -- and by default, React also re-renders EVERY child
+          whose parent re-rendered. Even though ExpensiveList's props
+          (`items`) never CHANGE, it still re-renders unnecessarily. */}
       <button onClick={() => setCount(count + 1)}>Count: {count}</button>
       <ExpensiveList items={items} />
     </div>

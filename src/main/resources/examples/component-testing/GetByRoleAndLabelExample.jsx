@@ -18,17 +18,18 @@ describe("Querying elements", () => {
   it("finds a button by its accessible role and name", () => {
     render(<LoginButton />);
 
-    // getByRole, elemanları GÖRÜNEN metinden değil, ERİŞİLEBİLİRLİK rolünden
-    // bulur -- bir <button>, "button" rolüne sahiptir. Bu, gerçek kullanıcıların
-    // (ve ekran okuyucuların) sayfayı nasıl algıladığına en yakın sorgu şeklidir.
+    // getByRole finds elements by their ACCESSIBILITY role, not by their
+    // VISIBLE text -- a <button> has the "button" role. This is the query
+    // style that most closely matches how real users (and screen readers)
+    // perceive the page.
     expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
   });
 
   it("finds a form field by its connected label", () => {
     render(<NameField />);
 
-    // getByLabelText, <label htmlFor="..."> ile eşleşen input'u bulur --
-    // input'un id'sini veya bir test-id eklemeye gerek kalmaz.
+    // getByLabelText finds the input that matches a <label htmlFor="...">
+    // -- there's no need to add the input's id or a test-id.
     expect(screen.getByLabelText("Name")).toHaveValue("Ada");
   });
 });

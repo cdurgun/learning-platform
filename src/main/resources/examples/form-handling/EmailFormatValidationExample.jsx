@@ -4,20 +4,20 @@ function EmailFormatValidationExample() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
-  // Basit bir e-posta biçimi kontrolü -- gerçek projelerde daha kapsamlı
-  // kurallar da olabilir, burada yalnızca "@" ve bir nokta var mı bakıyoruz.
+  // A simple email format check -- real projects may have more
+  // comprehensive rules; here we only check for "@" and a dot.
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function handleSubmit(event) {
     event.preventDefault();
 
     if (!emailPattern.test(email)) {
-      setError("Geçerli bir e-posta adresi gir.");
+      setError("Enter a valid email address.");
       return;
     }
 
     setError("");
-    console.log("Geçerli e-posta:", email);
+    console.log("Valid email:", email);
   }
 
   return (
@@ -26,9 +26,9 @@ function EmailFormatValidationExample() {
         type="email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
-        placeholder="E-posta"
+        placeholder="Email"
       />
-      <button type="submit">Gönder</button>
+      <button type="submit">Submit</button>
 
       {error && <p className="error">{error}</p>}
     </form>

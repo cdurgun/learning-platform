@@ -41,7 +41,7 @@ class WebMvcTestSliceExample {
                 .andExpect(status().isOk());
         // If PingController depended on a @Service, this test would fail at context
         // startup with "no qualifying bean" -- @WebMvcTest deliberately does NOT wire
-        // up @Service/@Repository beans; see "@MockitoBean ile Bağımlılıkları
-        // Sahtelemek" for how to supply the ones a real controller needs.
+        // up @Service/@Repository beans; see "Mocking Dependencies with @MockitoBean"
+        // for how to supply the ones a real controller needs.
     }
 }

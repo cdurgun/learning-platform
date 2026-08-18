@@ -2,11 +2,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-// Küçük, gerçekçi bir HandlerInterceptor -- "Advanced Spring MVC" dersindeki
-// HandlerInterceptorLifecycleExample ile aynı yaşam döngüsünü (preHandle/postHandle/
-// afterCompletion) kullanır, ama burada amaç interceptor'ı kendi başına test etmek
-// olduğu için mümkün olduğunca sade tutuldu: her istekte X-Response-Time-Ms header'ı
-// ekler.
+// A small, realistic HandlerInterceptor -- it uses the same lifecycle (preHandle/
+// postHandle/afterCompletion) as HandlerInterceptorLifecycleExample in the "Advanced
+// Spring MVC" lesson, but since the goal here is to test the interceptor on its own,
+// it's kept as simple as possible: it adds an X-Response-Time-Ms header to every request.
 public class TimingInterceptorForTest implements HandlerInterceptor {
 
     private static final String START_ATTRIBUTE = "requestStartNanos";
@@ -25,8 +24,9 @@ public class TimingInterceptorForTest implements HandlerInterceptor {
             long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000;
             response.setHeader("X-Response-Time-Ms", String.valueOf(elapsedMs));
         }
-        // Not: header'ı postHandle yerine afterCompletion'da eklemek kasıtlı -- afterCompletion
-        // handler bir exception fırlatsa BİLE her zaman çalışır, postHandle ise çalışmaz
-        // (bkz. "Advanced Spring MVC" dersindeki "HandlerInterceptor Yaşam Döngüsü" bölümü).
+        // Note: adding the header in afterCompletion instead of postHandle is intentional --
+        // afterCompletion always runs, EVEN IF the handler throws an exception, whereas
+        // postHandle does not (see the "HandlerInterceptor Lifecycle" section in the
+        // "Advanced Spring MVC" lesson).
     }
 }

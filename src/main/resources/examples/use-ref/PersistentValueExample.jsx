@@ -5,13 +5,13 @@ function PersistentValueExample() {
   const renderCount = useRef(0);
 
   renderCount.current = renderCount.current + 1;
-  // renderCount.current değişiyor, ama bu bir RE-RENDER TETİKLEMEZ --
-  // yalnızca bir sonraki render'da güncel değeri gösterir.
+  // renderCount.current changes, but this does NOT TRIGGER A RE-RENDER --
+  // it only shows the up-to-date value on the next render.
 
   return (
     <div>
-      <p>Sayaç: {count}</p>
-      <p>Bu component şu ana kadar {renderCount.current} kez render oldu.</p>
+      <p>Count: {count}</p>
+      <p>This component has rendered {renderCount.current} times so far.</p>
       <button onClick={() => setCount(count + 1)}>+1</button>
     </div>
   );

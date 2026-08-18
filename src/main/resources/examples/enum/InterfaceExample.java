@@ -7,6 +7,6 @@ enum TrafficLight implements Describable {
 
     @Override
     public String describe() {
-        return "Trafik ışığı: " + name();
+        return "Traffic light: " + name();
     }
 }

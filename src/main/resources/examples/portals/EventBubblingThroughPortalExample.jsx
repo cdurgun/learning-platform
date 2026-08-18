@@ -9,12 +9,12 @@ function EventBubblingThroughPortalExample() {
   const [clicks, setClicks] = useState(0);
 
   return (
-    // ÖNEMLİ: Popup, DOM'da bu <div>'in DIŞINDA (document.body'de)
-    // render ediliyor. Ama içindeki <button>'a tıklandığında, onClick
-    // yine de BURADA (React ağacındaki gerçek konumunda) çalışır --
-    // React, event'leri gerçek DOM ağacına göre değil, KENDİ component
-    // ağacına göre "bubble" ettirir. Bu, Portal'ların en şaşırtıcı ama en
-    // kullanışlı özelliği.
+    // IMPORTANT: Popup is rendered in the DOM OUTSIDE this <div> (in
+    // document.body). But when its <button> is clicked, onClick still
+    // fires HERE (at its real position in the React tree) -- React
+    // "bubbles" events according to its OWN component tree, not the
+    // actual DOM tree. This is the most surprising yet most useful
+    // feature of Portals.
     <div onClick={() => setClicks(clicks + 1)}>
       <p>Clicks: {clicks}</p>
       <Popup />

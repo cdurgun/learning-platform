@@ -5,10 +5,10 @@ const CourseReviews = lazy(() => import("./CourseReviews.jsx"));
 
 function NestedSuspenseExample() {
   return (
-    // Dıştaki Suspense, CourseHeader yüklenene kadar TÜM sayfa için bir
-    // fallback gösterir. CourseHeader göründükten sonra, İÇTEKİ Suspense
-    // yalnızca CourseReviews'un yerini kaplar -- sayfanın geri kalanı
-    // (CourseHeader dahil) tekrar "loading" durumuna DÖNMEZ.
+    // The outer Suspense shows a fallback for the WHOLE page until
+    // CourseHeader loads. Once CourseHeader appears, the INNER Suspense
+    // only takes the place of CourseReviews -- the rest of the page
+    // (including CourseHeader) does NOT go back to a "loading" state.
     <Suspense fallback={<p>Loading page...</p>}>
       <CourseHeader />
       <Suspense fallback={<p>Loading reviews...</p>}>

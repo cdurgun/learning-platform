@@ -1,15 +1,15 @@
 import { useState } from "react";
 
 function MultiFieldFormExample() {
-  // Her alan için ayrı bir useState açmak yerine, TÜM alanları tek bir
-  // state nesnesinde tutuyoruz -- form büyüdükçe daha yönetilebilir.
+  // Instead of opening a separate useState for each field, we keep ALL
+  // fields in a single state object -- more manageable as the form grows.
   const [formData, setFormData] = useState({ name: "", email: "" });
 
   function handleChange(event) {
     const { name, value } = event.target;
 
-    // Hangi input değiştiyse (input'un `name` attribute'una bakarak),
-    // yalnızca o alanı güncelliyoruz, diğerlerini olduğu gibi kopyalıyoruz.
+    // Whichever input changed (based on the input's `name` attribute),
+    // we only update that field, copying the rest as they are.
     setFormData({ ...formData, [name]: value });
   }
 
@@ -20,14 +20,14 @@ function MultiFieldFormExample() {
         name="name"
         value={formData.name}
         onChange={handleChange}
-        placeholder="İsim"
+        placeholder="Name"
       />
       <input
         type="email"
         name="email"
         value={formData.email}
         onChange={handleChange}
-        placeholder="E-posta"
+        placeholder="Email"
       />
       <p>
         {formData.name} / {formData.email}

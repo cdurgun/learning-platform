@@ -10,9 +10,9 @@ class ComponentDidCatchExample extends Component {
     return { hasError: true };
   }
 
-  // getDerivedStateFromError, fallback UI'ı GÖSTERMEK için kullanılır;
-  // componentDidCatch ise hatayı bir yere GÖNDERMEK (örneğin bir loglama
-  // servisine) için kullanılır -- ikisi birlikte çalışabilir.
+  // getDerivedStateFromError is used to SHOW the fallback UI;
+  // componentDidCatch is used to SEND the error somewhere (e.g. to a
+  // logging service) -- the two can work together.
   componentDidCatch(error, errorInfo) {
     console.error("Caught an error:", error, errorInfo.componentStack);
   }

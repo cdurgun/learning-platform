@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 // order-service's external "contract" -- everything another service or a client can ask
 // order-service to do goes through these two endpoints, and nothing else. The controller
 // itself makes no business decisions -- that's OrderService's job (see OrderService.java) --
-// exactly the Controller -> Service split from the Spring MVC Fundamentals lesson's "Bir
-// HTTP İsteğinin Yolculuğu: Request Lifecycle" section.
+// exactly the Controller -> Service split from the Spring MVC Fundamentals lesson's "The
+// Journey of an HTTP Request: Request Lifecycle" section.
 @RestController
 @RequestMapping("/orders")
 class OrderController {

@@ -10,10 +10,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// POST/PUT/PATCH gövdesi göndermek için content(...) ile ham baytları/string'i, ve
-// contentType(...) ile Content-Type header'ını vermeniz gerekir -- Content-Type
-// verilmezse Spring, hangi HttpMessageConverter'ın kullanılacağını bilemez ve
-// isteği reddedebilir (415 Unsupported Media Type).
+// To send a POST/PUT/PATCH body, you need to provide the raw bytes/string via
+// content(...), and the Content-Type header via contentType(...) -- if Content-Type
+// isn't provided, Spring won't know which HttpMessageConverter to use and may
+// reject the request (415 Unsupported Media Type).
 public class RequestBodyTestExample {
 
     record CreateNoteRequest(String title, String body) {
@@ -35,19 +35,19 @@ public class RequestBodyTestExample {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String requestJson = objectMapper.writeValueAsString(
-                new CreateNoteRequest("Toplantı Notu", "Spring MVC testing bölümünü bitir"));
+                new CreateNoteRequest("Meeting Note", "Finish the Spring MVC testing section"));
 
         mockMvc.perform(post("/notes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.title").value("Toplantı Notu"));
+                .andExpect(jsonPath("$.title").value("Meeting Note"));
 
-        System.out.println("POST govdesi gonderildi ve yanit dogrulandi.");
+        System.out.println("POST body sent and response verified.");
 
-        // content(requestJson) burada elle ObjectMapper ile serileştirildi -- gerçek
-        // projelerde bu genelde küçük bir yardımcı metoda (örn. asJsonString(Object))
-        // çıkarılır, çünkü hemen her yazma testinde tekrar eder.
+        // content(requestJson) is serialized here by hand with ObjectMapper -- in real
+        // projects this is usually extracted into a small helper method (e.g.
+        // asJsonString(Object)), since it repeats in almost every write test.
     }
 }

@@ -9,9 +9,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Path variable'lar URL'in kendi içinde ({id} gibi) verilir; query parametreleri ise
-// .param(ad, deger) ile eklenir -- ?page=0&size=10 formatındaki gerçek query string'i
-// elle oluşturmaya gerek yoktur, MockMvc bunu sizin için kurar.
+// Path variables are given inside the URL itself (like {id}); query parameters are
+// added via .param(name, value) -- there's no need to build the actual ?page=0&size=10
+// query string by hand, MockMvc sets it up for you.
 public class PathVariableQueryParamTestExample {
 
     record TopicSummary(String slug, int page, int size, String difficulty) {
@@ -41,14 +41,14 @@ public class PathVariableQueryParamTestExample {
                 .andExpect(jsonPath("$.size").value(5))
                 .andExpect(jsonPath("$.difficulty").value("ADVANCED"));
 
-        // difficulty verilmeden de çalıştığını doğrula -- @RequestParam(required = false)
-        // olduğu için 400 değil, null ile controller'a girer.
+        // Verify it also works without a difficulty -- since it's @RequestParam(required = false),
+        // it enters the controller as null instead of causing a 400.
         mockMvc.perform(get("/api/categories/{categorySlug}/topics", "spring-mvc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.size").value(20))
                 .andExpect(jsonPath("$.difficulty").doesNotExist());
 
-        System.out.println("Path variable ve query parametre testleri basarili.");
+        System.out.println("Path variable and query parameter tests passed.");
     }
 }

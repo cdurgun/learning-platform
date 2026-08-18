@@ -12,10 +12,10 @@ function ThemeProvider({ children }) {
   );
 }
 
-// Custom Hooks dersindeki desen burada devam ediyor: useContext'i
-// component'lerin içine dağıtmak yerine, ayrı bir hook'a (`useTheme`)
-// sarmalıyoruz. Böylece kullanan component, "context" kavramıyla hiç
-// uğraşmadan `useTheme()` çağırıyor -- tıpkı `useState` gibi.
+// The pattern from the Custom Hooks lesson continues here: instead of
+// spreading useContext across components, we wrap it in a separate hook
+// (`useTheme`). This way, the consuming component just calls `useTheme()`
+// without ever dealing with the "context" concept -- just like `useState`.
 function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {

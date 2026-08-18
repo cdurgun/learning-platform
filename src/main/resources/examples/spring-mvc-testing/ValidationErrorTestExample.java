@@ -20,12 +20,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// standaloneSetup(...), Bean Validation classpath'te olduğu için VARSAYILAN OLARAK bir
-// validator kurar -- yani @Valid ek bir .setValidator(...) çağrısı olmadan çalışır.
-// Ancak @ControllerAdvice sınıfları OTOMATİK taranmaz: geçerli bir hata gövdesi (400 +
-// ProblemDetail) almak için advice'ı .setControllerAdvice(...) ile elle eklemeniz gerekir
-// -- bkz. "Validation ve Exception Handling" dersindeki "@RestControllerAdvice: Global
-// Hata Yönetimi" bölümü.
+// standaloneSetup(...) sets up a validator BY DEFAULT, because Bean Validation is on the
+// classpath -- meaning @Valid works without an extra .setValidator(...) call. However,
+// @ControllerAdvice classes are NOT scanned automatically: to get a proper error body
+// (400 + ProblemDetail), you need to add the advice by hand via .setControllerAdvice(...)
+// -- see the "@RestControllerAdvice: Global Error Handling" section in the "Validation
+// and Exception Handling" lesson.
 public class ValidationErrorTestExample {
 
     record CreateTopicRequest(@NotBlank String slug, @Min(1) int estimatedMinutes) {
@@ -57,7 +57,7 @@ public class ValidationErrorTestExample {
                 .build();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        // slug boş VE estimatedMinutes 0 -- iki alan da ihlalde.
+        // slug is empty AND estimatedMinutes is 0 -- both fields are in violation.
         String invalidJson = objectMapper.writeValueAsString(new CreateTopicRequest("", 0));
 
         mockMvc.perform(post("/api/topics")
@@ -67,15 +67,15 @@ public class ValidationErrorTestExample {
                 .andExpect(jsonPath("$.detail").value("Validation failed"))
                 .andExpect(jsonPath("$.errors.length()").value(2));
 
-        System.out.println("Gecersiz govde 400 + ProblemDetail ile reddedildi.");
+        System.out.println("Invalid body was rejected with 400 + ProblemDetail.");
 
-        // Geçerli bir istekle karşılaştır: aynı controller, aynı advice, farklı sonuç.
+        // Compare with a valid request: same controller, same advice, different result.
         String validJson = objectMapper.writeValueAsString(new CreateTopicRequest("spring-mvc-testing", 45));
         mockMvc.perform(post("/api/topics")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson))
                 .andExpect(status().isOk());
 
-        System.out.println("Gecerli govde ise 200 ile kabul edildi.");
+        System.out.println("A valid body, on the other hand, was accepted with 200.");
     }
 }

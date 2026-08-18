@@ -17,9 +17,9 @@ function RatingDisplay({ rating }) {
 }
 
 function SyncedSiblingsExample() {
-  // İki farklı görünüme (bir slider, bir metin) sahip iki kardeş
-  // component, AYNI değeri temsil ediyor -- state, ortak ataya
-  // taşındığı için ikisi de her zaman senkron kalıyor.
+  // Two sibling components with different views (a slider and a text
+  // display) represent the SAME value -- since the state has been
+  // moved to their common ancestor, both always stay in sync.
   const [rating, setRating] = useState(0);
 
   return (

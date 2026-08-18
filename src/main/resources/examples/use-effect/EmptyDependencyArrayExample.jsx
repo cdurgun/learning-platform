@@ -4,12 +4,12 @@ function EmptyDependencyArrayExample() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    console.log("Component ilk kez ekrana geldi (mount oldu).");
-  }, []); // Boş dependency array: yalnızca İLK render'dan sonra bir kez çalışır.
+    console.log("Component appeared on screen for the first time (mounted).");
+  }, []); // Empty dependency array: runs only once, after the FIRST render.
 
   return (
     <div>
-      <p>Sayaç: {count}</p>
+      <p>Count: {count}</p>
       <button onClick={() => setCount(count + 1)}>+1</button>
     </div>
   );

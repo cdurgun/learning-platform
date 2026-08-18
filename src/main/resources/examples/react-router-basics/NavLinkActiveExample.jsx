@@ -12,9 +12,9 @@ function NavLinkActiveExample() {
   return (
     <BrowserRouter>
       <nav>
-        {/* NavLink, Link ile aynı işi yapar -- ama className'e bir fonksiyon
-            vererek "şu an bu link'in sayfasındayım" durumunu (isActive)
-            ayırt edebiliyoruz. */}
+        {/* NavLink does the same job as Link -- but by passing a function
+            to className, we can distinguish the "I'm currently on this
+            link's page" state (isActive). */}
         <NavLink
           to="/"
           className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}

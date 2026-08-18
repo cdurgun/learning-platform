@@ -13,9 +13,9 @@ function UpdatingStateExample() {
 
   return (
     <div>
-      <p>Sayaç: {count}</p>
+      <p>Count: {count}</p>
       <button onClick={increment}>+1</button>
-      <button onClick={reset}>Sıfırla</button>
+      <button onClick={reset}>Reset</button>
     </div>
   );
 }

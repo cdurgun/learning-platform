@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
-// Test edilecek component. Gerçek bir projede bu genelde ayrı bir dosyada
-// (Counter.jsx) olur, testi de ayrı bir dosyada (Counter.test.jsx) yazılır --
-// burada tek bir okunabilir örnek olması için ikisini birleştirdik.
+// The component under test. In a real project this usually lives in its own
+// file (Counter.jsx), with the test written in a separate file
+// (Counter.test.jsx) -- here we've combined the two into a single readable example.
 function Counter() {
   return (
     <div>
@@ -14,11 +14,11 @@ function Counter() {
 
 describe("Counter", () => {
   it("renders the initial count", () => {
-    // render(), component'i gerçek bir DOM'a (jsdom, tarayıcı SİMÜLASYONU) yerleştirir.
+    // render() places the component into a real DOM (jsdom, a SIMULATED browser).
     render(<Counter />);
 
-    // screen, o anki DOM'u SORGULAMAK için kullanılır. getByText, tam olarak bu
-    // metni içeren bir eleman bulamazsa testi ANINDA başarısız yapar.
+    // screen is used to QUERY the current DOM. If getByText can't find an
+    // element containing exactly this text, it fails the test IMMEDIATELY.
     expect(screen.getByText("Count: 0")).toBeInTheDocument();
   });
 });

@@ -1,13 +1,13 @@
 function KeyPropExample() {
   const users = [
-    { id: 1, name: "Ayşe" },
-    { id: 2, name: "Mehmet" },
-    { id: 3, name: "Elif" },
+    { id: 1, name: "Alice" },
+    { id: 2, name: "Bob" },
+    { id: 3, name: "Clara" },
   ];
 
-  // key, mümkün olduğunca eleman ismi ya da index değil, o elemana özgü,
-  // KALICI ve BENZERSİZ bir kimlik olmalı -- burada veritabanından gelen
-  // id gibi.
+  // The key should, whenever possible, be a PERMANENT and UNIQUE identifier
+  // specific to that item -- not its name or index -- such as an id
+  // coming from the database, as here.
   return (
     <ul>
       {users.map((user) => (

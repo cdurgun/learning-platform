@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
-// State & Events dersindeki koşullu render deseninin test edilmiş hali.
+// A tested version of the conditional rendering pattern from the State & Events lesson.
 function StatusMessage({ status }) {
   if (status === "loading") return <p>Loading...</p>;
   if (status === "error") return <p>Something went wrong.</p>;
@@ -13,8 +13,9 @@ describe("StatusMessage", () => {
     render(<StatusMessage status="loading" />);
     expect(screen.getByText("Loading...")).toBeInTheDocument();
 
-    // queryByText, getByText'in aksine bulamazsa HATA FIRLATMAZ -- null döner.
-    // Bir şeyin EKRANDA OLMADIĞINI doğrulamak için queryBy* kullanılır.
+    // Unlike getByText, queryByText does NOT THROW an error when it can't find
+    // something -- it returns null. queryBy* is used to verify that something
+    // is NOT ON THE SCREEN.
     expect(screen.queryByText("Data loaded successfully.")).not.toBeInTheDocument();
   });
 

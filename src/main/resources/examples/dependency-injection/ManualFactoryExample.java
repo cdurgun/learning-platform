@@ -26,7 +26,7 @@ class OrderNotifier {
 
     OrderNotifier() {
         // OrderNotifier still decides to CALL the factory itself here -- that
-        // is the piece "Dependency Injection: Sözleşmeye Karşı Programlamak"
+        // is the piece "Dependency Injection: Programming Against a Contract"
         // removes next: even the factory call moves outside this class.
         this.messageSender = MessageSenderFactory.create();
     }

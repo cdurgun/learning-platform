@@ -1,8 +1,8 @@
-// Gerçek uygulamalarda, fetch çağrılarını her component'in içine dağıtmak
-// yerine ayrı bir dosyada (örneğin api.js) toplamak yaygındır -- bu, tüm
-// istekleri TEK bir yerde tutar, `BASE_URL`'i tek bir yerde değiştirmeyi
-// sağlar. Bu örnek, o dosyanın İÇERİĞİNİ gösteriyor (normalde ayrı bir
-// dosya olurdu, component'ler bu fonksiyonları import ederdi).
+// In real apps, instead of scattering fetch calls across every component,
+// it's common to collect them in a separate file (e.g. api.js) -- this
+// keeps all requests in ONE place and lets you change `BASE_URL` in a
+// single spot. This example shows the CONTENTS of that file (normally it
+// would be a separate file, and components would import these functions).
 
 const BASE_URL = "http://localhost:3000";
 

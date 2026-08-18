@@ -9,10 +9,10 @@ class BlogPageDemo {
         List<BlogPageTemplateExample.Post> posts = List.of(
                 new BlogPageTemplateExample.Post(
                         "Spring MVC Views & Thymeleaf",
-                        "Model, ModelAndView ve Thymeleaf'in temel sözdizimi."),
+                        "Model, ModelAndView, and Thymeleaf's basic syntax."),
                 new BlogPageTemplateExample.Post(
                         "Validation & Exception Handling",
-                        "Bean Validation ve RFC 7807 ProblemDetail."));
+                        "Bean Validation and RFC 7807 ProblemDetail."));
 
         System.out.println("With posts:");
         System.out.println(BlogPageTemplateExample.render(posts));

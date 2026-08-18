@@ -1,14 +1,14 @@
 import { useState } from "react";
 
 function UseStateBasicExample() {
-  // useState(0), state'i 0 başlangıç değeriyle kurar.
-  // count: mevcut değeri okumak için. setCount: değeri güncellemek için.
+  // useState(0) sets up state with an initial value of 0.
+  // count: to read the current value. setCount: to update the value.
   const [count, setCount] = useState(0);
 
   return (
     <div>
-      <p>Sayaç: {count}</p>
-      <button onClick={() => setCount(count + 1)}>Artır</button>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
     </div>
   );
 }

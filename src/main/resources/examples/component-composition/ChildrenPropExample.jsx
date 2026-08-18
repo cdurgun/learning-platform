@@ -1,6 +1,6 @@
-// "children", her component'in otomatik olarak sahip olduğu özel bir prop.
-// Bir component'in AÇILIŞ ve KAPANIŞ etiketi arasına ne yazarsan, o içerik
-// props.children olarak o component'e ulaşır.
+// "children" is a special prop that every component automatically has.
+// Whatever you write between a component's OPENING and CLOSING tags becomes
+// that content, reaching the component as props.children.
 function Box({ children }) {
   return <div className="box">{children}</div>;
 }
@@ -8,7 +8,7 @@ function Box({ children }) {
 function App() {
   return (
     <Box>
-      <p>Bu metin, Box'un children'ı.</p>
+      <p>This text is Box's children.</p>
     </Box>
   );
 }

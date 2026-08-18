@@ -30,7 +30,7 @@ class OrderService {
     private final NotificationSender notificationSender;
 
     // Two NotificationSender beans exist now -- exactly the ambiguity from the
-    // Spring IoC Container lesson's "Bean Adlandırma ve Birden Fazla Bean"
+    // Spring IoC Container lesson's "Bean Naming and Multiple Beans"
     // section, but resolved with an annotation at the injection site instead
     // of a manual getBean(name) call.
     OrderService(@Qualifier("emailSender") NotificationSender notificationSender) {

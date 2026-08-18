@@ -1,18 +1,18 @@
-// React, component ile normal HTML etiketini büyük/küçük harfe bakarak ayırır:
-// - Küçük harfle başlıyorsa ("div", "button") -> normal HTML etiketi.
-// - Büyük harfle başlıyorsa ("Welcome", "UserCard") -> senin component'in.
+// React tells components and normal HTML tags apart by their capitalization:
+// - Starts with a lowercase letter ("div", "button") -> a normal HTML tag.
+// - Starts with an uppercase letter ("Welcome", "UserCard") -> your component.
 
 function userCard() {
-  // Bu fonksiyon küçük harfle başladığı için, JSX içinde <userCard /> yazılsa
-  // bile React bunu bir component olarak DEĞİL, bilinmeyen bir HTML etiketi
-  // olarak yorumlamaya çalışır -- bu yüzden component isimleri HER ZAMAN
-  // büyük harfle başlamalıdır.
-  return <div>Yanlış isimlendirme örneği</div>;
+  // Because this function starts with a lowercase letter, even if you write
+  // <userCard /> in JSX, React will try to interpret it as an unknown HTML
+  // tag rather than as a component -- this is why component names must
+  // ALWAYS start with an uppercase letter.
+  return <div>Incorrect naming example</div>;
 }
 
 function UserCard() {
-  // Doğrusu bu: büyük harfle başlayan bir isim.
-  return <div>Doğru isimlendirme örneği</div>;
+  // This is correct: a name that starts with an uppercase letter.
+  return <div>Correct naming example</div>;
 }
 
 console.log(userCard(), UserCard());

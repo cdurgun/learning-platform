@@ -1,19 +1,19 @@
 function EventHandlerFunctionExample() {
   function sayHello() {
-    console.log("Merhaba!");
+    console.log("Hello!");
   }
 
   return (
     <div>
-      {/* DOĞRU: fonksiyonun kendisini veriyoruz, çağırmıyoruz. */}
-      <button onClick={sayHello}>İsimli Fonksiyon</button>
+      {/* CORRECT: we pass the function itself, we don't call it. */}
+      <button onClick={sayHello}>Named Function</button>
 
-      {/* Inline (satır içi) bir fonksiyon da yazabilirsin. */}
-      <button onClick={() => console.log("Selam!")}>Inline Fonksiyon</button>
+      {/* You can also write an inline function. */}
+      <button onClick={() => console.log("Hi!")}>Inline Function</button>
 
-      {/* YANLIŞ: sayHello() yazarsan, fonksiyon component render olur
-          olmaz hemen çalışır -- tıklamayı beklemez. */}
-      {/* <button onClick={sayHello()}>Yanlış Kullanım</button> */}
+      {/* WRONG: if you write sayHello(), the function runs immediately
+          as soon as the component renders -- it won't wait for a click. */}
+      {/* <button onClick={sayHello()}>Wrong Usage</button> */}
     </div>
   );
 }

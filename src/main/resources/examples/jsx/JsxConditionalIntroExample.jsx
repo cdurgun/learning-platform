@@ -1,10 +1,11 @@
-// JSX içinde "if" yazamazsın (if bir ifade/expression değil, bir statement'tır) --
-// ama { } içine bir "expression" koyabildiğin için, ternary (? :) ya da && gibi
-// expression tabanlı araçlar burada işe yarar. Bu konuya "Conditional Rendering"
-// bölümünde (State & Events kategorisinde) çok daha detaylı gireceğiz -- burada
-// yalnızca JSX'in bunu neden bu şekilde yaptığını görüyoruz.
+// You can't write "if" inside JSX (if is a statement, not an
+// expression) -- but since you can put an "expression" inside { }, tools
+// based on expressions like ternary (? :) or && come in handy here. We'll
+// go into this topic in much more detail in the "Conditional Rendering"
+// section (in the State & Events category) -- here we're just seeing why
+// JSX does it this way.
 const isLoggedIn = true;
 
-const message = isLoggedIn ? <p>Hoş geldin!</p> : <p>Lütfen giriş yap.</p>;
+const message = isLoggedIn ? <p>Welcome!</p> : <p>Please log in.</p>;
 
 console.log(message);

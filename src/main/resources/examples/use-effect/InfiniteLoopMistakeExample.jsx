@@ -3,17 +3,17 @@ import { useState, useEffect } from "react";
 function InfiniteLoopMistakeExample() {
   const [count, setCount] = useState(0);
 
-  // YANLIŞ: dependency array'siz bir useEffect, HER render'dan sonra çalışır.
-  // İçinde state güncellenirse, bu güncelleme yeni bir render tetikler,
-  // o render yine effect'i çalıştırır -- SONSUZ DÖNGÜ.
+  // WRONG: a useEffect without a dependency array runs after EVERY
+  // render. If state is updated inside it, that update triggers a new
+  // render, which runs the effect again -- an INFINITE LOOP.
   // useEffect(() => {
   //   setCount(count + 1);
   // });
 
-  // DOĞRU: dependency array'i [] yaparak yalnızca ilk render'da çalıştır.
+  // RIGHT: make the dependency array [] so it only runs on the first render.
   useEffect(() => {
     setCount((prev) => prev + 1);
   }, []);
 
-  return <p>Sayaç (yalnızca 1 kez artmalı): {count}</p>;
+  return <p>Count (should only increase once): {count}</p>;
 }

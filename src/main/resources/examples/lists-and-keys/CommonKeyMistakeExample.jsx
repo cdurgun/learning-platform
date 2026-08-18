@@ -1,12 +1,12 @@
 function CommonKeyMistakeExample() {
-  const items = ["Elma", "Armut", "Muz"];
+  const items = ["Apple", "Pear", "Banana"];
 
   return (
     <ul>
-      {/* YAYGIN HATA: index'i key olarak kullanmak. Liste hiç değişmediği
-          sürece çalışıyor gibi görünür, ama bir eleman eklenip/silindiğinde
-          ya da sıralama değiştiğinde her elemanın index'i kayar -- React
-          artık yanlış elemanı "aynı eleman" sanabilir. */}
+      {/* COMMON MISTAKE: using the index as the key. It appears to work
+          as long as the list never changes, but when an item is
+          added/removed or the order changes, every item's index shifts --
+          React may now think the wrong item is "the same item". */}
       {items.map((item, index) => (
         <li key={index}>{item}</li>
       ))}

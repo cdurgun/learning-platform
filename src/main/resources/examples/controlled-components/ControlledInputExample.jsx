@@ -9,11 +9,11 @@ function ControlledInputExample() {
 
   return (
     <div>
-      {/* value={text}, input'un ekranda gösterdiği değeri React'in state'i
-          BELİRLESİN diyor -- input artık kendi başına bir değer tutmuyor,
-          değerini tamamen `text` state'inden alıyor. */}
+      {/* value={text} says that React's state should DECIDE the value the
+          input displays on screen -- the input no longer holds its own
+          value, it gets its value entirely from the `text` state. */}
       <input type="text" value={text} onChange={handleChange} />
-      <p>Yazdığın: {text}</p>
+      <p>You typed: {text}</p>
     </div>
   );
 }

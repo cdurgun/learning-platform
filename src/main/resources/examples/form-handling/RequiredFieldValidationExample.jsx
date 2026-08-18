@@ -8,12 +8,12 @@ function RequiredFieldValidationExample() {
     event.preventDefault();
 
     if (name.trim() === "") {
-      setError("İsim boş bırakılamaz.");
+      setError("Name cannot be empty.");
       return;
     }
 
     setError("");
-    console.log("Form gönderildi:", name);
+    console.log("Form submitted:", name);
   }
 
   return (
@@ -22,9 +22,9 @@ function RequiredFieldValidationExample() {
         type="text"
         value={name}
         onChange={(event) => setName(event.target.value)}
-        placeholder="İsim"
+        placeholder="Name"
       />
-      <button type="submit">Gönder</button>
+      <button type="submit">Submit</button>
 
       {error && <p className="error">{error}</p>}
     </form>

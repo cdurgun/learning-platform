@@ -9,17 +9,17 @@ function useCounter(initialValue = 0) {
 }
 
 function ReusingCustomHookExample() {
-  // Aynı hook'u iki kez çağırıyoruz -- her çağrı kendi BAĞIMSIZ state'ine sahip.
+  // We call the same hook twice -- each call has its own INDEPENDENT state.
   const apples = useCounter(0);
   const oranges = useCounter(10);
 
   return (
     <div>
-      <p>Elma: {apples.count}</p>
-      <button onClick={apples.increment}>Elma Ekle</button>
+      <p>Apples: {apples.count}</p>
+      <button onClick={apples.increment}>Add Apple</button>
 
-      <p>Portakal: {oranges.count}</p>
-      <button onClick={oranges.increment}>Portakal Ekle</button>
+      <p>Oranges: {oranges.count}</p>
+      <button onClick={oranges.increment}>Add Orange</button>
     </div>
   );
 }

@@ -26,11 +26,11 @@ function BuggyWidget() {
 function ErrorBoundaryScopeExample() {
   return (
     <div>
-      {/* İki AYRI ErrorBoundary, iki AYRI bölümü sarmalıyor -- Sidebar
-          çökse bile, MainContent bundan ETKİLENMEZ, kendi ErrorBoundary'si
-          İÇİNDE kalır. Tek bir büyük ErrorBoundary kullansaydık, herhangi
-          bir hata TÜM sayfayı "Something went wrong" mesajına
-          çevirebilirdi. */}
+      {/* Two SEPARATE ErrorBoundaries wrap two SEPARATE sections -- even if
+          the Sidebar crashes, the MainContent is NOT AFFECTED, the crash
+          stays CONTAINED within its own ErrorBoundary. If we used a single
+          large ErrorBoundary, any error could turn the ENTIRE page into a
+          "Something went wrong" message. */}
       <ErrorBoundary fallbackText="Sidebar failed to load.">
         <BuggyWidget />
       </ErrorBoundary>

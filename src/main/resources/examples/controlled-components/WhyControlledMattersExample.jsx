@@ -3,19 +3,19 @@ import { useState } from "react";
 function WhyControlledMattersExample() {
   const [text, setText] = useState("");
 
-  // Değer state'te olduğu için, kullanıcı her harf yazdığında ekranın
-  // BAŞKA bir yerinde de anında kullanabiliyoruz -- örneğin karakter
-  // sayısını ya da büyük harfli önizlemesini göstermek gibi.
+  // Because the value lives in state, we can instantly use it in ANOTHER
+  // part of the screen as the user types each letter -- for example to
+  // show a character count or an uppercase preview.
   return (
     <div>
       <input
         type="text"
         value={text}
         onChange={(event) => setText(event.target.value)}
-        placeholder="Bir şey yaz..."
+        placeholder="Type something..."
       />
-      <p>Karakter sayısı: {text.length}</p>
-      <p>Büyük harf önizleme: {text.toUpperCase()}</p>
+      <p>Character count: {text.length}</p>
+      <p>Uppercase preview: {text.toUpperCase()}</p>
     </div>
   );
 }

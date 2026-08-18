@@ -1,14 +1,14 @@
-// JSX'te attribute'lar HTML'e çok benzer, ama birkaç fark var:
-// 1) "class" yerine "className" kullanılır (class, JavaScript'te ayrı bir anlam taşıyor).
-// 2) Attribute değerleri de { } ile bir JavaScript değişkeni olabilir.
+// Attributes in JSX are very similar to HTML, but there are a few differences:
+// 1) "className" is used instead of "class" (class has a separate meaning in JavaScript).
+// 2) Attribute values can also be a JavaScript variable using { }.
 const userName = "ayse";
 
 const avatar = (
-  <img className="avatar" src={`/images/${userName}.png`} alt="Kullanıcı avatarı" />
+  <img className="avatar" src={`/images/${userName}.png`} alt="User avatar" />
 );
 
-// Etiketin kendisi kapanmıyorsa (örn. <img>, <input>, <br>), JSX'te
-// "self-closing" olmak ZORUNDADIR -- sonuna / eklenir.
+// If the tag itself doesn't close (e.g. <img>, <input>, <br>), it MUST be
+// "self-closing" in JSX -- a / is added at the end.
 const divider = <hr />;
 
 console.log(avatar, divider);

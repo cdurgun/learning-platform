@@ -15,7 +15,7 @@ import java.util.List;
 // This is not a toy problem -- this project's own fragments/layout.html sidebar hit
 // exactly this while computing which category should default to expanded:
 // "#vars.activeTopicSlug", never a bare "activeTopicSlug", inside a .?[...] selection
-// (see CLAUDE.md's "Bilinen Kısıtlar" for the SpelEvaluationException this caused
+// (see CLAUDE.md's "Known Constraints" for the SpelEvaluationException this caused
 // the first time around).
 class SelectionExpressionExample {
 

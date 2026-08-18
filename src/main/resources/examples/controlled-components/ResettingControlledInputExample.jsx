@@ -4,9 +4,9 @@ function ResettingControlledInputExample() {
   const [text, setText] = useState("");
 
   function handleClear() {
-    // Değer state'te olduğu için, input'u temizlemek yalnızca state'i
-    // sıfırlamak kadar basit -- gerçek DOM elemanına dokunmaya
-    // (useRef ya da event.target.reset() gibi) hiç gerek yok.
+    // Because the value lives in state, clearing the input is as simple
+    // as resetting the state -- there's no need to touch the actual DOM
+    // element (e.g. via useRef or event.target.reset()).
     setText("");
   }
 
@@ -17,7 +17,7 @@ function ResettingControlledInputExample() {
         value={text}
         onChange={(event) => setText(event.target.value)}
       />
-      <button onClick={handleClear}>Temizle</button>
+      <button onClick={handleClear}>Clear</button>
     </div>
   );
 }

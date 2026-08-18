@@ -21,8 +21,9 @@ function MultiPageNavExample() {
         <Link to="/about">About</Link>
       </nav>
 
-      {/* Üç ayrı sayfa, üç ayrı Route -- her biri kendi component'ini
-          render ediyor, URL değiştikçe React aralarında geçiş yapıyor. */}
+      {/* Three separate pages, three separate Routes -- each renders its
+          own component, and React switches between them as the URL
+          changes. */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/courses" element={<Courses />} />

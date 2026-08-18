@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Link, Outlet, useParams } from "react-router";
 
 function CourseLayout() {
-  // Bu, /courses/:courseSlug ile eşleşen "üst" route. İçindeki <Outlet />,
-  // eşleşen ALT route'un (varsa) nereye render edileceğini belirtir.
+  // This is the "parent" route matched by /courses/:courseSlug. The
+  // <Outlet /> inside it specifies where the matched CHILD route
+  // (if any) should be rendered.
   const { courseSlug } = useParams();
 
   return (
@@ -29,9 +30,9 @@ function NestedRouteExample() {
     <BrowserRouter>
       <Routes>
         <Route path="/courses/:courseSlug" element={<CourseLayout />}>
-          {/* İç içe (nested) Route -- yalnızca /courses/java/enum gibi bir
-              URL'de, CourseLayout'un İÇİNDEKİ <Outlet /> konumunda render
-              edilir. */}
+          {/* A nested Route -- it is only rendered at the <Outlet />
+              position INSIDE CourseLayout, for a URL like
+              /courses/java/enum. */}
           <Route path=":topicSlug" element={<TopicDetail />} />
         </Route>
       </Routes>

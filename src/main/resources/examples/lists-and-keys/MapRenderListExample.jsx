@@ -1,8 +1,8 @@
 function MapRenderListExample() {
-  const fruits = ["Elma", "Armut", "Muz"];
+  const fruits = ["Apple", "Pear", "Banana"];
 
-  // map(), bir dizideki her elemanı bir JSX elementine çevirir; sonuç
-  // yine bir dizi (bu sefer JSX elementlerinden oluşan) olur.
+  // map() converts each item in an array into a JSX element; the result
+  // is again an array (this time made up of JSX elements).
   return (
     <ul>
       {fruits.map((fruit) => (

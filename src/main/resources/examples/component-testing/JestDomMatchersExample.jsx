@@ -9,9 +9,10 @@ describe("SubmitButton", () => {
   it("is disabled when the disabled prop is true", () => {
     render(<SubmitButton disabled={true} />);
 
-    // toBeDisabled/toBeEnabled/toBeInTheDocument, @testing-library/jest-dom'un
-    // eklediği matcher'lardır -- düz Vitest'te yok, jsdom kullanan projelerde
-    // ayrıca kurulur (setupFiles içinde "@testing-library/jest-dom/vitest").
+    // toBeDisabled/toBeEnabled/toBeInTheDocument are matchers added by
+    // @testing-library/jest-dom -- they're not in plain Vitest, and are
+    // installed separately in projects that use jsdom (via
+    // "@testing-library/jest-dom/vitest" in setupFiles).
     expect(screen.getByRole("button", { name: /submit/i })).toBeDisabled();
   });
 

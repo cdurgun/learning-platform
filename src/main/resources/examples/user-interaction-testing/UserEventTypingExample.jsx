@@ -21,8 +21,9 @@ describe("NameInput interaction", () => {
 
     const input = screen.getByLabelText("Name");
 
-    // user.type, verilen metni HARF HARF yazar -- her tuş vuruşu, controlled
-    // component'teki onChange'i gerçek yazmaya çok benzer şekilde tetikler.
+    // user.type types the given text CHARACTER BY CHARACTER -- each
+    // keystroke triggers the onChange on the controlled component in a way
+    // that closely resembles real typing.
     await user.type(input, "Ada");
 
     expect(screen.getByText("You typed: Ada")).toBeInTheDocument();

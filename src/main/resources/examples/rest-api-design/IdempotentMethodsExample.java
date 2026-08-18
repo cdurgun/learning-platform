@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 // An operation is idempotent when calling it once has the same effect as calling it
-// N times. Mapping Annotation'ları ve HTTP Metotları already introduced idempotent
+// N times. Mapping Annotations and HTTP Methods already introduced idempotent
 // as a property of GET/PUT/DELETE -- this example proves it by actually calling each
 // operation twice and checking the store ends up in the same state either way.
 class IdempotentMethodsExample {

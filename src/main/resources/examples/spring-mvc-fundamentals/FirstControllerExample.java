@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 // body -- it is a LOGICAL VIEW NAME. DispatcherServlet hands this name to a
 // ViewResolver, which turns it into an actual template (e.g. templates/home.html).
 // This class can't run on its own -- it needs a running DispatcherServlet and a
-// configured ViewResolver, exactly like this project's own HomeController (see "Bu
-// Projenin Kendi Controller'ları").
+// configured ViewResolver, exactly like this project's own HomeController (see "This
+// Project's Own Controllers").
 @Controller
 class HomePageController {
 

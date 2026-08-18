@@ -11,8 +11,8 @@ function Courses() {
 function BasicRouterSetupExample() {
   return (
     <BrowserRouter>
-      {/* Routes, URL'e göre HANGİ Route'un render edileceğine karar verir --
-          aynı anda yalnızca eşleşen bir tane render edilir. */}
+      {/* Routes decides WHICH Route to render based on the URL -- only the
+          matching one is rendered at any given time. */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/courses" element={<Courses />} />

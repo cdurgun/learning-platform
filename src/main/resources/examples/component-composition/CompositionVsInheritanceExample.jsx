@@ -1,9 +1,9 @@
-// "Inheritance" (kalıtım), Object-Oriented Programming'de bir sınıfın başka
-// bir sınıftan özellik devralmasıdır. React'te component'ler arasında böyle
-// bir kalıtım YOKTUR -- bunun yerine "composition" (birleştirme) kullanılır:
-// küçük component'leri, büyük bir component'in İÇİNE koyarak birleştirirsin.
+// "Inheritance" is when, in Object-Oriented Programming, a class inherits
+// properties from another class. React components have NO such inheritance --
+// instead, "composition" is used: you combine small components by placing
+// them INSIDE a larger component.
 
-// Composition -- bu projenin (ve React'in) kullandığı yol:
+// Composition -- the way this project (and React) does it:
 function Card({ children }) {
   return <div className="card">{children}</div>;
 }
@@ -11,14 +11,14 @@ function Card({ children }) {
 function ProfileCard() {
   return (
     <Card>
-      <h3>Ayşe Yılmaz</h3>
-      <p>Frontend Geliştirici</p>
+      <h3>Jane Smith</h3>
+      <p>Frontend Developer</p>
     </Card>
   );
 }
 
-// "class ProfileCard extends Card { ... }" gibi bir kalıtım React'te
-// YAZILMAZ -- React ekibi, composition'ın neredeyse her senaryo için
-// yeterli ve daha basit olduğunu söylüyor.
+// You would NOT write inheritance like "class ProfileCard extends Card { ... }"
+// in React -- the React team says composition is sufficient and simpler for
+// nearly every scenario.
 
 console.log(ProfileCard());

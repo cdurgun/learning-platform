@@ -13,8 +13,8 @@ function LoadingStateExample() {
       });
   }, []);
 
-  // Veri gelene kadar ekranda bir "Loading..." mesajı göstermek, kullanıcıya
-  // bir şeylerin olduğunu bildirir -- boş bir liste yerine.
+  // Showing a "Loading..." message on screen until the data arrives lets
+  // the user know something is happening -- instead of an empty list.
   if (loading) {
     return <p>Loading...</p>;
   }

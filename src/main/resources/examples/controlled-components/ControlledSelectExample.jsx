@@ -5,12 +5,12 @@ function ControlledSelectExample() {
 
   return (
     <div>
-      {/* select'ler de aynı desenle kontrol edilir: value + onChange. */}
+      {/* Selects are controlled with the same pattern: value + onChange. */}
       <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-        <option value="tr">Türkçe</option>
+        <option value="tr">Turkish</option>
         <option value="en">English</option>
       </select>
-      <p>Seçilen dil: {language}</p>
+      <p>Selected language: {language}</p>
     </div>
   );
 }

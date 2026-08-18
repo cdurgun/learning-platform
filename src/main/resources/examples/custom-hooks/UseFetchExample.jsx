@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 
-// useEffect + useState'i tekrar tekrar yazmak yerine, "veri çekme" mantığını
-// yeniden kullanılabilir bir custom hook'a çıkarıyoruz. (Basitleştirilmiş
-// bir örnek -- hata yönetimi ve yarış durumları gibi konular "API & Data
-// Fetching" kategorisinde daha detaylı işlenecek.)
+// Instead of writing useEffect + useState over and over, we extract the
+// "data fetching" logic into a reusable custom hook. (A simplified
+// example -- topics like error handling and race conditions will be
+// covered in more detail in the "API & Data Fetching" category.)
 function useFetch(url) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,8 +24,8 @@ function UseFetchExample() {
   const { data, loading } = useFetch("https://api.example.com/users");
 
   if (loading) {
-    return <p>Yükleniyor...</p>;
+    return <p>Loading...</p>;
   }
 
-  return <p>{data.length} kullanıcı bulundu.</p>;
+  return <p>{data.length} users found.</p>;
 }

@@ -1,9 +1,10 @@
-// Bir component, en basit hâliyle JSX döndüren bir JavaScript fonksiyonudur.
-// Farkı: adı BÜYÜK harfle başlar -- React, küçük harfle başlayan isimleri
-// "div", "h1" gibi normal HTML etiketi sanır, büyük harfle başlayanları ise
-// senin yazdığın bir component olarak tanır.
+// At its simplest, a component is a JavaScript function that returns JSX.
+// The difference: its name starts with an UPPERCASE letter -- React treats
+// names starting with a lowercase letter as normal HTML tags like "div",
+// "h1", and recognizes names starting with an uppercase letter as a
+// component you wrote.
 function Welcome() {
-  return <h1>Merhaba!</h1>;
+  return <h1>Hello!</h1>;
 }
 
 console.log(Welcome());

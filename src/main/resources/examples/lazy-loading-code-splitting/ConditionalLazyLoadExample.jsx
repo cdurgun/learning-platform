@@ -1,8 +1,8 @@
 import { lazy, Suspense, useState } from "react";
 
-// EmojiPicker gibi büyük, nadiren kullanılan bir component'i lazy
-// yapmak özellikle faydalı -- kullanıcıların çoğu belki hiç açmaz, o
-// zaman kodunu hiç indirmemiş oluruz.
+// Making a large, rarely used component like EmojiPicker lazy is
+// especially useful -- most users may never open it, in which case we
+// never download its code at all.
 const EmojiPicker = lazy(() => import("./EmojiPicker.jsx"));
 
 function ConditionalLazyLoadExample() {
@@ -13,8 +13,9 @@ function ConditionalLazyLoadExample() {
       <button onClick={() => setShowPicker(!showPicker)}>
         {showPicker ? "Hide" : "Show"} Emoji Picker
       </button>
-      {/* EmojiPicker'ın kodu, `showPicker` İLK KEZ true olana kadar HİÇ
-          indirilmez -- yalnızca gerçekten kullanılacaksa yükleniyor. */}
+      {/* EmojiPicker's code is NEVER downloaded until `showPicker` becomes
+          true for the FIRST time -- it's only loaded if it will actually
+          be used. */}
       {showPicker && (
         <Suspense fallback={<p>Loading emoji picker...</p>}>
           <EmojiPicker />

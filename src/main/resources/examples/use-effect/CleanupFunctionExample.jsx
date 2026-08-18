@@ -8,14 +8,15 @@ function CleanupFunctionExample() {
       setSeconds((prev) => prev + 1);
     }, 1000);
 
-    // Cleanup fonksiyonu: component ekrandan kalktığında (unmount) ya da
-    // effect yeniden çalışmadan HEMEN ÖNCE React bunu otomatik çağırır.
-    // Burada, interval'i temizlemezsek, component ekrandan kalktıktan
-    // sonra bile arka planda çalışmaya devam eder -- bir "memory leak".
+    // Cleanup function: React automatically calls this when the
+    // component is removed from the screen (unmount), or RIGHT BEFORE
+    // the effect runs again. If we don't clear the interval here, it
+    // keeps running in the background even after the component is
+    // removed from the screen -- a "memory leak".
     return () => {
       clearInterval(intervalId);
     };
   }, []);
 
-  return <p>Geçen süre: {seconds} saniye</p>;
+  return <p>Elapsed time: {seconds} seconds</p>;
 }

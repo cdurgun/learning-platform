@@ -1,7 +1,7 @@
 function OnClickExample() {
   function handleClick() {
-    console.log("Butona tıklandı!");
+    console.log("Button clicked!");
   }
 
-  return <button onClick={handleClick}>Tıkla</button>;
+  return <button onClick={handleClick}>Click</button>;
 }

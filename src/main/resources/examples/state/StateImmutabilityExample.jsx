@@ -1,25 +1,25 @@
 import { useState } from "react";
 
 function StateImmutabilityExample() {
-  const [user, setUser] = useState({ name: "Ayşe", age: 25 });
+  const [user, setUser] = useState({ name: "Emma", age: 25 });
 
   function haveBirthday() {
-    // YANLIŞ: mevcut nesneyi doğrudan değiştirmek (mutate etmek).
-    // React bu değişikliği fark etmeyebilir, ekran güncellenmeyebilir.
+    // WRONG: mutating the existing object directly.
+    // React might not notice the change, and the screen might not update.
     // user.age = user.age + 1;
     // setUser(user);
 
-    // DOĞRU: spread (...) ile eski değerleri kopyalayan YENİ bir nesne
-    // oluşturup onu state'e veriyoruz.
+    // RIGHT: create a NEW object that copies the old values via spread
+    // (...) and pass that to the state.
     setUser({ ...user, age: user.age + 1 });
   }
 
   return (
     <div>
       <p>
-        {user.name}, {user.age} yaşında.
+        {user.name} is {user.age} years old.
       </p>
-      <button onClick={haveBirthday}>Doğum Günü</button>
+      <button onClick={haveBirthday}>Birthday</button>
     </div>
   );
 }

@@ -6,8 +6,8 @@ function FormSubmitExample() {
 
   function handleSubmit(event) {
     event.preventDefault();
-    // Form gönderildiğinde, o an state'te olan değeri kullanıyoruz --
-    // controlled input olduğu için değerin ne olduğunu her zaman biliyoruz.
+    // When the form is submitted, we use the value currently in state --
+    // since it's a controlled input, we always know what the value is.
     setSubmittedName(name);
   }
 
@@ -17,11 +17,11 @@ function FormSubmitExample() {
         type="text"
         value={name}
         onChange={(event) => setName(event.target.value)}
-        placeholder="İsmini yaz"
+        placeholder="Enter your name"
       />
-      <button type="submit">Gönder</button>
+      <button type="submit">Submit</button>
 
-      {submittedName && <p>Gönderilen: {submittedName}</p>}
+      {submittedName && <p>Submitted: {submittedName}</p>}
     </form>
   );
 }

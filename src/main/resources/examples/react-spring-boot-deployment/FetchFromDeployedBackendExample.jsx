@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-// API & Data Fetching dersindeki useEffect+fetch+loading/error deseni --
-// karşıda artık json-server değil, Render'a deploy edilmiş GERÇEK bir
-// Spring Boot uygulaması var.
+// The useEffect+fetch+loading/error pattern from the API & Data Fetching
+// lesson -- except on the other end there's no longer json-server, but a
+// REAL Spring Boot application deployed to Render.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 function CourseList() {

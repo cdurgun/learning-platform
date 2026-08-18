@@ -8,8 +8,8 @@ function NewCourseForm() {
   function handleSubmit(event) {
     event.preventDefault();
 
-    // Form gönderildikten (örneğin "kaydedildikten") SONRA, kullanıcıyı
-    // başka bir sayfaya yönlendirmek yaygın bir kalıptır.
+    // A common pattern is to redirect the user to another page AFTER
+    // the form is submitted (e.g. "saved").
     navigate("/courses");
   }
 

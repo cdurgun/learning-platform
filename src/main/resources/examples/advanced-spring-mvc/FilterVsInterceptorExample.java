@@ -36,7 +36,7 @@ class FilterVsInterceptorExample {
     }
 
     public static void main(String[] args) {
-        System.out.println("See 'Bir İsteğin İzlediği Yol: Filter Chain + Interceptor Chain Birlikte'");
+        System.out.println("See 'The Path a Request Follows: Filter Chain + Interceptor Chain Together'");
         System.out.println("for how these two actually nest around each other in a real request.");
     }
 }

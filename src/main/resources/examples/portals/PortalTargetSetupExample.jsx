@@ -1,10 +1,10 @@
 import { createPortal } from "react-dom";
 
 function Tooltip({ text }) {
-  // document.body yerine, index.html'de özel olarak ayrılmış bir hedef
-  // kullanmak daha yaygındır -- örneğin <div id="tooltip-root"></div>,
-  // uygulamanın #root'una KARDEŞ (sibling) olarak eklenir. Bu, portal
-  // içeriğinin kendi stillerini/konumunu yönetmesini kolaylaştırır.
+  // Instead of document.body, it's more common to use a target set aside
+  // specifically in index.html -- for example <div id="tooltip-root"></div>,
+  // added as a SIBLING to the app's #root. This makes it easier for the
+  // portal content to manage its own styles/position.
   const target = document.getElementById("tooltip-root");
 
   if (!target) {

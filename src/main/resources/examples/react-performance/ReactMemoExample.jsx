@@ -1,10 +1,10 @@
 import { memo, useState } from "react";
 
-// memo(), bir component'i "hatırlanan" (memoized) bir versiyona sarmalar --
-// React, yeniden render etmeden ÖNCE, props'ların bir öncekiyle AYNI olup
-// olmadığını kontrol eder; aynıysa, render'ı ATLAR.
+// memo() wraps a component in a "memoized" version -- BEFORE re-rendering,
+// React checks whether the props are the SAME as last time; if they are,
+// it SKIPS the render.
 const ExpensiveList = memo(function ExpensiveList({ items }) {
-  console.log("ExpensiveList render edildi");
+  console.log("ExpensiveList rendered");
 
   return (
     <ul>
@@ -15,9 +15,9 @@ const ExpensiveList = memo(function ExpensiveList({ items }) {
   );
 });
 
-// `items`'ı component'in DIŞINDA tanımlıyoruz -- component'in içine
-// koysaydık, her render'da YENİ bir dizi oluşturulur, referansı değişir ve
-// memo hiçbir zaman render'ı atlayamazdı (bkz. bir sonraki ders,
+// We define `items` OUTSIDE the component -- if we put it inside, a NEW
+// array would be created on every render, its reference would change, and
+// memo would never be able to skip the render (see the next lesson,
 // "ReactMemoWithCallbackExample").
 const items = ["Java", "React", "Spring Boot"];
 
@@ -26,9 +26,9 @@ function ReactMemoExample() {
 
   return (
     <div>
-      {/* `count` arttığında ReactMemoExample yeniden render olur, ama
-          `items`'ın İÇERİĞİ aynı kaldığı için (aynı dizi elemanları),
-          memo artık ExpensiveList'in yeniden render edilmesini ATLAR. */}
+      {/* When `count` increases, ReactMemoExample re-renders, but since the
+          CONTENTS of `items` stayed the same (same array elements), memo
+          now SKIPS re-rendering ExpensiveList. */}
       <button onClick={() => setCount(count + 1)}>Count: {count}</button>
       <ExpensiveList items={items} />
     </div>

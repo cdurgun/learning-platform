@@ -3,19 +3,19 @@ import { useState, useCallback } from "react";
 function UseCallbackBasicExample() {
   const [count, setCount] = useState(0);
 
-  // useCallback olmadan, her render'da handleClick YENİ bir fonksiyon olarak
-  // oluşturulur -- iki farklı render'daki fonksiyonlar "aynı" sayılmaz.
-  // useCallback, dependency array değişmediği sürece AYNI fonksiyon
-  // referansını korur.
+  // Without useCallback, handleClick would be created as a NEW function on
+  // every render -- functions from two different renders are not considered
+  // "equal". useCallback keeps the SAME function reference as long as the
+  // dependency array doesn't change.
   const handleClick = useCallback(() => {
-    console.log("Tıklandı, count:", count);
+    console.log("Clicked, count:", count);
   }, [count]);
 
   return (
     <div>
-      <p>Sayaç: {count}</p>
+      <p>Count: {count}</p>
       <button onClick={() => setCount(count + 1)}>+1</button>
-      <button onClick={handleClick}>Console'a Yaz</button>
+      <button onClick={handleClick}>Log to Console</button>
     </div>
   );
 }

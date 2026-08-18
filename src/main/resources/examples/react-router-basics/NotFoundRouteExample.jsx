@@ -23,8 +23,8 @@ function NotFoundRouteExample() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/courses" element={<Courses />} />
-        {/* path="*", tanımlı diğer hiçbir Route ile eşleşmeyen URL'leri
-            YAKALAR -- her zaman Routes içindeki EN SONA yazılır. */}
+        {/* path="*" CATCHES any URL that doesn't match any of the other
+            defined Routes -- it's always written LAST inside Routes. */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

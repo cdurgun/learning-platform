@@ -13,10 +13,10 @@ function CartCount() {
 }
 
 function ContextWithStateExample() {
-  // Context yalnızca SABİT bir değer taşımaz -- burada `value`'ya bir
-  // nesne veriyoruz: hem state'in kendisi (`items`) hem de onu
-  // GÜNCELLEYEN fonksiyon (`addItem`). Bu, gerçek uygulamalarda en sık
-  // görülen Context kullanımı.
+  // Context doesn't only carry a FIXED value -- here we're giving `value`
+  // an object: both the state itself (`items`) and the function that
+  // UPDATES it (`addItem`). This is the most common way Context is used
+  // in real applications.
   const [items, setItems] = useState([]);
 
   function addItem(item) {

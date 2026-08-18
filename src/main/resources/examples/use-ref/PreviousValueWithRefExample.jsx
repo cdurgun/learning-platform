@@ -5,17 +5,17 @@ function PreviousValueWithRefExample() {
   const previousCountRef = useRef(undefined);
 
   useEffect(() => {
-    // Her render'dan SONRA, mevcut değeri ref'e kaydediyoruz -- bir sonraki
-    // render'da "bir önceki değer" olarak okuyabilmek için. Bunun için
-    // state değil ref kullanıyoruz, çünkü bu kaydı ekranı yeniden
-    // render etmeden yapmak istiyoruz.
+    // AFTER every render, we save the current value into the ref -- so we
+    // can read it as the "previous value" on the next render. We use a ref
+    // instead of state here because we want to record this without
+    // triggering another render.
     previousCountRef.current = count;
   });
 
   return (
     <div>
       <p>
-        Şimdiki: {count}, Önceki: {previousCountRef.current}
+        Current: {count}, Previous: {previousCountRef.current}
       </p>
       <button onClick={() => setCount(count + 1)}>+1</button>
     </div>

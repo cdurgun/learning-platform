@@ -4,9 +4,9 @@ function Home() {
   return (
     <div>
       <h1>Home Page</h1>
-      {/* <a href="..."> yerine <Link to="..."> kullanıyoruz -- Link, sayfayı
-          YENİDEN YÜKLEMEDEN (full page reload olmadan) URL'i değiştirir,
-          React sadece gerekli kısmı yeniden render eder. */}
+      {/* We use <Link to="..."> instead of <a href="..."> -- Link changes
+          the URL WITHOUT RELOADING the page (no full page reload), React
+          only re-renders the part that needs to change. */}
       <Link to="/courses">View Courses</Link>
     </div>
   );

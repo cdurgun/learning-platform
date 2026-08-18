@@ -43,7 +43,7 @@ class AccountRepository {
     void debit(String account, int amount) {
         if (balanceOf(account) < amount) {
             // Unchecked -- rolls back automatically, no rollbackFor needed
-            // (see "Rollback Kuralları" earlier in this lesson).
+            // (see "Rollback Rules" earlier in this lesson).
             throw new InsufficientFundsException(account + " has insufficient funds");
         }
         ledger.add(account + ":-" + amount);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-// Özel bir hook, "use" ile başlayan NORMAL bir JavaScript fonksiyonudur --
-// içinde React'in kendi hook'larını (useState, useEffect gibi) çağırabilir.
+// A custom hook is just a NORMAL JavaScript function that starts with "use" --
+// inside it, you can call React's own hooks (like useState, useEffect).
 function useCounter(initialValue = 0) {
   const [count, setCount] = useState(initialValue);
 
@@ -21,7 +21,7 @@ function CustomHookNamingExample() {
 
   return (
     <div>
-      <p>Sayaç: {count}</p>
+      <p>Count: {count}</p>
       <button onClick={increment}>+1</button>
       <button onClick={decrement}>-1</button>
     </div>

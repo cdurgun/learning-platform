@@ -13,9 +13,9 @@ function CourseDetail() {
   const navigate = useNavigate();
 
   function handleBack() {
-    // navigate(-1), tarayıcının "geri" butonuyla aynı şeyi yapar --
-    // history'de bir adım geriye gider. navigate(-2) iki adım geriye
-    // gider, ve benzeri.
+    // navigate(-1) does the same thing as the browser's "back" button --
+    // it goes one step back in the history. navigate(-2) goes two steps
+    // back, and so on.
     navigate(-1);
   }
 

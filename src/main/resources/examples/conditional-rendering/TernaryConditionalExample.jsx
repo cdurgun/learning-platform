@@ -1,5 +1,6 @@
 function TernaryConditionalExample({ isLoggedIn }) {
-  // Ternary (? :) bir SONUÇ ÜRETİR, bu yüzden doğrudan { } içine yazılabilir.
-  // IfConditionalExample'daki dört satırı tek satıra indiriyor.
-  return <p>{isLoggedIn ? "Hoş geldin!" : "Lütfen giriş yap."}</p>;
+  // The ternary (? :) PRODUCES A VALUE, so it can be written directly
+  // inside { }. This condenses the four lines from IfConditionalExample
+  // into a single line.
+  return <p>{isLoggedIn ? "Welcome!" : "Please log in."}</p>;
 }

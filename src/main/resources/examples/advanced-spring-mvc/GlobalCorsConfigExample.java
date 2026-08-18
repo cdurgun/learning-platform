@@ -3,7 +3,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 // The same WebMvcConfigurer that registers interceptors (see "WebMvcConfigurer:
-// Interceptor'ı Kaydetmek") also has an addCorsMappings hook -- the global
+// Registering an Interceptor") also has an addCorsMappings hook -- the global
 // alternative to sprinkling @CrossOrigin over every controller method. One
 // CorsRegistration per URL pattern, each building the same kind of CorsConfiguration
 // CorsPreflightExample constructed by hand.

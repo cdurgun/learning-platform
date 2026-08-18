@@ -10,7 +10,7 @@ class BookCatalogAppDemo {
         // - Spring Boot Book
 
         // BookRepository is a singleton, so this change is visible to every
-        // later call -- exactly the "Bean Scope: Singleton (Varsayılan)"
+        // later call -- exactly the "Bean Scope: Singleton (Default)"
         // behavior from the Spring IoC Container lesson.
         context.getBean(BookService.class).addBook("Reflection Book");
         controller.printCatalog();

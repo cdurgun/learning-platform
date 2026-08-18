@@ -1,13 +1,14 @@
 import { useState } from "react";
 
-// useState, React'in sana hazır sunduğu bir HOOK'tur -- "use" ile başlayan,
-// function component'lere state gibi React özellikleri ekleyen bir fonksiyon.
+// useState is a HOOK that React provides out of the box -- a function that
+// starts with "use" and adds React features like state to function
+// components.
 function WhatIsAHookExample() {
   const [count, setCount] = useState(0);
 
   return (
     <div>
-      <p>useState bir hook'tur: {count}</p>
+      <p>useState is a hook: {count}</p>
       <button onClick={() => setCount(count + 1)}>+1</button>
     </div>
   );

@@ -1,12 +1,12 @@
 function IfConditionalExample({ isLoggedIn }) {
-  // if, bir SONUÇ ÜRETMEZ, bu yüzden doğrudan JSX'in { } içine yazılamaz.
-  // Bunun yerine, return'den ÖNCE normal bir değişkene karar veriyoruz.
+  // if does NOT PRODUCE A VALUE, so it can't be written directly inside
+  // JSX's { }. Instead, we decide on a plain variable BEFORE the return.
   let message;
 
   if (isLoggedIn) {
-    message = "Hoş geldin!";
+    message = "Welcome!";
   } else {
-    message = "Lütfen giriş yap.";
+    message = "Please log in.";
   }
 
   return <p>{message}</p>;

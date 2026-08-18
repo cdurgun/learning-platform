@@ -4,9 +4,9 @@ function DeleteCourseExample({ courses, setCourses }) {
   async function handleDelete(courseId) {
     await fetch(`${BASE_URL}/courses/${courseId}`, { method: "DELETE" });
 
-    // Sunucudan sildikten SONRA, ekrandaki listeyi de güncellememiz gerekir
-    // -- State dersindeki immutability kuralına uyarak, silinen kaydı
-    // filter() ile ÇIKARIP yeni bir dizi oluşturuyoruz.
+    // AFTER deleting on the server, we also need to update the list on
+    // screen -- following the immutability rule from the State lesson, we
+    // create a new array by REMOVING the deleted record with filter().
     setCourses(courses.filter((course) => course.id !== courseId));
   }
 

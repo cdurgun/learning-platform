@@ -1,14 +1,14 @@
 import { createContext, useContext } from "react";
 
-// createContext(), bir "kutu" oluşturur -- ağacın herhangi bir yerinden,
-// props geçirmeden okunabilecek bir değer taşır. Parantez içindeki "light",
-// bir Provider bulunmadığında kullanılacak VARSAYILAN değer.
+// createContext() creates a "box" -- it carries a value that can be read
+// from anywhere in the tree, without passing props. The "light" in the
+// parentheses is the DEFAULT value used when no Provider exists.
 const ThemeContext = createContext("light");
 
 function ThemedButton() {
-  // useContext(ThemeContext), en yakın ThemeContext.Provider'ın
-  // `value`'sunu okur -- ThemedButton, bu değeri props ile ALMADAN
-  // doğrudan buradan okuyor.
+  // useContext(ThemeContext) reads the `value` of the nearest
+  // ThemeContext.Provider -- ThemedButton reads this value directly,
+  // WITHOUT receiving it as a prop.
   const theme = useContext(ThemeContext);
 
   return <button className={theme}>Click me</button>;

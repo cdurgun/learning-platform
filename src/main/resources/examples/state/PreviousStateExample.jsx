@@ -4,21 +4,22 @@ function PreviousStateExample() {
   const [count, setCount] = useState(0);
 
   function incrementTwice() {
-    // YANLIŞ: count burada hâlâ ESKİ değeri gösterir, iki satır da aynı
-    // "eski değer + 1"i kullanır -- sonuçta yalnızca 1 artar, 2 değil.
+    // WRONG: count still shows the OLD value here, and both lines use
+    // the same "old value + 1" -- so the result only increases by 1,
+    // not 2.
     // setCount(count + 1);
     // setCount(count + 1);
 
-    // DOĞRU: fonksiyon formu (prevCount => ...), her seferinde bir önceki
-    // güncellemeden sonraki en güncel değeri kullanır.
+    // RIGHT: the function form (prevCount => ...) always uses the most
+    // up-to-date value from the previous update.
     setCount((prevCount) => prevCount + 1);
     setCount((prevCount) => prevCount + 1);
   }
 
   return (
     <div>
-      <p>Sayaç: {count}</p>
-      <button onClick={incrementTwice}>2 Artır</button>
+      <p>Count: {count}</p>
+      <button onClick={incrementTwice}>Increment by 2</button>
     </div>
   );
 }

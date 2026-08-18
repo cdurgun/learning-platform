@@ -1,17 +1,17 @@
-// Bir component'e istediğin kadar prop gönderebilirsin -- her biri
-// props nesnesinin ayrı bir alanı olarak fonksiyona ulaşır.
+// You can pass as many props as you like to a component -- each one
+// reaches the function as a separate field of the props object.
 function UserCard(props) {
   return (
     <div>
       <h2>{props.name}</h2>
-      <p>Yaş: {props.age}</p>
-      <p>Şehir: {props.city}</p>
+      <p>Age: {props.age}</p>
+      <p>City: {props.city}</p>
     </div>
   );
 }
 
 function App() {
-  return <UserCard name="Ayşe" age={28} city="İzmir" />;
+  return <UserCard name="Emma" age={28} city="Boston" />;
 }
 
 console.log(App());

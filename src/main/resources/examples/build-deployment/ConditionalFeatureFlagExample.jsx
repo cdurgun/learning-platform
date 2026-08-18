@@ -1,7 +1,7 @@
-// Ortam değişkenleri yalnızca metin/rozet göstermek için değil, ortama göre
-// farklı davranmak (feature flag) için de kullanılır. "true" string'ini
-// gerçek bir boolean'a çevirmeyi unutmamak önemli -- import.meta.env'deki
-// her değer STRING'dir, "false" bile truthy'dir.
+// Environment variables aren't just for showing text/badges -- they're also
+// used to behave differently depending on the environment (feature flags).
+// It's important not to forget to convert the "true" string into an actual
+// boolean -- every value in import.meta.env is a STRING, even "false" is truthy.
 const showBetaBanner = import.meta.env.VITE_SHOW_BETA_BANNER === "true";
 
 function BetaBanner() {

@@ -3,11 +3,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-// Advanced Spring MVC dersindeki GlobalCorsConfigExample'ın (addCorsMappings)
-// gerçek bir deploy'da kullanılmış hali. allowedOrigin, application.properties
-// üzerinden bir CORS_ALLOWED_ORIGIN ortam değişkeninden okunuyor -- kod hiç
-// değişmeden, Render Dashboard'ındaki bu değişkeni Vercel'in verdiği gerçek
-// adresle doldurmak yeterli.
+// This is what GlobalCorsConfigExample (addCorsMappings) from the Advanced
+// Spring MVC lesson looks like when used in a real deployment. allowedOrigin
+// is read from a CORS_ALLOWED_ORIGIN environment variable via
+// application.properties -- without changing the code at all, it's enough
+// to fill in this variable in the Render Dashboard with the real address
+// Vercel provides.
 @Configuration
 class DeploymentCorsConfigExample implements WebMvcConfigurer {
 

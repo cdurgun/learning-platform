@@ -5,21 +5,21 @@ function UseRefVsUseStateExample() {
   const refValue = useRef(0);
 
   function incrementState() {
-    setStateValue(stateValue + 1); // Ekranı günceller (re-render tetikler).
+    setStateValue(stateValue + 1); // Updates the screen (triggers a re-render).
   }
 
   function incrementRef() {
     refValue.current = refValue.current + 1;
     console.log("refValue.current:", refValue.current);
-    // Değer gerçekten değişti, ama ekran GÜNCELLENMEZ -- çünkü ref
-    // değişikliği bir re-render tetiklemez.
+    // The value really did change, but the screen is NOT UPDATED -- because
+    // changing a ref does not trigger a re-render.
   }
 
   return (
     <div>
       <p>State: {stateValue}</p>
-      <button onClick={incrementState}>State'i Artır</button>
-      <button onClick={incrementRef}>Ref'i Artır (Console'a Bak)</button>
+      <button onClick={incrementState}>Increment State</button>
+      <button onClick={incrementRef}>Increment Ref (Check Console)</button>
     </div>
   );
 }

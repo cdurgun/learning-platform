@@ -3,9 +3,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 // Two common ways to version a REST API. Neither needs a new mechanism -- both
-// reuse tools this project already knows: @GetMapping's path (Mapping Annotation'ları
-// ve HTTP Metotları) for URI versioning, @RequestHeader (Path Variable'lar ve Request
-// Parametreleri) for header versioning.
+// reuse tools this project already knows: @GetMapping's path (Mapping Annotations
+// and HTTP Methods) for URI versioning, @RequestHeader (Path Variables and Request
+// Parameters) for header versioning.
 @RestController
 class ApiVersioningExample {
 

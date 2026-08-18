@@ -25,8 +25,8 @@ class OrderService {
         }
         // Unlike every other line in this method, this one is a network call -- it can be
         // slow, time out, or fail because a completely different process crashed (see the
-        // Microservices Fundamentals lesson's "Dağıtık Sistemlerin Getirdiği Yeni
-        // Zorluklar" section).
+        // Microservices Fundamentals lesson's "New Challenges Introduced by Distributed
+        // Systems" section).
         StockCheckResponse stock = stockClient.checkStock(productName);
         if (stock.quantityInStock() < quantity) {
             throw new IllegalArgumentException("insufficient stock for " + productName);
