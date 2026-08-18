@@ -96,3 +96,36 @@ body {
 .topic-header-info {
     min-width: 0;
 }
+
+/* Faz 68: mobil navigasyon -- sidebar artık lg altında Bootstrap Offcanvas ile
+   açılan bir çekmece (bkz. fragments/layout.html :: sidebar, "offcanvas-lg"),
+   navbar da "sticky-top" ile üstte sabit. Navbar sabitlendiği için topic.html'deki
+   sağ TOC ("Bu sayfada") artık kayarken navbar'ın altına saklanmıyor -- eskiden
+   inline style="top: 1rem" kullanıyordu, o da yalnızca navbar sabit değilken
+   doğruydu. Playwright ile (gerçek Bootstrap CSS'iyle, CDN olmadan yerel kopya
+   üzerinden) ölçülen gerçek navbar yüksekliği masaüstünde ~56px (3.5rem); üstüne
+   ~0.75rem boşluk payı eklenerek 4.25rem sabitlendi, TOC navbar'ın hemen altında
+   başlıyor.
+   align-self: flex-start EKLENMESİ ZORUNLU -- bu olmadan sticky hiç çalışmıyordu:
+   Bootstrap'in ".row"u display:flex + varsayılan align-items:stretch kullanıyor,
+   bu da TOC <nav>'ını da "main" sütunuyla aynı yüksekliğe (tüm sayfa içeriği kadar)
+   geriyordu. position:sticky, elemanın kendi kutusu zaten containing block'un tüm
+   yüksekliğini kaplıyorsa "kayacak boşluk" bulamadığından hiçbir şekilde sabitlenmiyordu
+   -- Playwright ile ölçülünce TOC'un scroll sırasında sayfayla birlikte kaydığı,
+   hiç sabitlenmediği tespit edildi (muhtemelen bu, Faz 68 öncesinde de var olan,
+   fark edilmemiş bir hataydı). align-self: flex-start, TOC kutusunu kendi içeriği
+   kadar kısa tutarak sticky'nin gerçekten çalışmasını sağlıyor. */
+.toc-sticky {
+    top: 4.25rem;
+    align-self: flex-start;
+}
+
+/* Hamburger butonu navbar'ın soluna eklendiği için çok dar ekranlarda (~375px ve
+   altı, örn. iPhone SE) marka adı + TR/EN dil butonlarının sığması için slogan
+   ("Forge your skills") gizleniyor; marka adı ve dil butonları her zaman görünür
+   kalmalı, sadece ikincil slogan metni feda ediliyor. */
+@media (max-width: 400px) {
+    .navbar-tagline {
+        display: none;
+    }
+}

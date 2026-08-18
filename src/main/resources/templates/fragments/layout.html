@@ -6,7 +6,12 @@
 </head>
 <body>
 
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark px-3 sticky-top">
+    <button class="navbar-toggler d-lg-none me-2" type="button"
+            data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas"
+            aria-controls="sidebarOffcanvas" th:aria-label="#{nav.toggleMenu}">
+        <span class="navbar-toggler-icon"></span>
+    </button>
     <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/{lang}(lang=${language.code})}">
         <img th:src="@{/img/favicon.svg(v=2)}" alt="" width="30" height="30"/>
         <span class="d-flex flex-column lh-1">
@@ -24,35 +29,43 @@
     </div>
 </nav>
 
-<aside th:fragment="sidebar" class="col-12 col-md-3 col-lg-2 bg-light border-end p-3 sidebar-nav">
-    <div th:each="course : ${nav}" class="mb-4">
-        <h6 class="text-uppercase text-muted small fw-bold" th:text="${course.name()}">Kurs</h6>
-        <div th:each="category : ${course.categories()}"
-             th:with="categoryId=${'cat-' + course.slug() + '-' + category.slug()},
-                      categoryIsActive=${activeTopicSlug != null and !category.topics().?[#this.slug() == #vars.activeTopicSlug].isEmpty()}"
-             class="mb-1">
-            <button class="sidebar-toggle btn btn-sm d-flex align-items-center justify-content-between w-100 px-2 py-1 fw-semibold small text-start border-0 bg-transparent"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    th:data-bs-target="'#' + ${categoryId}"
-                    th:aria-expanded="${categoryIsActive}"
-                    th:aria-controls="${categoryId}">
-                <span th:text="${category.name()}">Kategori</span>
-                <span class="chevron" aria-hidden="true">&rsaquo;</span>
-            </button>
-            <div class="collapse" th:classappend="${categoryIsActive} ? 'show' : ''" th:id="${categoryId}">
-                <ul class="nav flex-column mb-2">
-                    <li class="nav-item" th:each="topicItem : ${category.topics()}">
-                        <a class="nav-link py-1 px-2"
-                           th:classappend="${activeTopicSlug != null and activeTopicSlug == topicItem.slug()} ? 'fw-bold text-primary' : ''"
-                           th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${topicItem.slug()})}"
-                           th:text="${topicItem.title()}">Konu</a>
-                    </li>
-                </ul>
+<aside th:fragment="sidebar" id="sidebarOffcanvas" class="offcanvas-lg offcanvas-start col-lg-2 bg-light border-end sidebar-nav"
+       tabindex="-1" aria-labelledby="sidebarOffcanvasLabel">
+    <div class="offcanvas-header d-lg-none">
+        <h5 class="offcanvas-title" id="sidebarOffcanvasLabel" th:text="#{nav.menu}">Menü</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas"
+                th:aria-label="#{nav.close}"></button>
+    </div>
+    <div class="offcanvas-body p-3 d-block">
+        <div th:each="course : ${nav}" class="mb-4">
+            <h6 class="text-uppercase text-muted small fw-bold" th:text="${course.name()}">Kurs</h6>
+            <div th:each="category : ${course.categories()}"
+                 th:with="categoryId=${'cat-' + course.slug() + '-' + category.slug()},
+                          categoryIsActive=${activeTopicSlug != null and !category.topics().?[#this.slug() == #vars.activeTopicSlug].isEmpty()}"
+                 class="mb-1">
+                <button class="sidebar-toggle btn btn-sm d-flex align-items-center justify-content-between w-100 px-2 py-1 fw-semibold small text-start border-0 bg-transparent"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        th:data-bs-target="'#' + ${categoryId}"
+                        th:aria-expanded="${categoryIsActive}"
+                        th:aria-controls="${categoryId}">
+                    <span th:text="${category.name()}">Kategori</span>
+                    <span class="chevron" aria-hidden="true">&rsaquo;</span>
+                </button>
+                <div class="collapse" th:classappend="${categoryIsActive} ? 'show' : ''" th:id="${categoryId}">
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item" th:each="topicItem : ${category.topics()}">
+                            <a class="nav-link py-1 px-2"
+                               th:classappend="${activeTopicSlug != null and activeTopicSlug == topicItem.slug()} ? 'fw-bold text-primary' : ''"
+                               th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${topicItem.slug()})}"
+                               th:text="${topicItem.title()}">Konu</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
+        <p th:if="${#lists.isEmpty(nav)}" class="text-muted small" th:text="#{nav.noContent}">Henüz yayınlanmış içerik yok.</p>
     </div>
-    <p th:if="${#lists.isEmpty(nav)}" class="text-muted small" th:text="#{nav.noContent}">Henüz yayınlanmış içerik yok.</p>
 </aside>
 
 <footer th:fragment="footer" class="border-top mt-5 py-3 text-center text-muted small">
