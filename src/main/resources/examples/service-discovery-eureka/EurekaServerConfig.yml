@@ -1,0 +1,25 @@
+# eureka-server's own application.yml -- runs as its own independent process, on its
+# own well-known port (8761 is Eureka's traditional default, used by convention across
+# almost every Spring Cloud tutorial and this course follows it).
+
+server:
+  port: 8761                          # never 8080 (learning-platform), 8081
+                                       # (order-service), or 8082 (inventory-service)
+
+spring:
+  application:
+    name: eureka-server               # this service's own identity too -- even the
+                                       # registry has a name, though it doesn't register
+                                       # itself with anyone (see below)
+
+eureka:
+  client:
+    register-with-eureka: false       # the server does NOT register itself as a client
+                                       # of itself -- in a single-node setup, there is no
+                                       # "another" Eureka server to talk to
+    fetch-registry: false             # and it doesn't need to fetch a registry either,
+                                       # since IT IS the registry
+  server:
+    enable-self-preservation: true    # default -- see "Heartbeats, Eviction, and
+                                       # Self-Preservation Mode" for what this protects
+                                       # against

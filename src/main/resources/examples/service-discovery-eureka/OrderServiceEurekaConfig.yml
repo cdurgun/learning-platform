@@ -1,0 +1,41 @@
+# order-service's application.yml, with the Eureka CLIENT settings added on top of
+# everything from the Spring Boot Microservice Basics lesson's "Its Own
+# `application.yml`: Port, Application Name, and Database" section -- nothing already
+# there changes, this is purely additive. inventory-service gets the exact same
+# `eureka.client` block in its own application.yml (with its own
+# spring.application.name, unchanged).
+
+server:
+  port: 8081
+
+spring:
+  application:
+    name: order-service               # UNCHANGED -- but now this name is what OTHER
+                                       # services will look order-service up BY, via
+                                       # Eureka, instead of a hardcoded host:port (see
+                                       # "Discovering Services with DiscoveryClient")
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders_db
+    username: orders_user
+    password: ${ORDERS_DB_PASSWORD}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/   # where the Eureka SERVER lives --
+                                                       # the ONLY new piece of information
+                                                       # order-service needs to start
+                                                       # registering itself
+    # register-with-eureka and fetch-registry default to true for a regular client --
+    # unlike eureka-server's own config above, order-service DOES want both: it
+    # registers ITSELF, and it fetches the registry to look up OTHER services.
+  instance:
+    lease-renewal-interval-in-seconds: 30    # default -- how often order-service sends
+                                              # a heartbeat (see "Heartbeats, Eviction,
+                                              # and Self-Preservation Mode")
