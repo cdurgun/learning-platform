@@ -110,21 +110,25 @@ Not a made-up controller -- let's test the real `HomeController` we
 introduced in spring-mvc-fundamentals' "This Project's Own Controllers: A
 Real Spring MVC Example" section. `HomeController` now has two endpoints:
 `/{lang:en|tr}` renders the actual home page, while a bare `/` is a
-language "negotiator" that 302-redirects to `/en` or `/tr` based on the
-`Accept-Language` header:
+language "negotiator" that 302-redirects to `/en` by default -- it
+deliberately ignores the `Accept-Language` header, so every visitor lands
+on the English site first and switches languages themselves via the
+navbar:
 
 {{HomeControllerTest.java}}
 
 `HomeController`'s only dependency is `NavigationService`, so a single
-`@MockitoBean` covers both tests. We don't care about the actual list
+`@MockitoBean` covers all three tests. We don't care about the actual list
 `buildNavigation(...)` returns -- what's being tested here isn't
 `NavigationService`'s behavior, it's whether `HomeController` calls it
 correctly and puts the right attributes into the model. The index test hits
 `/en` directly instead of relying on an ambient default locale -- the
 language is now an explicit URL segment, not implicit test-environment
-state -- and the redirect test simply confirms a bare `/` request (no
-`Accept-Language` header) lands on `/en`, matching the negotiator's
-fallback.
+state; the second test confirms a bare `/` request with no `Accept-Language`
+header lands on `/en`; and the third test goes further, sending a
+`Accept-Language: tr-TR,tr;q=0.9` header and still asserting `/en` -- that's
+not a gap in the negotiator, it's the negotiator's actual contract, pinned
+down so it can't silently regress.
 
 ## Verifying the Model and View Name: model(), view()
 

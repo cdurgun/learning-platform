@@ -112,20 +112,24 @@ Kurgu bir controller değil, `spring-mvc-fundamentals` dersinin "Bu Projenin
 Kendi Controller'ları: Gerçek Bir Spring MVC Örneği" bölümünde tanıttığımız
 gerçek `HomeController`'ı test edelim. `HomeController`'ın artık iki
 endpoint'i var: `/{lang:en|tr}` gerçek anasayfayı render ediyor, çıplak `/`
-ise `Accept-Language` başlığına göre `/en` ya da `/tr`'ye 302 yönlendiren
-bir dil "negotiator"ı:
+ise varsayılan olarak `/en`'e 302 yönlendiren bir dil "negotiator"ı --
+`Accept-Language` başlığını BİLİNÇLİ OLARAK dikkate almıyor, her ziyaretçi
+önce İngilizce siteyi görüyor, dil değişimini navbar'dan kendisi yapıyor:
 
 {{HomeControllerTest.java}}
 
 `HomeController`'ın tek bağımlılığı `NavigationService` olduğu için tek bir
-`@MockitoBean` her iki testi de kapsıyor. `buildNavigation(...)`'ın
+`@MockitoBean` her üç testi de kapsıyor. `buildNavigation(...)`'ın
 döndürdüğü gerçek listeye (ya da içeriğine) hiç önem vermiyoruz -- burada
 test edilen şey `NavigationService`'in davranışı değil, `HomeController`'ın
 onu doğru çağırıp çağırmadığı ve model'e doğru attribute'ları koyup
 koymadığı. İlk test doğrudan `/en`'i hedefliyor -- dil artık ortamın
-varsayılan locale'ine değil, açık bir URL segmentine bağlı -- ikinci test
-ise `Accept-Language` header'ı olmayan çıplak bir `/` isteğinin
-negotiator'ın varsayılanına uygun şekilde `/en`'de bittiğini doğruluyor.
+varsayılan locale'ine değil, açık bir URL segmentine bağlı; ikinci test
+`Accept-Language` header'ı olmayan çıplak bir `/` isteğinin `/en`'de
+bittiğini doğruluyor; üçüncü test ise bir adım ileri gidip
+`Accept-Language: tr-TR,tr;q=0.9` header'ı GÖNDEREREK yine `/en` bekliyor --
+bu bir eksiklik değil, negotiator'ın gerçek sözleşmesi; ileride sessizce
+geri dönmesin diye bilerek sabitlendi.
 
 ## Model ve View Adını Doğrulamak: model(), view()
 

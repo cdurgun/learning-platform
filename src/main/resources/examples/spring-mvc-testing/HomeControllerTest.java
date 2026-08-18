@@ -20,8 +20,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // controller. HomeController's only dependency is NavigationService, so a single
 // @MockitoBean is enough. This is a JUnit test class, run via `mvn test`. Since Phase 64,
 // HomeController has had two endpoints: `/{lang:en|tr}` renders the real home page,
-// while the bare `/` acts as a language "negotiator" -- it 302-redirects to `/en` or
-// `/tr` based on the `Accept-Language` header. The two tests below cover both.
+// while the bare `/` acts as a language "negotiator" -- it 302-redirects to `/en` by
+// default (Phase 69: deliberately ignores the `Accept-Language` header, so a visitor
+// with a Turkish browser/OS still lands on the English site first and switches
+// manually via the navbar). The three tests below cover the index page, the
+// no-header case, and the header-is-ignored case explicitly.
 @WebMvcTest(HomeController.class)
 class HomeControllerTest {
 
@@ -52,10 +55,23 @@ class HomeControllerTest {
 
     @Test
     void bareRootRedirectsToDefaultLanguage() throws Exception {
-        // A request with no Accept-Language header (like this test) falls back to EN --
+        // A request with no Accept-Language header (like this test) redirects to EN --
         // see HomeController.resolveRootLanguage's default behavior. This method doesn't
         // touch any dependency, so there's no need to stub navigationService at all.
         mockMvc.perform(get("/"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/en"));
+    }
+
+    @Test
+    void bareRootIgnoresAcceptLanguageHeader() throws Exception {
+        // Phase 69: even a request that clearly prefers Turkish still lands on `/en` --
+        // resolveRootLanguage no longer reads Accept-Language at all. This is a
+        // deliberate product decision (default to English for everyone, let the
+        // visitor switch languages themselves via the navbar's TR/EN buttons), not an
+        // oversight -- this test exists specifically to pin that behavior down so a
+        // future change doesn't silently reintroduce header-based negotiation.
+        mockMvc.perform(get("/").header("Accept-Language", "tr-TR,tr;q=0.9"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/en"));
     }

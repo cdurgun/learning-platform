@@ -8,11 +8,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.net.URI;
-import java.util.Locale;
 
 @Controller
 public class HomeController {
@@ -26,17 +24,19 @@ public class HomeController {
     /**
      * Kök adres artık içerik sunmuyor, bir dil "negotiator"ı: mevcutsa {@code ?lang=}
      * parametresine (eski yer imleri/paylaşılmış linkler için geriye dönük uyumluluk),
-     * yoksa tarayıcının {@code Accept-Language} başlığına bakarak `/en` veya `/tr`'ye
-     * 302 (geçici) yönlendirir -- 302 kullanıyoruz çünkü bu "içerik taşındı" değil,
-     * "hangi dil varyantı gösterilecek" kararı; Google'ın çok-dilli site rehberi de
-     * tam olarak bu deseni (kök sayfa negotiator + her dilin kendi sabit URL'si +
-     * hreflang) öneriyor. Gerçek içerik ve indexlenen URL'ler her zaman `/en/...` ve
-     * `/tr/...` altında, bu yönlendirme yalnızca kök `/` isteği için bir kolaylık.
+     * yoksa DAİMA İngilizce'ye 302 (geçici) yönlendirir -- 302 kullanıyoruz çünkü bu
+     * "içerik taşındı" değil, "hangi dil varyantı gösterilecek" kararı.
+     * BİLİNÇLİ OLARAK {@code Accept-Language} başlığına BAKMIYOR (Faz 69'da kaldırıldı
+     * -- bkz. Faz 69 notu): tarayıcı/işletim sistemi dili "tr" olan bir ziyaretçi için
+     * de varsayılan İngilizce olsun, kullanıcı isterse navbar'daki TR butonuyla kendisi
+     * geçsin isteniyor -- bu, Türkçe konuşan ama sitenin birincil (ve daha olgun/geniş)
+     * içeriği İngilizce olan bir kitleye hitap etme tercihi. Gerçek içerik ve
+     * indexlenen URL'ler her zaman `/en/...` ve `/tr/...` altında, bu yönlendirme
+     * yalnızca kök `/` isteği için bir kolaylık.
      */
     @GetMapping("/")
-    public ResponseEntity<Void> root(@RequestParam(required = false) String lang,
-                                      @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
-        Language language = resolveRootLanguage(lang, acceptLanguage);
+    public ResponseEntity<Void> root(@RequestParam(required = false) String lang) {
+        Language language = resolveRootLanguage(lang);
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create("/" + language.getCode()))
                 .build();
@@ -59,16 +59,13 @@ public class HomeController {
         return "index";
     }
 
-    private Language resolveRootLanguage(String lang, String acceptLanguage) {
+    private Language resolveRootLanguage(String lang) {
         if (lang != null) {
             try {
                 return Language.fromCode(lang);
             } catch (IllegalArgumentException ignored) {
-                // geçersiz/bozuk ?lang= değeri -- Accept-Language'e düş
+                // geçersiz/bozuk ?lang= değeri -- varsayılana düş
             }
-        }
-        if (acceptLanguage != null && acceptLanguage.toLowerCase(Locale.ROOT).startsWith("tr")) {
-            return Language.TR;
         }
         return Language.EN;
     }
