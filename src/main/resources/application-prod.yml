@@ -11,6 +11,9 @@ spring:
   thymeleaf:
     cache: true
 
+app:
+  base-url: https://www.learnforgex.com
+
 logging:
   level:
     com.cdurgun.learning: INFO

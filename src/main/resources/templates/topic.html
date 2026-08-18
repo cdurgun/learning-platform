@@ -7,6 +7,83 @@
     <meta th:if="${contentAvailable and translation.seoDescription != null}"
           name="description" th:content="${translation.seoDescription}"/>
 
+    <!-- İçerik bu dilde yoksa (topic var ama TopicTranslation yayında değil / dosya
+         eksik): ince/duplike içerik olarak indexlenmesin. Canonical'ı, varsa gerçek
+         içeriğin olduğu diğer dile işaret ediyoruz — yoksa canonical hiç eklenmiyor
+         (bkz. Faz 65 notu). -->
+    <meta th:unless="${contentAvailable}" name="robots" content="noindex, follow"/>
+    <link th:if="${!contentAvailable and otherLanguageAvailable}" rel="canonical"
+          th:href="${baseUrl + '/' + otherLanguage.code + '/topics/' + topic.slug}"/>
+
+    <th:block th:if="${contentAvailable}">
+        <!-- Canonical: bu sayfanın path-bazlı kendi adresi (Faz 64) -->
+        <link rel="canonical" th:href="${baseUrl + '/' + language.code + '/topics/' + topic.slug}"/>
+
+        <!-- hreflang: yalnızca GERÇEKTEN yayında olan diller arasında bağlanır —
+             otherLanguageAvailable=false iken diğer dile hreflang verilmiyor (o adres
+             şu an içerik yok mesajı gösteriyor, Google'a "eşdeğer sayfa" diye
+             sunulmamalı). x-default her zaman İngilizce'ye işaret eder, İngilizce bu
+             konuda henüz yayında değilse (yalnızca TR varsa) mevcut tek sürüme
+             (TR) düşer. -->
+        <link rel="alternate" th:hreflang="${language.code}"
+              th:href="${baseUrl + '/' + language.code + '/topics/' + topic.slug}"/>
+        <link th:if="${otherLanguageAvailable}" rel="alternate" th:hreflang="${otherLanguage.code}"
+              th:href="${baseUrl + '/' + otherLanguage.code + '/topics/' + topic.slug}"/>
+        <link rel="alternate" hreflang="x-default"
+              th:href="${baseUrl + '/' + (language.code == 'en' ? 'en' : (otherLanguageAvailable ? 'en' : 'tr')) + '/topics/' + topic.slug}"/>
+
+        <!-- Open Graph / Twitter Card -->
+        <meta property="og:type" content="article"/>
+        <meta property="og:site_name" content="LearnForgeX"/>
+        <meta property="og:title" th:content="${translation.seoTitle ?: translation.title}"/>
+        <meta th:if="${translation.seoDescription != null}" property="og:description"
+              th:content="${translation.seoDescription}"/>
+        <meta property="og:url" th:content="${baseUrl + '/' + language.code + '/topics/' + topic.slug}"/>
+        <meta property="og:image" th:content="${baseUrl + '/img/og-image.png'}"/>
+        <meta property="og:image:width" content="1200"/>
+        <meta property="og:image:height" content="630"/>
+        <meta property="og:locale" th:content="${language.code == 'tr'} ? 'tr_TR' : 'en_US'"/>
+        <meta th:if="${otherLanguageAvailable}" property="og:locale:alternate"
+              th:content="${otherLanguage.code == 'tr'} ? 'tr_TR' : 'en_US'"/>
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:title" th:content="${translation.seoTitle ?: translation.title}"/>
+        <meta th:if="${translation.seoDescription != null}" name="twitter:description"
+              th:content="${translation.seoDescription}"/>
+        <meta name="twitter:image" th:content="${baseUrl + '/img/og-image.png'}"/>
+
+        <!-- JSON-LD (schema.org LearningResource): th:inline="javascript", /*[[expr]]*/
+             işaretçileriyle Thymeleaf'in JS-context kaçışını (tırnak/özel karakter)
+             kullanıyor — JSON-LD teknik olarak script içinde JS değil ama string
+             kaçış kuralları (tırnak, ters bölü) aynı, bu yüzden bu projenin dışında
+             da yaygın kullanılan bir kalıp. Bazı Thymeleaf örneklerinde görülen
+             yorum-içi CDATA sarmalayıcı BİLİNÇLİ OLARAK eklenmedi — bu proje HTML5
+             çıktı üretiyor (XHTML strict değil), ve o sarmalayıcı attoparser'ı script
+             içeriğini yanlış parçalamaya iterek canlı ortamda gerçek bir
+             TemplateInputException'a yol açtı (bkz. Faz 66 düzeltme notu, ve Mimari
+             bölümündeki kalıcı kural). -->
+        <script type="application/ld+json" th:inline="javascript">
+        {
+          "@context": "https://schema.org",
+          "@type": "LearningResource",
+          "name": /*[[${translation.seoTitle ?: translation.title}]]*/ "Konu",
+          "description": /*[[${translation.seoDescription ?: translation.summary}]]*/ "Özet",
+          "url": /*[[${baseUrl + '/' + language.code + '/topics/' + topic.slug}]]*/ "https://www.learnforgex.com",
+          "inLanguage": /*[[${language.code}]]*/ "en",
+          "learningResourceType": "Lesson",
+          "educationalLevel": /*[[${topic.difficulty}]]*/ "BEGINNER",
+          "isPartOf": {
+            "@type": "Course",
+            "name": /*[[${topic.category.course.name}]]*/ "Java"
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "LearnForgeX",
+            "url": /*[[${baseUrl}]]*/ "https://www.learnforgex.com"
+          }
+        }
+        </script>
+    </th:block>
+
     <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg(v=2)}"/>
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/img/favicon-32.png(v=2)}"/>
     <link rel="icon" type="image/png" sizes="16x16" th:href="@{/img/favicon-16.png(v=2)}"/>
