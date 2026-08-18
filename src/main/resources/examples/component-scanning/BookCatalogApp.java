@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
 // A miniature version of this project's own three-layer structure
-// (repository/service/controller) -- see "Bu Projenin Kendi Sınıfları:
-// Gerçek Bir Component Scanning Örneği" for how NavigationService,
+// (repository/service/controller) -- see "This Project's Own Classes:
+// A Real Component Scanning Example" for how NavigationService,
 // TopicController, and the JPA repositories are wired the same way in
 // practice.
 @Repository
