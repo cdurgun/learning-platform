@@ -137,6 +137,17 @@
                         <span class="text-muted small ms-2"
                               th:if="${topic.estimatedMinutes != null}"
                               th:text="${topic.estimatedMinutes} + ' ' + #{time.minutesShort}">15 dk</span>
+
+                        <!-- Faz 77: "PDF İndir" — kasıtlı olarak kendi satırında, EN/TR dil
+                             butonunun YANINDA değil (topic-header zaten dar bir 2 sütunlu grid,
+                             bkz. custom.css .topic-header). Yalnızca üstte, tek buton (kullanıcı
+                             kararı) — dersin başında görünür olsun, ama sayfanın kalanına ek
+                             bir CTA eklenmeden sade kalsın. -->
+                        <div class="mt-2">
+                            <a class="btn btn-sm btn-outline-secondary"
+                               th:href="@{/{lang}/topics/{slug}/pdf(lang=${language.code}, slug=${topic.slug})}"
+                               th:text="#{pdf.download}">↓ PDF İndir</a>
+                        </div>
                     </div>
                     <a th:if="${otherLanguageAvailable}"
                        class="btn btn-sm btn-outline-secondary"

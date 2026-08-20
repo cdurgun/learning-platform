@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<!--
+    Faz 77: PDF İndir özelliği için ayrı, print-only bir template. Bootstrap/highlight.js
+    KASITLI OLARAK yok -- openhtmltopdf (CSS 2.1 tabanlı) flexbox/grid desteklemiyor, ve
+    highlight.js tarayıcıda JS ile çalışıyor, sunucu tarafında PDF motoru JS çalıştırmıyor
+    (bkz. CLAUDE.md kod-blokları kararı: v1'de düz monospace, renksiz). Tüm CSS bilerek
+    TEK bir <style> bloğunda inline -- CDN'e (bu sandbox'ta zaten erişilemeyen
+    cdn.jsdelivr.net dahil) bağımlı olmadan, tek başına deterministik render için.
+
+    contentHtml, MarkdownService.render()'ın web sayfasında (topic.html) kullanılanla
+    BİREBİR AYNI çıktısı -- PDF içeriği bu sayede otomatik olarak web sayfasıyla senkron
+    kalır (tek doğruluk kaynağı ilkesi, bkz. CLAUDE.md "Mimari").
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${translation.title}">Konu</title>
+    <style th:inline="css">
+        /* Faz 77: sayfa boyutu + kenar boşlukları + alt bilgi (sayfa numarası, marka).
+           CSS Paged Media (@page, @bottom-*, counter(page)/counter(pages)) openhtmltopdf
+           tarafından native destekleniyor -- resmi wiki'de doğrulandı. */
+        @page {
+            size: A4;
+            margin: 2.6cm 1.8cm 2.4cm 1.8cm;
+
+            @bottom-left {
+                content: "learnforgex.com";
+                font-family: 'PDF Body', sans-serif;
+                font-size: 8pt;
+                color: #6c757d;
+            }
+            @bottom-right {
+                content: "[(${pageFooterPrefix})] " counter(page) " [(${pageFooterConnector})] " counter(pages);
+                font-family: 'PDF Body', sans-serif;
+                font-size: 8pt;
+                color: #6c757d;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PDF Body', sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.5;
+            color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ---- Kapak bloğu ---- */
+        .pdf-brand {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: 0.02em;
+        }
+
+        .pdf-brand .pdf-brand-accent {
+            color: #d97706;
+        }
+
+        .pdf-breadcrumb {
+            font-size: 8.5pt;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 0.4cm;
+        }
+
+        .pdf-title {
+            font-size: 20pt;
+            font-weight: 700;
+            margin: 0.3cm 0 0.25cm 0;
+            page-break-after: avoid;
+        }
+
+        .pdf-summary {
+            font-size: 11pt;
+            color: #495057;
+            margin: 0 0 0.35cm 0;
+        }
+
+        .pdf-meta {
+            font-size: 9pt;
+        }
+
+        .pdf-badge {
+            display: inline;
+            background-color: #e9ecef;
+            color: #212529;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        .pdf-duration {
+            color: #6c757d;
+            margin-left: 0.25cm;
+        }
+
+        .pdf-footer-meta {
+            font-size: 8pt;
+            color: #868e96;
+            margin-top: 0.35cm;
+        }
+
+        .pdf-footer-meta a {
+            color: #868e96;
+        }
+
+        .pdf-divider {
+            border: none;
+            border-top: 1pt solid #dee2e6;
+            margin: 0.5cm 0 0.6cm 0;
+        }
+
+        /* ---- Ders içeriği (contentHtml) ---- */
+        .pdf-content h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            margin: 0.7cm 0 0.3cm 0;
+            page-break-after: avoid;
+        }
+
+        .pdf-content h3 {
+            font-size: 12pt;
+            font-weight: 700;
+            margin: 0.5cm 0 0.25cm 0;
+            page-break-after: avoid;
+        }
+
+        .pdf-content p {
+            margin: 0 0 0.3cm 0;
+        }
+
+        .pdf-content ul,
+        .pdf-content ol {
+            margin: 0 0 0.3cm 0;
+            padding-left: 0.6cm;
+        }
+
+        .pdf-content li {
+            margin-bottom: 0.12cm;
+        }
+
+        .pdf-content a {
+            color: #1d4ed8;
+        }
+
+        .pdf-content strong {
+            font-weight: 700;
+        }
+
+        /* Inline kod (metin içi `kod`) -- code block'un DIŞINDAKİ <code> */
+        .pdf-content p code,
+        .pdf-content li code {
+            font-family: 'PDF Mono', monospace;
+            font-size: 9pt;
+            background-color: #f1f3f5;
+            padding: 1px 4px;
+            border-radius: 2px;
+        }
+
+        /* Kod blokları -- v1: renksiz/düz monospace (bkz. dosya başındaki not) */
+        .pdf-content pre {
+            font-family: 'PDF Mono', monospace;
+            font-size: 8.5pt;
+            line-height: 1.4;
+            background-color: #f8f9fa;
+            border: 0.5pt solid #dee2e6;
+            border-radius: 3px;
+            padding: 0.3cm;
+            margin: 0 0 0.4cm 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            page-break-inside: avoid;
+        }
+
+        .pdf-content pre code {
+            font-family: 'PDF Mono', monospace;
+            background-color: transparent;
+            padding: 0;
+        }
+
+        /* > 💡 Tip / > ⚠️ Warning callout'ları -- MarkdownService bunları web sayfasında
+           Bootstrap ".alert-info"/".alert-warning" olarak üretiyor; burada Bootstrap
+           olmadığı için AYNI class isimlerine kendi (sade) PDF karşılığımızı veriyoruz. */
+        .pdf-content .alert-info,
+        .pdf-content .alert-warning {
+            padding: 0.3cm 0.4cm;
+            margin: 0 0 0.4cm 0;
+            border-left: 3pt solid;
+            border-radius: 2px;
+            page-break-inside: avoid;
+        }
+
+        .pdf-content .alert-info {
+            background-color: #eff6ff;
+            border-left-color: #3b82f6;
+        }
+
+        .pdf-content .alert-warning {
+            background-color: #fffbeb;
+            border-left-color: #d97706;
+        }
+
+        .pdf-content .alert-info p,
+        .pdf-content .alert-warning p {
+            margin: 0;
+        }
+
+        .pdf-content blockquote {
+            border-left: 3pt solid #dee2e6;
+            padding-left: 0.4cm;
+            color: #495057;
+            margin: 0 0 0.4cm 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="pdf-cover">
+    <div class="pdf-brand">Learn<span class="pdf-brand-accent">Forge</span>X</div>
+    <div class="pdf-breadcrumb" th:text="${courseName + ' / ' + categoryName}">Kurs / Kategori</div>
+
+    <h1 class="pdf-title" th:text="${translation.title}">Başlık</h1>
+    <p class="pdf-summary" th:text="${translation.summary}">Özet</p>
+
+    <div class="pdf-meta">
+        <span class="pdf-badge" th:text="${difficultyLabel}">Zorluk</span>
+        <span class="pdf-duration" th:if="${estimatedMinutes != null}"
+              th:text="${estimatedMinutes} + ' ' + ${minutesShortLabel}">15 dk</span>
+    </div>
+
+    <div class="pdf-footer-meta">
+        <div th:text="${generatedOnLabel}">Oluşturulma tarihi</div>
+        <div><span th:text="${readOnlineLabel}">Çevrimiçi oku:</span>
+            <a th:text="${canonicalUrl}" th:href="${canonicalUrl}">https://www.learnforgex.com</a></div>
+    </div>
+
+    <hr class="pdf-divider"/>
+</div>
+
+<article class="pdf-content" th:utext="${contentHtml}">
+    İçerik
+</article>
+
+</body>
+</html>

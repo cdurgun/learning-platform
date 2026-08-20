@@ -8,9 +8,12 @@ import com.cdurgun.learning.repository.TopicTranslationRepository;
 import com.cdurgun.learning.service.ContentResolver;
 import com.cdurgun.learning.service.MarkdownService;
 import com.cdurgun.learning.service.NavigationService;
+import com.cdurgun.learning.service.PdfExportService;
 import com.cdurgun.learning.web.nav.SequencedTopic;
 import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,19 +36,22 @@ public class TopicController {
     private final MarkdownService markdownService;
     private final NavigationService navigationService;
     private final MessageSource messageSource;
+    private final PdfExportService pdfExportService;
 
     public TopicController(TopicRepository topicRepository,
                             TopicTranslationRepository topicTranslationRepository,
                             ContentResolver contentResolver,
                             MarkdownService markdownService,
                             NavigationService navigationService,
-                            MessageSource messageSource) {
+                            MessageSource messageSource,
+                            PdfExportService pdfExportService) {
         this.topicRepository = topicRepository;
         this.topicTranslationRepository = topicTranslationRepository;
         this.contentResolver = contentResolver;
         this.markdownService = markdownService;
         this.navigationService = navigationService;
         this.messageSource = messageSource;
+        this.pdfExportService = pdfExportService;
     }
 
     /**
@@ -126,6 +132,44 @@ public class TopicController {
         addPreviousAndNext(model, topic, slug, language);
 
         return "topic";
+    }
+
+    /**
+     * Faz 77: "PDF İndir". {@code show()}'a KASITLI OLARAK dokunulmadı (bkz. CLAUDE.md
+     * "ilgisiz kodu refactor etme") -- bu metot, aynı içerik-çözümleme adımlarını (translation
+     * yayında mı, markdown dosyası var mı, {@code MarkdownService.render}) kendi başına, küçük
+     * bir tekrarla yapıyor; ikisi de aynı iki kaynağa (DB + {@code content/{lang}/{slug}.md})
+     * bakıyor, bu yüzden davranışları asla birbirinden sapamaz. Çeviri bu dilde yayında değilse
+     * (ya da dosya eksikse) 404 döner -- {@code show()}'daki "dostane mesaj" burada anlamsız,
+     * çünkü buton zaten yalnızca {@code contentAvailable=true} iken gösteriliyor (bkz.
+     * topic.html); bu 404, yalnızca eski bir bookmark/doğrudan URL isteği gibi kenar
+     * durumlar için bir güvenlik ağı.
+     */
+    @GetMapping("/{lang:en|tr}/topics/{slug}/pdf")
+    public ResponseEntity<byte[]> pdf(@PathVariable String lang, @PathVariable String slug) {
+        Language language = Language.fromCode(lang);
+
+        Topic topic = topicRepository.findBySlugWithCategoryAndCourse(slug)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: " + slug));
+
+        TopicTranslation translation = topicTranslationRepository
+                .findByTopicIdAndLanguage(topic.getId(), language)
+                .filter(TopicTranslation::isPublished)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Bu içerik " + lang + " dilinde henüz yayında değil: " + slug));
+
+        String rawMarkdown = contentResolver.resolve(slug, language)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "İçerik dosyası bulunamadı: " + slug));
+
+        MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown, slug);
+        byte[] pdfBytes = pdfExportService.renderTopicPdf(topic, translation, language, rendered.html());
+
+        String filename = slug + "-" + lang + ".pdf";
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(pdfBytes);
     }
 
     /**
