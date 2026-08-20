@@ -17,6 +17,7 @@ public class TopicTestFixtures {
                 .id(1L)
                 .name("Java")
                 .slug("java")
+                .sortOrder(1)
                 .build();
     }
 

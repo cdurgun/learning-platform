@@ -1,6 +1,7 @@
-# Learning Platform
+# LearnForgeX
 
-Türkçe ve İngilizce içerik sunan, Java odaklı bir öğrenim platformu.
+Türkçe ve İngilizce içerik sunan, Java odaklı bir öğrenim platformu. Canlı adres:
+[learnforgex.com](https://learnforgex.com).
 
 Kaynak kod: [github.com/cdurgun/learning-platform](https://github.com/cdurgun/learning-platform)
 

@@ -48,7 +48,7 @@ public class NavigationService {
     public List<CourseNav> buildNavigation(Language language) {
         List<CourseNav> nav = new ArrayList<>();
 
-        for (Course course : courseRepository.findAll()) {
+        for (Course course : courseRepository.findAllByOrderBySortOrderAsc()) {
             List<CategoryNav> categoryNavs = new ArrayList<>();
 
             for (Category category : categoryRepository.findByCourseIdOrderBySortOrderAsc(course.getId())) {
