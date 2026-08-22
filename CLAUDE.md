@@ -146,6 +146,19 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   adımı gerekmez; workspaces otomatik olarak onu da kapsar. Amaç, her proje klasöründe
   ayrı `node_modules` birikmesini önlemek — `npm install` yalnızca repo kökünde bir kez
   çalıştırılır.
+- **`ai-development-tools` kategorisindeki (Claude Code, ileride Cursor/GitHub
+  Copilot vb.) derslerde, CLI/araç davranışına dair sürüme bağımlı HİÇBİR iddia
+  kullanıcının kendi gerçek terminal oturumunda doğrulanmadan kesin gerçek gibi
+  yazılmaz (Faz 81/82'de kullanıcının bağlayıcı şartı).** Doğrulama hibrit
+  yöntemle yapılır: resmi dokümantasyon (WebSearch/WebFetch) ana kaynak,
+  versiyon/hesaba duyarlı ya da belirsiz noktalar kullanıcının kendi CLI
+  oturumunda canlı test edilir/kullanıcıdan istenir. Derste kesinlik iddia
+  edilen her ekran metni/komut davranışı ya gerçek bir kullanıcı gözlemine
+  (ekran görüntüsü, terminal çıktısı, `--help` metni) ya da resmi dokümana
+  atıfla yazılır; ikisi de yoksa bir `⚠️ Warning` blockquote'uyla açıkça hedge
+  edilir ve gözlemlenen sürüm/tarih/hesap türü belirtilir (bkz. "Faz 81",
+  "Faz 82" — gerçek session ID gibi kullanıcıya özel/hassas bilgiler de asla
+  derste yayınlanmaz, `<placeholder>` ile değiştirilir).
 
 ## Token ve Bağlam Verimliliği (Faz 75'ten itibaren, kullanıcı+ChatGPT kararı)
 
