@@ -739,3 +739,47 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   bu sayede gerçek bir hata (TOC'un sticky-top'unun hiç çalışmaması, bkz. Faz 68 notu)
   tespit edilebildi -- CDN'li ilk denemede sayfa stilsiz render olduğu için bu hata
   görünmüyordu.
+- **Zaten teslim edilmiş bir migration dosyasına -- kullanıcı onu kendi ortamında
+  çalıştırmış olabileceği için -- bir daha ASLA dokunulmaz, küçük bir yorum satırı
+  düzeltmesi bile olsa (Faz 83'te gerçek bir hatayla keşfedildi):** if / else topic'i
+  onaylandıktan sonra V268'in yorumuna (Number Guessing Game'in hangi topic'e
+  gömüleceği kararı) küçük bir not eklendi -- ama kullanıcı V268'i daha önce zaten
+  kendi ortamında ÇALIŞTIRMIŞTI. Flyway her migration'ın checksum'ını
+  `flyway_schema_history` tablosunda saklar ve bir sonraki başlatmada dosya
+  içeriğini bu checksum'a karşı doğrular -- yorum satırı gibi işlevsel olmayan bir
+  değişiklik bile checksum'ı değiştirir. Kullanıcı gerçek hatayı bildirdi:
+  `FlywayValidateException: Migration checksum mismatch for migration version 268`
+  ("Applied to database" vs "Resolved locally" farklı checksum'lar), uygulama hiç
+  başlamadı. Düzeltme: V268 birebir orijinal içeriğine geri alındı (checksum eski
+  hâline döndü), kullanıcı dosyayı değiştirip yeniden çalıştırarak sorunu doğruladı.
+  CLAUDE.md'nin "migration numaraları geçmişe dönük asla değiştirilmez" kuralı zaten
+  bunu söylüyordu ama bu, bir yorum-satırı düzeltmesinin bile kural kapsamında
+  olduğunun canlı kanıtı oldu -- bir migration dosyası TESLİM EDİLDİKTEN sonra
+  (kullanıcı henüz çalıştırmadığını doğrulamadıkça) üzerinde hiçbir düzenleme
+  yapılmamalı, ek/düzeltme her zaman YENİ bir migration dosyası olmalı.
+- **Bir migration dosyasının kendisi teslim edilmese/geç teslim edilse bile,
+  daha YÜKSEK numaralı migration'lar önce uygulanırsa Flyway varsayılan
+  ayarlarla başlamayı reddeder (Faz 84 sonrasında gerçek bir hatayla
+  keşfedildi):** switch topic'inin EN yayın migration'ı (V273) ilk switch
+  teslimatına dahil edilmeyi UNUTULDU (bkz. yukarıdaki madde) ve kullanıcıya
+  V273'ten SONRA gelen for-loop/enhanced-for-loop/while-do-while migration'ları
+  (V274-V282) içeren bir zip önce ulaştı; kullanıcı bunu çalıştırıp V274-V282'yi
+  uyguladı. V273 daha sonra ayrı bir küçük zip'le gönderildiğinde, Flyway
+  `flyway_schema_history` tablosunda V274-V282'nin zaten uygulanmış olduğunu,
+  V273'ün ise (classpath'te dosya olarak "resolved" ama DB'de "applied" DEĞİL)
+  bir BOŞLUK oluşturduğunu görüp gerçek bir hata verdi: `Detected resolved
+  migration not applied to database: 273` (`Migrations have failed
+  validation`, `outOfOrder=true` önerisiyle). Kök neden yine bir teslimat
+  sıralaması hatası -- bu proje `spring.flyway.out-of-order` ayarını hiç
+  set ETMİYOR (varsayılan `false`), yani Flyway her zaman "en son uygulanan
+  versiyondan DAHA DÜŞÜK numaralı, henüz uygulanmamış bir migration" durumunu
+  hata olarak görür. **Düzeltme/kalıcı ders:** (1) migration dosyaları HER
+  ZAMAN oluşturuldukları anda (aynı görev/zip içinde) teslim edilmeli, "sıradaki
+  topic'e geçip sonra topluca gönderirim" gibi bir gecikme asla YAPILMAMALI --
+  bu tam olarak bu hatayı doğuran alışkanlık; (2) böyle bir boşluk gerçekleşirse
+  tek seferlik düzeltme, `application.yml`'e GEÇİCİ olarak
+  `spring.flyway.out-of-order: true` eklemek (ya da çalıştırırken
+  `-Dspring.flyway.out-of-order=true` JVM argümanı vermek), uygulamayı bir kez
+  başlatıp eksik migration'ın (`V273` gibi) uygulanmasını sağlamak, sonra bu
+  ayarı KALDIRMAK -- kalıcı olarak `true` bırakmak, gelecekteki gerçek sıralama
+  hatalarını sessizce maskeler.
