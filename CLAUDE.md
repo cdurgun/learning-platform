@@ -266,11 +266,21 @@ için mutlaka önce oraya bak: bir kategori/topic'in isimlendirme konvansiyonu,
 bir migration deseni, daha önce çözülmüş bir hata sınıfı, ya da "bunu daha önce
 nasıl yapmıştık" sorusu.
 
-**Şu an proje durumu (Faz 76 itibarıyla):** 4 kurs (`java`, `spring-boot`,
-`react`, `ai`), migration'lar V1'den V252'ye kadar uygulandı. `ai` kursunda 3
-kategori tamamlandı (`ai-fundamentals`, `large-language-models`, `tools-mcp` —
-her biri 4 topic), "AI Agents" kategorisi (Wave 4) kullanıcı onayı bekliyor.
-Kesin sayılar ve tam liste için `docs/phase-log.md`.
+**Şu an proje durumu (Faz 82 itibarıyla):** 4 kurs (`java`, `spring-boot`,
+`react`, `ai`). `ai` kursunda artık 5 kategori var: `ai-fundamentals`,
+`large-language-models`, `tools-mcp`, `ai-agents` (her biri 4 topic, TR+EN
+tamamlandı) ve **`ai-development-tools`** (artık İKİ topic): `developing-
+with-claude-code` (V263-V265, TR+EN ikisi de yayında, bkz. "Faz 81") ve
+yeni `claude-code-cli-commands` (V266-V267, TR published=true + EN
+published=false -- içerik yazıldı ama kullanıcı henüz incelemedi, bkz. "Faz
+82"). Bu sandbox kopyasındaki migration'lar V1-V258 ve V263-V267'den
+oluşuyor; **V259-V262 KASITLI olarak bu kopyada yok** -- bu numaralar,
+kullanıcının aynı oturumda kendi yerel ortamında (Quiz özelliği, `enum`
+konusu) kullandığı numaralarla çakışmasın diye bilinçli olarak atlandı
+(bkz. `V263`'ün kendi migration yorumu ve "Faz 81"). İki değişiklik kümesi
+nihayetinde aynı gerçek depoda birleştirilirse bu numaralandırma sıraya
+devam etmeli, V259'dan yeniden BAŞLANMAMALI. Kesin sayılar ve tam liste
+için `docs/phase-log.md`.
 
 ## Proje Yapısı
 

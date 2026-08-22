@@ -32,10 +32,13 @@ için gerçekten yazıldı, derlendi ve çalıştırıldı.
 
 TypeScript SDK'sı **Node.js** üzerinde çalışır -- JavaScript'i (ve
 derlendikten sonra TypeScript'i) bir tarayıcı dışında çalıştıran bir
-program, Java için JVM'in oynadığı rolün aynısı. Node.js ile birlikte
-**npm** (Node Package Manager) de gelir -- bir projeye kütüphane kodunu
-(MCP SDK'sının kendisi gibi) indiren araç, bir Java projesi için Maven'ın
-yaptığına benzer.
+program, Java için JVM'in oynadığı role benzer bir rol oynar (birebir
+teknik eşdeğer değil -- örneğin JVM bir bytecode sanal makinesiyken Node.js
+V8 üzerine kurulu bir JavaScript runtime'dır, ama "kodu tarayıcı dışında
+çalıştıran platform" benzetmesi için amaca hizmet ediyor). Node.js ile
+birlikte **npm** (Node Package Manager) de gelir -- bir projeye kütüphane
+kodunu (MCP SDK'sının kendisi gibi) indirmek için, bir Java projesindeki
+Maven'a benzer bir amaçla kullanılan araç.
 
 Node.js'in bilgisayarınızda kurulu olup olmadığını kontrol etmek için bir
 terminal açın ve şunu çalıştırın:
@@ -227,7 +230,7 @@ telde gösterildiği gibi bir `tools/call` invocation'ı gerçekleştirir. Son
 call, `GeoFactsServer.ts`'teki `isError: true` yolunun gerçekten client'a
 ulaştığını göstermek için, bilinçli olarak `CAPITALS` içinde olmayan bir
 ülke (`Wakanda`) ister -- bunun neden bilerek yapıldığını aşağıda
-""Wakanda" Örneği Neden Var?" bölümünde açıklıyoruz.
+"'Wakanda' Örneği Neden Var?" bölümünde açıklıyoruz.
 
 ## Bağımlılıkları Kurun, Derleyin, Çalıştırın
 
@@ -309,7 +312,7 @@ Client
 Bu, önceki "MCP Architecture" dersinde öğrendiğimiz initialize/discover/
 invoke yaşam döngüsünün çalışan bir örneğidir.
 
-## "Wakanda" Örneği Neden Var?
+## 'Wakanda' Örneği Neden Var?
 
 Son çağrıda bilerek `Wakanda` gönderiyoruz. `CAPITALS` listesinde
 Wakanda bulunmadığı için server `isError: true` döndürüyor -- çökmek ya
@@ -381,10 +384,13 @@ farklıdır.
   özenle yazın -- SDK parameter *schema*'sını zorunlu kılar, ama hiçbir
   şey belirsiz bir *description*'ın modelin yanlış tool'u seçmesine
   neden olmasını engellemez.
-- Beklenen hata durumları için (`get_capital_city`'nin bilinmeyen-ülke
-  yolu gibi) fırlatmak yerine net bir mesajla `isError: true` döndürün --
-  bu, modele opak bir başarısızlık yerine üzerinde çalışabileceği somut
-  bir şey verir.
+- Beklenen, uygulama seviyesindeki hata durumları için (`get_capital_city`
+  'nin bilinmeyen-ülke yolu gibi) fırlatmak yerine net bir mesajla
+  `isError: true` döndürmek iyi bir kalıptır -- bu, modele opak bir
+  başarısızlık yerine üzerinde çalışabileceği somut bir şey verir (bu,
+  her tool hatasında mutlaka uyulması gereken evrensel bir kural değil --
+  hangi hataların bu şekilde ele alınacağı, tool'un ve uygulamanın kendi
+  tasarımına bağlıdır).
 
 ## Yaygın Hatalar
 
@@ -406,8 +412,9 @@ farklıdır.
 
 **Özet**
 
-- Bu dersin projesi sıradan bir Node.js/TypeScript projesidir (Java için
-  Maven neyse, Node.js için npm bağımlılıkları odur) -- dört dosyanın da
+- Bu dersin projesi sıradan bir Node.js/TypeScript projesidir (npm,
+  bağımlılık yönetimi amacıyla Java'daki Maven'a benzer bir rol oynar,
+  birebir teknik eşdeğeri değil) -- dört dosyanın da
   (`package.json`, `tsconfig.json`, `GeoFactsServer.ts`,
   `RunServerWithClient.ts`) tek bir klasörde yaşadığı.
 - TypeScript SDK'sı (`@modelcontextprotocol/sdk`), doğal ESM build'iyle

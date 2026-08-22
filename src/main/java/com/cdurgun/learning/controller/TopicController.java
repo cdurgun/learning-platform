@@ -9,7 +9,10 @@ import com.cdurgun.learning.service.ContentResolver;
 import com.cdurgun.learning.service.MarkdownService;
 import com.cdurgun.learning.service.NavigationService;
 import com.cdurgun.learning.service.PdfExportService;
+import com.cdurgun.learning.service.QuizService;
 import com.cdurgun.learning.web.nav.SequencedTopic;
+import com.cdurgun.learning.web.quiz.QuizSubmitRequest;
+import com.cdurgun.learning.web.quiz.QuizSubmitResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,7 +22,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
@@ -37,6 +43,7 @@ public class TopicController {
     private final NavigationService navigationService;
     private final MessageSource messageSource;
     private final PdfExportService pdfExportService;
+    private final QuizService quizService;
 
     public TopicController(TopicRepository topicRepository,
                             TopicTranslationRepository topicTranslationRepository,
@@ -44,7 +51,8 @@ public class TopicController {
                             MarkdownService markdownService,
                             NavigationService navigationService,
                             MessageSource messageSource,
-                            PdfExportService pdfExportService) {
+                            PdfExportService pdfExportService,
+                            QuizService quizService) {
         this.topicRepository = topicRepository;
         this.topicTranslationRepository = topicTranslationRepository;
         this.contentResolver = contentResolver;
@@ -52,6 +60,7 @@ public class TopicController {
         this.navigationService = navigationService;
         this.messageSource = messageSource;
         this.pdfExportService = pdfExportService;
+        this.quizService = quizService;
     }
 
     /**
@@ -128,10 +137,26 @@ public class TopicController {
         MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown.get(), slug);
         model.addAttribute("contentHtml", rendered.html());
         model.addAttribute("toc", rendered.toc());
+        model.addAttribute("quizQuestions", quizService.loadQuiz(topic.getId(), language));
 
         addPreviousAndNext(model, topic, slug, language);
 
         return "topic";
+    }
+
+    /**
+     * Faz 81: enum konusu için quiz submit. Şu an yalnızca enum'a hardcode —
+     * kullanıcı bu ilk sürümde başka konulara genellemeyi kasıtlı olarak kapsam dışı
+     * bıraktı. Business logic burada YOK, tamamı QuizService'te (bkz. mimari kuralı).
+     */
+    @PostMapping("/{lang:en|tr}/topics/enum/quiz/submit")
+    @ResponseBody
+    public ResponseEntity<QuizSubmitResponse> submitQuiz(@PathVariable String lang,
+                                                           @RequestBody QuizSubmitRequest request) {
+        Language language = Language.fromCode(lang);
+        Topic topic = topicRepository.findBySlug("enum")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: enum"));
+        return ResponseEntity.ok(quizService.submit(topic.getId(), language, request));
     }
 
     /**

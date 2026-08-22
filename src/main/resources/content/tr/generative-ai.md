@@ -14,14 +14,33 @@ inşa edileceği zemini kurar.
 ## Generative AI Nedir?
 
 Generative AI, tek bir label'ı sınıflandırmak ya da tahmin etmek yerine **yeni
-içerik yaratmak** üzere eğitilmiş -- neredeyse her zaman deep learning
-modelleri olan -- AI sistemlerini ifade eder: metin, görüntü, ses, kod, video.
+içerik yaratmak** üzere eğitilmiş AI sistemlerini ifade eder: metin, görüntü,
+ses, kod, video. Modern generative AI sistemlerinin büyük çoğunluğu deep
+learning tabanlıdır -- ama bu, "generative AI = deep learning" demek değildir,
+yalnızca bugün en yaygın kullanılan uygulamanın bu olduğu anlamına gelir.
 Bunu önceki üç derste kullanılan örneklerle karşılaştırın: bir spam filtresi
 iki label'dan birini tahmin eder ("spam" / "spam değil"); bir görüntü
 sınıflandırıcı birçok kategoriden birini tahmin eder ("kedi," "köpek,"
 "araba"). Generative AI yapısal olarak farklı bir şey yapar -- bir prompt
 verildiğinde, kelime, piksel ya da ses örneğini birer birer üreterek daha
 önce var olmayan tamamen yeni bir içerik parçası oluşturur.
+
+"Yeni içerik" birçok farklı türe yayılabilir; kabaca şöyle dallanır:
+
+```
+Generative AI
+├── Metin
+│   └── LLM (bkz. "Large Language Models: Bir Önizleme")
+├── Görüntü
+├── Ses
+├── Video
+└── Kod
+```
+
+Bu kategorideki dördüncü ve son ders ("Large Language Models") yalnızca
+en üstteki dala -- metne uygulanan generative AI'a -- odaklanıyor; diğer
+dallar bu ders kapsamı dışında, ama aynı temel fikrin (yeni içerik üretmek
+üzere eğitilmiş modeller) farklı veri türlerine uygulanmasıdır.
 
 ## Discriminative ve Generative: Temel Ayrım
 
@@ -40,6 +59,11 @@ hiç var olmamış bir kedi resmi üretebilir.
 > İkisini ayırt etmek için basit bir kontrol: bir sistemin çıktısı bir label,
 > bir kategori ya da bir sayıysa, neredeyse kesinlikle discriminative'dir.
 > Çıktısı yeni bir cümle, görüntü, ses klibi ya da kod bloğuysa, generative'dir.
+> Bu ayrımın, bu kursun bu aşamasında kullanılan başlangıç seviyesinde
+> basitleştirilmiş bir zihinsel model olduğunu unutmayın -- gerçek dünyada
+> bazı sistemler ikisinin sınırında durur, ama "discriminative vs.
+> generative" kontrolü yeni başlayanlar için doğru sezgiyi kurmada hâlâ
+> son derece kullanışlıdır.
 
 ## Generative Modeller Yeni İçeriği Nasıl Üretir?
 
@@ -74,8 +98,13 @@ yazma asistanları gibi araçların arkasındaki sistemler. LLM'ler, metne
 uygulanmış generative AI'dır, "Deep Learning"in "Yaygın Neural Network
 Türleri" bölümünde tanıtılan transformer mimarisi üzerine inşa edilmiştir,
 ve kitaplardan, web sitelerinden ve kod depolarından toplanan devasa
-miktarda metinle eğitilmiştir. Bu kursun sıradaki kategorisi, "Large
-Language Models," bu sistemlerin gerçekte nasıl çalıştığına, bir
+miktarda metinle eğitilmiştir. "Sırada ki token'ı tahmin etmek" burada bilinçli olarak basitleştirilmiş bir
+model olarak sunuluyor -- LLM'lerin gerçekte nasıl eğitildiği (pretraining),
+bir modelin talimatları takip etmesini sağlayan ayrı bir aşama
+(post-training / instruction tuning), "context"in inference sırasında
+modelin davranışını nasıl şekillendirdiği, ve inference'ın kendisi, hepsi bu
+kursun sıradaki kategorisi olan "Large Language Models"da tek tek ele
+alınacak. Bu kategori bu sistemlerin gerçekte nasıl çalıştığına, bir
 "prompt"un gerçekte ne yaptığına, ve belirli yeteneklerine/sınırlamalarına
 tamamen ayrılmıştır -- bu ders yalnızca LLM'lerin, ayrı bir kavram değil,
 generative AI'ın genel fikrinin belirli, son derece önemli bir örneği

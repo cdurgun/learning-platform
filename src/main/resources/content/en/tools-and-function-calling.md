@@ -15,8 +15,15 @@ Tool use is a pattern where an LLM, instead of only generating a final
 answer, can generate a *structured request* to call a specific function --
 naming the function and supplying arguments for it -- and a program outside
 the model actually executes that function and returns the result. The model
-itself never runs any code and never touches a network or a database; it
-only ever produces text. What makes tool use different from an ordinary
+itself never runs any code and never directly touches a network or a
+database -- a more accurate mental model: the model doesn't carry out
+operations on external systems itself, it *requests* them from the
+application hosting it, via structured tool-call output. ("It only ever
+produces text" is a simplified way of putting this -- with multimodal
+models or vendor-specific tool-call output formats, don't read that as an
+absolute technical claim; what matters isn't the shape of the model's
+output, it's that the model itself can never reach the outside world
+directly.) What makes tool use different from an ordinary
 response is that the text it produces is deliberately shaped (by the
 application built around the model) to be recognized as a tool call rather
 than shown directly to the user. Whether this feature is called "tool use,"
@@ -73,10 +80,15 @@ to use it correctly depends entirely on how well these are written:
 - **Name** -- a short, unambiguous identifier, like `get_current_weather`
   or `search_orders`.
 - **Description** -- a plain-language explanation of what the tool does
-  and when to use it. This is the single biggest factor in whether a model
-  picks the right tool at the right time -- a vague description ("gets
-  data") leads to a model guessing wrong far more often than a specific one
-  ("looks up the current shipping status of an order, given an order ID").
+  and when to use it. This is one of the most important signals in whether
+  a model picks the right tool at the right time -- a vague description
+  ("gets data") leads to a model guessing wrong far more often than a
+  specific one ("looks up the current shipping status of an order, given
+  an order ID"). (Tool selection doesn't depend on the description alone
+  -- the tool's name, its parameter schema, the surrounding conversation
+  context, and the model's or application's own design all play a role
+  too; but the description is one of the signals a developer directly
+  controls, and it makes an outsized difference.)
 - **Parameter schema** -- a structured definition (commonly JSON Schema) of
   what arguments the tool accepts, their types, and which are required.
   The model uses this schema to decide what values to fill in, and a
@@ -91,15 +103,15 @@ so much in practice.
 ## Tool Use vs. Agents
 
 A single tool call -- get the weather, return the answer -- is not yet what
-this course later calls an **agent**. Tool use is the underlying
-*mechanism*; an agent is a *system* built on top of it that can chain
-multiple tool calls together, make its own decisions about which tools to
-call and in what order, and keep going across several rounds of the loop
-described above without a human deciding each step. Every agent relies on
-tool use, but using one tool once, inside an otherwise ordinary
-conversation, is not by itself an agent -- the "AI Agents" category later
-in this course covers what additionally has to be true for a system to
-earn that name.
+this course later calls an **agent**. Tool calling is one of the core
+mechanisms agent systems are built on; an agent is a broader *system* that
+can plan multiple steps toward a goal, decide for itself which tools to use
+and in what order, and sustain the loop described above, across several
+rounds, with some degree of autonomy and without a human deciding each
+step. Every agent relies on tool use, but the reverse isn't true -- using
+one tool once, inside an otherwise ordinary conversation, is not by itself
+an agent -- the "AI Agents" category later in this course covers what
+additionally has to be true for a system to earn that name.
 
 ## Best Practices
 
@@ -145,9 +157,11 @@ earn that name.
   model decides -> application executes -> result fed back into context ->
   model continues or answers.
 - A tool is defined by its name, description, and parameter schema --
-  description quality is the biggest factor in correct tool selection.
-- Tool use is the mechanism agents are built on, but a single tool call is
-  not by itself an agent.
+  description quality is one of the most important signals in correct
+  tool selection.
+- Tool calling is one of the core mechanisms agent systems are built on;
+  an agent is a broader system that plans multiple steps toward a goal and
+  picks tools -- a single tool call is not by itself an agent.
 
 **Cheat Sheet**
 
@@ -156,8 +170,9 @@ earn that name.
 - Loop = prompt+tools -> model decides -> app executes -> result back into
   context -> model continues.
 - Tool definition = name + description + parameter schema; description
-  quality drives correct selection.
-- Tool use != agent. Agents chain tool calls autonomously across rounds.
+  quality strongly influences correct selection.
+- Tool use != agent. An agent plans toward a goal, picks tools, and
+  sustains the loop with some degree of autonomy.
 
 **Glossary**
 
@@ -168,6 +183,6 @@ earn that name.
   context.
 - **Parameter schema:** a structured definition (commonly JSON Schema) of
   the arguments a tool accepts, used by the model to construct valid calls.
-- **Agent:** a system built on tool use that can autonomously chain
-  multiple tool calls together to accomplish a task, covered later in this
-  course.
+- **Agent:** a broader system, built on tool use, that can plan multiple
+  steps toward a goal, choose and use tools, and sustain its own working
+  loop with some degree of autonomy, covered later in this course.

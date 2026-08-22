@@ -43,11 +43,14 @@ anlattığı yerde, o request ve response telde şöyle görünür:
 }
 ```
 
-Her MCP işlemi bu aynı biçimi izler -- yalnızca `method` adı ve
-`params`/`result` içeriği değişir (`tools/list`, `tools/call`,
-`resources/read`, ve benzerleri). Bu, "TypeScript ile MCP Sunucusu
-Oluşturma"nın SDK kodunun sıradan fonksiyon call'larının arkasına
-gizlediği katmandır -- ama altta gerçekten gönderilen şey budur.
+Bu ders için önemli olan nokta, MCP'nin kendi mesaj biçimini icat
+etmediği, JSON-RPC 2.0'ı wire format olarak kullandığıdır -- `tools/list`,
+`tools/call`, `resources/read` gibi işlemlerin çoğu bu request/response
+kalıbını izler (spesifikasyondaki bazı mesaj türleri, örneğin bir yanıt
+beklemeyen tek yönlü *notification*'lar, bu iki kutunun dışında kalabilir,
+ama bu ders seviyesinde onların ayrıntısına girmiyoruz). Bu, "TypeScript
+ile MCP Sunucusu Oluşturma"nın SDK kodunun sıradan fonksiyon call'larının
+arkasına gizlediği katmandır -- ama altta gerçekten gönderilen şey budur.
 
 ## Transports: stdio and Streamable HTTP
 
@@ -67,7 +70,10 @@ durumda da aynıdır.
 
 ## The Connection Lifecycle: Initialize, Discover, Invoke
 
-Transport'tan bağımsız olarak, her MCP bağlantısı aynı üç aşamadan geçer:
+Aşağıdaki, MCP protokolünün olası bütün mesaj türlerinin eksiksiz bir
+dökümü değil -- bu derste tool/resource kullanımını anlamak için yeterli,
+bilinçli olarak sadeleştirilmiş bir temel yaşam döngüsü. Transport'tan
+bağımsız olarak, bir MCP bağlantısı bu üç aşamadan geçer:
 
 1. **Initialize** -- başka bir şey olmadan önce, client ve server bir
    `initialize` request'i ve response'u değiş tokuş eder, bir protokol
@@ -149,9 +155,8 @@ transport değişir.
 
 **Özet**
 
-- Her MCP mesajı bir JSON-RPC 2.0 request ya da response'udur --
-  önceden var olan, genel amaçlı bir biçim, MCP'nin icat ettiği bir şey
-  değil.
+- MCP kendi mesaj biçimini icat etmez -- wire format olarak JSON-RPC 2.0'ı
+  kullanır, önceden var olan, genel amaçlı bir biçim.
 - Bir **transport** (yerel process'ler için yaygın olarak stdio, ya da
   uzak olanlar için Streamable HTTP) bu mesajları taşır; tool-calling
   davranışı hangisi kullanılırsa kullanılsın aynıdır.
@@ -179,8 +184,9 @@ transport değişir.
 
 **Terimler Sözlüğü**
 
-- **JSON-RPC 2.0:** MCP'nin her client-server değiş tokuşu için
-  kullandığı, genel amaçlı, metin tabanlı request/response mesaj biçimi.
+- **JSON-RPC 2.0:** MCP'nin client-server değiş tokuşları için wire
+  format olarak kullandığı, önceden var olan, genel amaçlı, metin tabanlı
+  mesaj biçimi.
 - **Transport:** JSON-RPC mesajlarının üzerinde seyahat ettiği gerçek
   kanal -- yaygın olarak stdio (yerel subprocess) ya da Streamable HTTP
   (uzak).

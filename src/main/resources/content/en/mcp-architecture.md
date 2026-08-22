@@ -42,11 +42,15 @@ tools, that request and response look like this on the wire:
 }
 ```
 
-Every MCP operation follows this same shape -- only the `method` name and
-`params`/`result` contents change (`tools/list`, `tools/call`,
-`resources/read`, and so on). This is the layer "Building an MCP Server"'s
-SDK code hides behind ordinary function calls -- but it's genuinely what's
-being sent underneath.
+What matters for this lesson is that MCP doesn't invent its own message
+format -- it uses JSON-RPC 2.0 as the wire format. Most operations, like
+`tools/list`, `tools/call`, and `resources/read`, follow this
+request/response shape (some message types in the specification, such as
+one-way *notifications* that expect no response, fall outside that
+request/response pair, but this lesson doesn't need to go into their
+detail). This is the layer "Building an MCP Server"'s SDK code hides
+behind ordinary function calls -- but it's genuinely what's being sent
+underneath.
 
 ## Transports: stdio and Streamable HTTP
 
@@ -64,8 +68,10 @@ a tool's `name`, `description`, and behavior are identical either way.
 
 ## The Connection Lifecycle: Initialize, Discover, Invoke
 
-Every MCP connection, regardless of transport, goes through the same
-three phases:
+What follows isn't a complete inventory of every possible message type in
+the MCP protocol -- it's a deliberately simplified base lifecycle, enough
+to understand tool/resource usage at this lesson's level. Regardless of
+transport, an MCP connection goes through these three phases:
 
 1. **Initialize** -- the client and server exchange an `initialize`
    request and response before anything else happens, agreeing on a
@@ -143,8 +149,8 @@ underneath changes.
 
 **Summary**
 
-- Every MCP message is a JSON-RPC 2.0 request or response -- a
-  pre-existing, general-purpose format, not something MCP invented.
+- MCP doesn't invent its own message format -- it uses JSON-RPC 2.0 as
+  its wire format, a pre-existing, general-purpose one.
 - A **transport** (commonly stdio for local processes, or Streamable HTTP
   for remote ones) carries those messages; tool-calling behavior is
   identical regardless of which one is used.
@@ -170,8 +176,8 @@ underneath changes.
 
 **Glossary**
 
-- **JSON-RPC 2.0:** the general-purpose, text-based request/response
-  message format MCP uses for every client-server exchange.
+- **JSON-RPC 2.0:** the pre-existing, general-purpose, text-based message
+  format MCP uses as its wire format for client-server exchanges.
 - **Transport:** the actual channel JSON-RPC messages travel over --
   commonly stdio (local subprocess) or Streamable HTTP (remote).
 - **stdio transport:** a transport where the client launches the server

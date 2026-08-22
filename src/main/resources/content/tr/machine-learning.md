@@ -20,9 +20,13 @@ alanıdır. Somut olarak: `if (email "free money" içeriyorsa) then spam = true`
 yazmak yerine, sisteme "spam" ya da "spam değil" olarak zaten etiketlenmiş
 binlerce e-posta gösterirsiniz, ve bir *öğrenme algoritması*, hangi örüntülerin
 (hangi kelimeler, göndericiler, biçimlendirme tuhaflıkları) iki kategoriyi
-ayırdığını otomatik olarak bulur. Bu sürecin çıktısı bir **model**'dir -- bir
-algoritmayla birlikte kullanıldığında, hiç görmediği yepyeni bir e-postaya bakıp
-onun spam olup olmadığını tahmin edebilen bir iç parametre kümesi (sayılar).
+ayırdığını otomatik olarak bulur. Bu sürecin çıktısı bir **model**'dir: sabit bir yapı (tahmin üreten bir
+fonksiyon/mimari) ile bu yapının içindeki öğrenilmiş **parametreler**in
+(sayılar) birleşimi. Eğitimi gerçekten yürüten şeye **öğrenme algoritması**
+denir -- modelin kendisi değil, modeli *üreten* süreçtir. Eğitim bittiğinde
+elinizde artık öğrenme algoritmasına ihtiyaç duymadan çalışan bir model
+kalır: hiç görmediği yepyeni bir e-postaya bakıp spam olup olmadığını tahmin
+edebilir.
 
 Bu, "Yapay Zeka Nedir?" dersinin "AI, davranışı veriden veya örneklerden öğrenilen
 yazılımdır" diye tanıttığı fikrin ta kendisi. Machine Learning, o cümlenin
@@ -44,8 +48,9 @@ bir kural kümesi yazmayı başaramadı, ama bilgisayarlar defalarca yeterince
 > Yararlı bir kontrol: mantığı makul boyutta bir `if`/`else` kural kümesi olarak
 > kendiniz makul biçimde yazabileceğinizi düşünüyorsanız, muhtemelen machine
 > learning'e ihtiyacınız yok -- düz kod daha basit, daha hızlı ve hata ayıklaması
-> daha kolay olacaktır. ML'e, kuralların *nasıl yazılacağını bilmediğiniz* şey
-> olduğu durumlarda başvurun.
+> daha kolay olacaktır. ML'i, açık ve kararlı kurallarla kolayca çözülemeyen ve
+> verideki örüntülerin öğrenilmesinin gerçek bir avantaj sağladığı problemler
+> için saklayın.
 
 ## Training ve Inference
 
@@ -109,8 +114,11 @@ karşınıza çıkan iki terim var:
   bir girdi bilgisi parçasıdır -- bir e-posta spam filtresi için feature'lar,
   ünlem işareti sayısını, göndericinin bilinen bir kişi olup olmadığını ya
   da belirli kelimelerin varlığını içerebilir. İyi feature'lar seçmek ve
-  hazırlamak (*feature engineering* denen bir süreç), bir ML sistemi inşa
-  etmenin en zaman alan ve beceri gerektiren parçalarından biriydi.
+  hazırlamak (*feature engineering* denen bir süreç), özellikle bu dersteki
+  klasik ML tekniklerinde bir sistem inşa etmenin en zaman alan ve beceri
+  gerektiren parçalarından biriydi -- feature'ların büyük ölçüde elle
+  tasarlanması gerekiyordu. Bunun her ML tekniğinde aynı ölçüde geçerli
+  olmadığını ileride "Deep Learning" dersinde göreceksiniz.
 - **Label (etiket),** bir eğitim örneğine iliştirilmiş doğru cevaptır --
   "spam" ya da "spam değil," bir evin gerçek satış fiyatı, bir fotoğrafın
   doğru kategorisi. Label'lar, supervised learning'i "supervised" (denetimli)
@@ -148,13 +156,26 @@ sıkı uyduğunu bilinçli olarak sınırlamak -- kullanmayı içerir.
 
 ## Bir Modelin İyi Olduğunu Nasıl Biliriz?
 
-Standart pratik, eğitime başlamadan önce mevcut veri kümesini en az iki
-parçaya bölmektir: bir **training set (eğitim kümesi)** (modelin gerçekten
-öğrendiği örnekler) ve bir **test set (test kümesi)** (eğitim sırasında
-modele hiç gösterilmeyen, yalnızca modelin ezberlemediği veride ne kadar
-iyi performans gösterdiğini ölçmek için kullanılan, kenara ayrılmış
-örnekler). Eğitim kümesinde iyi ama test kümesinde kötü performans gösteren
-bir model, overfitting'in ders kitabı örneğidir.
+Standart pratik, eğitime başlamadan önce mevcut veri kümesini üç parçaya
+bölmektir:
+
+- **Training set (eğitim kümesi):** modelin gerçekten öğrendiği örnekler.
+- **Validation set (doğrulama kümesi):** eğitim sırasında modele
+  gösterilmeyen, ama model/hyperparameter seçimleri yaparken (örneğin
+  hangi mimarinin ya da hangi ayarların daha iyi sonuç verdiğine karar
+  verirken) kullanılan, kenara ayrılmış örnekler.
+- **Test set (test kümesi):** ne eğitimde ne de bu seçimlerde kullanılan,
+  tamamen kenara ayrılmış örnekler -- modelin *final* performansını, tüm
+  kararlar verildikten sonra, dürüstçe ölçmek için son kez kullanılır.
+
+Bu üçe bölmenin nedeni basit: validation set'i model seçimi için
+kullanırsanız, modeliniz dolaylı olarak o veriye de biraz "uyum sağlamış"
+olur -- bu yüzden gerçekten hiç dokunulmamış, ayrı bir test set'e hâlâ
+ihtiyacınız vardır. Bu dersin amacı doğrulama sürecinin ayrıntılarına
+girmek değil, yalnızca doğru zihinsel modeli kurmak: training set öğrenir,
+validation set seçim yapar, test set final skoru verir. Eğitim kümesinde
+iyi ama test kümesinde kötü performans gösteren bir model, overfitting'in
+ders kitabı örneğidir.
 
 > ⚠️ Warning
 > Bir modelin eğitim kümesi skoru, gerçek dünyadaki kalitesinin GÜVENİLİR
@@ -244,10 +265,14 @@ ona doğrudan uygulanmaya devam ediyor.
 
 **Cheat Sheet**
 
-- Model = tahmin yapan eğitilmiş sonuç (parametreler + algoritma).
+- Model = mimari (tahmin üreten fonksiyon) + öğrenilmiş parametreler.
+  Öğrenme algoritması = modeli *üreten* eğitim süreci, modelin kendisi
+  değil.
 - Training = örneklerden öğrenmek. Inference = öğrenileni kullanmak.
 - Feature = modelin kullandığı bir girdi. Label = doğru cevap (yalnızca
   supervised learning).
+- Training set = model öğrenir. Validation set = model/hyperparameter
+  seçimi yapılır. Test set = final performans dürüstçe ölçülür.
 - Overfit = eğitim verisine çok yakın uyar, yeni veride başarısız olur.
   Underfit = çok basittir, her yerde başarısız olur.
 - Her zaman modelin hiç eğitilmediği bir test kümesinde değerlendirin.
@@ -267,6 +292,7 @@ ona doğrudan uygulanmaya devam ediyor.
   eğitim örneğine iliştirilmiş doğru cevap.
 - **Overfitting / Underfitting:** eğitim verisini genelleyemeyecek kadar
   hassas biçimde öğrenmek / gerçek örüntüyü hiç öğrenememek.
-- **Training set / Test set:** bir modelin öğrendiği veri / modelin
-  gerçekte ne kadar iyi performans gösterdiğini dürüstçe ölçmek için
-  kullanılan, kenara ayrılmış veri.
+- **Training set / Validation set / Test set:** bir modelin öğrendiği veri /
+  model ya da hyperparameter seçimi yaparken kullanılan kenara ayrılmış veri
+  / modelin gerçekte ne kadar iyi performans gösterdiğini son kez ve
+  dürüstçe ölçmek için kullanılan, hiç dokunulmamış veri.

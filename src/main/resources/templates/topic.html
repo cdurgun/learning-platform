@@ -163,6 +163,46 @@
                     İçerik
                 </article>
 
+                <!-- Quiz: yalnızca bu konu/dilde soru varsa render edilir (bugün için
+                     yalnızca enum) -- bkz. QuizService.loadQuiz. is_correct/correctOptionId/
+                     explanation bu markup'ta HİÇBİR ZAMAN yer almaz, yalnızca submit
+                     response'unda gelir (bkz. quiz.js). -->
+                <section th:if="${quizQuestions != null and !#lists.isEmpty(quizQuestions)}"
+                         id="quiz-section"
+                         class="mt-5 pt-4 border-top"
+                         th:data-submit-url="@{/{lang}/topics/enum/quiz/submit(lang=${language.code})}"
+                         th:data-msg-score="#{quiz.score}"
+                         th:data-msg-passed="#{quiz.passed}"
+                         th:data-msg-failed="#{quiz.failed}"
+                         th:data-msg-error="#{quiz.error.generic}">
+
+                    <h2 th:text="#{quiz.title}">Bilgini Test Et</h2>
+                    <p class="text-muted" th:text="#{quiz.instructions}">Tüm soruları cevapla ve gönder.</p>
+
+                    <form id="quiz-form">
+                        <div class="quiz-question mb-4" th:each="q, qStat : ${quizQuestions}"
+                             th:data-question-id="${q.id()}">
+                            <p class="fw-semibold"
+                               th:text="${qStat.count} + '. ' + ${q.question()}">Soru metni</p>
+                            <div class="form-check" th:each="opt : ${q.options()}">
+                                <input class="form-check-input quiz-option-input" type="radio"
+                                       th:name="'question-' + ${q.id()}"
+                                       th:id="'quiz-option-' + ${opt.id()}"
+                                       th:value="${opt.id()}"
+                                       th:data-question-id="${q.id()}"/>
+                                <label class="form-check-label" th:for="'quiz-option-' + ${opt.id()}"
+                                       th:text="${opt.optionText()}">Seçenek</label>
+                            </div>
+                            <div class="quiz-result-feedback mt-2 small" style="display:none;"></div>
+                        </div>
+
+                        <button type="submit" id="quiz-submit-btn" class="btn btn-primary" disabled
+                                th:text="#{quiz.submit}">Gönder</button>
+                    </form>
+
+                    <div id="quiz-summary" class="alert mt-3" style="display:none;" role="alert"></div>
+                </section>
+
                 <nav class="d-flex justify-content-between mt-5 pt-3 border-top" aria-label="Konu navigasyonu">
                     <a th:if="${previousTopic != null}"
                        class="btn btn-outline-secondary text-start"
@@ -204,6 +244,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
+<script th:src="@{/js/quiz.js}"></script>
 
 </body>
 </html>

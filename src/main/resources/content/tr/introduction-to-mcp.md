@@ -26,13 +26,18 @@ MCP-uyumlu uygulama tarafından yeniden kullanılabilir.
 ## Why Does It Exist?
 
 Paylaşılan bir standart olmadan, *M* farklı AI uygulamasını *N* farklı
-tool ve veri kaynağına bağlamak, neredeyse *M x N* ayrı, özel entegrasyon
+tool ve veri kaynağına bağlamak, çok sayıda ayrı, özel entegrasyon
 gerektirir -- bir sağlayıcının tool-calling biçimiyle kurulmuş bir
 uygulama, bir başkasıyla çalışması için yeniden yazılmalıdır, ve her yeni
 veri kaynağı, onu kullanmak isteyen her uygulama için ısmarlama bağlantı
-kodu gerektirir. MCP, bunu bir *M + N* problemine dönüştürmek için var: bir
-tool ya da veri kaynağı, bir MCP server olarak BİR KEZ implemente edilir,
-ve herhangi bir MCP-uyumlu uygulama, değiştirilmeden ona bağlanabilir. Bu,
+kodu gerektirir. MCP'nin amacı, her AI uygulaması ile her tool/veri
+kaynağı arasında ayrı özel entegrasyonlar yazma ihtiyacını azaltarak
+entegrasyon mimarisini standartlaştırmaktır: bir tool ya da veri kaynağı,
+bir MCP server olarak BİR KEZ implemente edilir, ve herhangi bir
+MCP-uyumlu uygulama, değiştirilmeden ona bağlanabilir. Bunu kısaca "*M x N*
+→ *M + N*" diye özetlemek yaygındır -- ama bunun kesin bir matematiksel
+entegrasyon-maliyeti formülü değil, fikri hızlıca akılda tutmaya yarayan
+basitleştirilmiş bir zihinsel model olduğunu unutmayın. Bu,
 hem "LLM Yetenekleri ve Sınırlamaları" hem de "Tools and Function
 Calling"in birlikte kurduğu şeye doğrudan, pratik bir cevaptır: modellerin
 güncel bilgiye ulaşmanın ve gerçek eylemler almanın güvenilir bir yoluna
@@ -140,10 +145,11 @@ modelin onları nasıl kullanmaya karar verdiğini değil.
 - MCP (Model Context Protocol), AI uygulamalarının dış tool'lara, veriye
   ve prompt şablonlarına nasıl bağlanacağını standartlaştıran açık bir
   protokoldür.
-- Var oluş amacı, *M x N* entegrasyon problemini (her uygulamanın her
-  tool'a özel olarak bağlanması) bir *M + N* problemine dönüştürmektir:
-  bir veri kaynağını bir kez server olarak implemente edin, herhangi bir
-  uyumlu host'tan kullanın.
+- Var oluş amacı, her uygulamanın her tool'a özel olarak bağlanma
+  ihtiyacını azaltacak şekilde entegrasyon mimarisini standartlaştırmaktır
+  -- kısaca "*M x N* → *M + N*" diye özetlenen (kesin bir formül değil,
+  basitleştirilmiş bir zihinsel model) bir fikir: bir veri kaynağını bir
+  kez server olarak implemente edin, herhangi bir uyumlu host'tan kullanın.
 - Üç rol sabit kalır: **host** (AI uygulaması), **client** (host'un
   içinde, her server bağlantısı için bir tane), ve **server** (belirli
   bir host'tan bağımsız olarak işlevsellik sunar).

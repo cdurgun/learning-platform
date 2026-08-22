@@ -31,11 +31,14 @@ to confirm it behaves exactly as shown.
 ## Prerequisites: Node.js and npm
 
 The TypeScript SDK runs on **Node.js** -- a program that runs JavaScript
-(and, once compiled, TypeScript) outside a browser, the same role the JVM
-plays for Java. Node.js comes bundled with **npm** (Node Package
-Manager), the tool that downloads library code -- like the MCP SDK
-itself -- into a project, comparable to what Maven does for a Java
-project.
+(and, once compiled, TypeScript) outside a browser, playing a role
+similar to the JVM's for Java (not a one-to-one technical equivalent --
+the JVM is a bytecode virtual machine, while Node.js is a JavaScript
+runtime built on V8, but the "platform that runs code outside a browser"
+analogy serves its purpose here). Node.js comes bundled with **npm**
+(Node Package Manager), the tool used, for a similar purpose to Maven in
+a Java project, to download library code -- like the MCP SDK itself --
+into a project.
 
 Open a terminal and check whether Node.js is already installed:
 
@@ -366,10 +369,13 @@ the same JSON-RPC messages is different.
   Calling" recommended -- the SDK enforces the parameter *schema*, but
   nothing stops a vague *description* from causing a model to pick the
   wrong tool.
-- Return `isError: true` with a clear message for expected failure
-  cases (like `get_capital_city`'s unknown-country path), rather than
-  throwing -- it gives the model something concrete to work with instead
-  of an opaque failure.
+- Returning `isError: true` with a clear message for expected,
+  application-level failure cases (like `get_capital_city`'s
+  unknown-country path), rather than throwing, is a good pattern -- it
+  gives the model something concrete to work with instead of an opaque
+  failure. (This isn't a universal rule every tool failure must follow --
+  which errors get handled this way depends on the tool's and
+  application's own design.)
 
 ## Common Mistakes
 
@@ -391,9 +397,10 @@ the same JSON-RPC messages is different.
 
 **Summary**
 
-- This lesson's project is an ordinary Node.js/TypeScript project (like
-  Maven is to Java, npm downloads dependencies for Node.js) -- all four
-  files (`package.json`, `tsconfig.json`, `GeoFactsServer.ts`,
+- This lesson's project is an ordinary Node.js/TypeScript project (npm
+  plays a role similar to Maven's for dependency management, not a
+  one-to-one technical equivalent) -- all four files (`package.json`,
+  `tsconfig.json`, `GeoFactsServer.ts`,
   `RunServerWithClient.ts`) live in one folder.
 - The TypeScript SDK (`@modelcontextprotocol/sdk`) needs
   `"type": "module"` in `package.json` and `NodeNext` module resolution

@@ -24,13 +24,17 @@ implementation can be reused by any MCP-compatible application.
 ## Why Does It Exist?
 
 Without a shared standard, connecting *M* different AI applications to *N*
-different tools and data sources requires something close to *M x N*
-separate, custom integrations -- an application built with one vendor's
-tool-calling format has to be rewritten to work with another's, and every
-new data source needs bespoke glue code for every application that wants
-to use it. MCP exists to turn that into an *M + N* problem: a tool or data
-source is implemented once, as an MCP server, and any MCP-compatible
-application can connect to it, unmodified. This is a direct, practical
+different tools and data sources requires a large number of separate,
+custom integrations -- an application built with one vendor's tool-calling
+format has to be rewritten to work with another's, and every new data
+source needs bespoke glue code for every application that wants to use it.
+MCP's purpose is to standardize that integration architecture, reducing
+the need to write a separate, custom integration between every AI
+application and every tool or data source: a tool or data source is
+implemented once, as an MCP server, and any MCP-compatible application can
+connect to it, unmodified. This is often summarized as "*M x N* → *M + N*"
+-- keep in mind that's not a precise mathematical cost formula, just a
+simplified mental model for holding onto the idea quickly. This is a direct, practical
 answer to what "LLM Capabilities and Limitations" and "Tools and Function
 Calling" both established: models need a reliable way to reach current
 information and take real actions, and that access has to be reusable
@@ -130,9 +134,11 @@ discovered and invoked, not how a model decides to use them.
 
 - MCP (Model Context Protocol) is an open protocol that standardizes how
   AI applications connect to external tools, data, and prompt templates.
-- It exists to turn the *M x N* integration problem (every application
-  custom-wired to every tool) into an *M + N* one: implement a data
-  source once as a server, use it from any compatible host.
+- It exists to standardize integration architecture, reducing the need
+  for every application to be custom-wired to every tool -- often
+  summarized as "*M x N* → *M + N*" (a simplified mental model, not a
+  precise formula): implement a data source once as a server, use it from
+  any compatible host.
 - Three roles stay constant: the **host** (the AI application), the
   **client** (inside the host, one per server connection), and the
   **server** (exposes functionality, independent of any specific host).

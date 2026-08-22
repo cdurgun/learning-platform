@@ -16,7 +16,14 @@ fonksiyonu çağırmak için *yapılandırılmış bir istek* üretebildiği -- 
 fonksiyonu adlandırıp ona argümanlar sağladığı -- ve modelin dışındaki bir
 programın bu fonksiyonu gerçekten çalıştırıp sonucu döndürdüğü bir
 kalıptır. Modelin kendisi hiçbir zaman kod çalıştırmaz, hiçbir zaman bir
-ağa ya da veritabanına dokunmaz; yalnızca metin üretir. Tool use'u sıradan
+ağa ya da veritabanına doğrudan dokunmaz -- daha doğru bir zihinsel model:
+model, dış sistemlerdeki işlemleri kendisi gerçekleştirmez, bunları
+yapılandırılmış tool-call çıktılarıyla kendisini barındıran uygulamadan
+*ister*. ("Yalnızca metin üretir" ifadesi bu fikrin sadeleştirilmiş bir
+anlatımıdır -- multimodal modeller ya da sağlayıcıya özgü çıktı biçimleri
+söz konusu olduğunda bunu mutlak bir teknik iddia olarak okumayın; burada
+önemli olan model çıktısının biçimi değil, modelin dış dünyaya asla
+doğrudan erişememesidir.) Tool use'u sıradan
 bir yanıttan farklı kılan şey, üretilen metnin (modelin etrafında kurulu
 uygulama tarafından) kullanıcıya doğrudan gösterilmek yerine bir tool call
 olarak tanınacak şekilde bilinçli olarak biçimlendirilmiş olmasıdır. Bu
@@ -76,10 +83,14 @@ kullanabilmesi tamamen bunların ne kadar iyi yazıldığına bağlıdır:
   belirsizliğe yer bırakmayan bir tanımlayıcı.
 - **Description** -- tool'un ne yaptığının ve ne zaman kullanılması
   gerektiğinin sade bir dille açıklaması. Bu, modelin doğru zamanda doğru
-  tool'u seçip seçmemesindeki TEK EN BÜYÜK etkendir -- belirsiz bir
+  tool'u seçmesindeki en önemli sinyallerden biridir -- belirsiz bir
   açıklama ("veri getirir"), spesifik bir açıklamaya ("bir siparişin
   güncel kargo durumunu, sipariş ID'si verildiğinde arar") kıyasla modelin
-  çok daha sık yanlış tahmin etmesine yol açar.
+  çok daha sık yanlış tahmin etmesine yol açar. (Tool seçimi yalnızca
+  description'a bağlı değildir -- tool adı, parameter schema, konuşmanın
+  context'i, ve modelin/uygulamanın kendi tasarımı da etkiler; ama
+  description, geliştiricinin doğrudan kontrol ettiği ve en çok fark
+  yaratan sinyallerden biridir.)
 - **Parameter schema** -- tool'un hangi argümanları kabul ettiğinin,
   tiplerinin, ve hangilerinin zorunlu olduğunun yapılandırılmış bir
   tanımı (yaygın olarak JSON Schema). Model, hangi değerleri dolduracağına
@@ -95,15 +106,16 @@ kalitesinin bu kadar önemli olmasının nedeni de budur.
 ## Tool Use vs. Agents
 
 Tek bir tool call -- havayı al, cevabı döndür -- bu kursun ilerleyen
-bölümlerinde **agent** olarak adlandırdığı şey HENÜZ DEĞİLDİR. Tool use,
-altta yatan *mekanizmadır*; bir agent ise bunun üzerine kurulu, birden
-fazla tool call'ı birbirine zincirleyebilen, hangi tool'un ne sırayla
-çağrılacağına kendi başına karar verebilen, ve yukarıda anlatılan döngünün
-birden fazla turunda, her adıma bir insan karar vermeden devam edebilen bir
-*sistemdir*. Her agent tool use'a dayanır, ama aksi halde sıradan bir
-konuşma içinde bir tool'u bir kez kullanmak, tek başına bir agent
-DEĞİLDİR -- bu kursun ilerleyen "AI Agents" kategorisi, bir sistemin bu
-adı hak etmesi için ayrıca neyin doğru olması gerektiğini ele alıyor.
+bölümlerinde **agent** olarak adlandırdığı şey HENÜZ DEĞİLDİR. Tool
+calling, agent sistemlerinin temel mekanizmalarından biridir; agent ise
+bir hedef doğrultusunda birden fazla adımı planlayabilen, hangi tool'ları
+ne sırayla kullanacağını kendi başına seçebilen, ve yukarıda anlatılan
+döngüyü, her adıma bir insan karar vermeden, belirli ölçüde otonom şekilde
+sürdürebilen daha geniş bir *sistemdir*. Her agent tool use'a dayanır, ama
+bunun tersi doğru değildir -- sıradan bir konuşma içinde bir tool'u bir kez
+kullanmak, tek başına bir agent DEĞİLDİR -- bu kursun ilerleyen "AI
+Agents" kategorisi, bir sistemin bu adı hak etmesi için ayrıca neyin doğru
+olması gerektiğini ele alıyor.
 
 ## Best Practices
 
@@ -151,9 +163,10 @@ adı hak etmesi için ayrıca neyin doğru olması gerektiğini ele alıyor.
   model karar verir -> uygulama çalıştırır -> sonuç context'e geri
   eklenir -> model devam eder ya da cevap verir.
 - Bir tool, adı, açıklaması ve parameter schema'sıyla tanımlanır --
-  açıklama kalitesi doğru tool seçiminin en büyük etkenidir.
-- Tool use, agent'ların üzerine kurulduğu mekanizmadır, ama tek bir tool
-  call tek başına bir agent değildir.
+  açıklama kalitesi doğru tool seçimindeki en önemli sinyallerden biridir.
+- Tool calling, agent sistemlerinin temel mekanizmalarından biridir; agent
+  bir hedef doğrultusunda birden fazla adımı planlayıp tool seçebilen daha
+  geniş bir sistemdir -- tek bir tool call tek başına bir agent değildir.
 
 **Cheat Sheet**
 
@@ -162,9 +175,9 @@ adı hak etmesi için ayrıca neyin doğru olması gerektiğini ele alıyor.
 - Loop = prompt+tool'lar -> model karar verir -> uygulama çalıştırır ->
   sonuç context'e döner -> model devam eder.
 - Tool tanımı = ad + açıklama + parameter schema; açıklama kalitesi doğru
-  seçimi belirler.
-- Tool use != agent. Agent'lar tool call'larını turlar boyunca özerk
-  şekilde zincirler.
+  seçimi güçlü şekilde etkiler.
+- Tool use != agent. Agent, hedef doğrultusunda planlayan, tool seçip
+  kullanan, döngüyü belirli ölçüde otonom sürdüren daha geniş bir sistemdir.
 
 **Terimler Sözlüğü**
 
@@ -177,6 +190,7 @@ adı hak etmesi için ayrıca neyin doğru olması gerektiğini ele alıyor.
 - **Parameter schema:** bir tool'un kabul ettiği argümanların
   yapılandırılmış tanımı (yaygın olarak JSON Schema), model tarafından
   geçerli call'lar oluşturmak için kullanılır.
-- **Agent:** tool use üzerine kurulu, bir görevi tamamlamak için birden
-  fazla tool call'ı özerk şekilde zincirleyebilen, bu kursun ilerleyen
-  bölümlerinde ele alınan bir sistem.
+- **Agent:** tool use üzerine kurulu, bir hedef doğrultusunda birden fazla
+  adımı planlayabilen, tool'ları seçip kullanabilen, ve çalışma döngüsünü
+  belirli ölçüde otonom sürdürebilen, bu kursun ilerleyen bölümlerinde ele
+  alınan daha geniş bir sistem.

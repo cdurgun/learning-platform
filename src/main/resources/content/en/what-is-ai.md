@@ -21,13 +21,16 @@ because AI isn't one single technique. It's an umbrella term that covers
 everything from a simple `if`-based chess-move picker written in 1970 to a
 modern system that writes working code from a plain-English description.
 
-A more useful way to think about it, for a software developer: **AI is
-software whose behavior is learned from data or examples, rather than
-explicitly written line by line by a programmer.** A traditional program's
-behavior is exactly what its `if`/`for`/`switch` statements say it is. An AI
-system's behavior emerges from a training process -- a topic we'll get into
-in the "Machine Learning" lesson right after this one. Keep that one sentence
-in mind; it's the thread that connects everything in this course.
+Under the AI umbrella there are also older approaches based on hand-written
+rules (like the 1970 chess-move picker above). But today, when people say
+"AI," they almost always mean -- and the rest of this course focuses on --
+the following approach: **software whose behavior is learned from data or
+examples, rather than explicitly written line by line by a programmer.** A
+traditional program's behavior is exactly what its `if`/`for`/`switch`
+statements say it is. This learning-based approach has its own name --
+**Machine Learning** -- and we'll zoom into it in the very next lesson. Keep
+that one sentence in mind; it's the thread that connects everything in this
+course.
 
 ## Why Does It Exist?
 
@@ -166,11 +169,32 @@ specific subset of the one before it:
 
 Picture four concentric circles, from largest to smallest: AI contains
 Machine Learning, which contains Deep Learning, which is the technique
-behind most of today's Generative AI. Every generative AI system is deep
-learning; not every deep learning system is generative; not every machine
-learning system is deep learning; not every AI system is machine learning
-at all (that hand-written chess-move picker from the first section is AI,
-but it's not machine learning -- nothing in it was learned from data).
+behind most of today's Generative AI. As plain text, that same map looks
+like this:
+
+```
+Artificial Intelligence
+└── Machine Learning        (learns from data)
+    └── Deep Learning       (uses neural networks)
+        └── Generative AI   (creates new content)
+```
+
+Every generative AI system is deep learning; not every deep learning system
+is generative; not every machine learning system is deep learning; not every
+AI system is machine learning at all (that hand-written chess-move picker
+from the first section is AI, but it's not machine learning -- nothing in it
+was learned from data).
+
+Running one real problem -- **spam email detection** -- through all four
+layers makes the difference concrete. Traditional software solves it with
+fixed rules ("is the sender on a blocklist?", "does it contain certain
+words?"). Machine Learning derives those rules itself from thousands of
+labeled emails instead of having them hand-written (covered in depth in the
+next lesson). Deep Learning does the same job by feeding a neural network
+the raw text of the email -- needing less manual selection of which words
+matter. Generative AI solves a different task: instead of predicting
+whether an email is spam, it could, for example, *generate* an explanation
+of why an email was flagged as spam -- generation, not classification.
 
 ## Best Practices
 

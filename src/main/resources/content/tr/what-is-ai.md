@@ -21,13 +21,16 @@ yazılmış basit bir `if` tabanlı satranç-hamlesi seçicisinden, düz İngili
 açıklamadan çalışan kod yazabilen modern bir sisteme kadar her şeyi kapsayan
 bir şemsiye terim.
 
-Bir yazılım geliştiricisi için daha kullanışlı bir bakış açısı şöyle: **AI,
-davranışı bir programcı tarafından satır satır açıkça yazılmak yerine, veriden
-ya da örneklerden öğrenilen yazılımdır.** Geleneksel bir programın davranışı,
-tam olarak `if`/`for`/`switch` ifadelerinin söylediği şeydir. Bir AI
-sisteminin davranışı ise bir eğitim (training) sürecinden ortaya çıkar --
-hemen bundan sonraki "Machine Learning" dersinde bu sürece gireceğiz. Bu tek
-cümleyi aklında tut; bu kursun tamamını birbirine bağlayan iplik bu.
+AI şemsiyesinin altında, elle yazılmış kurallara dayanan daha eski
+yaklaşımlar da var (yukarıdaki 1970 satranç-hamlesi seçicisi gibi). Ama
+bugün "AI" dendiğinde neredeyse her zaman kastedilen, ve bu kursun geri
+kalanının odaklandığı yaklaşım şu: **davranışı bir programcı tarafından
+satır satır açıkça yazılmak yerine, veriden ya da örneklerden öğrenilen
+yazılım.** Geleneksel bir programın davranışı, tam olarak `if`/`for`/`switch`
+ifadelerinin söylediği şeydir. Bu öğrenme yaklaşımının kendine has bir adı
+var -- **Machine Learning** -- ve hemen bundan sonraki derste ona
+yakınlaşacağız. Bu tek cümleyi aklında tut; bu kursun tamamını birbirine
+bağlayan iplik bu.
 
 ## Neden Var?
 
@@ -172,11 +175,31 @@ kendinden öncekinin daha spesifik bir alt kümesi:
 
 Büyükten küçüğe dört iç içe daire hayal et: AI, Machine Learning'i içerir; o
 da Deep Learning'i içerir; o da bugünün Generative AI'ının çoğunun arkasındaki
-tekniktir. Her generative AI sistemi bir deep learning sistemidir; her deep
-learning sistemi generative değildir; her machine learning sistemi deep
-learning değildir; her AI sistemi machine learning bile değildir (ilk
-bölümdeki elle yazılmış satranç-hamlesi seçicisi bir AI'dır, ama machine
-learning değildir -- içindeki hiçbir şey veriden öğrenilmedi).
+tekniktir. Metin olarak aynı harita şöyle görünür:
+
+```
+Artificial Intelligence
+└── Machine Learning        (veriden öğrenir)
+    └── Deep Learning       (neural network kullanır)
+        └── Generative AI   (yeni içerik üretir)
+```
+
+Her generative AI sistemi bir deep learning sistemidir; her deep learning
+sistemi generative değildir; her machine learning sistemi deep learning
+değildir; her AI sistemi machine learning bile değildir (ilk bölümdeki elle
+yazılmış satranç-hamlesi seçicisi bir AI'dır, ama machine learning değildir
+-- içindeki hiçbir şey veriden öğrenilmedi).
+
+Tek bir gerçek problemi -- **spam e-posta tespiti** -- dört katmandan da
+geçirmek farkı somutlaştırır. Geleneksel yazılım bunu sabit kurallarla çözer
+("gönderen kara listede mi?", "belirli kelimeler geçiyor mu?"). Machine
+Learning, bu kuralları elle yazmak yerine etiketlenmiş binlerce e-postadan
+kendisi çıkarır (bir sonraki derste ayrıntılı). Deep Learning aynı işi,
+e-postanın ham metnini bir neural network'e vererek yapar -- hangi
+kelimelerin önemli olduğunu elle seçmeye daha az ihtiyaç duyar. Generative
+AI ise farklı bir görev çözer: bir e-postanın spam olup olmadığını tahmin
+etmek yerine, örneğin "bu e-posta neden spam olarak işaretlendi" diye bir
+açıklama *metni üretebilir* -- sınıflandırma değil, üretim.
 
 ## Best Practices
 

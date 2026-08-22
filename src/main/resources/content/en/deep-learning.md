@@ -54,15 +54,29 @@ Without getting into the underlying math, it helps to know the shape of
 what happens inside a single node: it takes the values coming in from the
 previous layer, combines them using adjustable numbers called **weights**
 (each connection between two nodes has its own weight, roughly representing
-"how much this input matters"), and passes the result through a small
-mathematical function called an **activation function**. The activation
-function's job is to let the network represent *non-linear* patterns --
-relationships that can't be captured by a simple straight-line combination
-of inputs, which describes almost every interesting real-world pattern
-(there's no straight-line formula for "is this a picture of a cat"). You
-don't need to know the formulas for specific activation functions to
-understand deep learning at this level -- just that this step is what
-allows a network to learn far more than "a weighted sum of its inputs."
+"how much this input matters"), usually adds a **bias** -- a fixed number
+that belongs to the node itself, independent of its inputs -- and passes
+the result through a small mathematical function called an **activation
+function**. ("Parameters" doesn't mean only weights -- weights and biases
+together are what people mean by a network's parameters; this lesson won't
+go deeper into bias, just that it exists.) The activation function's job is
+to let the network represent *non-linear* patterns -- relationships that
+can't be captured by a simple straight-line combination of inputs, which
+describes almost every interesting real-world pattern (there's no
+straight-line formula for "is this a picture of a cat"). You don't need to
+know the formulas for specific activation functions to understand deep
+learning at this level -- just that this step is what allows a network to
+learn far more than "a weighted sum of its inputs."
+
+Here's a tiny, concrete example -- not to teach math, just to make the
+"input + weight + activation" logic visible: say a node takes two inputs,
+`x1 = 2` and `x2 = 1`, with weights `w1 = 3` and `w2 = -1`. The node first
+computes the weighted sum: `(2 × 3) + (1 × -1) = 5`. It then passes that
+through an activation function -- using the common, simplified ReLU (rounds
+negative values to 0, leaves positive ones unchanged) as an example, 5 is
+already positive, so the result stays 5. In a real network the only
+difference is scale: thousands of nodes, millions of weights -- but what
+each one does is exactly this same few-line computation.
 
 ## How a Network Learns: Loss and Backpropagation
 
@@ -104,15 +118,20 @@ edges or ears -- this hierarchy of representations emerges naturally from
 the training process described above. Stacking many layers is what makes
 this progressive abstraction possible; a shallow network with only one or
 two layers simply doesn't have enough steps to build up from raw pixels to
-a concept as abstract as "cat."
+a concept as abstract as "cat." It's worth flagging that this edge → shape →
+eye/ear → cat story is an *intuitive* illustration, not a guarantee -- a
+real network's layers generally do learn progressively more abstract
+patterns, but there's no guarantee any specific layer ends up learning a
+clean, human-nameable concept like "edge" or "ear."
 
 > 💡 Tip
 > When you hear that a model has "billions of parameters," those parameters
-> are almost entirely the weights described in "What Each Node Actually
-> Does" -- one number per connection between two neurons, multiplied across
-> every layer of a very deep, very wide network. More parameters roughly
-> means more capacity to represent complex patterns, though it also means
-> more data and compute are needed to train them well.
+> are almost entirely the weights and biases described in "What Each Node
+> Actually Does" -- one number per connection between two neurons, and one
+> per node, multiplied across every layer of a very deep, very wide network.
+> More parameters roughly means more capacity to represent complex
+> patterns, though it also means more data and compute are needed to train
+> them well.
 
 ## Common Types of Neural Networks
 
@@ -125,16 +144,22 @@ again later in this course:
   such as images -- their layers are structured to detect local patterns
   (like the edges and shapes from the previous section) regardless of where
   in the image they appear.
-- **Recurrent Neural Networks (RNNs):** designed for sequential data (text,
-  audio, time series), where a network processes one element at a time
-  while keeping a form of "memory" of what came before it.
-- **Transformers:** a newer architecture (introduced in 2017) that
-  processes an entire sequence at once rather than one element at a time,
-  using a mechanism called *attention* to weigh how much each part of the
-  input matters to every other part. Transformers are the architecture
-  behind essentially every large language model covered later in this
-  course -- this lesson won't go deeper into how they work, but it's worth
-  knowing the name now, since "Large Language Models" builds directly on it.
+- **Recurrent Neural Networks (RNNs):** a historically important
+  architecture designed for sequential data (text, audio, time series),
+  where a network processes one element at a time while keeping a form of
+  "memory" of what came before it. RNNs were the standard approach for
+  language tasks before transformers took over, and are now largely
+  superseded by them.
+- **Transformers:** a newer architecture (introduced in 2017) that models
+  the relationships between tokens -- how much each part of the input
+  matters to every other part -- using a mechanism called *attention*.
+  Unlike RNNs, this lets a transformer compute those relationships largely
+  in parallel during training rather than one element at a time in
+  sequence, which is a big part of why they scale so much more efficiently
+  on huge datasets. Transformers are the architecture behind essentially
+  every large language model covered later in this course -- this lesson
+  won't go deeper into how they work, but it's worth knowing the name now,
+  since "Large Language Models" builds directly on it.
 
 ## Why Deep Learning Took Off in the 2010s
 
@@ -225,6 +250,9 @@ scale simultaneously.
   layer and pass output to the next one (input, hidden, or output).
 - **Weight:** an adjustable number representing the strength of a
   connection between two neurons.
+- **Bias:** an adjustable, fixed number that belongs to a node itself,
+  independent of its inputs -- together with weights, it makes up a
+  network's parameters.
 - **Activation function:** a function applied inside a node that lets a
   network represent non-linear patterns.
 - **Forward pass:** running an example through the network from input to

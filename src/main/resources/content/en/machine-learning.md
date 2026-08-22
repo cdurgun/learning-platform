@@ -20,9 +20,13 @@ rules that a human explicitly programmed. Concretely: instead of writing
 thousands of emails already labeled "spam" or "not spam," and a *learning
 algorithm* automatically works out which patterns (which words, senders,
 formatting quirks) tend to separate the two categories. The output of that
-process is a **model** -- a set of internal parameters (numbers) that,
-combined with an algorithm for using them, can look at a brand-new, never-
-before-seen email and predict whether it's spam.
+process is a **model**: a fixed structure (a function/architecture that
+produces predictions) combined with the learned **parameters** (numbers)
+inside it. The thing that actually runs the training is called the
+**learning algorithm** -- it's not the model itself, it's the process that
+*produces* the model. Once training is done, you're left with a model that
+no longer needs the learning algorithm to run: it can look at a brand-new,
+never-before-seen email and predict whether it's spam.
 
 This is the exact idea "What Is Artificial Intelligence?" introduced as "AI
 is software whose behavior is learned from data or examples." Machine
@@ -44,8 +48,9 @@ enough examples.
 > 💡 Tip
 > A useful gut-check: if you could plausibly write the logic yourself as a
 > reasonably sized set of `if`/`else` rules, you probably don't need machine
-> learning -- plain code will be simpler, faster, and easier to debug. Reach
-> for ML when the rules are the thing you *don't* know how to write down.
+> learning -- plain code will be simpler, faster, and easier to debug. Save
+> ML for problems that aren't easily solved with clear, stable rules, where
+> learning patterns from data actually provides an advantage.
 
 ## Training vs. Inference
 
@@ -105,7 +110,10 @@ system:
   the number of exclamation marks, whether the sender is a known contact,
   or the presence of certain words. Choosing and preparing good features
   (a process called *feature engineering*) used to be one of the most
-  time-consuming and skill-dependent parts of building an ML system.
+  time-consuming and skill-dependent parts of building an ML system,
+  especially for the classical ML techniques covered in this lesson, where
+  features largely had to be designed by hand. You'll see in the later
+  "Deep Learning" lesson that this isn't equally true of every ML technique.
 - A **label** is the correct answer attached to a training example -- "spam"
   or "not spam," a house's actual sale price, a photo's correct category.
   Labels are what make supervised learning "supervised": a human (or some
@@ -141,12 +149,24 @@ memorizing.
 
 ## How Do We Know a Model Is Good?
 
-The standard practice is to split the available dataset into at least two
-parts before training even begins: a **training set** (the examples the
-model actually learns from) and a **test set** (examples held back and
-never shown to the model during training, used purely to measure how well
-it performs on data it hasn't memorized). A model that scores well on the
-training set but poorly on the test set is a textbook symptom of
+The standard practice is to split the available dataset into three parts
+before training even begins:
+
+- **Training set:** the examples the model actually learns from.
+- **Validation set:** examples held back from training, used while making
+  model or hyperparameter choices (for example, deciding which architecture
+  or which settings perform better).
+- **Test set:** examples that are never used in training or in those
+  choices -- held back completely, used exactly once to honestly measure
+  the model's *final* performance after every decision has been made.
+
+The reason for three-way split, not two, is simple: if you use the
+validation set to pick a model, your choice becomes indirectly tuned to
+that data too -- so you still need a genuinely untouched test set. The
+point of this lesson isn't to go deep into how validation is done, just to
+build the right mental model: the training set learns, the validation set
+picks, the test set gives the final, honest score. A model that scores well
+on the training set but poorly on the test set is a textbook symptom of
 overfitting.
 
 > ⚠️ Warning
@@ -229,11 +249,14 @@ to it directly.
 
 **Cheat Sheet**
 
-- Model = the trained result (parameters + algorithm) that makes
-  predictions.
+- Model = architecture (the function that produces predictions) + learned
+  parameters. Learning algorithm = the training process that *produces* the
+  model, not the model itself.
 - Training = learning from examples. Inference = using what was learned.
 - Feature = an input the model uses. Label = the correct answer (supervised
   learning only).
+- Training set = the model learns. Validation set = model/hyperparameter
+  choices get made. Test set = final performance gets honestly measured.
 - Overfit = too closely matches training data, fails on new data.
   Underfit = too simple, fails on everything.
 - Always evaluate on a test set the model never trained on.
@@ -253,5 +276,7 @@ to it directly.
   answer attached to a training example.
 - **Overfitting / Underfitting:** learning the training data too precisely
   to generalize / failing to learn the real pattern at all.
-- **Training set / Test set:** the data a model learns from / the held-back
-  data used to honestly measure how well it actually performs.
+- **Training set / Validation set / Test set:** the data a model learns from
+  / the held-back data used when making model or hyperparameter choices /
+  the untouched data used exactly once to honestly measure how well the
+  model actually performs.

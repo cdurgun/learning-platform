@@ -13,14 +13,35 @@ course (Large Language Models, Tools & MCP, AI Agents) builds on top of.
 
 ## What Is Generative AI?
 
-Generative AI refers to AI systems -- almost always deep learning models --
-trained not to classify or predict a single label, but to **create new
-content**: text, images, audio, code, video. Contrast this with the examples
-used throughout the previous three lessons: a spam filter predicts one of
-two labels ("spam" / "not spam"); an image classifier predicts one of many
-categories ("cat," "dog," "car"). Generative AI does something structurally
-different -- given a prompt, it produces an entirely new piece of content
-that didn't exist before, one word, pixel, or sound sample at a time.
+Generative AI refers to AI systems trained not to classify or predict a
+single label, but to **create new content**: text, images, audio, code,
+video. The large majority of modern generative AI systems are deep-learning
+based -- but that doesn't mean "generative AI = deep learning," only that
+it's the most common way to build one today. Contrast this with the
+examples used throughout the previous three lessons: a spam filter predicts
+one of two labels ("spam" / "not spam"); an image classifier predicts one
+of many categories ("cat," "dog," "car"). Generative AI does something
+structurally different -- given a prompt, it produces an entirely new piece
+of content that didn't exist before, one word, pixel, or sound sample at a
+time.
+
+"New content" spans several different types; roughly, it branches like
+this:
+
+```
+Generative AI
+├── Text
+│   └── LLM (see "Large Language Models: A Preview")
+├── Image
+├── Audio
+├── Video
+└── Code
+```
+
+The fourth and final lesson in this category, "Large Language Models,"
+zooms in on just the top branch -- generative AI applied to text. The other
+branches are out of scope here, but they're the same underlying idea
+(models trained to create new content) applied to different kinds of data.
 
 ## Discriminative vs. Generative: The Core Distinction
 
@@ -39,7 +60,10 @@ having learned what makes cat photos look the way they do.
 > A simple gut-check for telling the two apart: if a system's output is a
 > label, a category, or a number, it's almost certainly discriminative. If
 > its output is a new sentence, image, sound clip, or block of code, it's
-> generative.
+> generative. Keep in mind this is a simplified beginner-level mental model
+> at this stage of the course -- some real systems sit at the boundary
+> between the two, but the "discriminative vs. generative" check is still
+> extremely useful for building the right intuition as a newcomer.
 
 ## How Generative Models Produce New Content
 
@@ -71,12 +95,16 @@ Language Models (LLMs)**, the systems behind tools like modern AI chat
 assistants and code-writing assistants. LLMs are generative AI applied to
 text, built on the transformer architecture introduced in "Deep Learning"'s
 "Common Types of Neural Networks" section, and trained on enormous amounts
-of text collected from books, websites, and code repositories. This course's
-next category, "Large Language Models," is dedicated entirely to how these
-systems actually work, what a "prompt" really does, and their specific
-capabilities and limitations -- this lesson only needs you to see that LLMs
-are a specific, hugely important instance of the general idea of generative
-AI, not a separate concept.
+of text collected from books, websites, and code repositories. "Predicting the next token" is presented here as a deliberately simplified
+model -- how LLMs are actually trained (pretraining), the separate stage
+that teaches a model to follow instructions (post-training / instruction
+tuning), how "context" shapes a model's behavior at inference time, and
+inference itself, are each covered one at a time in this course's next
+category, "Large Language Models." That category is dedicated entirely to
+how these systems actually work, what a "prompt" really does, and their
+specific capabilities and limitations -- this lesson only needs you to see
+that LLMs are a specific, hugely important instance of the general idea of
+generative AI, not a separate concept.
 
 ## What Generative AI Is Not
 

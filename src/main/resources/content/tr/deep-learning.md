@@ -53,8 +53,12 @@ Altındaki matematiğe girmeden, tek bir node'un içinde ne olduğunun şeklini
 bilmek yardımcı olur: önceki katmandan gelen değerleri alır, bunları **weight**
 (ağırlık) denen ayarlanabilir sayılarla birleştirir (iki node arasındaki her
 bağlantının kendi ağırlığı vardır, kabaca "bu girdi ne kadar önemli"yi temsil
-eder), ve sonucu **activation function (aktivasyon fonksiyonu)** denen küçük
-bir matematiksel fonksiyondan geçirir. Aktivasyon fonksiyonunun görevi, ağın
+eder), genellikle buna node'un kendine ait, girdilerden bağımsız sabit bir
+**bias** değerini de ekler, ve sonucu **activation function (aktivasyon
+fonksiyonu)** denen küçük bir matematiksel fonksiyondan geçirir. ("Parametre"
+dendiğinde kastedilen yalnızca ağırlıklar değildir -- weight'ler ve bias'lar
+birlikte bir ağın parametreleridir; bu ders bias'ın ayrıntısına girmiyor,
+yalnızca var olduğunu bilmeniz yeterli.) Aktivasyon fonksiyonunun görevi, ağın
 *non-linear* (doğrusal olmayan) örüntüleri temsil edebilmesini sağlamaktır --
 girdilerin basit, düz-çizgi bir birleşimiyle yakalanamayan ilişkiler, ki bu
 neredeyse her ilginç gerçek dünya örüntüsünü tanımlar ("bu bir kedi
@@ -62,6 +66,17 @@ fotoğrafı mı" için düz-çizgi bir formül yoktur). Bu seviyede deep learnin
 anlamak için belirli aktivasyon fonksiyonlarının formüllerini bilmenize gerek
 yok -- yalnızca bu adımın, bir ağın "girdilerinin ağırlıklı bir toplamından"
 çok daha fazlasını öğrenmesini sağladığını bilmeniz yeterli.
+
+Somut, çok küçük bir örnek (matematik öğretmek için değil, yalnızca
+"girdi + ağırlık + aktivasyon" mantığını gözünüzde canlandırmak için): bir
+node iki girdi alsın, `x1 = 2` ve `x2 = 1`, ağırlıkları da sırasıyla
+`w1 = 3` ve `w2 = -1` olsun. Node önce ağırlıklı toplamı hesaplar:
+`(2 × 3) + (1 × -1) = 5`. Sonra bu değeri bir aktivasyon fonksiyonundan
+geçirir -- basitleştirilmiş bir örnek olarak yaygın kullanılan ReLU'yu
+(negatifse 0'a yuvarlar, pozitifse değiştirmez) alırsak, 5 zaten pozitif
+olduğu için sonuç yine 5'tir. Gerçek ağlarda tek fark ölçektir: binlerce
+node, milyonlarca ağırlık -- ama her birinin yaptığı iş, bu birkaç satırlık
+işlemin ta kendisidir.
 
 ## Bir Ağ Nasıl Öğrenir: Loss ve Backpropagation
 
@@ -101,16 +116,22 @@ kulak aramaya programlamaz -- bu temsil hiyerarşisi, yukarıda anlatılan
 eğitim sürecinden doğal olarak ortaya çıkar. Birçok katmanı üst üste yığmak,
 bu kademeli soyutlamayı mümkün kılan şeydir; yalnızca bir ya da iki katmanlı
 sığ bir ağın, ham piksellerden "kedi" kadar soyut bir kavrama kadar yükselecek
-yeterli adımı basitçe yoktur.
+yeterli adımı basitçe yoktur. Bu kenar→şekil→göz/kulak→kedi anlatımının
+*sezgisel* bir açıklama olduğunu, gerçek bir ağın belirli bir katmanının
+kesinlikle bu şekilde insan tarafından adlandırılabilir bir kavramı
+öğrendiğinin garanti edilmediğini de belirtmekte fayda var -- katmanlar
+genellikle gerçekten kademeli, soyutlanan örüntüler öğrenir, ama bunların
+tam olarak "kenar," "şekil" ya da "kulak" gibi temiz insan kategorilerine
+denk düşmesi varsayılmamalıdır.
 
 > 💡 Tip
 > Bir modelin "milyarlarca parametresi olduğunu" duyduğunuzda, o parametreler
 > neredeyse tamamen "Her Node Gerçekte Ne Yapar?" bölümünde anlatılan
-> ağırlıklardır -- çok derin, çok geniş bir ağın her katmanı boyunca çarpılan,
-> iki nöron arasındaki her bağlantı için bir sayı. Daha fazla parametre kabaca
-> karmaşık örüntüleri temsil etme kapasitesinin daha fazla olduğu anlamına
-> gelir, ama bunları iyi eğitmek için de daha fazla veri ve hesaplama gerektiği
-> anlamına gelir.
+> ağırlıklar ve bias'lardır -- çok derin, çok geniş bir ağın her katmanı
+> boyunca, iki nöron arasındaki her bağlantı ve her node için bir sayı. Daha
+> fazla parametre kabaca karmaşık örüntüleri temsil etme kapasitesinin daha
+> fazla olduğu anlamına gelir, ama bunları iyi eğitmek için de daha fazla
+> veri ve hesaplama gerektiği anlamına gelir.
 
 ## Yaygın Neural Network Türleri
 
@@ -124,16 +145,21 @@ bölümlerde tekrar karşınıza çıkacaklar:
   olsunlar yerel örüntüleri (önceki bölümdeki kenarlar ve şekiller gibi)
   tespit edecek şekilde yapılandırılmıştır.
 - **Recurrent Neural Networks (RNN'ler):** sıralı veri (metin, ses, zaman
-  serisi) için tasarlanmıştır, bir ağın kendinden önce gelenin bir tür
-  "hafızasını" tutarak elemanları birer birer işlediği bir yapı.
-- **Transformer'lar:** her elemanı birer birer değil, tüm diziyi bir kerede
-  işleyen daha yeni bir mimari (2017'de tanıtıldı), girdinin her parçasının
-  her diğer parçası için ne kadar önemli olduğunu tartmak üzere *attention*
-  denen bir mekanizma kullanır. Transformer'lar, bu kursta ilerleyen
-  bölümlerde ele alınan hemen hemen her büyük dil modelinin (large language
-  model) arkasındaki mimaridir -- bu ders nasıl çalıştıklarına daha derin
-  girmeyecek, ama ismini şimdiden bilmeye değer, çünkü "Large Language
-  Models" kategorisi doğrudan bunun üzerine inşa edilecek.
+  serisi) için tasarlanmış, tarihsel olarak önemli bir mimari -- bir ağın
+  kendinden önce gelenin bir tür "hafızasını" tutarak elemanları birer birer
+  işlediği bir yapı. Transformer'lar yaygınlaşmadan önce dil görevleri için
+  standart yaklaşımdı, bugün büyük ölçüde onların yerini almış durumda.
+- **Transformer'lar:** daha yeni bir mimari (2017'de tanıtıldı), token'lar
+  arasındaki ilişkileri -- girdinin her parçasının her diğer parçası için ne
+  kadar önemli olduğunu -- *attention* denen bir mekanizmayla modeller.
+  RNN'lerin aksine bu ilişkileri eleman eleman sırayla değil, eğitim
+  sırasında büyük ölçüde paralel biçimde hesaplayabilir, bu da devasa veri
+  kümelerinde çok daha verimli ölçeklenmelerini sağlar. Transformer'lar, bu
+  kursta ilerleyen bölümlerde ele alınan hemen hemen her büyük dil modelinin
+  (large language model) arkasındaki mimaridir -- bu ders nasıl
+  çalıştıklarına daha derin girmeyecek, ama ismini şimdiden bilmeye değer,
+  çünkü "Large Language Models" kategorisi doğrudan bunun üzerine inşa
+  edilecek.
 
 ## Deep Learning 2010'larda Neden Patladı?
 
@@ -230,6 +256,8 @@ olmasıydı.
   ileten bir nöron grubu (girdi, gizli ya da çıktı).
 - **Weight (ağırlık):** iki nöron arasındaki bir bağlantının gücünü temsil
   eden ayarlanabilir bir sayı.
+- **Bias:** bir node'a ait, girdilerden bağımsız, ayarlanabilir sabit bir
+  sayı -- weight'lerle birlikte bir ağın parametrelerini oluşturur.
 - **Activation function (aktivasyon fonksiyonu):** bir node'un içinde
   uygulanan, bir ağın doğrusal olmayan örüntüleri temsil etmesini sağlayan
   bir fonksiyon.
