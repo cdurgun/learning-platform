@@ -384,7 +384,14 @@ artık **12/12 topic TR+EN tamamlandı** (`microservices-fundamentals`'tan
 tamamı) -- migration'lar şu an V1'den **V317'ye kadar boşluksuz**. Kategori
 kuralı gereği bir "Pratik Proje" eklenebilecek doğal nokta bu, ama ayrı bir
 repo/tag/build gerektirdiği için henüz üretilmedi, kullanıcının ayrı bir
-kararı bekleniyor. Kesin sayılar ve tam liste için `docs/phase-log.md`.
+kararı bekleniyor. **GÜNCELLEME (Faz 104):** `java` kursuna Faz 97-104
+arasında eklenen **`exceptions` kategorisi artık 7/7 topic TR+EN
+tamamlandı** (`introduction-to-exceptions`, `try-catch-finally`,
+`exception-hierarchy`, `checked-vs-unchecked-exceptions`,
+`throw-and-throws`, `custom-exceptions`, `exception-handling-best-
+practices` -- kendi ayrı üst-seviye kategorisi, Faz 99'da `java-basics`'ten
+ayrıldı, bkz. "Mimari" bölümü). Migration'lar şu an V1'den **V339'a kadar
+boşluksuz**. Kesin sayılar ve tam liste için `docs/phase-log.md`.
 
 ## Proje Yapısı
 
