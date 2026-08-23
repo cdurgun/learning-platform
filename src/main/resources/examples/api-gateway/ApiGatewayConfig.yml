@@ -1,0 +1,35 @@
+# api-gateway's own application.yml -- runs as its own independent process, on
+# its own port, exactly like eureka-server and every business microservice in
+# this course (see the Spring Boot Microservice Basics lesson's "Its Own
+# `application.yml`: Port, Application Name, and Database" section).
+
+server:
+  port: 8090                          # never 8080 (learning-platform), 8081
+                                       # (order-service), 8082 (inventory-service),
+                                       # or 8761 (eureka-server)
+
+spring:
+  application:
+    name: api-gateway                 # not just a log label -- other tools
+                                       # (and eventually Observability, see the
+                                       # upcoming lesson) will use this to tell
+                                       # requests inside the gateway apart from
+                                       # requests inside order-service/
+                                       # inventory-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/   # api-gateway is ALSO a
+                                                       # Eureka client -- it needs
+                                                       # the registry to resolve
+                                                       # lb://order-service and
+                                                       # lb://inventory-service
+                                                       # (see "Discovery-Based
+                                                       # Routing with lb://")
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

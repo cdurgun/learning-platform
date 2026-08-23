@@ -1,0 +1,23 @@
+# Added to order-service's existing application.yml -- on top of everything from
+# earlier lessons in this category. This is what makes order-service able to
+# PRODUCE (publish) events -- nothing here changes what order-service already
+# does synchronously (its REST API, its Eureka registration, its Resilience4j-
+# wrapped call to inventory-service all stay exactly as they were).
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092       # where the Kafka broker itself
+                                             # listens -- Kafka is NOT a Spring
+                                             # Boot application like eureka-server
+                                             # or config-server, it's a separate
+                                             # piece of infrastructure this course
+                                             # assumes is already running (see
+                                             # "Setting Up Kafka (Broker) and
+                                             # Topics")
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+                                             # OrderPlacedEvent is serialized to
+                                             # JSON on the way out -- see
+                                             # "Serialization: Why JSON Over the
+                                             # Wire"

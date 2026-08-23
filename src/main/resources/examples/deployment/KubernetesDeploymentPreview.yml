@@ -1,0 +1,33 @@
+# A PREVIEW, not a working setup this lesson builds toward -- see "Beyond
+# Local: A Brief, Honest Look at Kubernetes". This is what order-service's
+# Docker image (built from OrderServiceDockerfile) would look like described
+# as a Kubernetes Deployment instead of a Docker Compose service -- shown here
+# only so the SHAPE looks familiar, not as something this lesson walks through
+# setting up.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  replicas: 3                          # Kubernetes runs THREE instances of
+                                        # order-service by default here --
+                                        # Docker Compose, by contrast, runs
+                                        # exactly one of each service unless
+                                        # told otherwise
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: order-service:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: EUREKA_URL
+              value: http://eureka-server:8761/eureka/

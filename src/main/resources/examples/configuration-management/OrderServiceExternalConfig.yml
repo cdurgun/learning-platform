@@ -1,0 +1,26 @@
+# This file lives INSIDE config-server's own repository (at
+# classpath:/config-repo/order-service.yml, matching ConfigServerConfig.yml's
+# search-locations) -- NOT inside order-service itself. Config Server serves
+# this content to order-service over HTTP when it asks for configuration
+# named "order-service" (see "Making order-service a Config Client").
+#
+# Notice this is a SUBSET of what used to live entirely inside order-service's
+# own application.yml (see the Spring Boot Microservice Basics lesson's "Its
+# Own `application.yml`: Port, Application Name, and Database" section) --
+# server.port and spring.application.name stay LOCAL to order-service (a
+# service needs to know its own port before it can even ask Config Server for
+# anything else), only the parts worth centralizing move here.
+
+greeting:
+  message: "Welcome to the Order Service"   # the property RefreshableGreetingController
+                                             # exposes -- changing THIS file and
+                                             # refreshing (see "Refreshing
+                                             # Configuration Without Restarting")
+                                             # changes the running service's
+                                             # behavior with no restart at all
+
+datasource:
+  max-pool-size: 10                         # exactly the kind of tuning value that's
+                                             # genuinely worth sharing/centralizing
+                                             # across every service using the same
+                                             # database technology

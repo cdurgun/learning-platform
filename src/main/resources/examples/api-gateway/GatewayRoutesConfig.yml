@@ -1,0 +1,36 @@
+# Route definitions, ADDED on top of api-gateway's own application.yml (see
+# ApiGatewayConfig.yml) -- this is where the gateway's actual job (matching an
+# incoming request to the right internal service) is configured. A "route" is
+# three things together: a PREDICATE (when does this route apply?), a URI
+# (where does it forward to?), and optionally one or more FILTERS (what does it
+# do to the request/response along the way?).
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: orders-route
+          uri: lb://order-service                 # "lb://" -- NOT a real host,
+                                                    # a service NAME resolved
+                                                    # through Eureka, exactly
+                                                    # like @LoadBalanced
+                                                    # RestClient (see "Discovery-
+                                                    # Based Routing with lb://")
+          predicates:
+            - Path=/orders/**                      # this route only matches
+                                                    # requests whose path starts
+                                                    # with /orders/
+          filters:
+            - StripPrefix=0                        # order-service's own
+                                                    # controllers already expect
+                                                    # paths starting with
+                                                    # /orders -- StripPrefix=0
+                                                    # means "forward the path
+                                                    # exactly as received"
+
+        - id: inventory-route
+          uri: lb://inventory-service
+          predicates:
+            - Path=/inventory/**
+          filters:
+            - StripPrefix=0

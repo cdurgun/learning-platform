@@ -1,0 +1,25 @@
+# Added on top of order-service's existing application.yml (see the Spring Boot
+# Microservice Basics lesson's "Its Own `application.yml`: Port, Application Name,
+# and Database" section, and the eureka.client block from the Service Discovery &
+# Eureka lesson) -- nothing already there changes, this is purely additive.
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventoryService:                          # this name is what @CircuitBreaker
+                                                   # in ResilientStockClient refers to
+                                                   # -- it does NOT have to match
+                                                   # "inventory-service" (the Eureka
+                                                   # name), they're independent
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10                   # look at the last 10 calls
+        failure-rate-threshold: 50                # if 50% or more of them failed,
+                                                    # OPEN the circuit
+        wait-duration-in-open-state: 10s          # stay OPEN for 10 seconds before
+                                                    # trying a HALF_OPEN test call
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    instances:
+      inventoryService:
+        max-attempts: 3                           # the ORIGINAL call plus 2 retries
+        wait-duration: 500ms                      # pause between attempts

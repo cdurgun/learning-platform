@@ -378,7 +378,13 @@ atlandı" deniyordu, bu artık tarihsel bir not, güncel durum değil. Migration
 şeması+içeriği, V263-V267 `ai-development-tools` kategorisi, V287-V293 ise
 Quiz'in genel bir "soru havuzu" (Question Pool) mimarisine yeniden
 tasarlanması (bkz. "Faz 87" ve yukarıdaki "Mimari" bölümündeki ilgili madde).
-Kesin sayılar ve tam liste için `docs/phase-log.md`.
+**GÜNCELLEME (Faz 96):** `spring-boot` kursunun `microservices` kategorisi
+artık **12/12 topic TR+EN tamamlandı** (`microservices-fundamentals`'tan
+`deployment`'a kadar, Faz 40'ta wave'lere bölünen orijinal ChatGPT planının
+tamamı) -- migration'lar şu an V1'den **V317'ye kadar boşluksuz**. Kategori
+kuralı gereği bir "Pratik Proje" eklenebilecek doğal nokta bu, ama ayrı bir
+repo/tag/build gerektirdiği için henüz üretilmedi, kullanıcının ayrı bir
+kararı bekleniyor. Kesin sayılar ve tam liste için `docs/phase-log.md`.
 
 ## Proje Yapısı
 
@@ -403,7 +409,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V293)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V317)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     static/img/                   LearnForgeX marka varlıkları (favicon.svg/logo.svg/logo-dark.svg,

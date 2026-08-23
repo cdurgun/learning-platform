@@ -1,0 +1,28 @@
+# Added to inventory-service's own application.yml -- this is what makes
+# inventory-service able to CONSUME events, entirely separate from (and running
+# alongside) its existing synchronous REST API that StockClient/ResilientStockClient
+# call directly.
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: inventory-service              # ALL instances of inventory-service
+                                                 # sharing this group id split the
+                                                 # topic's partitions between them --
+                                                 # each event is delivered to only
+                                                 # ONE instance in the group, never
+                                                 # to all of them at once (this is
+                                                 # what lets inventory-service scale
+                                                 # horizontally for event processing,
+                                                 # exactly like it already does for
+                                                 # its REST API)
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"       # tells the JSON deserializer which
+                                                  # packages it's allowed to
+                                                  # instantiate -- "*" is fine for
+                                                  # this course's single-package
+                                                  # examples, a real deployment
+                                                  # would list specific packages

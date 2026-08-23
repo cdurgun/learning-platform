@@ -1,0 +1,29 @@
+# config-server's own application.yml -- runs as its own independent process,
+# on its own port, exactly like eureka-server (see the Service Discovery &
+# Eureka lesson) and api-gateway (see the API Gateway lesson).
+
+server:
+  port: 8888                          # Config Server's traditional default
+                                       # port, by the same convention Eureka
+                                       # follows with 8761
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native                    # "native" backend: reads configuration
+                                       # files from the local filesystem/
+                                       # classpath, NOT from a Git repository --
+                                       # the simplest backend to reason about
+                                       # while learning (see "The Config
+                                       # Repository: Where Configuration
+                                       # Actually Lives" for the real-world
+                                       # Git-backed alternative)
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config-repo/   # where the actual
+                                                        # order-service.yml,
+                                                        # inventory-service.yml
+                                                        # etc. files live

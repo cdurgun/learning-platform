@@ -1,0 +1,25 @@
+# Added to order-service's application.yml -- widens the "management.endpoints"
+# block from the Spring Boot Microservice Basics lesson's "Health Checks: Is
+# the Service Up?" section, which only exposed "health". Nothing already
+# working (the health endpoint itself) changes.
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus   # "health" was already here --
+                                                # "metrics" exposes Micrometer's
+                                                # raw metric data, "prometheus"
+                                                # exposes the SAME data in the
+                                                # text format a Prometheus
+                                                # server scrapes on its own
+                                                # schedule (see "Metrics with
+                                                # Micrometer and Actuator")
+  metrics:
+    tags:
+      application: ${spring.application.name}  # every metric this service
+                                                 # produces gets tagged with its
+                                                 # OWN service name -- essential
+                                                 # once metrics from many
+                                                 # services land in the same
+                                                 # place

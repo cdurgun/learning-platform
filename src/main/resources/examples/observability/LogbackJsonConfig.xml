@@ -1,0 +1,25 @@
+<!--
+    Placed at src/main/resources/logback-spring.xml -- Spring Boot picks this up
+    automatically, no extra configuration needed. A plain log line ("2026-01-01
+    12:00:00 INFO OrderController - order placed") is easy for a HUMAN to read
+    in one service's own console, but hard for a LOG AGGREGATOR (something that
+    collects logs from every service into one searchable place) to parse
+    reliably across many services with slightly different formats. A structured
+    (JSON) log line turns every field -- including the correlation id
+    CorrelationIdMdcFilter put into MDC -- into a queryable field instead of
+    free text (see "Structured Logging: Making Logs Machine-Readable").
+-->
+<configuration>
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Every key in MDC (correlationId, set by CorrelationIdMdcFilter)
+                 is automatically included as its OWN field in the JSON output --
+                 no per-field configuration needed here. -->
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </root>
+</configuration>

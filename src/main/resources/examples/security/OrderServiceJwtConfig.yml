@@ -1,0 +1,12 @@
+# Added to order-service's application.yml -- the SAME issuer-uri api-gateway
+# uses, since both are verifying the SAME identity provider's tokens. This is
+# what "zero trust between services" looks like in configuration: order-service
+# doesn't ask api-gateway "did you already check this?" -- it verifies the
+# token itself, independently, every time.
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://auth.example.com/

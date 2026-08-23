@@ -1,0 +1,31 @@
+# order-service's application.yml, as it needs to look when running inside
+# Docker Compose (see DockerComposeConfig.yml) -- every "localhost" this
+# category's earlier lessons used (Service Discovery & Eureka's
+# eureka.client.service-url.defaultZone, Configuration Management's
+# spring.config.import, Event-Driven Architecture & Kafka's
+# spring.kafka.bootstrap-servers) breaks once order-service runs in its OWN
+# container, because "localhost" then means order-service's OWN container,
+# not eureka-server's.
+
+spring:
+  config:
+    import: "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+# In DockerComposeConfig.yml, Compose's own internal DNS resolves a service's
+# NAME (eureka-server, config-server, kafka) to its container's address --
+# these three environment variables, set ONLY in the container environment,
+# override the ${...:localhost...} defaults above with those service names
+# (CONFIG_SERVER_URL=http://config-server:8888, and so on). Running order-
+# service directly (not in a container) still works exactly as every earlier
+# lesson in this category already showed, unchanged, since the defaults are
+# still "localhost". This is the SAME environment-variable-override pattern
+# the Configuration Management lesson already used for secrets (see its
+# ${ORDERS_DB_PASSWORD} discussion) -- applied here to service ADDRESSES
+# instead of a password.

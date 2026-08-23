@@ -842,3 +842,23 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   aynı ilgisiz-dosya "cannot find symbol" desenini verdi. Bu ortamdaki hiçbir
   `mvn` çalıştırması artık bir doğrulama sinyali olarak KULLANILMAMALI,
   yalnızca kullanıcının kendi ortamındaki sonuç güvenilir kabul edilmeli.
+- **Microservices kategorisindeki `event-driven-kafka` konusu (Faz 92), kategorinin
+  diğer topic'lerinden FARKLI bir doğrulama önkoşulu getiriyor:** eureka-server,
+  api-gateway, config-server gibi önceki topic'ler yalnızca "bir Spring Boot
+  uygulaması daha" gerektiriyordu (Maven Central engeli aşılınca kullanıcının kendi
+  ortamında doğrudan çalıştırılabilir); `event-driven-kafka` ise GERÇEK bir Kafka
+  broker'ının (örn. Docker ile) ayrıca ayakta olmasını gerektiriyor -- kullanıcı bu
+  topic'i kendi ortamında doğrularken önce bir Kafka broker başlatmalı, aksi halde
+  order-service/inventory-service `spring.kafka.bootstrap-servers`'a bağlanamaz.
+- **`{{ÖrnekDosyası.ext}}` embed placeholder'larında ÖRNEK DOSYA ADI tire (`-`)
+  İÇEREMEZ (Faz 94'te `observability` konusu yazılırken gerçek bir hatayla
+  keşfedildi):** `MarkdownService.EXAMPLE_PLACEHOLDER` regex'i (`\{\{(\w+)\.(\w+)}}`,
+  bkz. CLAUDE.md'nin embed sistemi maddesi) hem dosya adı hem uzantı için `\w+`
+  kullanıyor -- bu yalnızca harf/rakam/alt çizgiyi kapsar, tireyi KAPSAMAZ. İlk
+  yazılan `logback-spring.xml` dosyası bu yüzden hiç eşleşmeyip sayfada düz metin
+  olarak `{{logback-spring.xml}}` görünecekti; `LogbackJsonConfig.xml`'e yeniden
+  adlandırılarak düzeltildi (proje genelinde başka hiçbir örnek dosyasında tire
+  olmadığı ayrıca doğrulandı). Yeni bir örnek dosyası yaratırken PascalCase/camelCase
+  kullan, tire İÇEREN bir dosya adı YAZMA -- bu kısıt gerçek bir Postgres/Flyway
+  çalıştırmasıyla değil, yalnızca içeriği gözle/grep'le inceleyerek fark edildi,
+  bu yüzden gelecekte de dikkatli kontrol gerekiyor.

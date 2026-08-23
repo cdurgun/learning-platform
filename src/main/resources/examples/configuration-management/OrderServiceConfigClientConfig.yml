@@ -1,0 +1,16 @@
+# Added to order-service's own application.yml -- on top of everything from
+# the Spring Boot Microservice Basics lesson, plus the eureka.client block
+# from Service Discovery & Eureka. Nothing already there is REMOVED; this is
+# what makes order-service ask config-server for MORE configuration on
+# startup, in addition to what it already knows locally.
+
+spring:
+  config:
+    import: "configserver:http://localhost:8888"   # on startup, order-service
+                                                     # fetches config named after
+                                                     # its own spring.application.name
+                                                     # ("order-service") from this
+                                                     # URL -- Spring Cloud Config
+                                                     # matches the request to
+                                                     # config-repo/order-service.yml
+                                                     # automatically

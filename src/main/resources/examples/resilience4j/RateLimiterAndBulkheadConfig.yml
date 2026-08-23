@@ -1,0 +1,21 @@
+# A SEPARATE Resilience4j config block from Resilience4jConfig.yml -- rate limiter
+# and bulkhead protect against two DIFFERENT problems than a circuit breaker does
+# (see "Rate Limiter and Bulkhead: Two More Guards"), so they get their own
+# instance names here, but the SAME "inventoryService" name could reuse settings
+# across all four guard types if a single call needed every one of them at once.
+
+resilience4j:
+  ratelimiter:
+    instances:
+      inventoryService:
+        limit-for-period: 20            # at most 20 calls...
+        limit-refresh-period: 1s        # ...per 1-second window
+        timeout-duration: 0             # don't wait for a free slot -- reject
+                                         # immediately if the limit is already hit
+  bulkhead:
+    instances:
+      inventoryService:
+        max-concurrent-calls: 5         # at most 5 calls to inventory-service IN
+                                         # FLIGHT at once, from THIS service
+        max-wait-duration: 0            # reject immediately if all 5 slots are busy,
+                                         # don't queue

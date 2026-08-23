@@ -1,0 +1,19 @@
+# Added to api-gateway's application.yml. Spring Security's resource server
+# support needs to know WHERE to fetch the public key(s) it uses to verify a
+# JWT's signature -- issuer-uri points at an identity provider (a dedicated
+# authentication service; this course assumes one already exists and issues
+# tokens, the same way it assumes a Kafka broker already exists for the
+# Event-Driven Architecture & Kafka lesson -- building an identity provider
+# itself is out of scope here).
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://auth.example.com/   # Spring Security fetches this
+                                                    # issuer's public signing keys
+                                                    # automatically on startup --
+                                                    # no key material is
+                                                    # hardcoded anywhere in
+                                                    # api-gateway's own config

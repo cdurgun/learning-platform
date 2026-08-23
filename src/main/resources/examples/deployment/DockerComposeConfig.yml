@@ -1,0 +1,63 @@
+# Real filename: docker-compose.yml, at the root of a workspace containing
+# every service this category has built -- order-service, inventory-service,
+# eureka-server (Service Discovery & Eureka), config-server (Configuration
+# Management), api-gateway (API Gateway), and Kafka (Event-Driven Architecture
+# & Kafka). One "docker compose up" starts the WHOLE system this course has
+# been building, service by service, across nine lessons.
+
+services:
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 5s
+      retries: 10
+
+  config-server:
+    build: ./config-server
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 5s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.9.0
+    ports:
+      - "9092:9092"
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8090:8090"
+    depends_on:
+      eureka-server:
+        condition: service_healthy   # see "Startup Order: Why depends_on Isn't
+                                      # Enough" -- waits for a PASSING health
+                                      # check, not just a started container
+
+  order-service:
+    build: ./order-service
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      kafka:
+        condition: service_started   # Kafka's own image has no built-in
+                                      # healthcheck here -- see the warning in
+                                      # "Startup Order" about what
+                                      # service_started does NOT guarantee
+
+  inventory-service:
+    build: ./inventory-service
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      kafka:
+        condition: service_started
