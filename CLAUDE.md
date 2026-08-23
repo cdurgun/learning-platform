@@ -391,7 +391,15 @@ tamamlandı** (`introduction-to-exceptions`, `try-catch-finally`,
 `throw-and-throws`, `custom-exceptions`, `exception-handling-best-
 practices` -- kendi ayrı üst-seviye kategorisi, Faz 99'da `java-basics`'ten
 ayrıldı, bkz. "Mimari" bölümü). Migration'lar şu an V1'den **V339'a kadar
-boşluksuz**. Kesin sayılar ve tam liste için `docs/phase-log.md`.
+boşluksuz**. **GÜNCELLEME (Faz 109):** `java` kursuna `exceptions`'ın hemen
+ardına, Faz 105-109 arasında eklenen **`generics` kategorisi artık 6/6 topic
+TR+EN tamamlandı** (`introduction-to-generics`, `generic-methods`,
+`bounded-type-parameters`, `wildcards`, `generics-with-collections`,
+`type-erasure-and-generic-limitations` -- kendi ayrı üst-seviye kategorisi,
+`java-basics` içine hiç konulmadı, `exceptions`/Faz 99 ile aynı desen).
+Kullanıcının açık talimatı gereği bu kategoriye bir Pratik Proje
+eklenmedi. Migration'lar şu an V1'den **V358'e kadar boşluksuz**. Kesin
+sayılar ve tam liste için `docs/phase-log.md`.
 
 ## Proje Yapısı
 
