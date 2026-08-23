@@ -16,13 +16,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Bir konunun tek bir dildeki quiz sorusu. DİKKAT: {@code language} alanına
- * {@code @Enumerated} EKLENMEZ — {@code LanguageAttributeConverter} zaten
- * {@code @Converter(autoApply = true)} ile bu alanı otomatik dönüştürüyor
- * (bkz. {@link TopicTranslation#getLanguage()}).
+ * FAZ B'DEN İTİBAREN YENİ ANLAM: bu artık bir soru DEĞİL, {@link Quiz} ile
+ * {@link Question} arasında bir İLİŞKİ (join) entity'si -- hangi sorunun hangi
+ * quiz'de, hangi sırada ({@link #position}) yer aldığını tutar. Eski anlamıyla
+ * ("bir konunun tek bir dildeki quiz sorusu") artık {@link Question}'a taşındı.
+ * Tablo adı çakışmayı önlemek için {@code quiz_question_link} (eski
+ * {@code quiz_question} tablosu Faz A'da {@code question}'a yeniden adlandırıldı).
  */
 @Entity
-@Table(name = "quiz_question")
+@Table(name = "quiz_question_link")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,18 +37,13 @@ public class QuizQuestion {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "topic_id", nullable = false)
-    private Topic topic;
+    @JoinColumn(name = "quiz_id", nullable = false)
+    private Quiz quiz;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private Question question;
 
     @Column(nullable = false)
-    private Language language;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String question;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String explanation;
-
-    @Column(name = "sort_order", nullable = false)
-    private Integer sortOrder;
+    private Integer position;
 }

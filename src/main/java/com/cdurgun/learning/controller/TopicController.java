@@ -13,6 +13,7 @@ import com.cdurgun.learning.service.QuizService;
 import com.cdurgun.learning.web.nav.SequencedTopic;
 import com.cdurgun.learning.web.quiz.QuizSubmitRequest;
 import com.cdurgun.learning.web.quiz.QuizSubmitResponse;
+import com.cdurgun.learning.web.quiz.QuizSummary;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -137,7 +138,10 @@ public class TopicController {
         MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown.get(), slug);
         model.addAttribute("contentHtml", rendered.html());
         model.addAttribute("toc", rendered.toc());
-        model.addAttribute("quizQuestions", quizService.loadQuiz(topic.getId(), language));
+
+        Optional<QuizSummary> quiz = quizService.findQuiz(topic.getId(), language);
+        model.addAttribute("quiz", quiz.orElse(null));
+        model.addAttribute("quizQuestions", quiz.map(q -> quizService.loadQuiz(q.id())).orElse(List.of()));
 
         addPreviousAndNext(model, topic, slug, language);
 
@@ -145,18 +149,21 @@ public class TopicController {
     }
 
     /**
-     * Faz 81: enum konusu için quiz submit. Şu an yalnızca enum'a hardcode —
-     * kullanıcı bu ilk sürümde başka konulara genellemeyi kasıtlı olarak kapsam dışı
-     * bıraktı. Business logic burada YOK, tamamı QuizService'te (bkz. mimari kuralı).
+     * Faz B: sabit quiz submit, artık herhangi bir konunun herhangi bir quiz'ine
+     * genellenmiş (eskiden yalnızca enum'a hardcode'du, bkz. Faz 81). Business
+     * logic burada YOK, tamamı QuizService'te (bkz. mimari kuralı).
      */
-    @PostMapping("/{lang:en|tr}/topics/enum/quiz/submit")
+    @PostMapping("/{lang:en|tr}/topics/{topicSlug}/quiz/{quizSlug}/submit")
     @ResponseBody
     public ResponseEntity<QuizSubmitResponse> submitQuiz(@PathVariable String lang,
+                                                           @PathVariable String topicSlug,
+                                                           @PathVariable String quizSlug,
                                                            @RequestBody QuizSubmitRequest request) {
         Language language = Language.fromCode(lang);
-        Topic topic = topicRepository.findBySlug("enum")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: enum"));
-        return ResponseEntity.ok(quizService.submit(topic.getId(), language, request));
+        QuizSummary quiz = quizService.resolveQuiz(topicSlug, language, quizSlug)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Quiz bulunamadı: " + topicSlug + "/" + quizSlug));
+        return ResponseEntity.ok(quizService.submit(quiz.id(), request));
     }
 
     /**

@@ -20,6 +20,17 @@ body {
     border-radius: 0.5rem;
 }
 
+/* CODE_OUTPUT quiz sorularının kod bloğu -- .markdown-content dışında (quiz-section
+   içinde) render edildiği için aynı stil ayrıca burada tanımlanıyor. */
+.quiz-question pre {
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.quiz-question pre code {
+    border-radius: 0.5rem;
+}
+
 .markdown-content blockquote {
     border-left: 4px solid #dee2e6;
     padding-left: 1rem;

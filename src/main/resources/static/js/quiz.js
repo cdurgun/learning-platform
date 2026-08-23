@@ -9,22 +9,30 @@ document.addEventListener('DOMContentLoaded', function () {
     var summary = document.getElementById('quiz-summary');
     var questionEls = section.querySelectorAll('.quiz-question');
     var totalQuestions = questionEls.length;
-    var answered = new Map();
 
     var msgScore = section.dataset.msgScore || 'Score: {0}/{1}';
     var msgPassed = section.dataset.msgPassed || 'Passed!';
     var msgFailed = section.dataset.msgFailed || 'Not passed.';
     var msgError = section.dataset.msgError || 'Something went wrong. Please try again.';
 
+    // Bir sorunun "cevaplanmış" sayılması için en az bir şıkkının işaretli
+    // olması yeterli -- bu, hem bugünkü radio (SINGLE_CHOICE/CODE_OUTPUT)
+    // input'larında hem de ileride checkbox olarak render edilebilecek
+    // MULTIPLE_CHOICE sorularında değişiklik gerektirmeden çalışır.
+    function answeredQuestionCount() {
+        var ids = new Set();
+        section.querySelectorAll('.quiz-option-input:checked').forEach(function (input) {
+            ids.add(input.dataset.questionId);
+        });
+        return ids.size;
+    }
+
     function updateSubmitState() {
-        submitBtn.disabled = answered.size !== totalQuestions;
+        submitBtn.disabled = answeredQuestionCount() !== totalQuestions;
     }
 
     section.querySelectorAll('.quiz-option-input').forEach(function (input) {
-        input.addEventListener('change', function () {
-            answered.set(input.dataset.questionId, input.value);
-            updateSubmitState();
-        });
+        input.addEventListener('change', updateSubmitState);
     });
 
     function lockForm() {
@@ -46,12 +54,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!questionEl) {
                 return;
             }
+            var selectedIds = (result.selectedOptionIds || []).map(String);
+            var correctIds = (result.correctOptionIds || []).map(String);
             questionEl.querySelectorAll('.quiz-option-input').forEach(function (input) {
                 var formCheck = input.closest('.form-check');
-                if (Number(input.value) === result.selectedOptionId) {
+                var isSelected = selectedIds.indexOf(input.value) !== -1;
+                var isCorrectOption = correctIds.indexOf(input.value) !== -1;
+                if (isSelected) {
                     formCheck.classList.add(result.correct ? 'text-success' : 'text-danger');
                 }
-                if (!result.correct && Number(input.value) === result.correctOptionId) {
+                if (!result.correct && isCorrectOption) {
                     formCheck.classList.add('text-success');
                 }
             });
@@ -65,14 +77,30 @@ document.addEventListener('DOMContentLoaded', function () {
         showSummary(response.passed ? 'alert-success' : 'alert-warning', scoreText + ' — ' + statusText);
     }
 
+    // Backend, Faz B'den itibaren gruplu bir answers[] listesi bekliyor
+    // (QuizSubmitRequest/QuizAnswer) -- her soru için işaretli şık(lar)ı ayrı
+    // ayrı topluyoruz, DOM sırasına dayalı düz bir selectedOptionIds listesi
+    // ARTIK YOK (bkz. QuizAnswer javadoc'u).
+    function collectAnswers() {
+        var answers = [];
+        questionEls.forEach(function (questionEl) {
+            var questionId = Number(questionEl.dataset.questionId);
+            var selectedOptionIds = Array.from(questionEl.querySelectorAll('.quiz-option-input:checked'))
+                .map(function (input) {
+                    return Number(input.value);
+                });
+            answers.push({questionId: questionId, selectedOptionIds: selectedOptionIds});
+        });
+        return answers;
+    }
+
     form.addEventListener('submit', function (event) {
         event.preventDefault();
-        var selectedOptionIds = Array.from(answered.values()).map(Number);
 
         fetch(section.dataset.submitUrl, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({selectedOptionIds: selectedOptionIds})
+            body: JSON.stringify({answers: collectAnswers()})
         })
             .then(function (response) {
                 if (!response.ok) {

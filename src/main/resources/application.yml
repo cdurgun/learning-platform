@@ -22,6 +22,15 @@ server:
 app:
   base-url: http://localhost:8080
 
+# Faz D: AI/n8n'in soru havuzuna yazdığı /api/internal/questions/ingest rotasını
+# korur (bkz. QuizIngestApiKeyInterceptor). Ortam değişkeni verilmezse BOŞ kalır
+# -- interceptor boş bir anahtarla "her isteği kabul et"e DEĞİL, tüm istekleri
+# REDDETMEYE düşer (fail-closed), bu yüzden dev/prod'da unutulması sessizce
+# güvenlik açığı yaratmaz, yalnızca ingestion'ı devre dışı bırakır.
+quiz:
+  ingest:
+    api-key: ${QUIZ_INGEST_API_KEY:}
+
 logging:
   level:
     com.cdurgun.learning: DEBUG

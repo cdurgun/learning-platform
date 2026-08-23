@@ -163,14 +163,16 @@
                     İçerik
                 </article>
 
-                <!-- Quiz: yalnızca bu konu/dilde soru varsa render edilir (bugün için
-                     yalnızca enum) -- bkz. QuizService.loadQuiz. is_correct/correctOptionId/
-                     explanation bu markup'ta HİÇBİR ZAMAN yer almaz, yalnızca submit
-                     response'unda gelir (bkz. quiz.js). -->
-                <section th:if="${quizQuestions != null and !#lists.isEmpty(quizQuestions)}"
+                <!-- Quiz: yalnızca bu konu/dilde aktif bir Quiz + sorusu varsa render
+                     edilir -- bkz. QuizService.findQuiz/loadQuiz. Faz B'den itibaren
+                     genellenmiş: submit URL'i topic+quiz slug'larından kuruluyor, artık
+                     enum'a hardcode değil. is_correct/correctOptionIds/explanation bu
+                     markup'ta HİÇBİR ZAMAN yer almaz, yalnızca submit response'unda
+                     gelir (bkz. quiz.js). -->
+                <section th:if="${quiz != null and quizQuestions != null and !#lists.isEmpty(quizQuestions)}"
                          id="quiz-section"
                          class="mt-5 pt-4 border-top"
-                         th:data-submit-url="@{/{lang}/topics/enum/quiz/submit(lang=${language.code})}"
+                         th:data-submit-url="@{/{lang}/topics/{topicSlug}/quiz/{quizSlug}/submit(lang=${language.code}, topicSlug=${topic.slug}, quizSlug=${quiz.slug()})}"
                          th:data-msg-score="#{quiz.score}"
                          th:data-msg-passed="#{quiz.passed}"
                          th:data-msg-failed="#{quiz.failed}"
@@ -184,8 +186,24 @@
                              th:data-question-id="${q.id()}">
                             <p class="fw-semibold"
                                th:text="${qStat.count} + '. ' + ${q.question()}">Soru metni</p>
+                            <!-- CODE_OUTPUT: kod snippet'i varsa highlight.js'in zaten sayfa
+                                 altında çalıştırdığı hljs.highlightAll() ile aynı mekanizmayla
+                                 vurgulanır (bkz. topic.html altındaki script) -- SINGLE_CHOICE/
+                                 MULTIPLE_CHOICE'ta bu blok hiç render edilmez, codeSnippet zaten
+                                 null. th:text kullanıldığı için kod metni her zaman escape'lenir. -->
+                            <pre th:if="${q.type() != null and q.type().name() == 'CODE_OUTPUT' and q.codeSnippet() != null and !#strings.isEmpty(q.codeSnippet())}"
+                                 class="mb-3"><code th:text="${q.codeSnippet()}"
+                                      th:class="${'language-' + (q.codeLanguage() != null ? q.codeLanguage() : 'plaintext')}">code</code></pre>
+                            <!-- MULTIPLE_CHOICE sorularda checkbox, diğer tiplerde (SINGLE_CHOICE/
+                                 CODE_OUTPUT) radio -- th:type, statik type="radio" fallback'ini
+                                 EZER. Aynı name'i checkbox'larda da korumak zararsız (radio'nun
+                                 aksine checkbox'lar aynı name'i paylaşsa bile birbirinden bağımsız
+                                 kalır) -- quiz.js zaten generic ':checked' sorgusu kullandığı için
+                                 (bkz. collectAnswers/answeredQuestionCount) burada BAŞKA hiçbir
+                                 değişiklik gerekmiyor. -->
                             <div class="form-check" th:each="opt : ${q.options()}">
                                 <input class="form-check-input quiz-option-input" type="radio"
+                                       th:type="${q.type() != null and q.type().name() == 'MULTIPLE_CHOICE'} ? 'checkbox' : 'radio'"
                                        th:name="'question-' + ${q.id()}"
                                        th:id="'quiz-option-' + ${opt.id()}"
                                        th:value="${opt.id()}"

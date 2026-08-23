@@ -159,6 +159,90 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   edilir ve gözlemlenen sürüm/tarih/hesap türü belirtilir (bkz. "Faz 81",
   "Faz 82" — gerçek session ID gibi kullanıcıya özel/hassas bilgiler de asla
   derste yayınlanmaz, `<placeholder>` ile değiştirilir).
+- **Quiz sistemi Faz 87'de genel bir "soru havuzu" (Question Pool) mimarisine
+  yeniden tasarlandı — eski "bir soru = doğrudan bir quiz'e ait" varsayımı
+  kalıcı olarak terk edildi.** Eski `QuizQuestion` → `Question`'a yeniden
+  adlandırıldı: artık topic+language'e bağlı ama hiçbir `Quiz`'e bağlı OLMAK
+  ZORUNDA olmayan, `type` (`QuestionType`: SINGLE_CHOICE/MULTIPLE_CHOICE/
+  CODE_OUTPUT), `difficulty` (mevcut `Difficulty` enum'u yeniden kullanılıyor,
+  yeni bir enum YARATILMADI), `status` (`QuestionStatus`:
+  DRAFT/PENDING_REVIEW/PUBLISHED/REJECTED) ve `source` (`QuestionSource`:
+  MANUAL/AI) taşıyan genel bir havuz sorusu. Eski `QuizOption` →
+  `QuestionOption`'a yeniden adlandırıldı (anlamı değişmedi). `QuizQuestion`
+  ADI KORUNDU ama anlamı tamamen değişti — artık bir soru DEĞİL, yeni `Quiz`
+  entity'si (bir topic+language'e bağlı, editoryal olarak KÜRE edilmiş/curated,
+  `slug`+`title`+`passThreshold` taşıyan **sabit quiz**) ile `Question`
+  arasında bir İLİŞKİ/join entity'si — hangi sorunun hangi quiz'de hangi
+  sırada (`position`) yer aldığını tutar. **Sabit quiz** (`QuizService`,
+  `/{lang}/topics/{topicSlug}/quiz/{quizSlug}/submit` — artık genel, eskiden
+  yalnızca `enum`'a hardcode'du) ile **Practice modu** (`PracticeService`,
+  `/{lang}/practice`, topic/language/difficulty/type filtreli RASTGELE
+  seçim) böylece aynı `Question` havuzunu iki farklı şekilde tüketiyor —
+  Practice hiçbir `Quiz` satırına ihtiyaç duymuyor, yalnızca
+  `status = 'PUBLISHED'` sorular arasından çekiyor (bu filtre sorgunun
+  KENDİSİNE sabit yazılı, hiçbir çağıran taraf override edemez). Puanlama
+  (`QuestionScorer`) her iki modda AYNI kuralı kullanır: seçilen şık id
+  kümesi doğru şık id kümesiyle BİREBİR eşleşmeli (MULTIPLE_CHOICE kısmi
+  doğru cevabı KABUL ETMEZ). **AI/n8n ingestion** (`POST
+  /api/internal/questions/ingest`, `QuizIngestApiKeyInterceptor` ile
+  `X-Api-Key` korumalı — anahtar `quiz.ingest.api-key`/`QUIZ_INGEST_API_KEY`
+  env'den, YAPILANDIRILMAMIŞSA istekler REDDEDİLİR/fail-closed) her zaman
+  `status = PENDING_REVIEW` + `source = AI` ile kaydeder — istek gövdesinde
+  (`QuestionIngestRequest`) bu iki alan BİLİNÇLİ OLARAK YOK, yani "sunucu
+  ezer" kuralı bir runtime kontrolüne değil DTO tasarımına dayanıyor; tip
+  başına doğru-şık-sayısı doğrulaması (SINGLE_CHOICE/CODE_OUTPUT tam bir,
+  MULTIPLE_CHOICE bir veya daha fazla) burada yapılır. Review için ayrı bir
+  admin arayüzü YOK (bilinçli v1 sadeleştirmesi) — inceleme,
+  `status`/`reviewed_by`/`reviewed_at` kolonları üzerinden doğrudan DB
+  `UPDATE`'iyle yapılır. **Şema (`V287`-`V293`, core/enum alt klasörlerinde):**
+  eski `quiz_question`/`quiz_option` tabloları yerinde `question`/
+  `question_option`'a yeniden adlandırılıp yeni kolonlar eklendi; yeni
+  `quiz`+`quiz_question_link` tabloları kuruldu; eski enum quiz verisi bu
+  modele taşındı (`sort_order` → `quiz_question_link.position`, sonra
+  `question.sort_order` kolonu düşürüldü); GLOBAL "soru başına en fazla bir
+  doğru şık" kısıtı (`uq_quiz_option_one_correct_per_question`, V259)
+  kaldırılıp `idx_question_pool` (`topic_id, language, type, difficulty,
+  status`) kompozit index'iyle değiştirildi — MULTIPLE_CHOICE artık DB
+  seviyesinde ENGELLENMİYOR, tip-farkındalı doğrulama servis/ingestion
+  katmanına taşındı. `quiz_question_link.question_id` KASITLI OLARAK
+  `ON DELETE RESTRICT` — canlı bir sabit quiz'in parçası olan bir soru
+  hard-delete edilemez, kaldırmak isteyen `question.status = REJECTED`
+  yapmalı. `Quiz.passThreshold` BİLİNÇLİ OLARAK `BigDecimal` (DB
+  `NUMERIC(3,2)`) — `Double`/`Float` kullanılırsa Hibernate'in
+  `ddl-auto: validate` şema doğrulaması `float(53)` bekleyip gerçek
+  `NUMERIC` kolonuyla çakışır; NUMERIC/DECIMAL kolonlu her yeni alanda bu
+  eşleşmeye dikkat et. CODE_OUTPUT sorular `topic.html`'de `codeSnippet`/
+  `codeLanguage` alanları üzerinden MEVCUT highlight.js entegrasyonuyla
+  (`hljs.highlightAll()`, ayrı bir JS değişikliği GEREKMEDİ) render edilir.
+  Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 87"yi grep'le.
+- **Faz 88'de GERÇEK bir regresyon bulunup düzeltildi ve grouped `answers`
+  sözleşmesi uçtan uca (gerçek tarayıcıda) doğrulandı — bkz. `docs/phase-log.md`
+  "Faz 88".** `static/js/quiz.js`, Faz 87'de `QuizSubmitRequest`/`QuizAnswer`
+  gruplu sözleşmeye geçildiğinde AYNI FAZDA güncellendiği RAPORLANMIŞTI ama
+  gerçekte hiç değiştirilmemişti — kullanıcının kendi tarayıcısında GERÇEK bir
+  `400 Bad Request` (`"answers is required"`) ile ortaya çıktı, hâlâ eski düz
+  `{selectedOptionIds: [...]}` gövdesini gönderiyordu; `renderResults()` de
+  hâlâ artık var olmayan tekil `selectedOptionId`/`correctOptionId` alanlarını
+  okuyordu. İkisi de düzeltildi (`collectAnswers()` her soru için ayrı
+  `{questionId, selectedOptionIds}` topluyor, backend `QuizService`/`QuizAnswer`
+  DOKUNULMADI). Ayrıca `topic.html`'deki şık `<input>`'u da (`MULTIPLE_CHOICE`
+  hâlâ radio render ediyordu, tarayıcı seviyesinde birden fazla şık SEÇİLEMEZDİ)
+  `th:type="${q.type()...} ? 'checkbox' : 'radio'"` ile düzeltildi (`quiz.js`
+  zaten generic `:checked` sorgusu kullandığı için başka bir JS değişikliği
+  GEREKMEDİ). **Doğrulama, kullanıcının kendi ortamında GERÇEK bir tarayıcıda
+  yapıldı:** sabit enum quiz'i (5 SINGLE_CHOICE soru) grouped `answers`
+  sözleşmesiyle sorunsuz submit edildi; AI ingestion endpoint'i (`POST
+  /api/internal/questions/ingest`) gerçek bir `curl` çağrısıyla test edildi
+  (`201`, `PENDING_REVIEW`/`AI` döndü), sonuç bir `MULTIPLE_CHOICE` soru
+  manuel olarak `PUBLISHED`'a çekilip `quiz_question_link`'e geçici (migration
+  DEĞİL, elle SQL) eklendi, tarayıcıda checkbox olarak render edildiği,
+  birden fazla şıkkın aynı anda seçilebildiği ve iki doğru şık seçilince
+  quiz'in **6/6 — Passed** sonucu döndürdüğü doğrulandı. Kullanıcının kendi
+  ortamında `mvn clean test`: **43 test, 0 hata, 0 başarısızlık, BUILD
+  SUCCESS.** Bu sandbox'ta `mvn -o test` hâlâ Lombok'un offline modda hiç
+  annotation processing yapmaması yüzünden tamamlanamıyor (bkz.
+  `docs/known-constraints.md`) — kod defektiyle İLGİSİZ, kullanıcının kendi
+  ortamı asıl doğrulama kaynağı.
 
 ## Token ve Bağlam Verimliliği (Faz 75'ten itibaren, kullanıcı+ChatGPT kararı)
 
@@ -286,31 +370,40 @@ tamamlandı) ve **`ai-development-tools`** (artık İKİ topic): `developing-
 with-claude-code` (V263-V265, TR+EN ikisi de yayında, bkz. "Faz 81") ve
 yeni `claude-code-cli-commands` (V266-V267, TR published=true + EN
 published=false -- içerik yazıldı ama kullanıcı henüz incelemedi, bkz. "Faz
-82"). Bu sandbox kopyasındaki migration'lar V1-V258 ve V263-V267'den
-oluşuyor; **V259-V262 KASITLI olarak bu kopyada yok** -- bu numaralar,
-kullanıcının aynı oturumda kendi yerel ortamında (Quiz özelliği, `enum`
-konusu) kullandığı numaralarla çakışmasın diye bilinçli olarak atlandı
-(bkz. `V263`'ün kendi migration yorumu ve "Faz 81"). İki değişiklik kümesi
-nihayetinde aynı gerçek depoda birleştirilirse bu numaralandırma sıraya
-devam etmeli, V259'dan yeniden BAŞLANMAMALI. Kesin sayılar ve tam liste
-için `docs/phase-log.md`.
+82"). **GÜNCELLEME (Faz 87):** V259-V262 (Quiz özelliği, `enum` konusu)
+artık BU sandbox kopyasında da mevcut -- daha önce burada "kullanıcının
+kendi yerel ortamındaki numaralarla çakışmasın diye kasıtlı olarak
+atlandı" deniyordu, bu artık tarihsel bir not, güncel durum değil. Migration'lar
+şu an V1'den **V293'e kadar boşluksuz** mevcut: V259-V262 orijinal Quiz
+şeması+içeriği, V263-V267 `ai-development-tools` kategorisi, V287-V293 ise
+Quiz'in genel bir "soru havuzu" (Question Pool) mimarisine yeniden
+tasarlanması (bkz. "Faz 87" ve yukarıdaki "Mimari" bölümündeki ilgili madde).
+Kesin sayılar ve tam liste için `docs/phase-log.md`.
 
 ## Proje Yapısı
 
 ```
 src/main/java/com/cdurgun/learning/
-    domain/          Course, Category, Topic, TopicTranslation, CodeExample, Language, Difficulty
+    domain/          Course, Category, Topic, TopicTranslation, CodeExample, Language, Difficulty,
+                     Question, QuestionOption, QuestionType, QuestionStatus, QuestionSource (soru
+                     havuzu -- Faz 87), Quiz, QuizQuestion (Quiz<->Question join/sıra entity'si)
     domain/converter/ Language <-> DB (tr/en kodu) dönüştürücüsü
     repository/      Spring Data JPA repository'leri
-    service/         ContentResolver, CodeExampleResolver, MarkdownService, NavigationService
-    controller/      HomeController, TopicController
-    config/          LangParamLocaleResolver, WebConfig
+    service/         ContentResolver, CodeExampleResolver, MarkdownService, NavigationService,
+                     QuizService (sabit quiz), PracticeService (soru havuzu/Practice), QuestionScorer
+                     (paylaşılan puanlama kuralı), QuestionIngestService (AI/n8n ingestion)
+    controller/      HomeController, TopicController, PracticeController, QuestionIngestController
+    config/          LangParamLocaleResolver, WebConfig, QuizIngestApiKeyInterceptor (ingestion
+                     rotasını X-Api-Key ile korur)
     web/nav/         Sidebar/anasayfa navigasyon DTO'ları (CourseNav)
+    web/quiz/        Sabit quiz + Practice GET/submit DTO'ları (QuizQuestionView, QuestionView,
+                     QuizAnswer, QuizSubmitRequest/Response, PracticeSubmitRequest/Response, ...)
+    web/ingest/      AI ingestion istek/yanıt DTO'ları (QuestionIngestRequest/Option/Response)
 
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V168)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V293)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     static/img/                   LearnForgeX marka varlıkları (favicon.svg/logo.svg/logo-dark.svg,

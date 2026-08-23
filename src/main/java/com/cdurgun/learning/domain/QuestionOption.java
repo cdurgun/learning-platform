@@ -16,18 +16,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Bir {@link QuizQuestion}'a ait çoktan seçmeli şık. Bir soruya ait en fazla bir
- * {@code correct = true} satır olabilir — bu, DB'de kısmi (partial) unique index'le
- * garanti edilir (bkz. {@code core/V259__quiz_schema.sql}), burada tekrar edilmez.
+ * Bir {@link Question}'a ait çoktan seçmeli şık. {@code SINGLE_CHOICE}/{@code CODE_OUTPUT}
+ * tipi sorularda tam olarak bir {@code correct = true} satır olması gerekir,
+ * {@code MULTIPLE_CHOICE}'ta bir veya daha fazla olabilir. FAZ A/B/C İTİBARIYLA DB hâlâ
+ * "en fazla bir doğru" kısıtını (bkz. {@code core/V259__quiz_schema.sql}, Faz B'de
+ * {@code core/V288}'de yeniden adlandırıldı) global olarak zorluyor -- bu, Faz D'nin
+ * {@code core/V294__...} migration'ıyla kaldırılıp servis/ingestion katmanına taşınacak
+ * (bkz. plan bölüm 5.1). O migration çalışana kadar MULTIPLE_CHOICE fiilen desteklenmez.
  */
 @Entity
-@Table(name = "quiz_option")
+@Table(name = "question_option")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuizOption {
+public class QuestionOption {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +39,7 @@ public class QuizOption {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
-    private QuizQuestion question;
+    private Question question;
 
     @Column(name = "option_text", nullable = false, columnDefinition = "TEXT")
     private String optionText;

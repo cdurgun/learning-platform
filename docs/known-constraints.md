@@ -783,3 +783,62 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   başlatıp eksik migration'ın (`V273` gibi) uygulanmasını sağlamak, sonra bu
   ayarı KALDIRMAK -- kalıcı olarak `true` bırakmak, gelecekteki gerçek sıralama
   hatalarını sessizce maskeler.
+- **`git mv` ile yeniden adlandırılan bir dosyaya yapılan sonraki `Write`/`Edit`
+  çağrıları -- ve freed-up eski isimde yeniden yaratılan yeni bir dosya --
+  bu sandbox'ta sessizce diskte kalıcı olmayabiliyor (Faz 87'de Question Pool
+  yeniden tasarımı sırasında gerçek bir hatayla keşfedildi):** `QuizQuestion`
+  → `Question`, `QuizOption` → `QuestionOption` (ve karşılık gelen repository
+  dosyaları) `git mv` ile yeniden adlandırılıp ardından `Write`/`Edit` ile
+  gerçek entity içeriği yazıldı; aynı fazda, freed-up olan eski `QuizQuestion`
+  ismiyle YENİ bir dosya (join entity) yaratıldı. Araç her adımda "başarılı"
+  raporladı, sonraki `Edit` çağrıları bile eski içerikle eşleşen `old_string`
+  bulup başarıyla uyguladı (yani aracın kendi iç durumu tutarlıydı) -- ama
+  kullanıcının kendi ortamındaki GERÇEK `mvn test` çalıştırıldığında bu ALTI
+  dosyanın DÖRDÜ diskte 0 byte, İKİSİ (freed-up isimdeki yeni dosyalar)
+  TAMAMEN EKSİK çıktı. Bu sandbox'taki `mvn -o compile` bunu YAKALAYAMADI
+  çünkü zaten (aşağıdaki Lombok maddesine bkz.) tamamen ilgisiz dosyalarda
+  bile aynı "cannot find symbol" hatasını veriyordu -- gerçek sinyal yalnızca
+  kullanıcının kendi ortamındaki derlemeden geldi. **Kalıcı ders:** bir dosya
+  `git mv` ile yeniden adlandırıldıktan SONRA (hedef dosyaya içerik yazarken,
+  ya da freed-up eski isimde yeni bir dosya yaratırken), o dosyanın gerçek
+  disk içeriğini (`wc -c`, `ls -la`) Bash ile DOĞRUDAN doğrulamadan araç
+  raporuna güvenme -- şüpheli bir durumda (özellikle `git mv` sonrası bir
+  isim yeniden kullanılıyorsa) tüm ilgili dosyaları `find ... -size 0` ile
+  tara, gerekirse içeriği Bash heredoc (`cat > dosya <<'EOF' ... EOF`) ile
+  doğrudan yazarak araç önbelleğini bypass et. **Faz 88'de aynı dersin farklı
+  bir versiyonu tekrar yaşandı:** bu kez dosya bozulmadı, ama bir faz özeti
+  "`quiz.js` bu fazda yeniden yazıldı" diye RAPORLADI ve bu YANLIŞTI -- dosya
+  gerçekte hiç değiştirilmemişti, kullanıcı kendi tarayıcısında gerçek bir
+  `400 Bad Request` ile fark etti. **Genişletilmiş ders:** yalnızca `git mv`
+  sonrası değil, HER "X dosyası güncellendi/yeniden yazıldı" iddiası şüpheli
+  -- kritik bir dosya için (özellikle önceki bir fazın özetine güvenerek
+  "zaten yapıldı" varsayılıyorsa) iddiayı kabul etmeden önce dosyanın gerçek
+  disk içeriğini (`cat`/`grep` ile beklenen anahtar kelimeyi ara) doğrudan
+  doğrula.
+- **Bu sandbox'ta `mvn -o` (offline) ile Lombok annotation processing hiç
+  çalışmıyor -- `~/.m2`'de Lombok jar'ının BİRDEN FAZLA sürümü (1.18.4'ten
+  1.18.46'ya kadar) MEVCUT olsa bile (Faz 87'de doğrulandı, önceki fazlardaki
+  "Maven Central engelli, hiçbir bağımlılık indirilemiyor" genellemesinin
+  ötesinde daha spesifik bir bulgu):** bu ortamda `mvn -o compile`/`mvn -o
+  test` her zaman, tamamen ilgisiz dosyalarda bile (`NavigationService`,
+  `PdfExportService`, `SitemapController` gibi bu oturumda hiç dokunulmamış
+  dosyalar), Lombok'un ürettiği HER getter/setter/builder için "cannot find
+  symbol" hatası veriyor -- bu, kod defektinin DEĞİL, annotation processor'ın
+  bu offline Maven çalıştırmasında hiç devreye girmemesinin kanıtı (yalnızca
+  gerçek tip/paket hataları -- "cannot find symbol: class ..." ya da "package
+  ... does not exist" -- gerçek bir koddaki hatayı gösterir, "cannot find
+  symbol: method getX()" TEK BAŞINA göstermez). **Sonuç:** bu sandbox'ta
+  `mvn compile`/`mvn test` çalıştırmak, bir değişikliğin GERÇEKTEN
+  derlenip/geçtiğini doğrulamak için KULLANILAMAZ -- yalnızca gerçek tip/paket
+  seviyesi hataları (eksik/yanlış adlandırılmış sınıf, import) ayıklamak için
+  sınırlı bir sinyal verir; asıl derleme/test doğrulaması HER ZAMAN kullanıcının
+  kendi ortamından istenmeli (bkz. Faz 87 -- kullanıcının kendi `mvn clean
+  test`'i hem gerçek bir tip hatasını hem gerçek bir şema/Hibernate hatasını
+  başarıyla yakaladı, bu sandbox'taki hiçbir `mvn` çalıştırması ikisini de
+  gösteremedi). **Faz 88'de yeniden doğrulandı:** quiz.js regresyonu +
+  MULTIPLE_CHOICE checkbox düzeltmesinden SONRA kullanıcının kendi ortamında
+  `mvn clean test` tekrar çalıştırıldı -- `Tests run: 43, Failures: 0, Errors:
+  0, Skipped: 0`, `BUILD SUCCESS` -- bu sandbox'taki `mvn -o test` ise yine
+  aynı ilgisiz-dosya "cannot find symbol" desenini verdi. Bu ortamdaki hiçbir
+  `mvn` çalıştırması artık bir doğrulama sinyali olarak KULLANILMAMALI,
+  yalnızca kullanıcının kendi ortamındaki sonuç güvenilir kabul edilmeli.
