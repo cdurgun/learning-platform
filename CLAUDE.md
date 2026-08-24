@@ -398,7 +398,59 @@ TR+EN tamamlandı** (`introduction-to-generics`, `generic-methods`,
 `type-erasure-and-generic-limitations` -- kendi ayrı üst-seviye kategorisi,
 `java-basics` içine hiç konulmadı, `exceptions`/Faz 99 ile aynı desen).
 Kullanıcının açık talimatı gereği bu kategoriye bir Pratik Proje
-eklenmedi. Migration'lar şu an V1'den **V358'e kadar boşluksuz**. Kesin
+eklenmedi. Migration'lar şu an V1'den **V358'e kadar boşluksuz**.
+**GÜNCELLEME (Faz 114):** `spring-boot` kursuna, spring-core(1)/spring-
+mvc(2)/microservices(3)'ten sonra sort_order=4'e eklenen **`advanced-
+spring` kategorisi artık 4/4 topic TR+EN tamamlandı**: `java-bean-
+validation` (Faz 110), `exception-handling` (Faz 111), `task-execution-
+and-scheduling` (Faz 112, `@Async`/`CompletableFuture` anlatımı Faz
+113'te pedagojik olarak genişletildi), `spring-batch` (Faz 114) --
+spring-core/spring-mvc/microservices'in İÇİNE değil, kendi ayrı üst-
+seviye kategorisi. Kullanıcının orijinal "Scheduling and Batch Jobs"
+fikri Faz 112'de ikiye bölünmüştü, ikinci yarısı (`spring-batch`) Faz
+114'te tamamlandı. **ÖNEMLİ:** ilk üç topic BİLİNÇLİ OLARAK mevcut Spring
+topic'lerinin (spring-mvc'deki `validation-exception-handling` Faz 22,
+spring-core'daki `transaction-management` Faz 82, `java` kursundaki
+`threads` Faz 45) ZATEN kapsamlıca işlediği temelleri TEKRAR ÖĞRETMİYOR
+-- yalnızca o topic'lerin üzerine inşa edilen, gerçekten yeni/daha derin
+materyale odaklanıyor. `spring-batch` bunun İSTİSNASI -- müfredata İLK
+KEZ giren tamamen yeni bir teknoloji olduğu için temellerden başlıyor,
+TEK tutarlı bir çalışan örnek (CSV'den sipariş içe aktarma) etrafında
+kurulu (bkz. Faz 110/111/112/113/114 notları). `spring-boot-starter-batch`
+pom.xml'de bir bağımlılık DEĞİL -- `microservices` kategorisinin Kafka/
+Eureka örnekleriyle AYNI kısıt (elle, dikkatle yazılmış, derlenmemiş
+örnekler). Kullanıcının açık talimatı gereği bu kategoriye henüz bir
+Pratik Proje eklenmedi. Migration'lar şu an V1'den **V371'e kadar
+boşluksuz**.
+
+**GÜNCELLEME (Faz 123):** `spring-boot` kursuna, spring-core(1)/spring-
+mvc(2)/microservices(3)/advanced-spring(4)'ten sonra sort_order=5'e
+eklenen **`spring-data-jpa` kategorisi artık 9/9 topic TR+EN tamamlandı**:
+`jpa-hibernate-and-spring-data-jpa` (Faz 115), `entities-and-repositories`
+(Faz 116), `query-methods-and-jpql` (Faz 117), `pagination-sorting-and-
+projections` (Faz 118), `dynamic-queries-with-specifications` (Faz 119),
+`relationships-fetching-and-n-plus-1` (Faz 120), `persistence-context-
+and-locking` (Faz 121), `jpa-auditing` (Faz 122), `testing-spring-data-
+jpa` (Faz 123) -- spring-core/spring-mvc/microservices/advanced-spring'in
+İÇİNE değil, kendi ayrı üst-seviye kategorisi. Kategori, içerik
+yazılmadan önce kullanıcının PLAN MODE'da onayladığı 9 topic'lik bir
+roadmap'e göre inşa edildi (bkz. Faz 115 notu). **ÖNEMLİ:** bu kategori,
+mevcut Spring topic'lerinin (spring-core'daki `transaction-management`
+Faz 82 -- `@Transactional`/dirty checking/lazy loading/`LazyInitialization
+Exception`/`join fetch`/open-in-view; spring-mvc'deki `rest-api-design`
+Faz -- `Pageable`/`Page`/`Sort`'un controller-seviyesi çözümlenmesi VE
+`spring-mvc-testing`'in `@DataJpaTest`'i yalnızca isim olarak anması)
+ZATEN kapsamlıca işlediği temelleri TEKRAR ÖĞRETMİYOR -- yalnızca o
+topic'lerin bilinçli olarak açık bıraktığı boşlukları (repository-
+seviyesi gerçek sayfalama, `Specification`, N+1'in kendisi, persistence
+context'in NEDEN dirty checking'i mümkün kıldığı, `@DataJpaTest`'in
+gerçek implementasyonu) dolduruyor, gerçek migration başlıklarıyla
+doğrulanmış referanslarla. Birçok topic, bu projenin GERÇEK kodundan
+(`Topic`/`Category`/`TopicRepository`/`QuizQuestion`/`QuestionIngestService`/
+`application-test.yml`'in kendi yorumu) doğrudan alınan motivasyon ve
+örnekler kullandı, uydurma paralel bir domain model yaratmak yerine.
+Kullanıcının açık talimatı gereği bu kategoriye bir Pratik Proje
+eklenmedi. Migration'lar şu an V1'den **V399'a kadar boşluksuz**. Kesin
 sayılar ve tam liste için `docs/phase-log.md`.
 
 ## Proje Yapısı
