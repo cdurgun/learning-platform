@@ -40,6 +40,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!-- Opsiyonel kullanıcı kimlik doğrulaması: session-based form login (bkz.
+             SecurityConfig). JWT/OAuth2 bilinçli olarak eklenmedi, proje sunucu
+             tarafında render edilen bir Thymeleaf uygulaması: session-based auth
+             ilk sürüm için yeterli ve daha basit. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
 
         <!-- Persistence -->
         <dependency>
@@ -115,9 +123,20 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        <!-- Boot 4: MockMvc'nin `@AutoConfigureMockMvc`'ı artık `spring-boot-starter-test`'te
+             DEĞİL, ayrı bir `spring-boot-starter-webmvc-test` starter'ında (bkz.
+             `AuthenticationFlowTest`, paket `org.springframework.boot.webmvc.test.autoconfigure`
+             altına taşındı). Bu starter `spring-boot-starter-test`'i zaten transitive
+             olarak içeriyor (JUnit/AssertJ/Mockito dahil), bu yüzden ayrı bir
+             `spring-boot-starter-test` bağımlılığına gerek yok. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

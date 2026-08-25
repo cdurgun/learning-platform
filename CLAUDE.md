@@ -243,6 +243,36 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   annotation processing yapmaması yüzünden tamamlanamıyor (bkz.
   `docs/known-constraints.md`) — kod defektiyle İLGİSİZ, kullanıcının kendi
   ortamı asıl doğrulama kaynağı.
+- **Kullanıcı kimlik doğrulaması Faz 138'de eklendi, opsiyonel bir katman —
+  var olan public öğrenim deneyimi (anasayfa, kurs/kategori/konu sayfaları,
+  sabit quiz submit) anonim erişime tamamen açık kalır, hiçbir mevcut rotanın
+  önüne bir "giriş yap" kapısı KONMADI.** Spring Security, session-based form
+  login — JWT/OAuth2 bilinçli olarak kullanılmıyor (sunucu tarafında render
+  edilen bir Thymeleaf uygulaması için gereksiz karmaşıklık olurdu). Kullanıcı
+  hesabı `User` entity'si (`app_user` tablosu — `user` Postgres'te ayrılmış
+  anahtar kelime olduğu için kaçınıldı), şifreler her zaman BCrypt ile encode
+  edilir, düz metin asla DB'ye yazılmaz. Login/register/logout rotaları,
+  projenin geri kalanıyla AYNI `{lang:en|tr}` path-değişkeni deseninde
+  (`/{lang}/login`, `/{lang}/register`, `/{lang}/logout`) — Spring Security
+  6.4+'ın varsayılan `PathPatternRequestMatcher`'ı MVC ile aynı `{var:regex}`
+  söz dizimini desteklediği için `loginProcessingUrl`/`logoutUrl` de doğrudan
+  bu kalıpla verilir, ayrı bir wildcard/regex çözümüne gerek yok. Başarı/hata/
+  logout sonrası hangi dile yönlendirileceği isteğin URI'sinin ilk path
+  segmentinden okunur (`config/LangPath`, `LangParamLocaleResolver`'daki aynı
+  mantığın küçük bir tekrarı). `GlobalModelAttributes`, her sayfaya otomatik
+  `currentUserDisplayName` (girişli değilse `null`) enjekte eder — navbar
+  (`fragments/layout.html`) bunu TR/EN dil butonlarının HEMEN SOLUNDA
+  `[ Sign in ] [ TR ] [ EN ]` / `[ Kullanıcı Adı ] [ Logout ] [ TR ] [ EN ]`
+  şeklinde kullanır. Yeni bir gated (yalnızca girişli kullanıcıya açık) sayfa
+  eklenirse `SecurityConfig`'teki `authorizeHttpRequests` bloğuna (şu an
+  bilinçli olarak `anyRequest().permitAll()`) bir kural eklenmeli — var olan
+  hiçbir rota bu değişiklikten etkilenmemeli. **CSRF koruması artık varsayılan
+  olarak açık** — gerçek Thymeleaf formları (`th:action`) `${_csrf.token}`
+  hidden input'uyla korunmalı (bkz. `login.html`/`register.html`/navbar logout
+  formu), ama tarayıcı oturumu olmadan çağrılan anonim JSON POST uç noktaları
+  (sabit quiz submit, Practice submit, AI ingestion) `SecurityConfig`'te
+  `csrf().ignoringRequestMatchers(...)` ile bilinçli olarak muaf tutuldu — yeni
+  bir anonim/oturumsuz POST API eklenirse aynı muafiyet listesine eklenmeli.
 
 ## Token ve Bağlam Verimliliği (Faz 75'ten itibaren, kullanıcı+ChatGPT kararı)
 
@@ -510,31 +540,52 @@ kursa hiçbir yerinde bir Pratik Proje eklenmedi. Migration'lar şu an
 V1'den **V427'ye kadar boşluksuz**. Kesin sayılar ve tam liste için
 `docs/phase-log.md`.
 
+**GÜNCELLEME (Faz 138):** İçerik dışı, mimari bir ekleme -- opsiyonel
+**kullanıcı kimlik doğrulaması** (Spring Security, session-based, BCrypt)
+eklendi (ayrıntılar için "Mimari" bölümündeki ilgili madde). `app_user`
+tablosu (V428), `User`/`Role` entity'leri, `AuthController`
+(`/{lang}/login`, `/{lang}/register`), navbar'da "Sign in" / "[Kullanıcı
+Adı] [Logout]" durumu. Var olan hiçbir public rota etkilenmedi -- v1'de
+gated hiçbir kaynak yok. Migration'lar şu an V1'den **V428'e kadar
+boşluksuz**. Kullanıcının kendi ortamında `mvn clean test`: **53 test, 0
+hata, 0 başarısızlık, BUILD SUCCESS** (yeni `AuthenticationFlowTest`in 5
+testi dahil). **Boot 4 gotcha'sı:** `@AutoConfigureMockMvc` artık
+`spring-boot-starter-test`'te DEĞİL, ayrı bir `spring-boot-starter-webmvc-
+test` starter'ında (paket `org.springframework.boot.webmvc.test.
+autoconfigure`) -- MockMvc kullanan yeni bir test eklenirse bu starter
+gerekli (bkz. `pom.xml`). Ayrıntılı uygulama akışı için `docs/phase-log.md`'de
+"Faz 138"i grep'le.
+
 ## Proje Yapısı
 
 ```
 src/main/java/com/cdurgun/learning/
     domain/          Course, Category, Topic, TopicTranslation, CodeExample, Language, Difficulty,
                      Question, QuestionOption, QuestionType, QuestionStatus, QuestionSource (soru
-                     havuzu -- Faz 87), Quiz, QuizQuestion (Quiz<->Question join/sıra entity'si)
+                     havuzu -- Faz 87), Quiz, QuizQuestion (Quiz<->Question join/sıra entity'si),
+                     User, Role (opsiyonel kimlik doğrulama -- Faz 138)
     domain/converter/ Language <-> DB (tr/en kodu) dönüştürücüsü
-    repository/      Spring Data JPA repository'leri
+    repository/      Spring Data JPA repository'leri (UserRepository dahil)
     service/         ContentResolver, CodeExampleResolver, MarkdownService, NavigationService,
                      QuizService (sabit quiz), PracticeService (soru havuzu/Practice), QuestionScorer
-                     (paylaşılan puanlama kuralı), QuestionIngestService (AI/n8n ingestion)
-    controller/      HomeController, TopicController, PracticeController, QuestionIngestController
+                     (paylaşılan puanlama kuralı), QuestionIngestService (AI/n8n ingestion),
+                     CustomUserDetailsService, UserRegistrationService (Faz 138)
+    controller/      HomeController, TopicController, PracticeController, QuestionIngestController,
+                     AuthController (login/register sayfaları -- Faz 138)
     config/          LangParamLocaleResolver, WebConfig, QuizIngestApiKeyInterceptor (ingestion
-                     rotasını X-Api-Key ile korur)
+                     rotasını X-Api-Key ile korur), SecurityConfig, LangPath (Faz 138)
     web/nav/         Sidebar/anasayfa navigasyon DTO'ları (CourseNav)
     web/quiz/        Sabit quiz + Practice GET/submit DTO'ları (QuizQuestionView, QuestionView,
                      QuizAnswer, QuizSubmitRequest/Response, PracticeSubmitRequest/Response, ...)
     web/ingest/      AI ingestion istek/yanıt DTO'ları (QuestionIngestRequest/Option/Response)
+    web/auth/        Kayıt formu bağlama DTO'su (RegisterForm -- Faz 138)
 
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V317)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V428)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
+    templates/auth/               login.html / register.html (Faz 138)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     static/img/                   LearnForgeX marka varlıkları (favicon.svg/logo.svg/logo-dark.svg,
                                    favicon.ico/-16.png/-32.png, apple-touch-icon.png -- Faz 48)

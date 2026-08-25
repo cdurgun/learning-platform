@@ -19,7 +19,20 @@
             <small class="navbar-tagline">Forge your skills</small>
         </span>
     </a>
-    <div class="ms-auto d-flex gap-2">
+    <div class="ms-auto d-flex align-items-center gap-2">
+        <div th:if="${currentUserDisplayName == null}">
+            <a class="btn btn-sm btn-outline-light"
+               th:href="@{/{lang}/login(lang=${language != null ? language.code : 'en'})}"
+               th:text="#{auth.signIn}">Sign in</a>
+        </div>
+        <div th:if="${currentUserDisplayName != null}" class="d-flex align-items-center gap-2">
+            <span class="text-light small" th:text="${currentUserDisplayName}">User Name</span>
+            <form class="d-inline" method="post"
+                  th:action="@{/{lang}/logout(lang=${language != null ? language.code : 'en'})}">
+                <input th:if="${_csrf}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-sm btn-outline-light" th:text="#{auth.logout}">Logout</button>
+            </form>
+        </div>
         <a class="btn btn-sm btn-outline-light"
            th:classappend="${language != null and language.code == 'tr'} ? 'active' : ''"
            th:href="@{/tr}">TR</a>
