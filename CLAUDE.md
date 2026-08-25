@@ -453,6 +453,63 @@ Kullanıcının açık talimatı gereği bu kategoriye bir Pratik Proje
 eklenmedi. Migration'lar şu an V1'den **V399'a kadar boşluksuz**. Kesin
 sayılar ve tam liste için `docs/phase-log.md`.
 
+**GÜNCELLEME (Faz 133):** java/spring-boot/react/ai'dan sonra BEŞİNCİ,
+bağımsız top-level course olarak Faz 124'te açılan **`postgresql`
+kursunun `postgresql-foundations` kategorisi artık 10/10 topic TR+EN
+tamamlandı**: `postgresql-and-the-relational-model` (Faz 124),
+`connecting-to-postgresql` (Faz 125), `databases-schemas-tables-and-
+basic-sql` (Faz 126), `postgresql-data-types` (Faz 127), `constraints-
+and-keys` (Faz 128), `inserting-updating-and-deleting-data` (Faz 129),
+`select-and-filtering` (Faz 130), `sorting-limiting-and-pagination` (Faz
+131), `joins` (Faz 132), `aggregation-and-group-by` (Faz 133) --
+kullanıcının PLAN MODE'da onayladığı 14 topic'lik roadmap'in (bkz. Faz
+124 notu) ilk 10'u, sırayla, her birinde durup onay beklenerek. **ÖNEMLİ:**
+bu kategori, bu projenin Spring Data JPA kategorisinin (Faz 115-123)
+`Pageable`/`Sort`/`@OneToMany`/`join fetch` gibi Java-seviyesi API'lerin
+ZATEN kapsadığı hiçbir şeyi TEKRAR ÖĞRETMİYOR -- yalnızca o API'lerin
+ALTINDA gerçekte hangi ham SQL'e (`LIMIT`/`OFFSET`, gerçek `JOIN`,
+`GROUP BY`) dönüştüğünü gösteriyor, her seferinde ilgili Spring Data JPA
+topic'ine gerçek migration başlığıyla doğrulanmış referansla. Kategorinin
+neredeyse her örneği bu projenin GERÇEK şemasından/kodundan: `V1__init_
+schema.sql`'in kendisi (`CREATE TABLE`, `ON DELETE CASCADE`), gerçek
+`quiz_question_link`'in `ON DELETE RESTRICT`'i (kendi gerçek migration
+yorumuyla), gerçek `TopicRepository.findBySlugWithCategoryAndCourse`
+JPQL `join fetch`'i, ve bu projenin kendi gerçek iki-adımlı TR/EN yayın
+iş akışını bulan bir `LEFT JOIN` sorgusu. Kullanıcının açık talimatı
+gereği bu kategoriye bir Pratik Proje eklenmedi. Migration'lar şu an
+V1'den **V419'a kadar boşluksuz**. Kesin sayılar ve tam liste için
+`docs/phase-log.md`.
+
+**GÜNCELLEME (Faz 137):** `postgresql` kursunun `advanced-postgresql`
+kategorisi de (Faz 134-137) **4/4 topic TR+EN tamamlandı**:
+`subqueries-ctes-and-window-functions` (Faz 134), `postgresql-specific-
+data-types` (Faz 135), `indexes-and-query-performance-with-explain`
+(Faz 136), `transactions-and-concurrency-in-postgresql` (Faz 137) --
+bu son topic'le **TÜM `postgresql` kursu (14/14 topic, 2 kategori)
+TAMAMLANDI** (bkz. Faz 124'teki onaylanmış 14 topic'lik roadmap). Bu
+kategori, Foundations'ın aksine, bilinçli olarak PostgreSQL'e özgü
+derinliğin yoğunlaştığı yer: `subqueries-ctes-and-window-functions`
+korelasyonlu subquery/CTE/window fonksiyonlarını GROUP BY'ın aksine
+satırları çökertmeden hesaplama olarak öğretti; `postgresql-specific-
+data-types`, UUID/JSONB/array'leri -- bu projenin gerçek şemasının
+HİÇBİRİNİ kullanmadığı AÇIKÇA belirtilerek, tüm örnekler illüstratif
+olarak etiketlenerek -- kapsadı; `indexes-and-query-performance-with-
+explain`, "Sorting, Limiting, and Pagination"ın (Faz 131) `OFFSET`
+maliyeti ve "Constraints and Keys"in (Faz 128) otomatik PK index'i
+ileri referanslarını, bu projenin kendi gerçek `idx_topic_category`
+index'iyle kapattı; `transactions-and-concurrency-in-postgresql`,
+`BEGIN`/`COMMIT`/`ROLLBACK`/MVCC/`SELECT ... FOR UPDATE`/deadlock'ı,
+"Transaction Management"in (Faz 82) isolation kapsamını (dirty/non-
+repeatable/phantom read, `READ_COMMITTED` varsayılanı) hiç TEKRARLAMADAN
+işledi. Kursun her topic'i, Spring Data JPA kursunun (Faz 115-123)
+Java-seviyesi API'lerinin (`Pageable`, `@OneToMany`/`join fetch`,
+`@Lock`) ALTINDA gerçekte hangi ham SQL'e dönüştüğünü gösterdi, hiçbirini
+tekrar öğretmeden -- her ikisi de gerçek migration başlıklarıyla
+doğrulanmış çapraz referanslarla. Kullanıcının açık talimatı gereği bu
+kursa hiçbir yerinde bir Pratik Proje eklenmedi. Migration'lar şu an
+V1'den **V427'ye kadar boşluksuz**. Kesin sayılar ve tam liste için
+`docs/phase-log.md`.
+
 ## Proje Yapısı
 
 ```
