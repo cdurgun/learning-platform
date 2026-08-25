@@ -78,6 +78,32 @@
             </div>
         </div>
         <p th:if="${#lists.isEmpty(nav)}" class="text-muted small" th:text="#{nav.noContent}">Henüz yayınlanmış içerik yok.</p>
+
+        <!-- Quiz Area: course/category navigasyonundan BAĞIMSIZ, ayrı bir kaynaktan
+             (QuizDefinition, bkz. QuizNavigationService) beslenen ayrı bir bölüm,
+             yukarıdaki course ağacıyla AYNI toggle/chevron/collapse deseni kullanılır. -->
+        <div th:if="${!#lists.isEmpty(quizNav)}" class="mb-4">
+            <h6 class="text-uppercase text-muted small fw-bold" th:text="#{nav.quiz}">QUIZ</h6>
+            <div th:each="group : ${quizNav}" th:with="groupId=${'quiz-' + group.groupSlug()}" class="mb-1">
+                <button class="sidebar-toggle btn btn-sm d-flex align-items-center justify-content-between w-100 px-2 py-1 fw-semibold small text-start border-0 bg-transparent"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        th:data-bs-target="'#' + ${groupId}"
+                        th:aria-controls="${groupId}">
+                    <span th:text="${group.groupLabel()}">Java Quiz</span>
+                    <span class="chevron" aria-hidden="true">&rsaquo;</span>
+                </button>
+                <div class="collapse" th:id="${groupId}">
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item" th:each="def : ${group.definitions()}">
+                            <a class="nav-link py-1 px-2"
+                               th:href="@{/{lang}/quiz/{slug}(lang=${language.code}, slug=${def.slug()})}"
+                               th:text="${def.title()}">Basic Java</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </aside>
 

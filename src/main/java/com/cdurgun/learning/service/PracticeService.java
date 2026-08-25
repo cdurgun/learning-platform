@@ -77,6 +77,18 @@ public class PracticeService {
                 type == null ? null : type.name(),
                 resolvedCount);
 
+        return toQuestionViews(questions);
+    }
+
+    /**
+     * {@code Question} listesini {@code QuestionView} listesine çevirir (options'ları
+     * toplu yükler, doğruluk bilgisini ASLA sızdırmaz). Practice'in kendi {@link #draw}
+     * metodu ve Quiz Area'nın {@code QuizDefinitionService.draw} metodu bu TEK metodu
+     * paylaşır -- "Question'dan QuestionView'a nasıl dönülür" için tek doğruluk kaynağı,
+     * sorgulama stratejisi (topic-scoped vs course/category-scoped) her iki tarafta ayrı
+     * kalır, yalnızca sonuç birleştirme paylaşılır.
+     */
+    public List<QuestionView> toQuestionViews(List<Question> questions) {
         if (questions.isEmpty()) {
             return List.of();
         }

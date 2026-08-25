@@ -1,11 +1,17 @@
 package com.cdurgun.learning.web;
 
+import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.User;
 import com.cdurgun.learning.repository.UserRepository;
+import com.cdurgun.learning.service.QuizNavigationService;
+import com.cdurgun.learning.web.nav.QuizNav;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
+
+import java.util.List;
 
 /**
  * Tüm {@code @Controller}'lara ortak model attribute'ları enjekte eder:
@@ -24,21 +30,56 @@ import org.springframework.web.bind.annotation.ModelAttribute;
  * {@code HomeController#root}, {@code TopicController#legacyRedirect},
  * {@code SitemapController}) bir view render etmediği için doldurulan {@code Model}
  * hiçbir zaman kullanılmaz — pratik etkisi sıfır, sadece anlamsız bir no-op.</p>
+ *
+ * <p>{@code quizNav} de burada, {@code baseUrl} gibi sitewide enjekte edilir (bkz. plan,
+ * "Web layer") -- var olan {@code nav} (CourseNav) attribute'unun aksine (yalnızca
+ * HomeController/TopicController'da, sayfa bazlı opt-in), Quiz Area kataloğu her sayfada
+ * sidebar'da görünmesi gereken küçük, sabit bir liste olduğu için BİLİNÇLİ OLARAK global
+ * yapıldı -- bu, her `@RequestMapping` çağrısında bir DB sorgusu (join-fetch, ucuz) çalışır
+ * anlamına gelir, `nav`'ın sayfa-bazlı opt-in deseninden küçük bir bilinçli sapma.</p>
  */
 @ControllerAdvice
 public class GlobalModelAttributes {
 
     private final String baseUrl;
     private final UserRepository userRepository;
+    private final QuizNavigationService quizNavigationService;
 
-    public GlobalModelAttributes(@Value("${app.base-url}") String baseUrl, UserRepository userRepository) {
+    public GlobalModelAttributes(@Value("${app.base-url}") String baseUrl, UserRepository userRepository,
+                                  QuizNavigationService quizNavigationService) {
         this.baseUrl = baseUrl;
         this.userRepository = userRepository;
+        this.quizNavigationService = quizNavigationService;
     }
 
     @ModelAttribute("baseUrl")
     public String baseUrl() {
         return baseUrl;
+    }
+
+    /**
+     * {@code config.LangPath} (auth handler'larının login/logout sonrası dil çözümlemesi
+     * için kullandığı aynı mantık) paket-private olduğu için buraya paylaşılamıyor --
+     * {@code LangPath}'in kendi javadoc'unun da açıkladığı gibi, bu proje bu tek satırlık
+     * "URI'nin ilk path segmentini oku" mantığını cross-package paylaşım yerine küçük,
+     * bağımsız bir kopya olarak tekrarlamayı tercih ediyor; burada da AYNI hassas
+     * gerekçeyle tekrarlanıyor.
+     */
+    @ModelAttribute("quizNav")
+    public List<QuizNav> quizNav(HttpServletRequest request) {
+        return quizNavigationService.buildQuizNav(resolveLanguage(request.getRequestURI()));
+    }
+
+    private static Language resolveLanguage(String requestUri) {
+        String withoutLeadingSlash = requestUri.startsWith("/") ? requestUri.substring(1) : requestUri;
+        int nextSlash = withoutLeadingSlash.indexOf('/');
+        String firstSegment = nextSlash == -1 ? withoutLeadingSlash : withoutLeadingSlash.substring(0, nextSlash);
+
+        try {
+            return Language.fromCode(firstSegment);
+        } catch (IllegalArgumentException e) {
+            return Language.EN;
+        }
     }
 
     /**

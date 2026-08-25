@@ -842,6 +842,36 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   aynı ilgisiz-dosya "cannot find symbol" desenini verdi. Bu ortamdaki hiçbir
   `mvn` çalıştırması artık bir doğrulama sinyali olarak KULLANILMAMALI,
   yalnızca kullanıcının kendi ortamındaki sonuç güvenilir kabul edilmeli.
+- **GÜNCELLEME (Faz 140/Quiz Area Phase 6): `mvn`'in KENDİSİ (maven-compiler-plugin'in
+  Lombok annotation processor'ı bu offline çalıştırmada devreye SOKAMAMASI) bozuk --
+  Lombok'un kendisi ya da JDK'nın annotation processing'i DEĞİL.** Doğrudan `javac`
+  çağrısına Lombok jar'ını `-processorpath` ile VE `-proc:full` ile açıkça verildiğinde
+  (`~/.m2`'deki gerçek Lombok jar'ı, örn. `lombok-1.18.46.jar`, `mvn -o -q
+  dependency:build-classpath` ile üretilen tam classpath'e ek olarak), annotation
+  processing GERÇEKTEN çalışıyor -- tüm proje (main + test kaynakları), gerçek Lombok
+  getter/setter/builder'larıyla, SIFIR hatayla derleniyor (`javap` ile üretilen
+  `.class` dosyalarında gerçek `getCourse()`/`getCategories()` vb. metotların VAR
+  olduğu doğrulandı). Bu classpath'e `-parameters` bayrağı da eklenirse (Spring'in
+  `@PathVariable`/`@RequestParam` reflection'ı için gerekli), `junit-platform-launcher`
+  ile küçük bir `RunTests.java` (bkz. bu Faz'ın oturum geçmişi) TÜM test suite'ini
+  GERÇEKTEN çalıştırabiliyor -- gerçek Postgres'e karşı (`@SpringBootTest` dahil,
+  `AuthenticationFlowTest`'in MockMvc'si dahil), gerçek Flyway migration'larıyla.
+  Aynı sınıf dosyaları + tam classpath ile `com.cdurgun.learning.LearningPlatformApplication`
+  `main`'i DOĞRUDAN `java -cp ...` ile başlatılıp GERÇEK bir HTTP sunucusu (Tomcat)
+  ayağa kaldırılabiliyor, `curl` ile gerçek uçtan uca istek/yanıt doğrulaması
+  yapılabiliyor -- bu, önceki fazlarda "Maven Central engelli, Spring Boot hiç
+  çalıştırılamıyor" olarak genellenen kısıtın KISMEN aşılabildiği anlamına geliyor
+  (KISITLI: yalnızca `~/.m2`'de ZATEN cache'lenmiş bağımlılıklarla; yeni bir
+  bağımlılık eklenirse hâlâ indirilemez). **Bu, önceki fazlardaki "bu sandbox'ta
+  `mvn compile`/`mvn test` KULLANILAMAZ" sonucunu GEÇERSİZ KILMAZ** (`mvn` KOMUTUNUN
+  KENDİSİ hâlâ bozuk) -- yalnızca bunun yerine kullanılabilecek, önceki fazlarda
+  denenmemiş bir MANUEL workaround'un var olduğunu belgeliyor. Yeni bir Faz'da tam
+  derleme/test/gerçek-DB doğrulaması gerekiyorsa önce bu workaround denenmeli (özet:
+  `dependency:build-classpath` ile classpath üret, Lombok jar'ını hem classpath'e hem
+  `-processorpath`'e ekle, `-proc:full -parameters` ile `javac` çağır) -- kullanıcının
+  kendi ortamındaki `mvn clean test` HÂLÂ nihai/en güvenilir doğrulama kaynağı olmaya
+  devam ediyor, bu workaround onun YERİNE değil, sandbox içi ek bir güven katmanı
+  olarak kullanılmalı.
 - **Microservices kategorisindeki `event-driven-kafka` konusu (Faz 92), kategorinin
   diğer topic'lerinden FARKLI bir doğrulama önkoşulu getiriyor:** eureka-server,
   api-gateway, config-server gibi önceki topic'ler yalnızca "bir Spring Boot

@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var msgPassed = section.dataset.msgPassed || 'Passed!';
     var msgFailed = section.dataset.msgFailed || 'Not passed.';
     var msgError = section.dataset.msgError || 'Something went wrong. Please try again.';
+    var msgCorrect = section.dataset.msgCorrect || 'Correct: {0}';
+    var msgIncorrect = section.dataset.msgIncorrect || 'Incorrect: {0}';
 
     // Bir sorunun "cevaplanmış" sayılması için en az bir şıkkının işaretli
     // olması yeterli -- bu, hem bugünkü radio (SINGLE_CHOICE/CODE_OUTPUT)
@@ -72,9 +74,28 @@ document.addEventListener('DOMContentLoaded', function () {
             feedback.style.display = 'block';
         });
 
-        var scoreText = msgScore.replace('{0}', response.score).replace('{1}', response.total);
-        var statusText = response.passed ? msgPassed : msgFailed;
-        showSummary(response.passed ? 'alert-success' : 'alert-warning', scoreText + ' — ' + statusText);
+        var total = response.total;
+        var score = response.score;
+        var incorrect = total - score;
+        var percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+
+        var scoreText = msgScore.replace('{0}', score).replace('{1}', total) + ' (' + percentage + '%)';
+        var correctText = msgCorrect.replace('{0}', score);
+        var incorrectText = msgIncorrect.replace('{0}', incorrect);
+        var summaryText = scoreText + ' — ' + correctText + ', ' + incorrectText;
+
+        // response.passed yalnızca sabit (topic-gömülü) quiz'de var (bir Quiz.passThreshold'a
+        // bağlı) -- Quiz Area/Practice'in PracticeSubmitResponse'unda bu alan HİÇ YOK (bkz.
+        // PracticeSubmitResponse javadoc'u), bu yüzden `response.passed` `undefined`/falsy
+        // olur. `typeof` kontrolü bu iki durumu KASITLI OLARAK ayırt eder -- aksi halde her
+        // Quiz Area sonucu, mükemmel bir skorda bile, yanlışlıkla "başarısız" gibi
+        // gösterilirdi.
+        if (typeof response.passed === 'boolean') {
+            var statusText = response.passed ? msgPassed : msgFailed;
+            showSummary(response.passed ? 'alert-success' : 'alert-warning', summaryText + ' — ' + statusText);
+        } else {
+            showSummary('alert-info', summaryText);
+        }
     }
 
     // Backend, Faz B'den itibaren gruplu bir answers[] listesi bekliyor

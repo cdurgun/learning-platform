@@ -53,20 +53,23 @@ public class SecurityConfig {
                         // kendi X-Api-Key interceptor'ıyla zaten korunuyor) anonim erişime açık.
                         .anyRequest().permitAll())
                 .csrf(csrf -> csrf
-                        // Bu üç uç nokta, Spring Security'den ÖNCE de var olan, anonim JSON
-                        // POST'lar: ingestion n8n'den (tarayıcı session'ı yok) geliyor; sabit
-                        // quiz submit'i `quiz.js` düz `fetch()` ile çağırıyor ve hiçbir CSRF
+                        // Bu dört uç nokta, anonim JSON POST'lar: ingestion n8n'den (tarayıcı
+                        // session'ı yok) geliyor; sabit quiz submit'i ve Quiz Area submit'i
+                        // (Faz 139) `quiz.js` düz `fetch()` ile çağırıyor ve hiçbir CSRF
                         // header'ı GÖNDERMİYOR -- CSRF koruması eklemek bunu GERÇEKTEN kırardı
                         // (403). Practice submit'in şu an hiç UI/istemcisi yok (saf bir JSON
                         // API -- bkz. PracticeController javadoc'u) ama aynı anonim/oturumsuz
                         // kullanım deseni beklendiği için aynı muafiyete eklendi. Ingest zaten
-                        // kendi X-Api-Key mekanizmasıyla korunuyor; quiz/practice submit'in
-                        // hassas bir yan etkisi yok (bir cevabı puanlamaktan başka bir şey
-                        // yapmıyor) -- bu yüzden CSRF'ten bilinçli olarak muaf tutuldu.
+                        // kendi X-Api-Key mekanizmasıyla korunuyor; quiz/practice/Quiz Area
+                        // submit'in hassas bir yan etkisi yok (bir cevabı puanlamaktan başka
+                        // bir şey yapmıyor) -- bu yüzden CSRF'ten bilinçli olarak muaf tutuldu.
+                        // Yeni bir anonim/oturumsuz POST API eklenirse aynı muafiyet listesine
+                        // eklenmeli (bkz. CLAUDE.md "Mimari" bölümü).
                         .ignoringRequestMatchers(
                                 "/api/internal/**",
                                 "/{lang:en|tr}/topics/*/quiz/*/submit",
-                                "/{lang:en|tr}/practice/submit"))
+                                "/{lang:en|tr}/practice/submit",
+                                "/{lang:en|tr}/quiz/*/submit"))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .formLogin(form -> form

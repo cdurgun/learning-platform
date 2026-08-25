@@ -556,6 +556,28 @@ autoconfigure`) -- MockMvc kullanan yeni bir test eklenirse bu starter
 gerekli (bkz. `pom.xml`). Ayrıntılı uygulama akışı için `docs/phase-log.md`'de
 "Faz 138"i grep'le.
 
+**GÜNCELLEME (Faz 139):** Yeni bir top-level **Quiz Area** eklendi --
+kategori-kapsamlı, rastgele soru çekilen, yeniden kullanılabilir quiz
+tanımları (`QuizDefinition`, `course` FK + kategorilerle `@ManyToMany`,
+boş kategori kümesi = tüm kurs konvansiyonu). Var olan sabit/topic-gömülü
+`Quiz`/`QuizQuestion`/`QuizService`'e HİÇ DOKUNULMADI -- Quiz Area
+BİLİNÇLİ OLARAK ayrı, ek bir kavram (bkz. "Mimari" bölümündeki Faz 87
+maddesi, Question Pool). Sidebar'da (`fragments/layout.html`) course
+ağacından bağımsız, kendi "QUIZ" bölümü var (`QuizNav`/
+`QuizNavigationService`, `GlobalModelAttributes`'e sitewide enjekte
+edilir). Submit/puanlama YENİDEN YAZILMADI -- `PracticeService.submit`
+AYNEN kullanılacak (draw tarafı yeni, submit tarafı Practice ile paylaşılan).
+`java` kursu için gerçek seed (`basic-java`=`java-basics`+`control-flow`,
+`advanced-java`=`exceptions`+`generics`+`collections`+`oop`+`concurrency`+
+`functional-interfaces-streams`, `all-java`=tüm kurs) V430'da eklendi;
+`spring-boot`/`react` kursları için henüz eklenmedi (kullanıcının açık
+talimatıyla sonraki bir faza bırakıldı). Migration'lar şu an V1'den
+**V430'a kadar boşluksuz**. **Soru çekme/cevap gönderme UI akışı
+(controller + `quiz-play.html` + CSRF muafiyeti) HENÜZ EKLENMEDİ** --
+şu anki durum yalnızca nav + veri modeli + seed, kullanıcının onayını
+bekleyen ayrı bir sonraki faz. Ayrıntılı uygulama akışı için
+`docs/phase-log.md`'de "Faz 139"u grep'le.
+
 ## Proje Yapısı
 
 ```
@@ -563,18 +585,20 @@ src/main/java/com/cdurgun/learning/
     domain/          Course, Category, Topic, TopicTranslation, CodeExample, Language, Difficulty,
                      Question, QuestionOption, QuestionType, QuestionStatus, QuestionSource (soru
                      havuzu -- Faz 87), Quiz, QuizQuestion (Quiz<->Question join/sıra entity'si),
-                     User, Role (opsiyonel kimlik doğrulama -- Faz 138)
+                     User, Role (opsiyonel kimlik doğrulama -- Faz 138), QuizDefinition (Quiz Area
+                     kapsam tanımı, course FK + Category ile @ManyToMany -- Faz 139)
     domain/converter/ Language <-> DB (tr/en kodu) dönüştürücüsü
-    repository/      Spring Data JPA repository'leri (UserRepository dahil)
+    repository/      Spring Data JPA repository'leri (UserRepository, QuizDefinitionRepository dahil)
     service/         ContentResolver, CodeExampleResolver, MarkdownService, NavigationService,
                      QuizService (sabit quiz), PracticeService (soru havuzu/Practice), QuestionScorer
                      (paylaşılan puanlama kuralı), QuestionIngestService (AI/n8n ingestion),
-                     CustomUserDetailsService, UserRegistrationService (Faz 138)
+                     CustomUserDetailsService, UserRegistrationService (Faz 138), QuizDefinitionService
+                     (Quiz Area draw -- Faz 139), QuizNavigationService (Quiz Area sidebar nav -- Faz 139)
     controller/      HomeController, TopicController, PracticeController, QuestionIngestController,
                      AuthController (login/register sayfaları -- Faz 138)
     config/          LangParamLocaleResolver, WebConfig, QuizIngestApiKeyInterceptor (ingestion
                      rotasını X-Api-Key ile korur), SecurityConfig, LangPath (Faz 138)
-    web/nav/         Sidebar/anasayfa navigasyon DTO'ları (CourseNav)
+    web/nav/         Sidebar/anasayfa navigasyon DTO'ları (CourseNav, QuizNav -- Faz 139)
     web/quiz/        Sabit quiz + Practice GET/submit DTO'ları (QuizQuestionView, QuestionView,
                      QuizAnswer, QuizSubmitRequest/Response, PracticeSubmitRequest/Response, ...)
     web/ingest/      AI ingestion istek/yanıt DTO'ları (QuestionIngestRequest/Option/Response)
@@ -583,7 +607,8 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V428)
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V430,
+                                   quiz-area/ -- Faz 139)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     templates/auth/               login.html / register.html (Faz 138)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
@@ -606,6 +631,17 @@ bash ile yeniden doğrula** (ör. `mvn -version`, `curl -I https://repo.maven.ap
   gerektiren hiçbir Java kodu (`mvn compile`, `spring-boot:run`) gerçekten
   derlenip çalıştırılamıyor. Yalnızca harici bağımlılık gerektirmeyen saf JDK
   kodu (`java.util.*` gibi) `javac`/`java` ile gerçekten derlenebilir.
+- **GÜNCELLEME (Faz 140):** `mvn -o compile`/`mvn -o test`'in Lombok'u offline
+  hiç işleyememesi (aşağıdaki madde) bir Maven/plugin-çözümleme sorunu -- Lombok'un
+  KENDİSİ değil. `~/.m2`'de ZATEN cache'lenmiş bağımlılıklarla, `javac`'ı Lombok
+  jar'ını `-processorpath`+`-proc:full` ile DOĞRUDAN çağırmak GERÇEK bir derleme
+  (main+test, sıfır hata) üretiyor -- bu classpath'le testler de (`junit-platform-
+  launcher` ile) ve hatta uygulamanın kendisi de (`java -cp ... 
+  LearningPlatformApplication`, gerçek Tomcat+Postgres+Flyway) GERÇEKTEN
+  çalıştırılabiliyor, `curl` ile uçtan uca doğrulama dahil. Ayrıntılı komut
+  tarifi için `docs/known-constraints.md`'de "Faz 140"ı grep'le -- bu, önceki
+  "mvn kullanılamaz" sonucunu geçersiz KILMIYOR, yalnızca bir workaround'un var
+  olduğunu belgeliyor; kullanıcının kendi `mvn clean test`'i hâlâ nihai kaynak.
 - **`javac`/`java` ile gerçek derleme, Faz 12'den beri varsayılan olarak
   YAPILMIYOR** (oturum maliyeti/limit nedeniyle) — yeni `.java` dosyaları elle
   dikkatli yazılıp gözden geçirilir. İstisna: kullanıcı özellikle isterse, ya da

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <!-- Bu dosya doğrudan render edilmez; yalnızca aşağıdaki quizSection fragment'ini
+         barındırır -- topic.html'deki (sabit, topic-gömülü Quiz) ve quiz-play.html'deki
+         (Quiz Area, kategori-kapsamlı rastgele quiz) markup BİREBİR AYNI olduğu için
+         Faz 139'da buraya çıkarıldı, tek doğruluk kaynağı olsun diye. Fragment parametreleri
+         (`quizQuestions`, `submitUrl`) sayesinde `Quiz`/`Topic` entity'lerine hiç bağımlı
+         değil -- yalnızca `QuizQuestionView`/`QuestionView` (ikisi de aynı erişimci
+         metotlarını taşır: id()/question()/type()/codeSnippet()/codeLanguage()/options())
+         şeklindeki genel view listesini bekler. is_correct/correctOptionIds/explanation
+         bu markup'ta HİÇBİR ZAMAN yer almaz, yalnızca submit response'unda gelir
+         (bkz. quiz.js). -->
+</head>
+<body>
+
+<section th:fragment="quizSection(quizQuestions, submitUrl)"
+         id="quiz-section"
+         class="mt-5 pt-4 border-top"
+         th:data-submit-url="${submitUrl}"
+         th:data-msg-score="#{quiz.score}"
+         th:data-msg-passed="#{quiz.passed}"
+         th:data-msg-failed="#{quiz.failed}"
+         th:data-msg-error="#{quiz.error.generic}"
+         th:data-msg-correct="#{quiz.correctCount}"
+         th:data-msg-incorrect="#{quiz.incorrectCount}">
+
+    <h2 th:text="#{quiz.title}">Test Your Knowledge</h2>
+    <p class="text-muted" th:text="#{quiz.instructions(${#lists.size(quizQuestions)})}">Answer all questions, then submit to see your score.</p>
+
+    <form id="quiz-form">
+        <div class="quiz-question mb-4" th:each="q, qStat : ${quizQuestions}"
+             th:data-question-id="${q.id()}">
+            <p class="fw-semibold"
+               th:text="${qStat.count} + '. ' + ${q.question()}">Question text</p>
+            <!-- CODE_OUTPUT: kod snippet'i varsa highlight.js'in sayfa altında zaten
+                 çalıştırdığı hljs.highlightAll() ile aynı mekanizmayla vurgulanır --
+                 SINGLE_CHOICE/MULTIPLE_CHOICE'ta bu blok hiç render edilmez, codeSnippet
+                 zaten null. th:text kullanıldığı için kod metni her zaman escape'lenir. -->
+            <pre th:if="${q.type() != null and q.type().name() == 'CODE_OUTPUT' and q.codeSnippet() != null and !#strings.isEmpty(q.codeSnippet())}"
+                 class="mb-3"><code th:text="${q.codeSnippet()}"
+                      th:class="${'language-' + (q.codeLanguage() != null ? q.codeLanguage() : 'plaintext')}">code</code></pre>
+            <!-- MULTIPLE_CHOICE sorularda checkbox, diğer tiplerde (SINGLE_CHOICE/
+                 CODE_OUTPUT) radio -- th:type, statik type="radio" fallback'ini EZER.
+                 quiz.js zaten generic ':checked' sorgusu kullandığı için burada BAŞKA
+                 hiçbir değişiklik gerekmiyor. -->
+            <div class="form-check" th:each="opt : ${q.options()}">
+                <input class="form-check-input quiz-option-input" type="radio"
+                       th:type="${q.type() != null and q.type().name() == 'MULTIPLE_CHOICE'} ? 'checkbox' : 'radio'"
+                       th:name="'question-' + ${q.id()}"
+                       th:id="'quiz-option-' + ${opt.id()}"
+                       th:value="${opt.id()}"
+                       th:data-question-id="${q.id()}"/>
+                <label class="form-check-label" th:for="'quiz-option-' + ${opt.id()}"
+                       th:text="${opt.optionText()}">Option</label>
+            </div>
+            <div class="quiz-result-feedback mt-2 small" style="display:none;"></div>
+        </div>
+
+        <button type="submit" id="quiz-submit-btn" class="btn btn-primary" disabled
+                th:text="#{quiz.submit}">Submit</button>
+    </form>
+
+    <div id="quiz-summary" class="alert mt-3" style="display:none;" role="alert"></div>
+</section>
+
+</body>
+</html>
