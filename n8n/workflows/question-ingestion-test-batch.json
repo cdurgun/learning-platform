@@ -1,0 +1,62 @@
+{
+  "id": "question-ingestion-test-batch",
+  "name": "Question Ingestion - Test Batch (Enum, 3 questions)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// First implementation, Question Ingestion / n8n Integration phase --\n// a small, hand-written test batch (2-3 real, accurate Java `enum` questions).\n// This node ONLY builds the payload; it never talks to Postgres or to\n// production -- the next node calls the existing Question Ingestion API,\n// which is the sole write path into the question pool (see\n// QuestionIngestService). Every item explicitly sets source: \"N8N\" and\n// deliberately has NO status field at all -- the API forces PENDING_REVIEW\n// regardless of what is sent, so there is nothing here that could bypass\n// review even if this workflow were misconfigured.\nreturn [\n  {\n    json: {\n      topicSlug: \"enum\",\n      language: \"en\",\n      type: \"SINGLE_CHOICE\",\n      difficulty: \"BEGINNER\",\n      source: \"N8N\",\n      question: \"Which of the following is true when comparing two enum constants with the == operator in Java?\",\n      explanation: \"Enum constants are singletons -- each constant is a single, unique instance for the entire JVM, so == correctly compares identity and is the recommended way to compare enum values (equals() works too but is unnecessary).\",\n      options: [\n        { optionText: \"== correctly compares enum constants because each constant is a singleton instance.\", correct: true },\n        { optionText: \"== always returns false for enum constants; equals() must be used instead.\", correct: false },\n        { optionText: \"== compares enum constants by their ordinal() value only.\", correct: false },\n        { optionText: \"== throws a compile-time error when used on enum types.\", correct: false }\n      ]\n    }\n  },\n  {\n    json: {\n      topicSlug: \"enum\",\n      language: \"en\",\n      type: \"SINGLE_CHOICE\",\n      difficulty: \"INTERMEDIATE\",\n      source: \"N8N\",\n      question: \"What happens when Enum.valueOf(SomeEnum.class, \\\"DOES_NOT_EXIST\\\") is called with a constant name that does not exist?\",\n      explanation: \"valueOf() throws an IllegalArgumentException at runtime if the given name does not match any constant in the enum -- it never returns null.\",\n      options: [\n        { optionText: \"It throws an IllegalArgumentException.\", correct: true },\n        { optionText: \"It returns null.\", correct: false },\n        { optionText: \"It returns the first declared constant as a fallback.\", correct: false },\n        { optionText: \"It throws a checked exception that must be declared.\", correct: false }\n      ]\n    }\n  },\n  {\n    json: {\n      topicSlug: \"enum\",\n      language: \"en\",\n      type: \"SINGLE_CHOICE\",\n      difficulty: \"BEGINNER\",\n      source: \"N8N\",\n      question: \"Can a switch statement in Java use enum constants as its case labels?\",\n      explanation: \"Yes -- switch has first-class support for enums; the case labels use the bare constant name (not EnumType.CONSTANT) because the switch expression's type already establishes the enum type.\",\n      options: [\n        { optionText: \"Yes, using the bare constant name as the case label.\", correct: true },\n        { optionText: \"No, enums cannot be used in switch statements.\", correct: false },\n        { optionText: \"Yes, but only if the enum implements Comparable.\", correct: false },\n        { optionText: \"Yes, but each case label must be fully qualified as EnumType.CONSTANT.\", correct: false }\n      ]\n    }\n  }\n];"
+      },
+      "id": "build-test-questions-1",
+      "name": "Build Test Questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.QUESTION_INGEST_BASE_URL || 'http://localhost:8080') + '/api/internal/questions/ingest' }}",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Api-Key", "value": "={{ $env.QUIZ_INGEST_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "ingest-question-1",
+      "name": "Ingest Question",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Build Test Questions", "type": "main", "index": 0 }]]
+    },
+    "Build Test Questions": {
+      "main": [[{ "node": "Ingest Question", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

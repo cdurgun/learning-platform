@@ -25,14 +25,19 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * FAZ D: AI/n8n'in soru havuzuna yazdığı TEK giriş noktası. Buradan geçen HER
- * soru, client ne gönderirse göndersin, {@code status = PENDING_REVIEW} ve
- * {@code source = AI} ile kaydedilir -- bu iki alan {@link QuestionIngestRequest}'te
+ * Manuel yazım/Claude/n8n -- HANGİ kaynaktan gelirse gelsin soru havuzuna
+ * yazan TEK giriş noktası (bkz. Question Ingestion / Authoring API fazı).
+ * Buradan geçen HER soru, client ne gönderirse göndersin, {@code status =
+ * PENDING_REVIEW} ile kaydedilir -- bu alan {@link QuestionIngestRequest}'te
  * hiç YOK (bkz. o DTO'nun javadoc'u), yani "sunucu ezer" kuralı burada bir
- * if/override değil, DTO'nun kendisinden kaynaklanan bir imkansızlık. Kimlik
- * doğrulama (X-Api-Key) bu servisin SORUMLULUĞUNDA DEĞİL --
- * {@code config.QuizIngestApiKeyInterceptor} tarafından, bu servise hiç
- * ulaşılamadan önce yapılır.
+ * if/override değil, DTO'nun kendisinden kaynaklanan bir imkansızlık.
+ * {@code source} ise (status'un AKSİNE) DTO'da VAR ve çağıranın kendi beyanı
+ * -- ama sıkı bir izin listesine (bkz. {@link QuestionSource}, yalnızca
+ * {@code MANUAL}/{@code CLAUDE}/{@code N8N}) karşı doğrulanmadan asla
+ * kaydedilmez, aynı {@code parseEnum} yardımcısıyla {@code type}/{@code
+ * difficulty} gibi. Kimlik doğrulama (X-Api-Key) bu servisin SORUMLULUĞUNDA
+ * DEĞİL -- {@code config.QuizIngestApiKeyInterceptor} tarafından, bu servise
+ * hiç ulaşılamadan önce yapılır.
  */
 @Service
 public class QuestionIngestService {
@@ -62,6 +67,7 @@ public class QuestionIngestService {
         Language language = parseLanguage(request.language());
         QuestionType type = parseEnum(QuestionType.class, request.type(), "type");
         Difficulty difficulty = parseEnum(Difficulty.class, request.difficulty(), "difficulty");
+        QuestionSource source = parseEnum(QuestionSource.class, request.source(), "source");
 
         String questionText = requireNonBlank(request.question(), "question");
         String explanation = requireNonBlank(request.explanation(), "explanation");
@@ -85,7 +91,7 @@ public class QuestionIngestService {
                 .type(type)
                 .difficulty(difficulty)
                 .status(QuestionStatus.PENDING_REVIEW)
-                .source(QuestionSource.AI)
+                .source(source)
                 .question(questionText)
                 .codeSnippet(codeSnippet)
                 .codeLanguage(codeLanguage)

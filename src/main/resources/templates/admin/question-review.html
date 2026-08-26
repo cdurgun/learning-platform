@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html th:lang="${language.code}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="'LearnForgeX — ' + #{admin.questions.title}">Question Review</title>
+    <!-- Kimlik doğrulanmış/ADMIN-only bir araç -- public içerik değil, indexlenmemeli. -->
+    <meta name="robots" content="noindex, nofollow"/>
+
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/favicon.svg(v=2)}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/custom.css}"/>
+</head>
+<body>
+
+<!-- Bilinçli olarak yalnızca navbar + footer -- public course/quiz sidebar'ı bu
+     ekranla ilgisiz, admin sayfası public sayfalardan görsel olarak ayrışıyor
+     (bkz. auth/login.html'deki aynı "sidebar yok" deseni). -->
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-4">
+    <h1 class="mb-1" th:text="#{admin.questions.title}">Question Review</h1>
+    <p class="text-muted mb-4" th:text="#{admin.questions.pendingCount(${#lists.size(pendingQuestions)})}">
+        Pending Questions: 0
+    </p>
+
+    <div th:if="${#lists.isEmpty(pendingQuestions)}" class="alert alert-info" th:text="#{admin.questions.empty}">
+        No pending questions.
+    </div>
+
+    <div class="card mb-4" th:each="q : ${pendingQuestions}">
+        <div class="card-body">
+            <p class="text-uppercase text-muted small fw-bold mb-1" th:text="#{admin.questions.question}">Question:</p>
+            <p class="fw-semibold" th:text="${q.questionDisplayText()}">Question text</p>
+
+            <pre th:if="${q.type() != null and q.type().name() == 'CODE_OUTPUT' and q.codeSnippet() != null and !#strings.isEmpty(q.codeSnippet())}"
+                 class="mb-3"><code th:text="${q.codeSnippet()}"
+                      th:class="${'language-' + (q.codeLanguage() != null ? q.codeLanguage() : 'plaintext')}">code</code></pre>
+
+            <p class="text-uppercase text-muted small fw-bold mb-1" th:text="#{admin.questions.options}">Options:</p>
+            <ul class="list-unstyled mb-3">
+                <li th:each="opt, optStat : ${q.options()}" th:classappend="${opt.correct()} ? 'text-success fw-semibold' : ''">
+                    <span th:text="${opt.correct()} ? '&#9679;' : '&#9675;'">o</span>
+                    <span th:text="${T(java.lang.Character).toString(65 + optStat.index)} + ')'">A)</span>
+                    <span th:text="${opt.optionText()}">Option text</span>
+                    <span th:if="${opt.correct()}" class="badge text-bg-success ms-1">&#10003;</span>
+                </li>
+            </ul>
+
+            <p class="text-uppercase text-muted small fw-bold mb-1" th:text="#{admin.questions.explanation}">Explanation:</p>
+            <p class="mb-3" th:text="${q.explanation()}">Explanation text</p>
+
+            <div class="row small text-muted mb-3">
+                <div class="col-6 col-md-3">
+                    <span th:text="#{admin.questions.difficulty}">Difficulty:</span>
+                    <span th:text="${q.difficulty()}">INTERMEDIATE</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span th:text="#{admin.questions.type}">Type:</span>
+                    <span th:text="${q.type()}">SINGLE_CHOICE</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span th:text="#{admin.questions.language}">Language:</span>
+                    <span th:text="${q.language()}">EN</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span th:text="#{admin.questions.source}">Source:</span>
+                    <span th:text="${q.source()}">MANUAL</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span th:text="#{admin.questions.status}">Status:</span>
+                    <span th:text="${q.status()}">PENDING_REVIEW</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span th:text="#{admin.questions.topic}">Topic:</span>
+                    <span th:text="${q.topicTitle()}">Interface</span>
+                </div>
+            </div>
+
+            <!-- Faz C: her buton kendi POST formunda -- login/register/logout formlarıyla
+                 AYNI CSRF deseni (${_csrf.token} gizli input'u). İki ayrı form (tek bir
+                 form + iki submit butonu değil) kasıtlı: hangi action'ın tetiklendiği
+                 yalnızca th:action'a bakılarak netleşiyor, JS'e ya da isimli submit
+                 button ayrımına gerek kalmıyor. -->
+            <div class="d-flex gap-2">
+                <form method="post" th:action="@{/{lang}/admin/questions/{id}/publish(lang=${language.code}, id=${q.id()})}">
+                    <input th:if="${_csrf}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-sm btn-success" th:text="#{admin.questions.publish}">Publish</button>
+                </form>
+                <form method="post" th:action="@{/{lang}/admin/questions/{id}/reject(lang=${language.code}, id=${q.id()})}">
+                    <input th:if="${_csrf}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger" th:text="#{admin.questions.reject}">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+</body>
+</html>

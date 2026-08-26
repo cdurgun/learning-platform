@@ -578,6 +578,190 @@ talimatıyla sonraki bir faza bırakıldı). Migration'lar şu an V1'den
 bekleyen ayrı bir sonraki faz. Ayrıntılı uygulama akışı için
 `docs/phase-log.md`'de "Faz 139"u grep'le.
 
+**GÜNCELLEME (Faz 141):** **Question Review** mimarisi eklendi -- önce
+ayrıntılı bir mimari öneri sunulup onaylandı (bkz.
+`docs/question-review-promotion-proposal.md`), sonra iki küçük fazda
+uygulandı. **Faz A (ADMIN yetkilendirmesi):** `SecurityConfig`'e tek bir
+kural eklendi -- `/{lang:en|tr}/admin/**` → `hasRole("ADMIN")`. Yeni bir
+yetkilendirme mekanizması KURULMADI: `Role.ADMIN` ve
+`CustomUserDetailsService`'in `"ROLE_" + role.name()` authority'si Faz
+138'den beri zaten vardı, hiç kullanılmıyordu. Kullanıcının kendi dev
+hesabını ADMIN'e yükseltmesi ELLE yapıldı (migration YOK, rol-yönetim
+arayüzü YOK). **Faz B (Question Review UI, yalnızca listeleme):** yeni
+`QuestionReviewController` (`GET /{lang}/admin/questions`),
+`QuestionReviewService.listPending()`, `web/review/QuestionReviewView`
+DTO'su (public quiz DTO'larının aksine `correct` alanını BİLİNÇLİ OLARAK
+gizlemiyor -- kimlik doğrulanmış bir ADMIN görünümü), yeni
+`admin/question-review.html` (Publish/Reject butonları KASITLI OLARAK
+`disabled`, hiçbir forma bağlı değil -- Faz C'ye bırakıldı). **Güncel
+davranış:** yalnızca `ADMIN` rolü `/{lang}/admin/questions`'a erişebiliyor
+(USER 403, anonim login'e yönlendiriliyor), `PENDING_REVIEW` sorular
+listelenip doğru şıkkıyla birlikte incelenebiliyor, Publish/Reject HENÜZ
+YOK; `PENDING_REVIEW` sorular public quiz'lerde (Practice/Quiz
+Area/sabit quiz) HÂLÂ görünmüyor -- bu, Faz B'de hiç değişmeyen,
+`QuestionRepository`'nin pool sorgularına zaten sabit yazılı
+`status='PUBLISHED'` filtresinden geliyor (bkz. Faz 87/139). Hem otomatik
+testle (69/69) hem gerçek canlı uygulamaya karşı (geçici ADMIN/USER
+hesaplarıyla gerçek `/en/login` akışı üzerinden) doğrulandı. Migration'lar
+hâlâ V1'den **V430'a kadar boşluksuz** (bu fazlarda yeni migration YOK).
+Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 141"i grep'le.
+
+**GÜNCELLEME (Faz 142):** Question Review'in eksik parçası, **Publish/
+Reject**, eklendi. `QuestionReviewService.publish`/`reject` -- yalnızca
+`PENDING_REVIEW`'dan geçişe izin veriyor (zaten PUBLISHED/REJECTED bir
+soruya tekrar çağrılırsa `409 Conflict`, satır değişmez), `reviewedBy`/
+`reviewedAt`'i (Faz 87'den beri var, hiç kullanılmıyordu) artık gerçekten
+dolduruyor. Yeni `POST /{lang}/admin/questions/{id}/publish`/`.../reject`
+-- Faz A'nın `hasRole("ADMIN")` kuralına otomatik giriyor,
+`SecurityConfig`'te ek değişiklik gerekmedi; CSRF muafiyet listesine
+BİLİNÇLİ OLARAK eklenmedi (login/register/logout formlarıyla aynı
+kategori -- kimlik doğrulanmış gerçek tarayıcı formu). `admin/question-
+review.html`'deki butonlar artık gerçek POST formları (Faz B'deki
+`disabled` durumdan). **Public havuza sızma/dışlanma hiçbir yeni kod
+gerektirmedi** -- `QuestionRepository`'nin sabit `status='PUBLISHED'`
+filtresi (Faz 87) `publish()`'in hemen ardından soruyu otomatik uygun
+hale getiriyor; gerçek canlı uygulamaya karşı `/en/practice`'e yapılan
+bir HTTP çağrısıyla doğrulandı. Hem otomatik testle (75/75) hem gerçek
+canlı uygulamaya karşı (409 double-processing koruması dahil)
+doğrulandı. Migration'lar hâlâ V1'den **V430'a kadar boşluksuz**.
+Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 142"yi grep'le.
+
+**GÜNCELLEME (Faz 143):** Question Review'in son parçası, **Development →
+Production promotion**, eklendi -- kod değil, iki küçük araç: `scripts/
+export_approved_questions.py` + ince bir `scripts/export-approved-
+questions.sh` sarmalayıcısı. Yalnızca AÇIKÇA verilen dev question id'lerini
+işler (`export-approved-questions.sh 101 102 103`) -- asla "tüm PUBLISHED
+sorular" gibi kapsayıcı bir varsayılan kullanmaz (kullanıcının bilinçli
+kararı). Yeni soru ÜRETİMİ/incelemesi HÂLÂ hiçbir zaman bir migration
+olarak yazılmıyor (yalnızca `QuestionIngestController` üzerinden dev'e
+canlı INSERT) -- yalnızca PROMOTION bir Flyway migration'ı, `db/migration/
+question-promotion/` alt klasöründe, her zaman doğrudan `status='PUBLISHED'`
+ile tek bir INSERT (bkz. "Mimari" bölümündeki Faz 87 maddesi). Script
+production'a HİÇBİR ŞEKİLDE bağlanamaz -- yapısal olarak: env değişkeni
+isimleri (`EXPORT_SOURCE_DB_*`) `application-prod.yml`'in okuduklarından
+(`DB_URL`/`DB_USERNAME`/`DB_PASSWORD`) kasıtlı olarak farklı. Tekrar-promote
+önleme bu aşamada bir SÜREÇ sorumluluğu (migration başlığındaki dev id
+listesi) -- yeni bir `promoted_at` kolonu/unique constraint BİLİNÇLİ OLARAK
+EKLENMEDİ. Doğrulama gerçek bir atılabilir Postgres container'ında (tüm 431
+migration sıfırdan) yapıldı, prod'a hiç dokunulmadı. Ayrıntılı uygulama
+akışı için `docs/phase-log.md`'de "Faz 143"ü grep'le.
+
+**GÜNCELLEME (Faz 144):** **Question Ingestion / Authoring API** netleştirildi
+-- manuel yazım/Claude/n8n'in ortak giriş noktası. Var olan
+`QuestionIngestController`/`QuestionIngestService`/`QuizIngestApiKeyInterceptor`
+mimarisi (Faz 87/D) zaten gereksinimlerin neredeyse tamamını karşılıyordu --
+**yeni bir API/servis YARATILMADI**, yalnızca genişletildi. `QuestionSource`
+enum'u `MANUAL, AI` yerine `MANUAL, CLAUDE, N8N` oldu (eski genel `AI`
+hiçbir gerçek satırda hiç kullanılmamıştı). `QuestionIngestRequest`'e yeni
+bir `source` alanı eklendi -- `status`'un AKSİNE (o hâlâ DTO'da hiç YOK,
+hâlâ bir imkansızlık) `source` güvenlik açısından hassas değil, çağıranın
+kendini beyan etmesine izin veriliyor ama var olan `parseEnum` yardımcısıyla
+sıkı bir izin listesine (yalnızca MANUAL/CLAUDE/N8N) karşı doğrulanıyor.
+Hiçbir migration/şema değişikliği YOK (`source` zaten VARCHAR, CHECK
+constraint yok). Hem otomatik testle (80/80) hem gerçek canlı uygulamaya
+karşı doğrulandı -- ingest edilen `PENDING_REVIEW` soru gerçek `/en/practice`
+havuzundan tamamen izole kaldı, gerçek Question Review ekranında doğru
+`source` ile göründü. Ayrıntılı uygulama akışı için `docs/phase-log.md`'de
+"Faz 144"ü grep'le.
+
+**GÜNCELLEME (Faz 145):** **n8n → Question Ingestion API'nin ilk GERÇEK
+uçtan uca entegrasyonu** kuruldu -- yerel makinede zaten cache'li olan
+gerçek bir `n8n` Docker image'ıyla (simülasyon değil). Yeni `n8n/`
+dizini: `workflows/question-ingestion-test-batch.json` (Manual Trigger →
+Code node [3 gerçek `enum` sorusu üretir] → HTTP Request [var olan
+`/api/internal/questions/ingest`'e POST]) + `README.md`. n8n
+PostgreSQL'e ya da production'a HİÇ bağlanmıyor, yalnızca var olan
+Ingestion API'yi çağırıyor -- workflow'da başka hiçbir bağlantı düğümü
+yok. `retryOnFail: false` + `onError: "continueRegularOutput"` AÇIKÇA
+ayarlandı (duplicate yaratabilecek bir retry'a karşı). API-key,
+workflow dosyasına hiç yazılmadan `{{$env.QUIZ_INGEST_API_KEY}}`
+ifadesiyle veriliyor. Gerçek n8n CLI ile (`import:workflow` +
+`execute --id`) çalıştırılıp gerçek dev DB'ye karşı doğrulandı: 3
+soru `source=N8N`/`PENDING_REVIEW` olarak eklendi, `/en/practice`'ten
+izole kaldı, Question Review ekranında doğru göründü; ayrı bir bozuk-
+topic-slug testiyle 400 hatasının duplicate yaratmadan görünür şekilde
+raporlandığı da doğrulandı. Test verisi temizlendi, Publish/Reject'e
+dokunulmadı. Ayrıntılı uygulama akışı için `docs/phase-log.md`'de
+"Faz 145"i grep'le.
+
+**GÜNCELLEME (Faz 146):** **Büyük ölçekli soru üretim workflow'u** önce
+plan mode'da tasarlanıp onaylandı (H2 başlıkları kavramsal KAPSAM
+tanımlar ama literal kelime-eşleşme gerekliliği DEĞİLDİR -- content-fit
+LLM prompt'unun gerçek ders metnine topraklanmasıyla sağlanır, Validate
+Output yalnızca YAPISAL doğrulama yapar), sonra `enum` topic'iyle
+sınırlı, kontrollü bir ilk test olarak uygulandı. n8n'in Postgres'e/dosya
+sistemine doğrudan bağlanması hâlâ YASAK olduğu için üç yeni salt-okunur
+`/api/internal/**` uç noktası eklendi: `GET /api/internal/topics/{slug}`
+(metadata), `GET /api/internal/topics/{slug}/content?lang=..` (ham
+markdown), `GET /api/internal/questions/existing?topicSlug=..&language=..`
+(id+question, TÜM statüler -- duplicate kontrolü için). Yeni
+`GenerationToolingController`/`GenerationToolingService` (yalnızca okur,
+`Question` YAZMAZ) -- hiçbir yeni güvenlik kodu yok, üçü de var olan
+`/api/internal/**`/`QuizIngestApiKeyInterceptor` kapsamında. Yeni
+`n8n/workflows/question-generation-enum-test.json` (9 düğüm: Topic
+Selection → Load Topic Content → Build Generation Spec → Generate Batch
+→ Parse Generated Questions → Validate Output → Duplicate Check → Submit
+Valid Questions → Record Results). **Bu sandbox'ta kullanılabilir bir
+`ANTHROPIC_API_KEY` YOK** (gerçek bir HTTP çağrısı `api.anthropic.com`'dan
+GERÇEK bir `401 invalid x-api-key` döndürdü) -- `Generate Batch` bu yüzden
+Faz 145'teki AYNI teknikle (elle/Claude tarafından yazılmış, ders içeriğine
+gerçekten topraklanmış bir Code node, Anthropic'in YANIT ŞEKLİYLE birebir
+aynı biçimde) bir stand-in'e çevrildi, akışın geri kalanı DEĞİŞMEDEN gerçek
+çalıştı. **Ayrıca `n8n execute` CLI'ının workflow'daki `pinData`'yı hiç
+dikkate almadığı da bu Faz'da keşfedildi** (bkz. `docs/known-constraints.md`
+"Faz 146"). Üretilen 6 soru (3 EN + 3 TR, `EnumSet`/`EnumMap`/`Singleton
+Pattern`'e topraklı) gerçek Ingestion API'ye submit edilip gerçek dev DB'de
+`status=PENDING_REVIEW`/`source=N8N` olarak doğrulandı, `status='PUBLISHED'`
+sayımı 0, gerçek `/en/admin/questions` ekranında (geçici bir ADMIN hesabıyla)
+göründüğü teyit edildi. Test verisi/geçici hesap temizlendi. Migration'lar
+hâlâ V1'den **V430'a kadar boşluksuz** (bu Faz'da migration YOK). Kullanıcının
+açık talimatıyla büyük ölçekli/çok-topic'li üretim BİLİNÇLİ OLARAK bu Faz'ın
+dışında bırakıldı -- sonraki adım için onay bekleniyor. Ayrıntılı uygulama
+akışı için `docs/phase-log.md`'de "Faz 146"yı grep'le.
+
+**GÜNCELLEME (Faz 147):** **`Generate Batch` düğümü gerçek OpenAI'a geçirildi**
+ve iki gerçek, ücretli çağrıyla `enum` topic'inde uçtan uca doğrulandı. n8n'in
+kalıcı SQLite'ında zaten var olan bir credential ("OpenAI account",
+`openAiApi` tipi) yalnızca `id`/`name`/`type` salt-okunur sorgulanarak
+bulundu (şifreli anahtar hiç okunmadı/yazdırılmadı), `Generate Batch` artık
+`https://api.openai.com/v1/chat/completions`'ı n8n'in KENDİ credential
+mekanizmasıyla (`predefinedCredentialType`/`openAiApi`) çağırıyor.
+`QuestionSource`'a `MANUAL`/`CLAUDE`/`N8N` ile AYNI desende yeni bir `OPENAI`
+değeri eklendi. **İki gerçek çağrıda üç yeni bug bulunup düzeltildi** (hiçbiri
+için ikinci bir ücretli çağrı YAPILMADI -- kaçırılan sorular, halihazırda
+alınmış gerçek yanıt yeniden oynatılarak kurtarıldı): `Load Topic Content`
+`onlyLanguage`/`overrideCount`'u kaybediyordu; gerçek HTTP Request düğümü
+`item.json`'ı API yanıtıyla değiştirdiği için `topicSlug`/`language`
+kayboluyordu (`itemMatching` ile düzeltildi); CODE_OUTPUT prompt düzeltmesi
+kodu `question` metninden `codeSnippet`'e taşıyınca TÜM CODE_OUTPUT
+sorularının `question` metni aynı jenerik cümle olduğu için `Duplicate
+Check` birbirinden farklı iki kodu yanlışlıkla kopya sandı (`question +
+codeSnippet` birlikte karşılaştırılarak düzeltildi). **Kalite incelemesi +
+prompt iyileştirmesi:** ilk 3 sorudan biri aşırı tanım-tabanlı, biri de
+açıklaması yalnızca doğru şıkkı gerekçelendirip yanlışları hiç ele
+almıyordu bulundu; `buildPrompt()` batch başına en fazla bir tanım sorusuna
+izin verecek, gerçekçi distractor isteyecek, açıklamaların en yakın yanlış
+şıkkı da ele almasını isteyecek, aynı cümle kalıbının tekrarını
+yasaklayacak, ve CODE_OUTPUT kodunun yalnızca `codeSnippet`'te olmasını
+zorunlu kılacak şekilde yeniden yazıldı. **CODE_OUTPUT render hatası**
+(kodun hem `codeSnippet`'te hem `question` metninde ham fenced blok olarak
+tekrarlanıp admin ekranında ters tırnaklarla düz metin görünmesi) SUNUM
+KATMANINDA düzeltildi -- yeni `QuestionReviewView.questionDisplayText()`
+(`codeSnippet` doluysa `question`'daki fenced bloğu ekrandan düşüren
+türetilmiş bir görünüm metodu, DB'deki `question` sütununu HİÇ değiştirmez),
+`admin/question-review.html` artık bunu çağırıyor. **Kullanıcının manuel
+kalite kararıyla** id 43 (aşırı basit) ve id 49 (id 44 ile pedagojik olarak
+yedünk, ikisi de `valueOf(String)` test ediyor) REJECTED, id 44/45/46/47/48
+PUBLISHED edildi -- gerçek `/en/admin/questions/{id}/publish|reject` uç
+noktalarıyla, `reviewedBy`/`reviewedAt`'in dolduğu, 5 PUBLISHED sorunun
+gerçek `PracticeService`/`QuizService` native sorgusunun sonuç kümesinde
+göründüğü, ve 43-49 dışında hiçbir satırın etkilenmediği doğrulandı. Dev DB
+sonucu: 17 soru (10 orijinal `PUBLISHED`/`MANUAL` + 5 yeni
+`PUBLISHED`/`OPENAI` + 2 `REJECTED`/`OPENAI`). Testler **90/90**. Migration'lar
+hâlâ V1'den **V430'a kadar boşluksuz** (bu Faz'da migration YOK). Büyük
+ölçekli/çok-topic'li üretim HÂLÂ bu Faz'ın dışında. Ayrıntılı uygulama
+akışı için `docs/phase-log.md`'de "Faz 147"yi grep'le.
+
 ## Proje Yapısı
 
 ```
@@ -591,31 +775,68 @@ src/main/java/com/cdurgun/learning/
     repository/      Spring Data JPA repository'leri (UserRepository, QuizDefinitionRepository dahil)
     service/         ContentResolver, CodeExampleResolver, MarkdownService, NavigationService,
                      QuizService (sabit quiz), PracticeService (soru havuzu/Practice), QuestionScorer
-                     (paylaşılan puanlama kuralı), QuestionIngestService (AI/n8n ingestion),
+                     (paylaşılan puanlama kuralı), QuestionIngestService (manuel/Claude/n8n
+                     ortak ingestion giriş noktası -- Faz 144),
                      CustomUserDetailsService, UserRegistrationService (Faz 138), QuizDefinitionService
-                     (Quiz Area draw -- Faz 139), QuizNavigationService (Quiz Area sidebar nav -- Faz 139)
+                     (Quiz Area draw -- Faz 139), QuizNavigationService (Quiz Area sidebar nav -- Faz 139),
+                     QuestionReviewService (listeleme + publish/reject, `status='PENDING_REVIEW'`
+                     dışında 409 -- Faz 141/142), GenerationToolingService (salt-okunur, n8n'in
+                     soru üretim workflow'u için topic metadata/içerik/mevcut-soru okuması --
+                     hiçbir Question YAZMAZ, Faz 146)
     controller/      HomeController, TopicController, PracticeController, QuestionIngestController,
-                     AuthController (login/register sayfaları -- Faz 138)
+                     AuthController (login/register sayfaları -- Faz 138), QuestionReviewController
+                     (ADMIN-only: `GET /{lang}/admin/questions`, `POST .../{id}/publish`,
+                     `POST .../{id}/reject` -- Faz 141/142), GenerationToolingController
+                     (salt-okunur `/api/internal/topics/{slug}[/content]` +
+                     `/api/internal/questions/existing` -- Faz 146)
     config/          LangParamLocaleResolver, WebConfig, QuizIngestApiKeyInterceptor (ingestion
-                     rotasını X-Api-Key ile korur), SecurityConfig, LangPath (Faz 138)
+                     rotasını X-Api-Key ile korur), SecurityConfig (Faz 141'den itibaren
+                     `/{lang:en|tr}/admin/**` → `hasRole("ADMIN")` kuralı da içeriyor), LangPath (Faz 138)
     web/nav/         Sidebar/anasayfa navigasyon DTO'ları (CourseNav, QuizNav -- Faz 139)
     web/quiz/        Sabit quiz + Practice GET/submit DTO'ları (QuizQuestionView, QuestionView,
                      QuizAnswer, QuizSubmitRequest/Response, PracticeSubmitRequest/Response, ...)
     web/ingest/      AI ingestion istek/yanıt DTO'ları (QuestionIngestRequest/Option/Response)
     web/auth/        Kayıt formu bağlama DTO'su (RegisterForm -- Faz 138)
+    web/review/      Question Review DTO'su (QuestionReviewView + nested ReviewOptionView --
+                     `correct` alanını BİLİNÇLİ OLARAK gizlemiyor, public DTO'ların aksine -- Faz 141;
+                     `questionDisplayText()` -- CODE_OUTPUT'ta `question`'a AI'nın yanlışlıkla
+                     gömdüğü fenced kod bloğunu sunumdan düşüren türetilmiş görünüm metodu,
+                     DB'ye hiç dokunmaz -- Faz 147)
+    web/internal/    Generation tooling DTO'ları (TopicMetadataResponse, ExistingQuestionView --
+                     Faz 146)
 
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
     db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V430,
-                                   quiz-area/ -- Faz 139)
+                                   quiz-area/ -- Faz 139, question-promotion/ -- promotion
+                                   script'inin ürettiği migration'lar için, Faz 143)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
     templates/auth/               login.html / register.html (Faz 138)
+    templates/admin/              question-review.html -- ADMIN-only, Publish/Reject artık
+                                   gerçek CSRF-korumalı POST formları (Faz 141/142)
     static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
     static/img/                   LearnForgeX marka varlıkları (favicon.svg/logo.svg/logo-dark.svg,
                                    favicon.ico/-16.png/-32.png, apple-touch-icon.png -- Faz 48)
     messages*.properties          Arayüz metni çevirileri
 ```
+
+scripts/
+    export_approved_questions.py  Development→Production question promotion export --
+                                   yalnızca AÇIK dev question id listesi, salt-okunur,
+                                   production'a bağlanamaz (bkz. Faz 143)
+    export-approved-questions.sh  Yukarıdakinin ince CLI sarmalayıcısı
+
+n8n/
+    workflows/question-ingestion-test-batch.json  Manual Trigger → Code → HTTP Request
+                                   (var olan Ingestion API'ye POST) -- PostgreSQL'e/prod'a
+                                   hiç bağlanmıyor (bkz. Faz 145)
+    workflows/question-generation-enum-test.json  9 düğümlü büyük ölçekli soru üretim
+                                   pipeline'ı (Topic Selection → ... → Record Results),
+                                   `enum` topic'iyle sınırlı ilk test -- `Generate Batch`
+                                   şu an gerçek Anthropic çağrısı yerine bir Code-node
+                                   stand-in (bkz. Faz 146, ANTHROPIC_API_KEY yok)
+    README.md                     Kurulum/çalıştırma talimatı (env değişkenleri, n8n CLI)
 
 ## Bilinen Kısıtlar / Dikkat Edilecekler (Güncel Durum Özeti)
 

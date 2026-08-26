@@ -871,7 +871,58 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   `-processorpath`'e ekle, `-proc:full -parameters` ile `javac` çağır) -- kullanıcının
   kendi ortamındaki `mvn clean test` HÂLÂ nihai/en güvenilir doğrulama kaynağı olmaya
   devam ediyor, bu workaround onun YERİNE değil, sandbox içi ek bir güven katmanı
-  olarak kullanılmalı.
+  olarak kullanılmalı. **Faz 141'de (Question Review, Faz A/B) YENİDEN doğrulandı** --
+  aynı workaround'la hem tam test suite (69/69) hem canlı uygulamaya karşı gerçek
+  ADMIN/USER/anonim HTTP istekleri sorunsuz çalıştı, ayrıca yeni bir sorun ÇIKMADI.
+  **Faz 142'de (Publish/Reject) BİR KEZ DAHA doğrulandı** -- tam suite 75/75, ayrıca
+  canlı uygulamaya karşı gerçek publish/reject POST'ları (CSRF token'ı dahil), 409
+  double-processing koruması, ve `/en/practice`'in publish edilen soruyu ANINDA
+  havuza aldığı/reddedileni dışarıda bıraktığı gerçek bir HTTP çağrısıyla doğrulandı.
+- **GÜNCELLEME (Faz 143, Question Review Promotion): gerçek dev/prod'a HİÇ dokunmadan
+  bir Flyway migration'ını uçtan uca doğrulamanın yeni, tekrar kullanılabilir bir yolu
+  keşfedildi/kullanıldı -- `~/.m2`'de zaten cache'lenmiş bir `postgres:16-alpine` Docker
+  image'ı ile, gerçek dev/prod portlarından TAMAMEN farklı bir portta (bu Faz'da 5555),
+  ATILABİLİR (disposable) bir Postgres container'ı ayağa kaldırılıp `mvn -o flyway:migrate`
+  bu container'a karşı çalıştırıldı -- projenin TÜM migration geçmişi (bu Faz'da V1..V431)
+  sıfırdan, gerçek Flyway ile (kod yolu prod'da kullanılanla BİREBİR aynı) uygulanabiliyor,
+  sonuç gerçek SQL sorgularıyla incelenip, `flyway:migrate`'in ikinci bir çalıştırmasıyla
+  idempotency de doğrulanabiliyor. İş bitince `docker rm -f` ile container TAMAMEN
+  siliniyor, gerçek dev DB'ye (`learning`, port 5433) hiçbir zaman dokunulmuyor. Yeni bir
+  migration'ın (özellikle veri migration'larının) gerçek etkisini görmek gerektiğinde bu
+  yöntem, gerçek dev DB'yi geçici olarak bozma riskine girmeden kullanılabilir.
+- **BİLİNÇLİ bir sınır (Faz 143, `scripts/export_approved_questions.py`): bu proje şu an
+  tekrar-promote'a karşı YAPISAL bir koruma (örn. `promoted_at` kolonu, `question` üzerinde
+  bir unique constraint) SAĞLAMIYOR** -- Flyway'in kendi `flyway_schema_history`'si yalnızca
+  AYNI migration dosyasının iki kez UYGULANMASINI engelliyor, FARKLI bir migration'ın AYNI
+  mantıksal soruyu bir daha promote etmesini DEĞİL. Bu, kullanıcının bilinçli kararıyla
+  ERTELENDİ (bkz. plan modu çıktısı, "Adjustment 2") -- tekrar-promote önleme şu an bir
+  SÜREÇ sorumluluğu: her promotion migration'ının başlık yorumu tam olarak hangi dev
+  question id'lerinin dahil edildiğini kaydediyor, yeni bir promotion migration'ı
+  yazmadan önce `db/migration/question-promotion/*.sql` başlıkları bu id'ler için
+  grep'lenmeli. Promotion sıklaşırsa (tek seferlik ~138 sorudan çok daha fazla batch)
+  bir `promoted_at` kolonu eklemek doğal bir sonraki adım olur, ama şu an İMPLEMENTE
+  EDİLMEDİ.
+- **GÜNCELLEME (Faz 145, n8n entegrasyonu): `docker.n8n.io/n8nio/n8n:latest` yerel
+  olarak ZATEN cache'liydi, bu yüzden n8n workflow'ları bu sandbox'ta simülasyon
+  değil GERÇEK bir n8n instance'ıyla test edilebiliyor.** Tekrar kullanılabilir
+  komut dizisi: (1) `docker volume create <ad>` -- KALICI bir volume, aksi halde
+  her `docker run --rm` n8n'in TÜM DB migration geçmişini (~150+ migration) sıfırdan
+  çalıştırıyor, ki bu hem yavaş hem gereksiz; (2) `n8n import:workflow --input=...`
+  ile workflow JSON'ı içe aktar -- JSON'ın üst seviyede bir `"id"` alanı OLMALI
+  (yoksa `SQLITE_CONSTRAINT: NOT NULL constraint failed: workflow_entity.id` ile
+  patlıyor, n8n export'unun ürettiği dosyalarda bu alan zaten var ama elle
+  yazılan bir workflow'da unutulması kolay); (3) `n8n execute --id=<id>` ile
+  ÇALIŞTIR -- `--file` bayrağı DEPRECATED ama hâlâ var, `--id` tercih edilmeli;
+  (4) workflow ifadelerinde `$env` kullanmak için (API key gibi sırları workflow
+  dosyasına YAZMADAN ortam değişkeninden okumak üzere) `-e
+  N8N_BLOCK_ENV_ACCESS_IN_NODE=false` GEREKLİ -- varsayılan olarak n8n bunu
+  engelliyor (`"error": "access to env vars denied"`); (5) n8n container'ından
+  host makinedeki bir sürece (bu projenin durumunda host'ta `java -cp ...`
+  ile çalışan Spring Boot uygulaması) erişmek için `http://host.docker.internal:
+  <port>` kullanılabiliyor (bu Docker Desktop kurulumunda doğrulandı). Bitince
+  `docker volume rm <ad>` ile TAMAMEN temizlenebiliyor, gerçek dev DB'ye hiçbir
+  kalıntı bırakmıyor (n8n kendi ayrı SQLite DB'sinde çalışıyor, projenin Postgres'ine
+  hiç dokunmuyor).
 - **Microservices kategorisindeki `event-driven-kafka` konusu (Faz 92), kategorinin
   diğer topic'lerinden FARKLI bir doğrulama önkoşulu getiriyor:** eureka-server,
   api-gateway, config-server gibi önceki topic'ler yalnızca "bir Spring Boot
@@ -892,3 +943,27 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   kullan, tire İÇEREN bir dosya adı YAZMA -- bu kısıt gerçek bir Postgres/Flyway
   çalıştırmasıyla değil, yalnızca içeriği gözle/grep'le inceleyerek fark edildi,
   bu yüzden gelecekte de dikkatli kontrol gerekiyor.
+- **GÜNCELLEME (Faz 146, büyük ölçekli soru üretim workflow'u): `n8n execute --id=...`
+  CLI komutu, workflow JSON'undaki üst seviye `"pinData"` alanını HİÇ dikkate almıyor
+  -- yalnızca n8n'in kendi editör UI'ı pinData'yı onurlandırıyor gibi görünüyor.**
+  Bu, gerçek bir denemeyle keşfedildi: bir HTTP Request düğümüne (`Generate Batch`,
+  Anthropic Messages API'ye POST) pinData ile sahte bir yanıt bağlanmıştı, ama
+  `n8n execute` çalıştırıldığında düğüm GERÇEKTEN `api.anthropic.com`'a bağlandı ve
+  (bu sandbox'ta kullanılabilir bir `ANTHROPIC_API_KEY` olmadığı için) gerçek bir
+  `401 invalid x-api-key` yanıtıyla başarısız oldu -- pinData sessizce YOK SAYILDI.
+  **Sonuç:** CLI-only (UI'sız) bir n8n testinde, henüz kimlik bilgisi/API erişimi
+  olmayan bir dış çağrı düğümünü test etmek gerekiyorsa, pinData'ya GÜVENME --
+  bunun yerine o düğümü GEÇİCİ OLARAK, gerçek dış API'nin yanıt ŞEKLİYLE birebir
+  aynı çıktıyı üreten bir Code node'a çevir (Faz 145'in `Build Test Questions`
+  düğününde zaten kullanılan teknikle aynı) -- böylece downstream düğümlerin TAMAMI
+  değişmeden, gerçekten çalışır durumda kalır. **İkinci, ilişkili bir hata da bu
+  Faz'da keşfedildi:** bu şekilde bir Code node'u "dış API stand-in'i" yaparken,
+  düğümün döndürdüğü `json` nesnesi INPUT item'ın kendi alanlarını (ör.
+  `topicSlug`/`language`) AÇIKÇA taşımazsa (`{ json: { ...yeni alanlar } }` gibi
+  input'u tamamen değiştiren bir dönüş), sonraki düğümler bu alanları `undefined`
+  olarak görür -- gerçek bir örnekte bu, `Duplicate Check` aşamasında bozuk bir URL
+  yüzünden gerçek bir `404` hatasına yol açtı (kök neden: `topicSlug`/`language`
+  `Generate Batch` stand-in'inin çıktısında hiç yoktu). Yeni bir stand-in/mock Code
+  node yazarken input item'ın ileride gereken tüm alanlarını çıktıya AÇIKÇA
+  kopyalamak gerekiyor, `...item.json` ile yaymak yerine yeni bir nesne kurmak bu
+  hatayı kolayca gizliyor.

@@ -47,7 +47,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        // Şu an gated hiçbir öğrenim kaynağı yok -- kimlik doğrulama v1'de
+                        // Question Review (Faz A, henüz UI/controller'ı yok -- yalnızca kural
+                        // önden hazır) -- CustomUserDetailsService zaten her girişli kullanıcıya
+                        // "ROLE_" + role.name() authority'sini veriyor (bkz. Role enum'u,
+                        // Faz 138'den beri var, hiç kullanılmıyordu), burada onu ilk kez
+                        // kullanan tek kural. .anyRequest().permitAll()'dan ÖNCE gelmeli --
+                        // Spring Security zincirinde ilk eşleşen kural kazanır.
+                        .requestMatchers("/{lang:en|tr}/admin/**").hasRole("ADMIN")
+                        // Şu an gated başka hiçbir öğrenim kaynağı yok -- kimlik doğrulama v1'de
                         // yalnızca opsiyonel bir yetenek. Var olan tüm rotalar (anasayfa,
                         // konu sayfaları, sabit quiz submit, PDF export, AI ingestion --
                         // kendi X-Api-Key interceptor'ıyla zaten korunuyor) anonim erişime açık.

@@ -1,0 +1,255 @@
+{
+  "id": "question-generation-enum-test",
+  "name": "Question Generation - Enum Test Batch (Large-Scale Pipeline)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Topic Selection stage -- a small, hand-curated array for THIS run, never\n// \"all topics\" (same explicit-batch philosophy as scripts/export_approved_questions.py,\n// Faz 143 and the Topic Selection stage of the approved design). Exactly ONE topic,\n// ONE language (EN), overrideCount=5 for this small real-OpenAI end-to-end test\n// (user-requested: \"exactly 5 questions\", same single-language scope as the prior\n// 3-question test).\nreturn [\n  { json: { topicSlug: \"enum\", onlyLanguage: \"en\", overrideCount: 5 } }\n];"
+      },
+      "id": "topic-selection-1",
+      "name": "Topic Selection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Load Topic Content stage -- calls the 3 new read-only /api/internal/** endpoints\n// (topic metadata + EN content + TR content) for each selected topic. Uses the Code\n// node's own HTTP helper so the whole \"fetch + merge into one item\" step stays in a\n// single, easy-to-audit stage instead of 3 separate HTTP Request nodes + a Merge node.\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\nconst results = [];\n\nfor (const item of $input.all()) {\n  const topicSlug = item.json.topicSlug;\n\n  const metadata = await this.helpers.httpRequest({\n    method: \"GET\",\n    url: `${baseUrl}/api/internal/topics/${topicSlug}`,\n    headers: { \"X-Api-Key\": apiKey },\n    json: true,\n  });\n\n  const contentEn = await this.helpers.httpRequest({\n    method: \"GET\",\n    url: `${baseUrl}/api/internal/topics/${topicSlug}/content?lang=en`,\n    headers: { \"X-Api-Key\": apiKey },\n  });\n\n  const contentTr = await this.helpers.httpRequest({\n    method: \"GET\",\n    url: `${baseUrl}/api/internal/topics/${topicSlug}/content?lang=tr`,\n    headers: { \"X-Api-Key\": apiKey },\n  });\n\n  results.push({\n    json: {\n      topicSlug,\n      onlyLanguage: item.json.onlyLanguage,\n      overrideCount: item.json.overrideCount,\n      difficulty: metadata.difficulty,\n      categorySlug: metadata.categorySlug,\n      courseSlug: metadata.courseSlug,\n      contentEn: String(contentEn),\n      contentTr: String(contentTr),\n    }\n  });\n}\nreturn results;"
+      },
+      "id": "load-topic-content-1",
+      "name": "Load Topic Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build Generation Spec stage -- deterministic, NO LLM call here. Parses the topic's\n// own H2 outline (per this project's content convention, CLAUDE.md \"Icerik Yazim\n// Formati\") as conceptual scope ONLY -- per the user's approved clarification, the\n// outline is NOT used later as a literal keyword-match gate; content-fit is ensured by\n// grounding the actual LLM prompt in the real lesson excerpt (see the prompt built\n// below), not by post-hoc heading-vocabulary checking. Reuses Faz 7's content-depth\n// bucket methodology (wc -l -> question count) and code-heaviness -> type-mix rule\n// from the approved design.\nfunction extractHeadings(md) {\n  return md.split(\"\\n\")\n    .filter(l => l.trim().startsWith(\"## \"))\n    .map(l => l.trim().replace(/^##\\s+/, \"\"));\n}\n\nfunction countCodeSignals(md) {\n  const embeds = (md.match(/\\{\\{[^}]+\\}\\}/g) || []).length;\n  const fences = (md.match(/```/g) || []).length / 2;\n  return embeds + fences;\n}\n\nfunction bucketForLineCount(lineCount) {\n  if (lineCount < 150) return { bucket: \"small\", count: 5 };\n  if (lineCount < 300) return { bucket: \"normal\", count: 7 };\n  return { bucket: \"detailed\", count: 9 };\n}\n\nfunction typeMixFor(codeSignals) {\n  if (codeSignals >= 8) {\n    return { SINGLE_CHOICE: 0.55, CODE_OUTPUT: 0.35, MULTIPLE_CHOICE: 0.10 };\n  }\n  return { SINGLE_CHOICE: 0.70, MULTIPLE_CHOICE: 0.20, CODE_OUTPUT: 0.10 };\n}\n\nfunction difficultyDistributionFor(baseline) {\n  if (baseline === \"BEGINNER\") return { BEGINNER: 0.6, INTERMEDIATE: 0.4, ADVANCED: 0.0 };\n  if (baseline === \"ADVANCED\") return { BEGINNER: 0.0, INTERMEDIATE: 0.4, ADVANCED: 0.6 };\n  return { BEGINNER: 0.25, INTERMEDIATE: 0.55, ADVANCED: 0.20 };\n}\n\nfunction buildPrompt(topicSlug, language, content, outlineHeadings, targetCount, typeMix, difficultyDistribution) {\n  const langName = language === \"tr\" ? \"Turkish\" : \"English\";\n  const typeMixStr = Object.entries(typeMix).map(([k, v]) => `${k}: ~${Math.round(v * 100)}%`).join(\", \");\n  const diffStr = Object.entries(difficultyDistribution).map(([k, v]) => `${k}: ~${Math.round(v * 100)}%`).join(\", \");\n\n  return `You are generating quiz questions for a Java learning platform, topic \"${topicSlug}\".\n\nThe full lesson content for this topic (in ${langName}) is below. This is the ONLY source of truth -- every question and its explanation must be fully supported by this content. Do not introduce facts, APIs, or behavior not present here. The section outline below defines the topic's conceptual SCOPE only -- do not require literal vocabulary overlap with a heading; ground each question in the actual lesson text instead.\n\nTopic outline (scope reference only):\n${outlineHeadings.map(h => \"- \" + h).join(\"\\n\")}\n\n--- LESSON CONTENT (${langName}) ---\n${content}\n--- END LESSON CONTENT ---\n\nGenerate exactly ${targetCount} quiz questions in ${langName}. Requirements:\n\n- Approximate type mix: ${typeMixStr} (use judgment; skip a type that does not fit naturally).\n- Approximate difficulty mix: ${diffStr}.\n- Each question must have exactly 4 options.\n- SINGLE_CHOICE and CODE_OUTPUT questions must have EXACTLY ONE correct option.\n- MULTIPLE_CHOICE questions must have ONE OR MORE correct options.\n- Ground every question strictly in the lesson content above -- never introduce a fact, API, or behavior that is not stated or directly implied there.\n\nTEST UNDERSTANDING, NOT RECALL. At most ONE question in this batch may be a plain \"What is X?\" / \"What does X mean?\" definition question. All other questions must test one of: predicting the output of code, choosing the correct API/method for a scenario, distinguishing between two similar-looking concepts or methods (e.g. two methods that look interchangeable but behave differently), reasoning about a concrete usage scenario, or identifying a consequence/pitfall described in the lesson. A definition question is only acceptable when the topic has no behavior, API, or scenario left in the content to test -- prefer application over definition whenever the content supports it.\n\nDISTRACTORS must be plausible, not absurd. Each wrong option should reflect a real misconception a learner could actually hold (a similar-sounding method, a common off-by-one/ordering mistake, confusing two related concepts from the lesson, etc.) -- never an option so obviously wrong that no reasoning is required to eliminate it.\n\nEXPLANATIONS must do more than restate the correct option. State why the correct answer is right AND briefly address why the most plausible wrong option is wrong (not all distractors need coverage, just enough to show the reasoning, not just the conclusion).\n\nAVOID REPETITIVE PATTERNS. Do not phrase multiple questions in this batch the same way (e.g. do not open several questions with \"Which of the following...\"). Vary sentence structure and the angle of each question.\n\nCODE_OUTPUT questions: put the code ONLY in the \"codeSnippet\" field, valid and self-contained Java with fully deterministic output. The \"question\" field must be plain prose (e.g. \"What will be the output of the following code?\") and must NEVER itself contain the code or any \\`\\`\\` fenced block -- the code is rendered separately from codeSnippet, repeating it in the question text is a duplicate.\n\nReturn ONLY a JSON array (no prose, no markdown fences) where each element has exactly this shape:\n{\"type\": \"SINGLE_CHOICE\" | \"MULTIPLE_CHOICE\" | \"CODE_OUTPUT\", \"difficulty\": \"BEGINNER\" | \"INTERMEDIATE\" | \"ADVANCED\", \"question\": \"...\", \"codeSnippet\": null or \"...\", \"codeLanguage\": null or \"java\", \"explanation\": \"...\", \"options\": [{\"optionText\": \"...\", \"correct\": true|false}, ...]}`;\n}\n\nconst results = [];\nfor (const item of $input.all()) {\n  const { topicSlug, difficulty, contentEn, contentTr } = item.json;\n\n  const languagesToUse = item.json.onlyLanguage ? [item.json.onlyLanguage] : [\"en\", \"tr\"];\n  const languageContent = { en: contentEn, tr: contentTr };\n  for (const language of languagesToUse) {\n    const content = languageContent[language];\n    const lineCount = content.split(\"\\n\").length;\n    const computedBucket = bucketForLineCount(lineCount);\n    const bucket = computedBucket.bucket;\n    const count = item.json.overrideCount || computedBucket.count;\n    const codeSignals = countCodeSignals(content);\n    const typeMix = typeMixFor(codeSignals);\n    const difficultyDistribution = difficultyDistributionFor(difficulty);\n    const outlineHeadings = extractHeadings(content);\n    const prompt = buildPrompt(topicSlug, language, content, outlineHeadings, count, typeMix, difficultyDistribution);\n\n    results.push({\n      json: {\n        topicSlug,\n        language,\n        outlineHeadings,\n        contentDepthBucket: bucket,\n        contentLineCount: lineCount,\n        codeSignals,\n        targetCount: count,\n        typeMix,\n        difficultyDistribution,\n        prompt,\n      }\n    });\n  }\n}\nreturn results;"
+      },
+      "id": "build-generation-spec-1",
+      "name": "Build Generation Spec",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.4, messages: [ { role: 'system', content: 'You output only valid JSON. No prose, no markdown code fences, no commentary -- the raw JSON array only.' }, { role: 'user', content: $json.prompt } ] } }}",
+        "options": {}
+      },
+      "id": "generate-batch-1",
+      "name": "Generate Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        300
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "openAiApi": {
+          "id": "sfmqlEISp7fEml6j",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Generated Questions stage -- reads the OpenAI Chat Completions response shape\n// ({choices: [{message: {content: \"<JSON array string>\"}}]}) and expands it into one\n// item per generated question. The real OpenAI HTTP Request node REPLACES item.json\n// with the raw API response, losing topicSlug/language -- recovered here via n8n's\n// paired-item lookup against Build Generation Spec (itemMatching), not from this\n// node's own input, since a plain destructure would silently read undefined.\nconst results = [];\nconst inputItems = $input.all();\nfor (let i = 0; i < inputItems.length; i++) {\n  const item = inputItems[i];\n  const source = $('Build Generation Spec').itemMatching(i).json;\n  const topicSlug = source.topicSlug;\n  const language = source.language;\n\n  let generated = [];\n  let parseError = null;\n  try {\n    const raw = item.json.choices && item.json.choices[0] && item.json.choices[0].message && item.json.choices[0].message.content;\n    if (!raw) throw new Error(\"no message content in LLM response\");\n    generated = JSON.parse(raw);\n    if (!Array.isArray(generated)) throw new Error(\"LLM output is not a JSON array\");\n  } catch (e) {\n    parseError = e.message;\n  }\n\n  if (parseError) {\n    results.push({ json: { topicSlug, language, parseError, question: null } });\n    continue;\n  }\n\n  for (const q of generated) {\n    results.push({ json: { topicSlug, language, ...q, parseError: null } });\n  }\n}\nreturn results;"
+      },
+      "id": "parse-generated-1",
+      "name": "Parse Generated Questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate Output stage -- deterministic, STRUCTURAL ONLY, mirroring\n// QuestionIngestService's own rules client-side (required fields, option count,\n// correct-option-count per type, enum values, non-empty/non-duplicate option text).\n// Per the user's approved clarification, this does NOT reject a question for lacking\n// H2-heading vocabulary overlap -- content-fit is handled upstream by grounding the\n// LLM prompt in the real lesson excerpt (see Build Generation Spec), not here.\nconst ALLOWED_TYPES = [\"SINGLE_CHOICE\", \"MULTIPLE_CHOICE\", \"CODE_OUTPUT\"];\nconst ALLOWED_DIFFICULTIES = [\"BEGINNER\", \"INTERMEDIATE\", \"ADVANCED\"];\n\nfunction validate(q) {\n  const reasons = [];\n  if (q.parseError) { reasons.push(\"LLM output parse error: \" + q.parseError); return reasons; }\n  if (!q.question || typeof q.question !== \"string\" || q.question.trim().length < 10) reasons.push(\"question text missing or too short\");\n  if (!q.explanation || typeof q.explanation !== \"string\" || q.explanation.trim().length < 10) reasons.push(\"explanation missing or too short\");\n  if (!ALLOWED_TYPES.includes(q.type)) reasons.push(\"invalid type: \" + q.type);\n  if (!ALLOWED_DIFFICULTIES.includes(q.difficulty)) reasons.push(\"invalid difficulty: \" + q.difficulty);\n  if (!Array.isArray(q.options) || q.options.length < 2) {\n    reasons.push(\"fewer than 2 options\");\n  } else {\n    const correctCount = q.options.filter(o => o.correct === true).length;\n    if ((q.type === \"SINGLE_CHOICE\" || q.type === \"CODE_OUTPUT\") && correctCount !== 1) reasons.push(`${q.type} requires exactly one correct option, got ${correctCount}`);\n    if (q.type === \"MULTIPLE_CHOICE\" && correctCount < 1) reasons.push(\"MULTIPLE_CHOICE requires at least one correct option\");\n    const texts = q.options.map(o => (o.optionText || \"\").trim().toLowerCase());\n    if (new Set(texts).size !== texts.length) reasons.push(\"duplicate option text within question\");\n    if (q.options.some(o => !o.optionText || !o.optionText.trim())) reasons.push(\"empty option text\");\n  }\n  if (q.type === \"CODE_OUTPUT\" && (!q.codeSnippet || !q.codeSnippet.trim())) reasons.push(\"CODE_OUTPUT requires a codeSnippet\");\n  if (q.type !== \"CODE_OUTPUT\" && q.codeSnippet) reasons.push(\"codeSnippet only allowed for CODE_OUTPUT\");\n  return reasons;\n}\n\nreturn $input.all().map(item => {\n  const reasons = validate(item.json);\n  return { json: { ...item.json, validation: { passed: reasons.length === 0, reasons } } };\n});"
+      },
+      "id": "validate-output-1",
+      "name": "Validate Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Duplicate Check stage -- normalized exact-match + Jaccard word-overlap, checked\n// against BOTH the real existing pool (via /api/internal/questions/existing, which is\n// NOT filtered by status -- even a PENDING_REVIEW/REJECTED question counts as \"already\n// tried\") and other items within this same batch. No vector DB, per the user's approved\n// clarification. Items that already failed Validate Output are passed through untouched\n// (not re-checked) so Record Results can still account for every generated item.\n//\n// IMPORTANT: the comparable text for a CODE_OUTPUT question is `question + codeSnippet`,\n// not `question` alone -- since the prompt now requires the code to live ONLY in\n// codeSnippet (see Build Generation Spec), every CODE_OUTPUT item's `question` text is\n// generic (\"What will be the output of the following code?\"), so comparing on\n// `question` alone would treat every CODE_OUTPUT question as a duplicate of every other\n// one regardless of what code they actually contain (a real false-positive observed\n// with a real OpenAI batch: an ordinal() question and a valueOf() question were wrongly\n// flagged as duplicates of each other). The existing-pool endpoint only returns\n// `question` text (no codeSnippet), so that side of the comparison is unchanged --\n// acceptable since older rows still have code embedded in their stored question text.\nfunction normalize(text) {\n  return (text || \"\").toLowerCase().replace(/[^\\w\\s]/g, \"\").replace(/\\s+/g, \" \").trim();\n}\nfunction tokenSet(text) {\n  return new Set(normalize(text).split(\" \").filter(Boolean));\n}\nfunction jaccard(a, b) {\n  const inter = [...a].filter(x => b.has(x)).length;\n  const union = new Set([...a, ...b]).size;\n  return union === 0 ? 0 : inter / union;\n}\nfunction comparableText(q) {\n  return q.codeSnippet ? `${q.question} ${q.codeSnippet}` : q.question;\n}\n\nconst JACCARD_THRESHOLD = 0.6;\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\n\nconst items = $input.all().filter(i => i.json.validation && i.json.validation.passed);\nconst skipped = $input.all().filter(i => !i.json.validation || !i.json.validation.passed);\n\nconst existingCache = {};\nconst results = [];\n\nfor (const item of items) {\n  const { topicSlug, language } = item.json;\n  const key = topicSlug + \"::\" + language;\n  if (!(key in existingCache)) {\n    existingCache[key] = await this.helpers.httpRequest({\n      method: \"GET\",\n      url: `${baseUrl}/api/internal/questions/existing?topicSlug=${encodeURIComponent(topicSlug)}&language=${encodeURIComponent(language)}`,\n      headers: { \"X-Api-Key\": apiKey },\n      json: true,\n    });\n  }\n\n  const newText = comparableText(item.json);\n  const newTokens = tokenSet(newText);\n  const newNorm = normalize(newText);\n  let match = null;\n\n  for (const ex of existingCache[key]) {\n    if (normalize(ex.question) === newNorm) { match = { id: ex.id, reason: \"exact match (existing)\" }; break; }\n    const sim = jaccard(newTokens, tokenSet(ex.question));\n    if (sim >= JACCARD_THRESHOLD) { match = { id: ex.id, reason: `word-overlap ${sim.toFixed(2)} (existing)` }; break; }\n  }\n\n  if (!match) {\n    for (const accepted of results) {\n      if (accepted.json.topicSlug !== topicSlug || accepted.json.language !== language) continue;\n      const acceptedText = comparableText(accepted.json);\n      const sim2 = jaccard(newTokens, tokenSet(acceptedText));\n      const norm2 = normalize(acceptedText);\n      if (newNorm === norm2 || sim2 >= JACCARD_THRESHOLD) { match = { id: \"batch:\" + acceptedText.slice(0, 30), reason: \"within-batch duplicate\" }; break; }\n    }\n  }\n\n  results.push({ json: { ...item.json, duplicateCheck: { isDuplicate: !!match, matchedId: match ? match.id : null, reason: match ? match.reason : null } } });\n}\n\nfor (const s of skipped) {\n  results.push({ json: { ...s.json, duplicateCheck: { isDuplicate: false, matchedId: null, reason: \"skipped (failed validation)\" } } });\n}\n\nreturn results;"
+      },
+      "id": "duplicate-check-1",
+      "name": "Duplicate Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Submit Valid Questions stage -- POSTs only items that passed BOTH Validate Output\n// and Duplicate Check to the EXISTING /api/internal/questions/ingest endpoint (same\n// auth/no-retry pattern proven in Faz 145). source is always \"OPENAI\" for this workflow\n// (the LLM provider actually used by Generate Batch), no status field --\n// the API forces PENDING_REVIEW regardless. Items that don't qualify are passed through\n// with an explicit skip reason instead of being dropped, so Record Results can still\n// summarize the full batch.\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\nconst results = [];\n\nfor (const item of $input.all()) {\n  const j = item.json;\n  const submittable = j.validation && j.validation.passed && j.duplicateCheck && !j.duplicateCheck.isDuplicate;\n\n  if (!submittable) {\n    results.push({ json: { ...j, submission: { attempted: false, success: false, reason: (!j.validation || !j.validation.passed) ? \"failed validation\" : \"duplicate\" } } });\n    continue;\n  }\n\n  try {\n    const response = await this.helpers.httpRequest({\n      method: \"POST\",\n      url: `${baseUrl}/api/internal/questions/ingest`,\n      headers: { \"X-Api-Key\": apiKey, \"Content-Type\": \"application/json\" },\n      body: {\n        topicSlug: j.topicSlug,\n        language: j.language,\n        type: j.type,\n        difficulty: j.difficulty,\n        source: \"OPENAI\",\n        question: j.question,\n        codeSnippet: j.codeSnippet || null,\n        codeLanguage: j.codeLanguage || null,\n        explanation: j.explanation,\n        options: j.options,\n      },\n      json: true,\n    });\n    results.push({ json: { ...j, submission: { attempted: true, success: true, id: response.id, status: response.status } } });\n  } catch (e) {\n    results.push({ json: { ...j, submission: { attempted: true, success: false, reason: e.message } } });\n  }\n}\nreturn results;"
+      },
+      "id": "submit-valid-1",
+      "name": "Submit Valid Questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Record Results stage -- final summary of the whole run (generated / validation-failed\n// / deduped-out / submitted / submission-failed counts, plus a per-question detail list),\n// visible directly in n8n's own execution log. No new logging infrastructure.\nconst items = $input.all().map(i => i.json);\nconst summary = {\n  totalGenerated: items.length,\n  validationFailed: items.filter(i => !i.validation || !i.validation.passed).length,\n  duplicatesSkipped: items.filter(i => i.validation && i.validation.passed && i.duplicateCheck && i.duplicateCheck.isDuplicate).length,\n  submitted: items.filter(i => i.submission && i.submission.success).length,\n  submissionFailed: items.filter(i => i.submission && i.submission.attempted && !i.submission.success).length,\n  details: items.map(i => ({\n    topicSlug: i.topicSlug,\n    language: i.language,\n    question: i.question ? i.question.slice(0, 70) : null,\n    validationPassed: i.validation ? i.validation.passed : false,\n    validationReasons: i.validation ? i.validation.reasons : [],\n    isDuplicate: i.duplicateCheck ? i.duplicateCheck.isDuplicate : false,\n    duplicateReason: i.duplicateCheck ? i.duplicateCheck.reason : null,\n    submitted: i.submission ? i.submission.success : false,\n    submittedId: i.submission ? i.submission.id : null,\n  })),\n};\nreturn [{ json: summary }];"
+      },
+      "id": "record-results-1",
+      "name": "Record Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2180,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Topic Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Topic Selection": {
+      "main": [
+        [
+          {
+            "node": "Load Topic Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Topic Content": {
+      "main": [
+        [
+          {
+            "node": "Build Generation Spec",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Generation Spec": {
+      "main": [
+        [
+          {
+            "node": "Generate Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Batch": {
+      "main": [
+        [
+          {
+            "node": "Parse Generated Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Generated Questions": {
+      "main": [
+        [
+          {
+            "node": "Validate Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Output": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Check": {
+      "main": [
+        [
+          {
+            "node": "Submit Valid Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Valid Questions": {
+      "main": [
+        [
+          {
+            "node": "Record Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

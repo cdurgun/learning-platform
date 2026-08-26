@@ -47,17 +47,21 @@ class QuestionIngestServiceTest {
     }
 
     private static QuestionIngestRequest singleChoice(List<QuestionIngestOption> options) {
-        return new QuestionIngestRequest("enum", "en", "SINGLE_CHOICE", "INTERMEDIATE",
+        return singleChoice("MANUAL", options);
+    }
+
+    private static QuestionIngestRequest singleChoice(String source, List<QuestionIngestOption> options) {
+        return new QuestionIngestRequest("enum", "en", "SINGLE_CHOICE", "INTERMEDIATE", source,
                 "What is an enum?", null, null, "Because.", options);
     }
 
     private static QuestionIngestRequest multipleChoice(List<QuestionIngestOption> options) {
-        return new QuestionIngestRequest("enum", "en", "MULTIPLE_CHOICE", "INTERMEDIATE",
+        return new QuestionIngestRequest("enum", "en", "MULTIPLE_CHOICE", "INTERMEDIATE", "MANUAL",
                 "Which are true?", null, null, "Because.", options);
     }
 
     private static QuestionIngestRequest codeOutput(String codeSnippet, List<QuestionIngestOption> options) {
-        return new QuestionIngestRequest("enum", "en", "CODE_OUTPUT", "INTERMEDIATE",
+        return new QuestionIngestRequest("enum", "en", "CODE_OUTPUT", "INTERMEDIATE", "MANUAL",
                 "What does this print?", codeSnippet, "java", "Because.", options);
     }
 
@@ -71,7 +75,7 @@ class QuestionIngestServiceTest {
     }
 
     @Test
-    void ingestForcesPendingReviewAndAiSourceRegardlessOfRequest() {
+    void ingestForcesPendingReviewRegardlessOfRequest() {
         stubSave();
         QuestionIngestRequest request = singleChoice(List.of(
                 new QuestionIngestOption("A", true),
@@ -81,19 +85,71 @@ class QuestionIngestServiceTest {
 
         assertThat(response.id()).isEqualTo(100L);
         assertThat(response.status()).isEqualTo(QuestionStatus.PENDING_REVIEW.name());
-        assertThat(response.source()).isEqualTo(QuestionSource.AI.name());
 
         ArgumentCaptor<Question> captor = ArgumentCaptor.forClass(Question.class);
         verify(questionRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(QuestionStatus.PENDING_REVIEW);
-        assertThat(captor.getValue().getSource()).isEqualTo(QuestionSource.AI);
+    }
+
+    // ---- source: caller-declared, but validated against the strict QuestionSource enum ----
+
+    @Test
+    void ingestAcceptsEveryDeclaredQuestionSource() {
+        stubSave();
+        for (QuestionSource source : QuestionSource.values()) {
+            QuestionIngestRequest request = singleChoice(source.name(), List.of(
+                    new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
+
+            QuestionIngestResponse response = newService().ingest(request);
+
+            assertThat(response.source()).isEqualTo(source.name());
+        }
+    }
+
+    @Test
+    void ingestPersistsTheDeclaredSourceOnTheQuestionEntity() {
+        stubSave();
+        QuestionIngestRequest request = singleChoice("CLAUDE", List.of(
+                new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
+
+        newService().ingest(request);
+
+        ArgumentCaptor<Question> captor = ArgumentCaptor.forClass(Question.class);
+        verify(questionRepository).save(captor.capture());
+        assertThat(captor.getValue().getSource()).isEqualTo(QuestionSource.CLAUDE);
+    }
+
+    @Test
+    void ingestRejectsMissingSource() {
+        when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(enumTopic()));
+        QuestionIngestRequest request = singleChoice(null, List.of(
+                new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
+
+        assertThatThrownBy(() -> newService().ingest(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("source is required");
+        verify(questionRepository, never()).save(any());
+    }
+
+    @Test
+    void ingestRejectsInvalidSourceValue() {
+        when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(enumTopic()));
+        // "AI" was the old, now-removed generic value -- confirms it is no longer accepted,
+        // not just any arbitrary garbage string.
+        QuestionIngestRequest request = singleChoice("AI", List.of(
+                new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
+
+        assertThatThrownBy(() -> newService().ingest(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("invalid source");
+        verify(questionRepository, never()).save(any());
     }
 
     @Test
     void ingestRejectsUnknownTopicSlug() {
         when(topicRepository.findBySlug("does-not-exist")).thenReturn(Optional.empty());
         QuestionIngestRequest request = new QuestionIngestRequest("does-not-exist", "en", "SINGLE_CHOICE",
-                "INTERMEDIATE", "Q?", null, null, "Because.",
+                "INTERMEDIATE", "MANUAL", "Q?", null, null, "Because.",
                 List.of(new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
 
         assertThatThrownBy(() -> newService().ingest(request))
@@ -106,7 +162,7 @@ class QuestionIngestServiceTest {
     void ingestRejectsInvalidLanguage() {
         when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(enumTopic()));
         QuestionIngestRequest request = new QuestionIngestRequest("enum", "fr", "SINGLE_CHOICE",
-                "INTERMEDIATE", "Q?", null, null, "Because.",
+                "INTERMEDIATE", "MANUAL", "Q?", null, null, "Because.",
                 List.of(new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
 
         assertThatThrownBy(() -> newService().ingest(request))
@@ -119,7 +175,7 @@ class QuestionIngestServiceTest {
     void ingestRejectsInvalidType() {
         when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(enumTopic()));
         QuestionIngestRequest request = new QuestionIngestRequest("enum", "en", "NOT_A_TYPE",
-                "INTERMEDIATE", "Q?", null, null, "Because.",
+                "INTERMEDIATE", "MANUAL", "Q?", null, null, "Because.",
                 List.of(new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
 
         assertThatThrownBy(() -> newService().ingest(request))
@@ -205,7 +261,7 @@ class QuestionIngestServiceTest {
     void ingestRejectsCodeSnippetForNonCodeOutputType() {
         when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(enumTopic()));
         QuestionIngestRequest request = new QuestionIngestRequest("enum", "en", "SINGLE_CHOICE", "INTERMEDIATE",
-                "Q?", "System.out.println(1);", "java", "Because.",
+                "MANUAL", "Q?", "System.out.println(1);", "java", "Because.",
                 List.of(new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
 
         assertThatThrownBy(() -> newService().ingest(request))
@@ -251,11 +307,25 @@ class QuestionIngestServiceTest {
     void ingestRejectsBlankQuestionText() {
         when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(enumTopic()));
         QuestionIngestRequest request = new QuestionIngestRequest("enum", "en", "SINGLE_CHOICE", "INTERMEDIATE",
-                "   ", null, null, "Because.",
+                "MANUAL", "   ", null, null, "Because.",
                 List.of(new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
 
         assertThatThrownBy(() -> newService().ingest(request))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("question is required");
+    }
+
+    @Test
+    void ingestPersistsTopicResolvedFromSlugNotFromAnyClientSuppliedId() {
+        stubSave();
+        QuestionIngestRequest request = singleChoice(List.of(
+                new QuestionIngestOption("A", true), new QuestionIngestOption("B", false)));
+
+        newService().ingest(request);
+
+        ArgumentCaptor<Question> captor = ArgumentCaptor.forClass(Question.class);
+        verify(questionRepository).save(captor.capture());
+        assertThat(captor.getValue().getTopic().getSlug()).isEqualTo("enum");
+        assertThat(captor.getValue().getTopic().getId()).isEqualTo(7L);
     }
 }

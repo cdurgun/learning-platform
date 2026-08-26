@@ -1,6 +1,8 @@
 package com.cdurgun.learning.repository;
 
+import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Question;
+import com.cdurgun.learning.domain.QuestionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +10,25 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
+
+    /**
+     * Question generation tooling'in (n8n) duplicate-kontrolü için -- {@code
+     * GET /api/internal/questions/existing}. BİLİNÇLİ OLARAK statüye göre
+     * filtrelemiyor (PENDING_REVIEW/REJECTED dahil TÜMÜ) -- daha önce
+     * reddedilmiş ya da hâlâ incelenmemiş bir soru bile "zaten denenmiş" sayılır,
+     * neredeyse aynı metinle yeniden üretilmemeli.
+     */
+    List<Question> findByTopicIdAndLanguage(Long topicId, Language language);
+
+    /**
+     * Question Review ekranı (Faz B) için -- en eski bekleyen soru önce görünsün diye
+     * {@code createdAt} artan sırada. Statü burada bir metot parametresi (Practice/Quiz
+     * Area'nın {@code status='PUBLISHED'}'i sabit yazdığı sorgulardan farklı olarak) --
+     * çünkü bu sorgu hem PENDING_REVIEW listesi hem ileride (Faz C sonrası) REJECTED
+     * geçmişi gibi başka statüler için de kullanılabilir, halbuki public havuz sorguları
+     * bilinçli olarak PUBLISHED'e sabit kilitli kalmalı (bkz. o sorguların javadoc'u).
+     */
+    List<Question> findByStatusOrderByCreatedAtAsc(QuestionStatus status);
 
     /**
      * Practice havuzu sorgusu. {@code status = 'PUBLISHED'} filtresi BİLİNÇLİ OLARAK
