@@ -762,6 +762,39 @@ hâlâ V1'den **V430'a kadar boşluksuz** (bu Faz'da migration YOK). Büyük
 ölçekli/çok-topic'li üretim HÂLÂ bu Faz'ın dışında. Ayrıntılı uygulama
 akışı için `docs/phase-log.md`'de "Faz 147"yi grep'le.
 
+**GÜNCELLEME (Faz 148):** **EN->TR çeviri workflow'u** eklendi -- mevcut
+PUBLISHED/PENDING_REVIEW EN sorularının TR karşılıklarını üretip
+`PENDING_REVIEW`/`source=OPENAI` olarak ekliyor, `correct`/şık yapısı/
+`difficulty`/`type`/`codeSnippet`/`topic` HİÇBİRİ modelin çıktısından
+alınmıyor -- hep orijinal EN sorudan birebir kopyalanıyor. Yeni salt-okunur
+`GET /api/internal/questions/for-translation` (`source` alanı dahil --
+`MANUAL` kaynaklı sorular, bu projede zaten EN+TR ÇİFTİ yazıldığı için
+çeviri adayı listesinden atlanıyor). Yeni `n8n/workflows/question-
+translation-en-to-tr.json` (8 düğüm). **Üç gerçek bulgu keşfedilip
+düzeltildi:** (1) `MANUAL` ön-filtresi olmadan ilk çalıştırma, zaten TR
+karşılığı olan sorulara redundant, farklı-kelime-kalıplı TR kopyaları
+üretti (fuzzy dedup'ın 0.6 Jaccard eşiğinin altında kaldı) -- yapısal
+filtreyle düzeltildi; (2) Faz 147'nin `comparableText()`'i CODE_OUTPUT'lar
+için hâlâ yetersizdi (paylaşılan boilerplate + "son satır" bazen anlamsız
+bir `}` oluyordu) -- parantez/noktalı-virgül temizlenmiş SON ANLAMLI
+satırı karşılaştıracak şekilde düzeltildi, HER İKİ workflow'a da uygulandı;
+(3) **n8n'in HTTP transport katmanında, Türkçe metni ARA SIRA ama
+DETERMİNİSTİK şekilde CJK karakterlerine bozan bir encoding hatası**
+bulundu (4 ayrı gerçek çağrıda da AYNI bozuk çıktı) -- kök nedeni bu
+sandbox'tan izole edilemedi, bunun yerine `Validate Translation`'a bir CJK-
+koruma regex'i eklendi (4/4 çalıştırmada bozuk çeviriyi submit'ten önce
+yakalayıp eledi, bkz. `docs/known-constraints.md` "Faz 148"). 4. denemeden
+sonra bu TEK soru 5. bir ücretli çağrı yerine elle çevrilip submit edildi.
+**Generation workflow'u da varsayılana döndürüldü:** `Topic Selection`'daki
+tek-dil zorlaması kaldırıldı -- artık her yeni üretim hem EN hem TR
+bağımsız olarak (her biri kendi gerçek markdown dosyasına topraklanarak)
+üretecek. Sonuç: 5 EN sorunun (44/45/46/47/48) TAMAMI bir TR karşılığına
+sahip (53/54/57/55/58), topic/type/difficulty/codeSnippet/doğru-şık-deseni
+birebir eşleşiyor, hiçbiri PUBLISHED değil -- kullanıcının onayı
+bekleniyor. Testler **92/92**. Migration'lar hâlâ V1'den **V430'a kadar
+boşluksuz** (bu Faz'da migration YOK). Ayrıntılı uygulama akışı için
+`docs/phase-log.md`'de "Faz 148"i grep'le.
+
 ## Proje Yapısı
 
 ```
@@ -788,7 +821,8 @@ src/main/java/com/cdurgun/learning/
                      (ADMIN-only: `GET /{lang}/admin/questions`, `POST .../{id}/publish`,
                      `POST .../{id}/reject` -- Faz 141/142), GenerationToolingController
                      (salt-okunur `/api/internal/topics/{slug}[/content]` +
-                     `/api/internal/questions/existing` -- Faz 146)
+                     `/api/internal/questions/existing` -- Faz 146; `/api/internal/
+                     questions/for-translation` -- Faz 148)
     config/          LangParamLocaleResolver, WebConfig, QuizIngestApiKeyInterceptor (ingestion
                      rotasını X-Api-Key ile korur), SecurityConfig (Faz 141'den itibaren
                      `/{lang:en|tr}/admin/**` → `hasRole("ADMIN")` kuralı da içeriyor), LangPath (Faz 138)
@@ -803,7 +837,8 @@ src/main/java/com/cdurgun/learning/
                      gömdüğü fenced kod bloğunu sunumdan düşüren türetilmiş görünüm metodu,
                      DB'ye hiç dokunmaz -- Faz 147)
     web/internal/    Generation tooling DTO'ları (TopicMetadataResponse, ExistingQuestionView --
-                     Faz 146)
+                     Faz 146; TranslationSourceQuestionView -- EN->TR çeviri workflow'u için
+                     tam soru+şık verisi, `source` alanı dahil -- Faz 148)
 
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
@@ -832,10 +867,14 @@ n8n/
                                    (var olan Ingestion API'ye POST) -- PostgreSQL'e/prod'a
                                    hiç bağlanmıyor (bkz. Faz 145)
     workflows/question-generation-enum-test.json  9 düğümlü büyük ölçekli soru üretim
-                                   pipeline'ı (Topic Selection → ... → Record Results),
-                                   `enum` topic'iyle sınırlı ilk test -- `Generate Batch`
-                                   şu an gerçek Anthropic çağrısı yerine bir Code-node
-                                   stand-in (bkz. Faz 146, ANTHROPIC_API_KEY yok)
+                                   pipeline'ı (Topic Selection → ... → Record Results) --
+                                   Faz 147'de gerçek OpenAI'a geçirildi, Faz 148'de
+                                   varsayılana (hem EN hem TR, hesaplanmış soru sayısı)
+                                   döndürüldü
+    workflows/question-translation-en-to-tr.json  8 düğümlü EN->TR çeviri pipeline'ı --
+                                   mevcut PUBLISHED/PENDING_REVIEW EN sorularını çevirir,
+                                   `correct`/tip/zorluk/kod/topic'i hiç değiştirmez
+                                   (bkz. Faz 148)
     README.md                     Kurulum/çalıştırma talimatı (env değişkenleri, n8n CLI)
 
 ## Bilinen Kısıtlar / Dikkat Edilecekler (Güncel Durum Özeti)

@@ -967,3 +967,26 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   node yazarken input item'ın ileride gereken tüm alanlarını çıktıya AÇIKÇA
   kopyalamak gerekiyor, `...item.json` ile yaymak yerine yeni bir nesne kurmak bu
   hatayı kolayca gizliyor.
+- **GÜNCELLEME (Faz 148, EN->TR çeviri workflow'u): bu n8n Docker image'ında,
+  OpenAI'dan gelen Türkçe (non-ASCII/diyakritikli) metin, HTTP transport
+  katmanında ARA SIRA ve DETERMİNİSTİK şekilde bozuluyor -- UTF-8 baytları
+  CJK (Çince/Japonca/Korece) aralığı karakterlere dönüşüyor (`"için"` ->
+  `"i莽in"`, `"döner"` -> `"d枚ner"`).** Bu, aynı EN sorunun çevirisi 4 AYRI
+  gerçek OpenAI çağrısında da (dördünde de bayt-bayt AYNI bozuk çıktı) tekrar
+  üretildi -- rastgele bir gürültü DEĞİL, bu spesifik metin/yanıt için
+  deterministik bir hata. Kaynağı uygulama kodu (workflow JS'i) DEĞİL, n8n'in
+  kendi HTTP client/response-decode katmanı gibi görünüyor -- Code node'daki
+  JS'te hiçbir encoding/decoding işlemi YOK, `this.helpers.httpRequest(...)`
+  çağrısının `json: true` seçeneğiyle otomatik ayrıştırdığı yanıt zaten bozuk
+  geliyor. Kök neden bu sandbox'tan tam olarak izole edilip DÜZELTİLEMEDİ
+  (n8n'in kendi bağımlılık zincirinde bir yerde) -- bunun yerine bir
+  UYGULAMA-SEVİYESİ SAVUNMA eklendi: `Validate Translation` aşamasına, Türkçe
+  metinde ASLA olmaması gereken CJK Unified Ideographs aralığını
+  (`/[一-鿿]/`) arayan ucuz bir regex kontrolü -- bu, 4 çalıştırmanın
+  4'ünde de bozuk çeviriyi submit edilmeden ÖNCE yakalayıp elemeyi başardı,
+  hiçbir bozuk satır dev DB'ye hiç yazılmadı. **Gelecekte n8n üzerinden
+  ÇOK-BAYTLI/diyakritikli dil (Türkçe, ama aynı sınıf başka diller de) üreten
+  her workflow'a bu CJK-koruma kontrolünün (ya da dile göre uyarlanmış bir
+  benzerinin) eklenmesi ÖNERİLİR** -- bu, tek bir soruya özel bir tuhaflık
+  değil, gözlemlenen davranış transport katmanında olduğu için teorik olarak
+  herhangi bir çok-baytlı yanıtı etkileyebilir.

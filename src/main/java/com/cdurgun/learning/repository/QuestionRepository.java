@@ -21,6 +21,15 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByTopicIdAndLanguage(Long topicId, Language language);
 
     /**
+     * EN->TR çeviri workflow'u (n8n) için -- {@code GET
+     * /api/internal/questions/for-translation}. Çağıran taraf tipik olarak
+     * {@code [PUBLISHED, PENDING_REVIEW]} verir (zaten REJECTED bir soru
+     * çevrilmeye değmez) ama statü kümesi bilinçli olarak bir parametre --
+     * bu metot kendi başına hiçbir statüyü sabit varsaymıyor.
+     */
+    List<Question> findByLanguageAndStatusIn(Language language, List<QuestionStatus> statuses);
+
+    /**
      * Question Review ekranı (Faz B) için -- en eski bekleyen soru önce görünsün diye
      * {@code createdAt} artan sırada. Statü burada bir metot parametresi (Practice/Quiz
      * Area'nın {@code status='PUBLISHED'}'i sabit yazdığı sorgulardan farklı olarak) --

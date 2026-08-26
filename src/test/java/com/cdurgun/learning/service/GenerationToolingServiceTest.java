@@ -5,14 +5,17 @@ import com.cdurgun.learning.domain.Course;
 import com.cdurgun.learning.domain.Difficulty;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Question;
+import com.cdurgun.learning.domain.QuestionOption;
 import com.cdurgun.learning.domain.QuestionSource;
 import com.cdurgun.learning.domain.QuestionStatus;
 import com.cdurgun.learning.domain.QuestionType;
 import com.cdurgun.learning.domain.Topic;
+import com.cdurgun.learning.repository.QuestionOptionRepository;
 import com.cdurgun.learning.repository.QuestionRepository;
 import com.cdurgun.learning.repository.TopicRepository;
 import com.cdurgun.learning.web.internal.ExistingQuestionView;
 import com.cdurgun.learning.web.internal.TopicMetadataResponse;
+import com.cdurgun.learning.web.internal.TranslationSourceQuestionView;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,9 +38,11 @@ class GenerationToolingServiceTest {
     private ContentResolver contentResolver;
     @Mock
     private QuestionRepository questionRepository;
+    @Mock
+    private QuestionOptionRepository questionOptionRepository;
 
     private GenerationToolingService newService() {
-        return new GenerationToolingService(topicRepository, contentResolver, questionRepository);
+        return new GenerationToolingService(topicRepository, contentResolver, questionRepository, questionOptionRepository);
     }
 
     private static Topic enumTopic() {
@@ -115,6 +120,54 @@ class GenerationToolingServiceTest {
                         org.assertj.core.groups.Tuple.tuple(1L, "Published question?"),
                         org.assertj.core.groups.Tuple.tuple(2L, "Pending question?"),
                         org.assertj.core.groups.Tuple.tuple(3L, "Rejected question?"));
+    }
+
+    @Test
+    void listForTranslationReturnsFullQuestionDataIncludingOptionsInSortOrder() {
+        Question question = Question.builder()
+                .id(44L)
+                .topic(enumTopic())
+                .language(Language.EN)
+                .type(QuestionType.CODE_OUTPUT)
+                .difficulty(Difficulty.BEGINNER)
+                .status(QuestionStatus.PUBLISHED)
+                .source(QuestionSource.OPENAI)
+                .question("What will be the output?")
+                .codeSnippet("System.out.println(Day.MONDAY.ordinal());")
+                .codeLanguage("java")
+                .explanation("ordinal() returns 0 for the first constant.")
+                .build();
+        when(questionRepository.findByLanguageAndStatusIn(Language.EN,
+                List.of(QuestionStatus.PUBLISHED, QuestionStatus.PENDING_REVIEW)))
+                .thenReturn(List.of(question));
+
+        QuestionOption first = QuestionOption.builder().id(1L).question(question).optionText("0").correct(true).sortOrder(0).build();
+        QuestionOption second = QuestionOption.builder().id(2L).question(question).optionText("1").correct(false).sortOrder(1).build();
+        when(questionOptionRepository.findByQuestionIdInOrderBySortOrderAsc(List.of(44L)))
+                .thenReturn(List.of(first, second));
+
+        List<TranslationSourceQuestionView> result = newService().listForTranslation("en", List.of("PUBLISHED", "PENDING_REVIEW"));
+
+        assertThat(result).hasSize(1);
+        TranslationSourceQuestionView view = result.get(0);
+        assertThat(view.id()).isEqualTo(44L);
+        assertThat(view.topicSlug()).isEqualTo("enum");
+        assertThat(view.type()).isEqualTo("CODE_OUTPUT");
+        assertThat(view.difficulty()).isEqualTo("BEGINNER");
+        assertThat(view.source()).isEqualTo("OPENAI");
+        assertThat(view.codeSnippet()).isEqualTo("System.out.println(Day.MONDAY.ordinal());");
+        assertThat(view.options()).extracting(TranslationSourceQuestionView.OptionView::optionText,
+                        TranslationSourceQuestionView.OptionView::correct)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple("0", true),
+                        org.assertj.core.groups.Tuple.tuple("1", false));
+    }
+
+    @Test
+    void listForTranslationRejectsInvalidStatus() {
+        assertThatThrownBy(() -> newService().listForTranslation("en", List.of("NOT_A_STATUS")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("invalid status");
     }
 
     private static Question questionOf(Long id, QuestionStatus status, String text) {

@@ -3,6 +3,7 @@ package com.cdurgun.learning.controller;
 import com.cdurgun.learning.service.GenerationToolingService;
 import com.cdurgun.learning.web.internal.ExistingQuestionView;
 import com.cdurgun.learning.web.internal.TopicMetadataResponse;
+import com.cdurgun.learning.web.internal.TranslationSourceQuestionView;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Question generation tooling (n8n) için salt-okunur `/api/internal/**` uç
- * noktaları -- topic metadata, topic gövde içeriği (markdown), ve mevcut soru
- * metinleri (duplicate kontrolü için). Hepsi zaten var olan {@code
+ * noktaları -- topic metadata, topic gövde içeriği (markdown), mevcut soru
+ * metinleri (duplicate kontrolü için), ve EN->TR çeviri workflow'u için tam
+ * soru+şık verisi (`/for-translation`, Faz 148). Hepsi zaten var olan {@code
  * QuizIngestApiKeyInterceptor} tarafından korunuyor ({@code WebConfig}'teki
  * {@code /api/internal/**} path pattern'i otomatik kapsıyor) -- burada AYRICA
  * bir yetkilendirme kontrolü YOK, aynı {@link QuestionIngestController}'daki
@@ -48,5 +51,14 @@ public class GenerationToolingController {
     @ResponseBody
     public List<ExistingQuestionView> existing(@RequestParam String topicSlug, @RequestParam String language) {
         return generationToolingService.listExisting(topicSlug, language);
+    }
+
+    @GetMapping("/api/internal/questions/for-translation")
+    @ResponseBody
+    public List<TranslationSourceQuestionView> forTranslation(
+            @RequestParam String language,
+            @RequestParam(defaultValue = "PUBLISHED,PENDING_REVIEW") String statuses) {
+        List<String> statusList = Arrays.stream(statuses.split(",")).map(String::trim).toList();
+        return generationToolingService.listForTranslation(language, statusList);
     }
 }

@@ -1,0 +1,231 @@
+{
+  "id": "question-translation-en-to-tr",
+  "name": "Question Translation - EN to TR",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch Translatable EN Questions stage -- calls the read-only\n// /api/internal/questions/for-translation endpoint (default statuses:\n// PUBLISHED,PENDING_REVIEW -- REJECTED questions are never translated), then\n// applies two client-side filters:\n//\n// 1) Skip source == \"MANUAL\" -- this project has always authored MANUAL questions\n//    as matched EN+TR pairs from the start (confirmed: ids 1-10 are exactly 5\n//    EN + 5 TR MANUAL rows), so a MANUAL EN question already has a real,\n//    hand-written TR sibling. Translating it again would create a redundant,\n//    machine-phrased duplicate that the fuzzy Duplicate Check stage cannot\n//    always catch (different wording of the same fact can score below the\n//    Jaccard threshold -- observed for real with 3 baseline questions before\n//    this filter existed). The fuzzy dedup check later in the pipeline still\n//    runs as a safety net for everything else.\n// 2) ONLY_IDS below -- a small, hand-curated allow-list for a single controlled\n//    run (same \"never all topics/questions blindly\" philosophy as Topic\n//    Selection in the generation workflow). Set to null/[] to translate every\n//    eligible (non-MANUAL) EN question.\nconst ONLY_IDS = [46, 48];\n\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\n\nconst questions = await this.helpers.httpRequest({\n  method: \"GET\",\n  url: `${baseUrl}/api/internal/questions/for-translation?language=en`,\n  headers: { \"X-Api-Key\": apiKey },\n  json: true,\n});\n\nconst eligible = questions.filter(q => q.source !== \"MANUAL\");\nconst scoped = (ONLY_IDS && ONLY_IDS.length > 0) ? eligible.filter(q => ONLY_IDS.includes(q.id)) : eligible;\n\nreturn scoped.map(q => ({ json: q }));"
+      },
+      "id": "fetch-translatable-1",
+      "name": "Fetch Translatable EN Questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build Translation Requests stage -- builds one grounded translation prompt per\n// EN question, carrying the full original question (id, topicSlug, type,\n// difficulty, codeSnippet, codeLanguage, options with their correct flags)\n// forward under \"original\" -- type/difficulty/codeSnippet/topic are NEVER re-read\n// from the LLM's output later, only from this original object, so the model\n// cannot change them even if it tried.\nfunction buildPrompt(q) {\n  const optionsList = q.options.map((o, i) => `${i + 1}. ${o.optionText}`).join(\"\\n\");\n  const codeBlock = q.codeSnippet ? `Code (do NOT translate, shown here only for context):\\n${q.codeSnippet}\\n\\n` : \"\";\n  return `You are translating an existing, already-approved English quiz question about Java into natural, fluent Turkish for a Java learning platform. This is a TRANSLATION task, not a new-question-generation task -- do not add, remove, or change any technical fact.\n\nRules:\n- Translate ONLY natural-language prose (the question text, the explanation, and the option texts).\n- NEVER translate Java identifiers, keywords, method/class/type names, or code fragments that appear inline in the text (e.g. enum, valueOf(), ordinal(), class/method names) -- keep them exactly as written.\n- Do NOT change which options are correct or incorrect -- you are only translating text, not judging correctness.\n- Do NOT add, remove, or reorder options.\n- Do NOT change the meaning, difficulty, or technical content of the question.\n- Use natural, idiomatic Turkish for an educational Java platform, the way an existing Turkish Java course on this platform would phrase it.\n\nOriginal English question (type: ${q.type}, difficulty: ${q.difficulty}):\nQuestion: ${q.question}\n${codeBlock}Explanation: ${q.explanation}\nOptions (in order):\n${optionsList}\n\nReturn ONLY a JSON object (no prose, no markdown fences) with exactly this shape:\n{\"question\": \"...\", \"explanation\": \"...\", \"options\": [\"...\", \"...\", ...]}\nThe \"options\" array must have exactly ${q.options.length} strings, in the SAME order as the original options above.`;\n}\n\nreturn $input.all().map(item => ({\n  json: {\n    original: item.json,\n    prompt: buildPrompt(item.json),\n  }\n}));"
+      },
+      "id": "build-translation-requests-1",
+      "name": "Build Translation Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.3, messages: [ { role: 'system', content: 'You output only valid JSON. No prose, no markdown code fences, no commentary -- the raw JSON object only.' }, { role: 'user', content: $json.prompt } ] } }}",
+        "options": {}
+      },
+      "id": "translate-1",
+      "name": "Translate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        300
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "openAiApi": {
+          "id": "sfmqlEISp7fEml6j",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Translation stage -- reads the OpenAI Chat Completions response shape and\n// extracts the translated {question, explanation, options[]}. The original question\n// (topicSlug/type/difficulty/codeSnippet/codeLanguage/options-with-correct-flags) is\n// recovered via itemMatching against Build Translation Requests, since the real HTTP\n// Request node replaces item.json with the raw API response (same lesson as the\n// generation pipeline's Faz 147 fix).\nconst results = [];\nconst inputItems = $input.all();\nfor (let i = 0; i < inputItems.length; i++) {\n  const item = inputItems[i];\n  const original = $('Build Translation Requests').itemMatching(i).json.original;\n\n  let translated = null;\n  let parseError = null;\n  try {\n    const raw = item.json.choices && item.json.choices[0] && item.json.choices[0].message && item.json.choices[0].message.content;\n    if (!raw) throw new Error(\"no message content in LLM response\");\n    translated = JSON.parse(raw);\n  } catch (e) {\n    parseError = e.message;\n  }\n\n  results.push({ json: { original, translated, parseError } });\n}\nreturn results;"
+      },
+      "id": "parse-translation-1",
+      "name": "Parse Translation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate Translation stage -- deterministic, structural only. Confirms the\n// translation kept the exact same option COUNT as the original (order is assumed\n// preserved per the prompt's explicit instruction) and that nothing looks empty or\n// suspiciously untranslated (identical to the English source). Does NOT re-validate\n// type/difficulty/codeSnippet/topic -- those are never taken from the model's output\n// in the first place (see Submit Valid Translations), so there is nothing to check.\nfunction normalize(text) {\n  return (text || \"\").toLowerCase().replace(/[^\\w\\s]/g, \"\").replace(/\\s+/g, \" \").trim();\n}\n\n// A real transport-level corruption was observed with a live OpenAI response: one\n// item's Turkish text came back with its UTF-8 bytes mangled into CJK-range\n// characters (e.g. \"icin\" -> \"i\\u83bdin\"). Turkish text should never legitimately\n// contain CJK Unified Ideographs -- this is a cheap, reliable guard against that\n// specific failure mode recurring silently.\nconst CJK_RANGE = /[\\u4e00-\\u9fff]/;\nfunction containsUnexpectedCjk(text) {\n  return typeof text === \"string\" && CJK_RANGE.test(text);\n}\n\nreturn $input.all().map(item => {\n  const { original, translated, parseError } = item.json;\n  const reasons = [];\n\n  if (parseError) {\n    reasons.push(\"LLM output parse error: \" + parseError);\n  } else if (!translated || typeof translated !== \"object\") {\n    reasons.push(\"translated output is not a JSON object\");\n  } else {\n    if (!translated.question || typeof translated.question !== \"string\" || translated.question.trim().length < 5) {\n      reasons.push(\"translated question missing or too short\");\n    }\n    if (!translated.explanation || typeof translated.explanation !== \"string\" || translated.explanation.trim().length < 5) {\n      reasons.push(\"translated explanation missing or too short\");\n    }\n    if (!Array.isArray(translated.options) || translated.options.length !== original.options.length) {\n      reasons.push(`translated options count (${translated.options ? translated.options.length : 0}) does not match original (${original.options.length})`);\n    } else if (translated.options.some(o => !o || typeof o !== \"string\" || !o.trim())) {\n      reasons.push(\"empty translated option text\");\n    }\n    if (translated.question && normalize(translated.question) === normalize(original.question)) {\n      reasons.push(\"translated question text is identical to the English source -- looks untranslated\");\n    }\n    if (containsUnexpectedCjk(translated.question) || containsUnexpectedCjk(translated.explanation)\n        || (Array.isArray(translated.options) && translated.options.some(containsUnexpectedCjk))) {\n      reasons.push(\"translated text contains unexpected CJK characters -- likely a transport/encoding corruption, not a real translation\");\n    }\n  }\n\n  return { json: { ...item.json, validation: { passed: reasons.length === 0, reasons } } };\n});"
+      },
+      "id": "validate-translation-1",
+      "name": "Validate Translation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Duplicate Check stage -- same normalized exact-match + Jaccard word-overlap\n// technique as the generation pipeline's Duplicate Check, applied against the REAL\n// TR pool for this topic (via /api/internal/questions/existing?language=tr, all\n// statuses -- a PENDING_REVIEW or REJECTED TR question still counts as \"already\n// tried\"). Comparable text is translated-question + ORIGINAL codeSnippet (code is\n// never translated, so it stays identical across languages -- same fix as Faz 147's\n// CODE_OUTPUT false-positive, applied here from the start).\nfunction normalize(text) {\n  return (text || \"\").toLowerCase().replace(/[^\\w\\s]/g, \"\").replace(/\\s+/g, \" \").trim();\n}\nfunction tokenSet(text) {\n  return new Set(normalize(text).split(\" \").filter(Boolean));\n}\nfunction jaccard(a, b) {\n  const inter = [...a].filter(x => b.has(x)).length;\n  const union = new Set([...a, ...b]).size;\n  return union === 0 ? 0 : inter / union;\n}\n// Same boilerplate-overlap false-positive fix as the generation pipeline's\n// Duplicate Check (Faz 148), refined further after a real run showed \"last line\"\n// alone picks up a near-empty closing brace for snippets wrapped in a main()\n// method. Only the last line with meaningful content once braces/parens/\n// semicolons are stripped is compared, so the comparison lands on the actual\n// statement under test regardless of trailing braces.\nfunction comparableText(question, codeSnippet) {\n  if (!codeSnippet) return question;\n  const lines = codeSnippet.split(\"\\n\").map(l => l.trim()).filter(Boolean);\n  const meaningfulLines = lines.filter(l => l.replace(/[{}();]/g, \"\").trim().length > 0);\n  const distinctiveLine = meaningfulLines.length > 0\n    ? meaningfulLines[meaningfulLines.length - 1]\n    : (lines.length > 0 ? lines[lines.length - 1] : codeSnippet);\n  return `${question} ${distinctiveLine}`;\n}\n\nconst JACCARD_THRESHOLD = 0.6;\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\n\nconst items = $input.all().filter(i => i.json.validation && i.json.validation.passed);\nconst skipped = $input.all().filter(i => !i.json.validation || !i.json.validation.passed);\n\nconst existingCache = {};\nconst results = [];\n\nfor (const item of items) {\n  const { original, translated } = item.json;\n  const topicSlug = original.topicSlug;\n  const key = topicSlug + \"::tr\";\n  if (!(key in existingCache)) {\n    existingCache[key] = await this.helpers.httpRequest({\n      method: \"GET\",\n      url: `${baseUrl}/api/internal/questions/existing?topicSlug=${encodeURIComponent(topicSlug)}&language=tr`,\n      headers: { \"X-Api-Key\": apiKey },\n      json: true,\n    });\n  }\n\n  const newText = comparableText(translated.question, original.codeSnippet);\n  const newTokens = tokenSet(newText);\n  const newNorm = normalize(newText);\n  let match = null;\n\n  for (const ex of existingCache[key]) {\n    if (normalize(ex.question) === newNorm) { match = { id: ex.id, reason: \"exact match (existing TR)\" }; break; }\n    const sim = jaccard(newTokens, tokenSet(ex.question));\n    if (sim >= JACCARD_THRESHOLD) { match = { id: ex.id, reason: `word-overlap ${sim.toFixed(2)} (existing TR)` }; break; }\n  }\n\n  if (!match) {\n    for (const accepted of results) {\n      if (accepted.json.original.topicSlug !== topicSlug) continue;\n      const acceptedText = comparableText(accepted.json.translated.question, accepted.json.original.codeSnippet);\n      const sim2 = jaccard(newTokens, tokenSet(acceptedText));\n      const norm2 = normalize(acceptedText);\n      if (newNorm === norm2 || sim2 >= JACCARD_THRESHOLD) { match = { id: \"batch:\" + acceptedText.slice(0, 40), reason: \"within-batch duplicate\" }; break; }\n    }\n  }\n\n  results.push({ json: { ...item.json, duplicateCheck: { isDuplicate: !!match, matchedId: match ? match.id : null, reason: match ? match.reason : null } } });\n}\n\nfor (const s of skipped) {\n  results.push({ json: { ...s.json, duplicateCheck: { isDuplicate: false, matchedId: null, reason: \"skipped (failed validation)\" } } });\n}\n\nreturn results;"
+      },
+      "id": "duplicate-check-tr-1",
+      "name": "Duplicate Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Submit Valid Translations stage -- POSTs only items that passed both Validate\n// Translation and Duplicate Check to the EXISTING /api/internal/questions/ingest\n// endpoint. type/difficulty/codeSnippet/codeLanguage/topicSlug and each option's\n// `correct` flag are copied VERBATIM from the ORIGINAL EN question -- never from the\n// model's translated output -- so a translation can only ever change question text/\n// explanation text/option text, structurally never the answer, structure, difficulty,\n// type, code, or topic (per the requirement that a translation must not alter any of\n// those). source is always \"OPENAI\", no status field -- the API forces PENDING_REVIEW\n// regardless. Non-qualifying items pass through tagged with a skip reason instead of\n// being dropped, so Record Results can still summarize the full batch.\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\nconst results = [];\n\nfor (const item of $input.all()) {\n  const { original, translated, validation, duplicateCheck } = item.json;\n  const submittable = validation && validation.passed && duplicateCheck && !duplicateCheck.isDuplicate;\n\n  if (!submittable) {\n    results.push({ json: { ...item.json, submission: { attempted: false, success: false, reason: (!validation || !validation.passed) ? \"failed validation\" : \"duplicate\" } } });\n    continue;\n  }\n\n  const optionsPayload = original.options.map((o, i) => ({ optionText: translated.options[i], correct: o.correct }));\n\n  try {\n    const response = await this.helpers.httpRequest({\n      method: \"POST\",\n      url: `${baseUrl}/api/internal/questions/ingest`,\n      headers: { \"X-Api-Key\": apiKey, \"Content-Type\": \"application/json\" },\n      body: {\n        topicSlug: original.topicSlug,\n        language: \"tr\",\n        type: original.type,\n        difficulty: original.difficulty,\n        source: \"OPENAI\",\n        question: translated.question,\n        codeSnippet: original.codeSnippet,\n        codeLanguage: original.codeLanguage,\n        explanation: translated.explanation,\n        options: optionsPayload,\n      },\n      json: true,\n    });\n    results.push({ json: { ...item.json, submission: { attempted: true, success: true, id: response.id, status: response.status } } });\n  } catch (e) {\n    results.push({ json: { ...item.json, submission: { attempted: true, success: false, reason: e.message } } });\n  }\n}\nreturn results;"
+      },
+      "id": "submit-translations-1",
+      "name": "Submit Valid Translations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Record Results stage -- final summary of the whole translation run.\nconst items = $input.all().map(i => i.json);\nconst summary = {\n  totalCandidates: items.length,\n  validationFailed: items.filter(i => !i.validation || !i.validation.passed).length,\n  duplicatesSkipped: items.filter(i => i.validation && i.validation.passed && i.duplicateCheck && i.duplicateCheck.isDuplicate).length,\n  submitted: items.filter(i => i.submission && i.submission.success).length,\n  submissionFailed: items.filter(i => i.submission && i.submission.attempted && !i.submission.success).length,\n  details: items.map(i => ({\n    originalId: i.original.id,\n    topicSlug: i.original.topicSlug,\n    translatedQuestion: i.translated ? (i.translated.question || \"\").slice(0, 70) : null,\n    validationPassed: i.validation ? i.validation.passed : false,\n    validationReasons: i.validation ? i.validation.reasons : [],\n    isDuplicate: i.duplicateCheck ? i.duplicateCheck.isDuplicate : false,\n    duplicateReason: i.duplicateCheck ? i.duplicateCheck.reason : null,\n    submitted: i.submission ? i.submission.success : false,\n    submittedId: i.submission ? i.submission.id : null,\n  })),\n};\nreturn [{ json: summary }];"
+      },
+      "id": "record-results-1",
+      "name": "Record Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Translatable EN Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Translatable EN Questions": {
+      "main": [
+        [
+          {
+            "node": "Build Translation Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Translation Requests": {
+      "main": [
+        [
+          {
+            "node": "Translate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate": {
+      "main": [
+        [
+          {
+            "node": "Parse Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Translation": {
+      "main": [
+        [
+          {
+            "node": "Validate Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Translation": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Check": {
+      "main": [
+        [
+          {
+            "node": "Submit Valid Translations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Valid Translations": {
+      "main": [
+        [
+          {
+            "node": "Record Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
