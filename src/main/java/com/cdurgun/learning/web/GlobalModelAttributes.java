@@ -102,4 +102,22 @@ public class GlobalModelAttributes {
                 .map(User::getDisplayName)
                 .orElse(authentication.getName());
     }
+
+    /**
+     * Sidebar'da yalnızca ADMIN'e görünmesi gereken bağlantılar (örn. "Soru İncelemesi")
+     * için -- {@code SecurityConfig}'in {@code /{lang:en|tr}/admin/**} için zaten
+     * uyguladığı {@code hasRole("ADMIN")} kuralıyla AYNI yetki kaynağını (Spring
+     * Security'nin authority listesi) okur, yeni bir yetkilendirme mekanizması
+     * KURMAZ -- bu yalnızca o var olan kararın template'te bir YANSIMASI, kendi
+     * başına bir erişim kontrolü DEĞİL (gerçek erişim kontrolü hâlâ tamamen
+     * {@code SecurityConfig}'te).
+     */
+    @ModelAttribute("isAdmin")
+    public boolean isAdmin(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
 }

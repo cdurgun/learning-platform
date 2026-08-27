@@ -82,7 +82,7 @@
         <!-- Quiz Area: course/category navigasyonundan BAĞIMSIZ, ayrı bir kaynaktan
              (QuizDefinition, bkz. QuizNavigationService) beslenen ayrı bir bölüm,
              yukarıdaki course ağacıyla AYNI toggle/chevron/collapse deseni kullanılır. -->
-        <div th:if="${!#lists.isEmpty(quizNav)}" class="mb-4">
+        <div th:if="${!#lists.isEmpty(quizNav) or isAdmin}" class="mb-4">
             <h6 class="text-uppercase text-muted small fw-bold" th:text="#{nav.quiz}">QUIZ</h6>
             <div th:each="group : ${quizNav}" th:with="groupId=${'quiz-' + group.groupSlug()}" class="mb-1">
                 <button class="sidebar-toggle btn btn-sm d-flex align-items-center justify-content-between w-100 px-2 py-1 fw-semibold small text-start border-0 bg-transparent"
@@ -103,6 +103,17 @@
                     </ul>
                 </div>
             </div>
+            <!-- ADMIN-only: yalnızca sidebar'da gizlenmesi yeterli DEĞİL -- gerçek erişim
+                 kontrolü SecurityConfig'teki `/{lang:en|tr}/admin/**` -> hasRole("ADMIN")
+                 kuralı (Faz 141) tarafından zaten sağlanıyor, bu yalnızca o kararın
+                 UI'daki yansıması. -->
+            <ul class="nav flex-column mb-1" th:if="${isAdmin}">
+                <li class="nav-item">
+                    <a class="nav-link py-1 px-2"
+                       th:href="@{/{lang}/admin/questions(lang=${language.code})}"
+                       th:text="#{admin.questions.title}">Question Review</a>
+                </li>
+            </ul>
         </div>
     </div>
 </aside>
