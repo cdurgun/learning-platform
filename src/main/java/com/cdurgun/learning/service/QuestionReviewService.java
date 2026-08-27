@@ -16,6 +16,7 @@ import com.cdurgun.learning.web.review.QuestionReviewView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -176,12 +177,15 @@ public class QuestionReviewService {
      * (b) gerçek 409/404 hatasını maskeleyip yerine 500 döndüremez -- ikisinde de
      * yalnızca uygulama logger'ına yazılır, orijinal sonuç/istisna DEĞİŞMEDEN kalır.</p>
      *
-     * <p><b>KASITLI OLARAK ele alınmayan:</b> aynı soru için eşzamanlı iki
-     * {@code autoPublish} çağrısının {@code transition()} seviyesinde birbirini
-     * engellemesi -- {@code Question}'da optimistic lock (`@Version`) ya da koşullu
-     * {@code UPDATE ... WHERE status = 'PENDING_REVIEW'} YOK, bu {@link #publish}/
-     * {@link #reject}'te de zaten önceden var olan, bu Faz'ın kapsamı DIŞINDA bırakılan
-     * ayrı bir konu.</p>
+     * <p><b>Eşzamanlı çift-yayınlama (Faz sonrası eklendi):</b> {@code Question.version}
+     * ({@code @Version}) sayesinde {@code transition()}'ın son yazması artık {@code
+     * UPDATE ... WHERE id=? AND version=?} -- iki eşzamanlı çağrı aynı anda
+     * {@code PENDING_REVIEW} okuyup ikisi de uygulama-seviyesi kontrolü geçse bile,
+     * yalnızca ilk COMMIT olan gerçek satırı günceller; ikincisi 0 satır etkiler ve
+     * Hibernate bunu {@link OptimisticLockingFailureException} olarak fırlatır --
+     * {@code transition()} bunu YAKALAYIP aynı 409'a çevirir, bu yüzden yukarıdaki
+     * {@code catch (ResponseStatusException e) { if CONFLICT -> FAILED audit }} bloğu
+     * DEĞİŞİKLİK GEREKTİRMEDEN bu yeni CONFLICT kaynağını da kapsar.</p>
      */
     @Transactional
     public QuestionAutoPublishResponse autoPublish(Long questionId, QuestionAutoPublishRequest request) {
@@ -257,6 +261,15 @@ public class QuestionReviewService {
         question.setStatus(targetStatus);
         question.setReviewedBy(reviewerEmail);
         question.setReviewedAt(LocalDateTime.now());
-        questionRepository.save(question);
+        try {
+            // saveAndFlush (not save) so the version-checked UPDATE runs synchronously
+            // here, and a losing concurrent writer's OptimisticLockingFailureException
+            // surfaces inside this try/catch rather than at a later, uncontrolled flush.
+            questionRepository.saveAndFlush(question);
+        } catch (OptimisticLockingFailureException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Soru " + questionId + " eşzamanlı bir işlemle zaten güncellendi -- yalnızca PENDING_REVIEW "
+                            + "sorular yayınlanabilir/reddedilebilir");
+        }
     }
 }

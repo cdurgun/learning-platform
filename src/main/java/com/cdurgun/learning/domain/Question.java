@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -94,4 +95,14 @@ public class Question {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * Optimistic lock -- {@link QuestionReviewService#transition}'ın eşzamanlı iki
+     * PENDING_REVIEW->PUBLISHED/REJECTED geçişinden yalnızca birinin gerçekten
+     * başarılı olmasını, Hibernate'in {@code UPDATE ... WHERE id=? AND version=?}
+     * karşılaştır-ve-değiştir'iyle veritabanı seviyesinde garanti eder.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
 }

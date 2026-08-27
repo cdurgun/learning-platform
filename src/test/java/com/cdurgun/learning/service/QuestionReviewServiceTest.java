@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -80,7 +81,7 @@ class QuestionReviewServiceTest {
     void autoPublishTransitionsPendingReviewQuestionToPublishedAndLogsSuccess() {
         Question question = pendingQuestion();
         when(questionRepository.findById(200L)).thenReturn(Optional.of(question));
-        when(questionRepository.save(any(Question.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(questionRepository.saveAndFlush(any(Question.class))).thenAnswer(inv -> inv.getArgument(0));
 
         QuestionReviewService service = newService(true);
         QuestionAutoPublishResponse response = service.autoPublish(200L,
@@ -115,7 +116,7 @@ class QuestionReviewServiceTest {
 
         // No second state transition -- the question was already PUBLISHED and stays so.
         assertThat(question.getStatus()).isEqualTo(QuestionStatus.PUBLISHED);
-        verify(questionRepository, never()).save(any());
+        verify(questionRepository, never()).saveAndFlush(any());
 
         ArgumentCaptor<QuestionPublishLog> captor = ArgumentCaptor.forClass(QuestionPublishLog.class);
         verify(questionPublishAuditService).record(captor.capture());
@@ -144,7 +145,7 @@ class QuestionReviewServiceTest {
     void successfulAuditWriteFailureDoesNotTurnASuccessfulPublishIntoAnError() {
         Question question = pendingQuestion();
         when(questionRepository.findById(200L)).thenReturn(Optional.of(question));
-        when(questionRepository.save(any(Question.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(questionRepository.saveAndFlush(any(Question.class))).thenAnswer(inv -> inv.getArgument(0));
         // Simulates QuestionPublishAuditService.record()'s own REQUIRES_NEW transaction
         // failing (e.g. a transient DB issue, or the concurrent-duplicate-SUCCESS-row
         // race hitting uq_question_publish_log_success_question).
@@ -178,5 +179,28 @@ class QuestionReviewServiceTest {
                 .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
                         .isEqualTo(HttpStatus.CONFLICT));
         verify(questionPublishAuditService).record(any());
+    }
+
+    @Test
+    void optimisticLockFailureOnSaveIsTranslatedToConflictAndLogsFailure() {
+        Question question = pendingQuestion();
+        when(questionRepository.findById(200L)).thenReturn(Optional.of(question));
+        // Simulates a losing concurrent writer: another transaction already advanced
+        // this row's version between our findById() and our saveAndFlush().
+        when(questionRepository.saveAndFlush(any(Question.class)))
+                .thenThrow(new ObjectOptimisticLockingFailureException(Question.class, 200L));
+
+        QuestionReviewService service = newService(true);
+
+        assertThatThrownBy(() -> service.autoPublish(200L, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                        .isEqualTo(HttpStatus.CONFLICT));
+
+        ArgumentCaptor<QuestionPublishLog> captor = ArgumentCaptor.forClass(QuestionPublishLog.class);
+        verify(questionPublishAuditService).record(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(PublishLogStatus.FAILED);
+        assertThat(captor.getValue().getQuestionId()).isEqualTo(200L);
+        assertThat(captor.getValue().getErrorMessage()).isNotBlank();
     }
 }
