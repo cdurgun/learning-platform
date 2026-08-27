@@ -30,6 +30,13 @@ app:
 quiz:
   ingest:
     api-key: ${QUIZ_INGEST_API_KEY:}
+  # AI Judge otomatik yayınlama kill switch'i (bkz. QuestionReviewService#autoPublish).
+  # Varsayılan olarak DEVRE DIŞI -- /api/internal/questions/{id}/auto-publish, bu
+  # bayrak açıkça "true"ya ayarlanmadıkça 503 döner. Aynı X-Api-Key ile korunur
+  # (bkz. QuizIngestApiKeyInterceptor), bu ayrı bir kimlik doğrulama DEĞİL, ikinci
+  # bir bilinçli açma/kapama anahtarı.
+  auto-publish:
+    enabled: ${QUIZ_AUTO_PUBLISH_ENABLED:false}
 
 logging:
   level:
