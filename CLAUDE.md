@@ -180,7 +180,17 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   seçim) böylece aynı `Question` havuzunu iki farklı şekilde tüketiyor —
   Practice hiçbir `Quiz` satırına ihtiyaç duymuyor, yalnızca
   `status = 'PUBLISHED'` sorular arasından çekiyor (bu filtre sorgunun
-  KENDİSİNE sabit yazılı, hiçbir çağıran taraf override edemez). Puanlama
+  KENDİSİNE sabit yazılı, hiçbir çağıran taraf override edemez). **DİKKAT:**
+  sabit quiz'in soru üyeliği (`quiz_question_link`) `Question.status`'tan
+  TAMAMEN BAĞIMSIZDIR — `QuizService.loadQuiz()` hiçbir status filtresi
+  uygulamaz, yalnızca `quiz_question_link`'te ne varsa onu döner. Yani bir
+  soruyu `PUBLISHED` yapmak onu OTOMATİK OLARAK hiçbir topic'in sabit
+  quiz'ine EKLEMEZ (yalnızca havuza girmesini sağlar, Practice/Quiz Area'da
+  görünür hale getirir) — bir topic'in sabit quiz'ine yeni soru eklemek AYRI,
+  açık bir `quiz_question_link` seed adımı gerektirir (bkz. `enum/V291`,
+  `git-fundamentals/V467`/`V468` — topic slug + language + quiz slug ile
+  portable şekilde resolve edilen quiz'e link'leyen migration deseni).
+  Puanlama
   (`QuestionScorer`) her iki modda AYNI kuralı kullanır: seçilen şık id
   kümesi doğru şık id kümesiyle BİREBİR eşleşmeli (MULTIPLE_CHOICE kısmi
   doğru cevabı KABUL ETMEZ). **AI/n8n ingestion** (`POST

@@ -990,3 +990,28 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   benzerinin) eklenmesi ÖNERİLİR** -- bu, tek bir soruya özel bir tuhaflık
   değil, gözlemlenen davranış transport katmanında olduğu için teorik olarak
   herhangi bir çok-baytlı yanıtı etkileyebilir.
+- **Promotion-style bir migration'ın (`WITH ... RETURNING` + `NOT EXISTS`
+  idempotency deseni, bkz. `question-promotion/V431`, `git-fundamentals/V467`/
+  `V468`) fallback (satır henüz yoksa oluşturma) dalındaki içerik, migration
+  YAZILIRKEN mevcut olan ham veriyi değil, o verinin GEÇMESİ GEREKEN NİHAİ
+  durumunu (ör. `status='PUBLISHED'`, gerçek `reviewed_by`/`reviewed_at`)
+  yansıtmalı -- git-fundamentals'ın Türkçe quiz sorularını linkleyen `V468`
+  yazılırken gerçek bir hatayla keşfedildi:** ilk yazılan `V468`, sorular
+  henüz PUBLISH edilmeden ÖNCE (`status='PENDING_REVIEW'` iken) export edilen
+  içerikle üretilmişti. Bu hata, migration'ı ÜRETEN dev DB'ye (`learning`)
+  karşı görünmedi -- o DB'de sorular zaten canlı ingestion ile mevcuttu, migration'ın
+  `NOT EXISTS` kontrolü var olan satırları buldu ve fallback dalını hiç
+  ÇALIŞTIRMADAN "başarılı" oldu. Sorun yalnızca `mvn test`'in ayrı, temiz
+  `learning_test` veritabanında migration'ı SIFIRDAN çalıştırmasıyla ortaya
+  çıktı: fallback dalı bu kez GERÇEKTEN çalıştı ve 10 `PENDING_REVIEW` satırı
+  oluşturdu, bu da `QuestionReviewControllerTest.noPendingQuestionsShowsEmptyState`'i
+  beklenmedik şekilde bozdu. **Kalıcı ders:** (1) bir promotion migration'ı
+  yazmadan önce içerik, migration'ın temsil etmesi istenen nihai durumdan
+  (review/publish TAMAMLANDIKTAN) SONRA export edilmeli; (2) böyle bir
+  migration'ı yalnızca onu ÜRETEN dev DB'ye karşı test etmek YETERSİZ --
+  dev DB'de zaten var olan satırlar `NOT EXISTS` kontrolüyle eşleşip fallback
+  dalını hiç çalıştırmadan migration'ı "başarılı" gösterebilir; gerçek
+  doğrulama MUTLAKA (a) tamamen boş/disposable bir Postgres container'ında
+  (bkz. Faz 143'teki teknik) VE (b) `mvn test`'in kullandığı ayrı
+  `learning_test` veritabanında da yapılmalı, yalnızca dev DB'ye bakmak
+  yetmez.
