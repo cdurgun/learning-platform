@@ -890,6 +890,23 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   siliniyor, gerçek dev DB'ye (`learning`, port 5433) hiçbir zaman dokunulmuyor. Yeni bir
   migration'ın (özellikle veri migration'larının) gerçek etkisini görmek gerektiğinde bu
   yöntem, gerçek dev DB'yi geçici olarak bozma riskine girmeden kullanılabilir.
+- **EKLEME (Faz 149, undoing-changes quiz'i, Faz 143'teki disposable-DB yöntemine
+  gotcha): `mvn -o flyway:migrate`'in `-Dflyway.locations=classpath:db/migration`'ı,
+  `src/main/resources/db/migration`'ı DEĞİL, `target/classes/db/migration`'ı (Maven'in
+  derlenmiş kaynak çıktısı) tarar.** Bu Faz'da yeni yazılan iki migration dosyası
+  (`undoing-changes/V471`/`V472`) `src/main/resources`'a eklendikten hemen sonra
+  disposable container'a karşı `mvn -o flyway:migrate` çalıştırıldığında migration'lar
+  SESSİZCE atlandı (`Current version: 470`, hata YOK) -- `target/classes` daha önceki bir
+  build'den kalma, henüz senkronize edilmemişti. `cp -r src/main/resources/* target/classes/`
+  ile senkronize edildikten SONRA aynı komut V471/V472'yi doğru şekilde uyguladı. Bu, Faz
+  140'taki `javac`/`java -cp` workaround'unda ZATEN elle yapılan resource-kopyalama adımının
+  (`cp -r src/main/resources/* $SCRATCH/classes/`) `mvn -o flyway:migrate` için de AYRICA
+  gerekli olduğu anlamına geliyor -- iki workaround birbirinden BAĞIMSIZ, `javac`
+  çalıştırması `target/classes`'a yazmaz. Yeni bir migration dosyası eklendikten sonra
+  Faz 143'teki disposable-DB yöntemi kullanılacaksa, `mvn -o flyway:migrate`'ten ÖNCE
+  `target/classes`'ın güncel olduğu (ya taze bir `cp -r` ile ya da başarılı bir
+  `mvn -o compile`/`test-compile` ile) doğrulanmalı, aksi halde "migration bulunamadı"
+  değil, DAHA SİNSİ bir "migration sessizce atlandı" sonucu alınır.
 - **BİLİNÇLİ bir sınır (Faz 143, `scripts/export_approved_questions.py`): bu proje şu an
   tekrar-promote'a karşı YAPISAL bir koruma (örn. `promoted_at` kolonu, `question` üzerinde
   bir unique constraint) SAĞLAMIYOR** -- Flyway'in kendi `flyway_schema_history`'si yalnızca
