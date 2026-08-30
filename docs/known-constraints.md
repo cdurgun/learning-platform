@@ -1131,3 +1131,32 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   (bkz. Faz 143'teki teknik) VE (b) `mvn test`'in kullandığı ayrı
   `learning_test` veritabanında da yapılmalı, yalnızca dev DB'ye bakmak
   yetmez.
+- **GÜNCELLEME (Faz 153): `string` topic'inin AI Judge tarafından reddedilen 4
+  sorusu (335 EN, 337/340/341 TR) yerine, aynı gerçek n8n pipeline'ıyla
+  (Generate Batch + AI Judge, Faz 152'nin düzeltilmiş hâli), reddedilen
+  satırlara HİÇ DOKUNMADAN scoped top-up çalıştırmalarıyla replacement soru
+  üretildi.** `Topic Selection`'a Faz 146'dan beri var olan `onlyLanguage`
+  parametresi ilk kez gerçek bir çalıştırmada kullanıldı (`{topicSlug:
+  "string", onlyLanguage: "en"|"tr", overrideCount: N}`). **Gözlemlenen gerçek
+  davranış, bu topic'in havuzu (44 soru) büyüdükçe normal dedup/validation'ın
+  ARTIK önemli bir oranda üretimi eledigini gösterdi:** `overrideCount: 1`
+  ile yapılan ilk EN denemesi 3 gerçek çağrıda da (aynı sorguya 3 ayrı gerçek
+  OpenAI çağrısı) hiç soru submit edemedi -- ikisi `Duplicate Check`'e (exact
+  match / word-overlap 0.85-0.89, var olan PENDING_REVIEW/REJECTED satırlar
+  dahil TÜM statüler karşı karşılaştırılıyor, bkz. Faz 87/omitted-status
+  filtresi) takıldı, biri `Validate Output`'a gerçek bir LLM JSON-parse
+  hatasıyla (malformed array) takıldı. Batch boyutu `overrideCount: 4`
+  (EN) / `6` (TR)'ye çıkarılınca AYNI tek çağrıda hem başarılı submit+APPROVE
+  hem yeni gerçek REJECT'ler (343, 344, 345, 347 -- ör. 344'te judge, TR
+  açıklamasının `"örnek"` uzunluğunu YANLIŞ 6 olarak verdiğini yakaladı, gerçek
+  bir içerik hatası) hem de yeni duplicate/validation elemeleri AYNI ANDA
+  gözlemlendi. **Ders:** bir topic'in soru havuzu büyüdükçe, tek-öğeli
+  (`overrideCount: 1`) scoped top-up çalıştırmaları giderek daha yüksek
+  olasılıkla TAMAMEN boşa gidiyor (hepsi dedup/validation'a takılıyor) --
+  gelecekte benzer bir "N tane reddedilmiş soruyu değiştir" görevi için,
+  ihtiyaç duyulan sayıdan büyükçe bir `overrideCount` (bu Faz'da ~4-6x) marj
+  bırakmak, tek seferde yeterli sağ kalan üretme şansını pratikte anlamlı
+  ölçüde artırıyor. Reddedilen 4 orijinal satır (`reviewed_by`/`reviewed_at`
+  hâlâ `NULL`, `status` hâlâ `PENDING_REVIEW`) doğrulamayla teyit edildiği
+  üzere hiç değiştirilmedi; 4 gerçek REJECT side-effect'i de (343/344/345/347)
+  aynı şekilde `PENDING_REVIEW` bırakıldı, override edilmedi.
