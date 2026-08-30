@@ -907,6 +907,105 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   `target/classes`'ın güncel olduğu (ya taze bir `cp -r` ile ya da başarılı bir
   `mvn -o compile`/`test-compile` ile) doğrulanmalı, aksi halde "migration bulunamadı"
   değil, DAHA SİNSİ bir "migration sessizce atlandı" sonucu alınır.
+- **KRİTİK, GÜNCEL BİR BUL (Faz 151, `question-generation-enum-test.json`'ın ilk
+  gerçek `string` topic'i çalıştırması): bu sandbox'ta kurulu n8n sürümünde
+  (`docker.n8n.io/n8nio/n8n:latest`, bu Faz'da tespit edilen sürüm 2.35.3),
+  `AI Judge` node'unun kullandığı `this.helpers.httpRequestWithAuthentication`
+  Code Node API'si ARTIK DESTEKLENMİYOR -- her çağrı anında (ağa hiç
+  çıkmadan) `"The function \"helpers.httpRequestWithAuthentication\" is not
+  supported in the Code Node"` hatasıyla senkron olarak başarısız oluyor.**
+  Bu, `AI Judge` node'unun kendi try/catch'i tarafından REJECT-eşdeğeri olarak
+  yakalanıyor (tasarım gereği doğru davranış -- ASLA belirsiz/başarısız bir
+  judge çağrısında otomatik APPROVE etmiyor), bu yüzden pipeline'ın geri kalanı
+  (submission, Post-Ingest Status Decision) hatasız çalışmaya devam ediyor ama
+  **`judgeApproved` her zaman 0 çıkıyor, dolayısıyla `autoPublished` de her
+  zaman 0** -- yani şu anki n8n sürümünde bu workflow ASLA otomatik publish
+  ÜRETEMEZ, yalnızca `PENDING_REVIEW` sorular üretebilir. Gerçek bir OpenAI
+  entegrasyon/versiyon hatası olduğu, `Generate Batch`'in gerçek yanıt süresiyle
+  (16621ms, gerçek bir tamamlama çağrısıyla tutarlı) `AI Judge`'ın 18 kalem
+  için toplam yalnızca 35ms sürmesi (18 gerçek OpenAI çağrısı için İMKANSIZ
+  ölçüde hızlı, ağa hiç çıkılmadığının kanıtı) karşılaştırılarak sayısal olarak
+  doğrulandı. **Kök neden, `Generate Batch`'in kullandığı
+  `this.helpers.httpRequest(...)` (kimlik doğrulamasını n8n'in dahili
+  credential mekanizmasıyla `authentication: "predefinedCredentialType"`
+  parametresiyle KENDİSİ hallediyor) ile `AI Judge`'ın kullandığı
+  `this.helpers.httpRequestWithAuthentication.call(this, "openAiApi", ...)`
+  (kimlik bilgisini Code Node içinden AÇIKÇA enjekte etmeye çalışan farklı bir
+  API) arasındaki farktır** -- ilki hâlâ destekleniyor, ikincisi n8n'in Code
+  Node sandbox'ından (muhtemelen bir n8n 2.x kırıcı değişikliği, workflow'un
+  yazıldığı sürümden SONRA) kaldırılmış. **Düzeltme bu Faz'da YAPILMADI**
+  (kullanıcının açık talimatıyla: yalnızca `Topic Selection` düğümüne
+  dokunulmasına izin verildi, `AI Judge`'ın kendisi bu görevin kapsamı
+  dışındaydı) -- gelecekte gerçek auto-publish gerekiyorsa, `AI Judge`
+  node'unun kimlik doğrulama çağrısı `Generate Batch`'in kullandığı AYNI
+  `this.helpers.httpRequest(...)` + `authentication: "predefinedCredentialType"`
+  desenine geçirilmeli. Bu Faz'da bu bug nedeniyle 14 gerçek soru (8 EN + 6 TR,
+  `string` topic'i, id 318-331) `PENDING_REVIEW`/`source=OPENAI` olarak dev
+  DB'de kaldı, hiçbiri publish edilmedi -- kullanıcının Judge sonucunu bypass
+  etme/manuel publish etme talimatı olmadığı için BİLİNÇLİ OLARAK
+  dokunulmadı. **Ayrıca, aynı çalıştırmada ikinci bir gerçek bulgu:** üretilen
+  MULTIPLE_CHOICE sorularının bir kısmı (id 319, 324) tam 2 değil 3 doğru şıkla
+  geldi -- `Build Generation Spec`'in prompt'u MULTIPLE_CHOICE için "bir ya da
+  daha fazla doğru şık" istiyor (`Validate Output` da yalnızca "≥1" doğruluyor),
+  "tam olarak 2" kısıtı workflow'un KENDİSİNE hiç yazılı değil (bu, önceki Git
+  kursu sorularında Claude'un kendi kararıyla uyguladığı bir kural, n8n
+  pipeline'ının kodlanmış bir gereksinimi DEĞİL) -- gelecekte "tam olarak 2"
+  gerekiyorsa bu, `Build Generation Spec`'in prompt'una VE `Validate Output`'un
+  doğrulamasına AÇIKÇA eklenmesi gereken bir değişikliktir, şu an ikisinde de
+  yok.
+- **GÜNCELLEME (Faz 152, Faz 151'in düzeltmesi): `AI Judge` node'u, tek bir Code
+  node yerine 5 node'a bölünerek DÜZELTİLDİ ve gerçek bir OpenAI çağrısıyla
+  DOĞRULANDI -- bu, projenin n8n Code Node sandbox kısıtı için genel, tekrar
+  kullanılabilir bir çözüm deseni oluşturuyor.** Kök neden tam olarak izole
+  edildi: n8n'in JS Task Runner'ı (`@n8n/task-runner`'ın `runner-types.js`
+  dosyası, `docker exec n8n sh -c "cat .../runner-types.js"` ile okunarak
+  doğrulandı) Code node'lara yalnızca sabit, kısa bir `EXPOSED_RPC_METHODS`
+  listesi sunuyor (`helpers.httpRequest`, `helpers.request`, birkaç binary-data
+  yardımcısı) -- `helpers.httpRequestWithAuthentication` (ve
+  `requestWithAuthenticationPaginated`, `getSSHClient` gibi bir dizi başka
+  yardımcı) `UNSUPPORTED_HELPER_FUNCTIONS` listesinde AÇIKÇA yer alıyor ve
+  çağrıldığı an (ağa hiç çıkmadan) senkron bir `UnsupportedFunctionError`
+  fırlatıyor. Bu, Code node'ların bir credential'ı KENDİ JS'lerinden asla
+  KULLANAMAYACAĞI anlamına geliyor -- `this.getCredentials(...)` bile
+  `EXPOSED_RPC_METHODS`'ta YOK. **Tek güvenli/desteklenen çözüm: kimlik
+  doğrulaması gereken HTTP çağrısını, `Generate Batch`'in zaten kullandığı
+  AYNI deseni (`n8n-nodes-base.httpRequest` node tipi,
+  `authentication: "predefinedCredentialType"`, `nodeCredentialType: "openAiApi"`,
+  `credentials` alanında AYNI credential id) kullanan GERÇEK bir HTTP Request
+  node'una taşımak** -- bu node tipi Code node sandbox'ından TAMAMEN ayrı
+  çalışıyor, kısıt ona hiç uygulanmıyor. Tek bir Code node'un yerine 5 node
+  geldi: `AI Judge Prep` (Code -- uygunluk kontrolü + ders içeriği fetch +
+  prompt oluşturma, kimlik bilgisi YOK) → `AI Judge Route` (IF -- yalnızca
+  `needsJudgeCall===true` olan kalemleri OpenAI çağrısına yönlendiriyor, uygun
+  olmayanlar sıfır maliyetle atlanıyor, ORİJİNAL tasarımdaki "boşa OpenAI
+  çağrısı yok" davranışı BİREBİR korundu) → `AI Judge Call OpenAI` (gerçek HTTP
+  Request node, `Generate Batch` ile AYNI credential/authentication deseni) →
+  `AI Judge Parse Verdict` (Code -- yanıtı ayrıştırır, HER TÜRLÜ hata/eksik
+  alan/beklenmeyen verdict AYNI REJECT-eşdeğeri fail-safe'e düşer, hiçbir
+  zaman varsayılan APPROVE YOK; HTTP node `item.json`'ı ham API yanıtıyla
+  DEĞİŞTİRDİĞİ için orijinal soru alanları `$("AI Judge Prep").itemMatching(i)`
+  ile geri kazanılıyor -- `Parse Generated Questions`'ın `Build Generation
+  Spec`'e karşı ZATEN kullandığı AYNI desen, Faz 147'de bulunmuş) →
+  `AI Judge Merge` (Merge node, `mode: "append"`, IF'in TRUE/FALSE iki dalını
+  tek akışa geri birleştiriyor, `Submit Valid Questions`'a value akıyor).
+  **Gerçek bir OpenAI çağrısıyla doğrulandı:** `string` topic'i için ikinci
+  gerçek çalıştırmada `AI Judge Call OpenAI`, yönlendirilen 10 kalem için
+  toplam 2526ms sürdü (18 kalemin tamamı için önceki bozuk sürümün 35ms'siyle
+  TEZAT, 10 gerçek API round-trip'i için makul bir süre) -- gerçek verdict'ler
+  üretti (4 APPROVE, 6 REJECT), `Post-Ingest Status Decision` bu 4 APPROVE'u
+  gerçekten auto-publish etti (dev DB'de `status='PUBLISHED'`, gerçek
+  `reviewed_by='n8n-ai-judge'`, gerçek FARKLI `reviewed_at` zaman damgaları --
+  hiçbiri elle/bypass ile YAZILMADI, tamamen `POST .../auto-publish`
+  endpoint'inin kendi davranışı), 6 REJECT `PENDING_REVIEW`'da kaldı (`reviewed_by`
+  NULL). **Bu Faz'da OpenAI credential'ına (`sfmqlEISp7fEml6j`, "OpenAI
+  account") HİÇ dokunulmadı** -- ne yeniden oluşturuldu, ne decrypt edildi, ne
+  yazdırıldı; yalnızca `Generate Batch`'in zaten kullandığı REFERANS (id+name)
+  yeni node'a KOPYALANDI. Anahtar hiçbir zaman bu Code node'ların içine
+  girmedi. **Gelecekte benzer bir "Code node içinden kimlik doğrulamalı bir
+  API çağırma" ihtiyacı doğarsa, bu 5-node deseni (Prep → Route (IF) → gerçek
+  HTTP node → Parse → Merge) doğrudan tekrar kullanılabilir** -- Code node'un
+  KENDİSİNDEN kimlik doğrulamalı bir istek atmaya ASLA çalışılmamalı, bu
+  n8n sürümünde (2.35.3) yapısal olarak imkansız.
 - **BİLİNÇLİ bir sınır (Faz 143, `scripts/export_approved_questions.py`): bu proje şu an
   tekrar-promote'a karşı YAPISAL bir koruma (örn. `promoted_at` kolonu, `question` üzerinde
   bir unique constraint) SAĞLAMIYOR** -- Flyway'in kendi `flyway_schema_history`'si yalnızca

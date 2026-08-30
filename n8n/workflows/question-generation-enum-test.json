@@ -15,7 +15,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Topic Selection stage -- a small, hand-curated array for THIS run, never\n// \"all topics\" (same explicit-batch philosophy as scripts/export_approved_questions.py,\n// Faz 143). No onlyLanguage/overrideCount override -- this is the DEFAULT behavior:\n// every run generates BOTH EN and TR independently (each grounded in its own real\n// content/{lang}/{slug}.md, per the originally approved design -- never a translation\n// pass), with the question count computed from real content depth. Edit topicSlug\n// (and optionally add onlyLanguage/overrideCount for a scoped top-up run) here\n// before each real run.\n//\n// First AI-Judge/auto-publish rollout target (per plan): git-fundamentals ONLY.\n// Do not widen this to other Git topics until this first run has been reviewed.\nreturn [\n  { json: { topicSlug: \"git-fundamentals\" } }\n];"
+        "jsCode": "// Topic Selection stage -- a small, hand-curated array for THIS run, never\n// \"all topics\" (same explicit-batch philosophy as scripts/export_approved_questions.py,\n// Faz 143). Every run generates BOTH EN and TR independently (each grounded in its own\n// real content/{lang}/{slug}.md, per the originally approved design -- never a\n// translation pass). Edit topicSlug (and optionally add onlyLanguage/overrideCount for\n// a scoped top-up run) here before each real run.\n//\n// This run's target: java/java-basics -> String (topic slug \"string\"). overrideCount\n// is set to 10 because the requested batch size (10 EN + 10 TR) is larger than this\n// topic's content-depth-computed default (113 lines -> \"small\" bucket -> 5) -- the\n// default bucket logic is left untouched, only this run's explicit item overrides it,\n// exactly as documented above.\nreturn [\n  { json: { topicSlug: \"string\", overrideCount: 10 } }\n];"
       },
       "id": "topic-selection-1",
       "name": "Topic Selection",
@@ -122,22 +122,105 @@
     },
     {
       "parameters": {
-        "jsCode": "// AI Judge stage -- a SECOND, independent OpenAI call (same predefinedCredentialType\n// openAiApi credential already used by Generate Batch, low temperature) that reviews\n// each candidate question that survived Validate Output + Duplicate Check, BEFORE\n// ingestion. This is the gate that makes automatic publishing safe: only a question\n// the Judge explicitly APPROVEs is eligible for the Post-Ingest Auto-Publish stage\n// below -- everything else (REJECT, a failed/timed-out call, or malformed JSON output)\n// is treated as REJECT-equivalent and simply stays PENDING_REVIEW after ingest, exactly\n// like today, for a human to review on /{lang}/admin/questions. The Judge NEVER\n// auto-approves on ambiguous output.\n//\n// Topic content is re-fetched here (small per-topicSlug+language cache, same style as\n// Duplicate Check's existingCache) rather than threaded through from Build Generation\n// Spec -- Parse Generated Questions already flattens one spec item into many question\n// items without preserving pairedItem links, so itemMatching back to Build Generation\n// Spec is not reliable at this stage; a direct, cached re-fetch is simpler and robust.\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\nconst model = $env.OPENAI_MODEL || \"gpt-4o-mini\";\n\nconst contentCache = {};\nasync function getTopicContent(topicSlug, language) {\n  const key = topicSlug + \"::\" + language;\n  if (!(key in contentCache)) {\n    contentCache[key] = await this.helpers.httpRequest({\n      method: \"GET\",\n      url: `${baseUrl}/api/internal/topics/${topicSlug}/content?lang=${language}`,\n      headers: { \"X-Api-Key\": apiKey },\n    });\n  }\n  return contentCache[key];\n}\n\nfunction buildJudgePrompt(q, lessonContent) {\n  const optionsText = (q.options || [])\n    .map((o, i) => `${i + 1}. ${o.optionText}${o.correct ? \" [marked CORRECT]\" : \"\"}`)\n    .join(\"\\n\");\n  return `You are a strict, independent reviewer for a quiz question that will be shown to real learners. Judge ONLY the question below against the lesson content -- you did not write this question, treat it with skepticism.\n\n--- LESSON CONTENT (source of truth) ---\n${lessonContent}\n--- END LESSON CONTENT ---\n\nCANDIDATE QUESTION\nType: ${q.type}\nDifficulty: ${q.difficulty}\nQuestion: ${q.question}\n${q.codeSnippet ? \"Code/command snippet (\" + (q.codeLanguage || \"unspecified\") + \"):\\n\" + q.codeSnippet + \"\\n\" : \"\"}Options (in order, marked options are what the generator claims are correct):\n${optionsText}\nExplanation given: ${q.explanation}\n\nCheck ALL of the following:\n1. Factual correctness -- is everything stated or implied actually true?\n2. Is the question fully answerable from the lesson content above, not from outside knowledge?\n3. Are the option(s) marked CORRECT actually correct, and are the other options actually incorrect?\n4. If a code/command snippet is present, is it syntactically valid and does it actually produce the claimed result (for CODE_OUTPUT, does the snippet genuinely produce one of the options as its true output)?\n5. Pedagogical quality -- does this test real understanding of the topic (not trivia), is the wording clear and unambiguous, are the distractors plausible rather than absurd?\n\nRespond with STRICT JSON ONLY, no prose, no markdown fences, exactly this shape:\n{\"verdict\": \"APPROVE\", \"reason\": \"...\"} or {\"verdict\": \"REJECT\", \"reason\": \"...\"}\n\nThe reason must be one concise sentence. If you are not fully confident the question is correct and high quality, you MUST answer REJECT -- never APPROVE when in doubt.`;\n}\n\nfunction rejectEquivalent(reason) {\n  return { verdict: \"REJECT\", reason };\n}\n\nconst results = [];\nfor (const item of $input.all()) {\n  const q = item.json;\n  const eligible = q.validation && q.validation.passed && q.duplicateCheck && !q.duplicateCheck.isDuplicate;\n\n  if (!eligible) {\n    results.push({ json: { ...q, judge: { verdict: null, reason: \"skipped (not eligible: failed validation or duplicate)\" } } });\n    continue;\n  }\n\n  let judge;\n  try {\n    const lessonContent = await getTopicContent(q.topicSlug, q.language);\n    const prompt = buildJudgePrompt(q, lessonContent);\n    const response = await this.helpers.httpRequestWithAuthentication.call(this, \"openAiApi\", {\n      method: \"POST\",\n      url: \"https://api.openai.com/v1/chat/completions\",\n      body: {\n        model,\n        temperature: 0.1,\n        messages: [\n          { role: \"system\", content: \"You output only valid JSON. No prose, no markdown code fences, no commentary.\" },\n          { role: \"user\", content: prompt },\n        ],\n      },\n      json: true,\n    });\n\n    const raw = response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content;\n    if (!raw) throw new Error(\"no message content in judge response\");\n    const parsed = JSON.parse(raw);\n    if (parsed.verdict !== \"APPROVE\" && parsed.verdict !== \"REJECT\") {\n      throw new Error(\"judge returned an unrecognized verdict: \" + JSON.stringify(parsed.verdict));\n    }\n    if (!parsed.reason || typeof parsed.reason !== \"string\") {\n      throw new Error(\"judge response missing a reason string\");\n    }\n    judge = { verdict: parsed.verdict, reason: parsed.reason };\n  } catch (e) {\n    // Malformed/ambiguous/failed judge call -- REJECT-equivalent, never default-approve.\n    judge = rejectEquivalent(\"judge call failed or returned invalid output: \" + e.message);\n  }\n\n  results.push({ json: { ...q, judge } });\n}\nreturn results;\n"
+        "jsCode": "// AI Judge Prep -- eligibility check + lesson-content fetch + judge prompt build.\n// Split out of the original single \"AI Judge\" Code node as an n8n 2.35.3 compatibility\n// fix: this n8n version's JS Task Runner sandbox only exposes helpers.httpRequest /\n// helpers.request to Code nodes (see @n8n/task-runner's EXPOSED_RPC_METHODS list --\n// helpers.httpRequestWithAuthentication is explicitly listed in\n// UNSUPPORTED_HELPER_FUNCTIONS and throws synchronously, before any network call).\n// The actual authenticated OpenAI call now happens in a real HTTP Request node\n// (\"AI Judge Call OpenAI\"), using the SAME predefinedCredentialType/openAiApi pattern\n// already proven working by \"Generate Batch\" -- no OpenAI key is ever read, decrypted,\n// or handled inside this Code node. This node only builds the prompt text (plain\n// helpers.httpRequest against the app's own /api/internal/** content endpoint, same as\n// before, using $env.QUIZ_INGEST_API_KEY -- unrelated to the OpenAI credential).\n// Ineligible items (failed validation or duplicate) get their final judge verdict set\n// directly here and are routed around the OpenAI call entirely by the next (IF) node --\n// same zero-wasted-calls behavior as the original design.\nconst baseUrl = $env.QUESTION_INGEST_BASE_URL || \"http://localhost:8080\";\nconst apiKey = $env.QUIZ_INGEST_API_KEY;\n\nconst contentCache = {};\nasync function getTopicContent(topicSlug, language) {\n  const key = topicSlug + \"::\" + language;\n  if (!(key in contentCache)) {\n    contentCache[key] = await this.helpers.httpRequest({\n      method: \"GET\",\n      url: `${baseUrl}/api/internal/topics/${topicSlug}/content?lang=${language}`,\n      headers: { \"X-Api-Key\": apiKey },\n    });\n  }\n  return contentCache[key];\n}\n\nfunction buildJudgePrompt(q, lessonContent) {\n  const optionsText = (q.options || [])\n    .map((o, i) => `${i + 1}. ${o.optionText}${o.correct ? \" [marked CORRECT]\" : \"\"}`)\n    .join(\"\\n\");\n  return `You are a strict, independent reviewer for a quiz question that will be shown to real learners. Judge ONLY the question below against the lesson content -- you did not write this question, treat it with skepticism.\n\n--- LESSON CONTENT (source of truth) ---\n${lessonContent}\n--- END LESSON CONTENT ---\n\nCANDIDATE QUESTION\nType: ${q.type}\nDifficulty: ${q.difficulty}\nQuestion: ${q.question}\n${q.codeSnippet ? \"Code/command snippet (\" + (q.codeLanguage || \"unspecified\") + \"):\\n\" + q.codeSnippet + \"\\n\" : \"\"}Options (in order, marked options are what the generator claims are correct):\n${optionsText}\nExplanation given: ${q.explanation}\n\nCheck ALL of the following:\n1. Factual correctness -- is everything stated or implied actually true?\n2. Is the question fully answerable from the lesson content above, not from outside knowledge?\n3. Are the option(s) marked CORRECT actually correct, and are the other options actually incorrect?\n4. If a code/command snippet is present, is it syntactically valid and does it actually produce the claimed result (for CODE_OUTPUT, does the snippet genuinely produce one of the options as its true output)?\n5. Pedagogical quality -- does this test real understanding of the topic (not trivia), is the wording clear and unambiguous, are the distractors plausible rather than absurd?\n\nRespond with STRICT JSON ONLY, no prose, no markdown fences, exactly this shape:\n{\"verdict\": \"APPROVE\", \"reason\": \"...\"} or {\"verdict\": \"REJECT\", \"reason\": \"...\"}\n\nThe reason must be one concise sentence. If you are not fully confident the question is correct and high quality, you MUST answer REJECT -- never APPROVE when in doubt.`;\n}\n\nconst results = [];\nfor (const item of $input.all()) {\n  const q = item.json;\n  const eligible = q.validation && q.validation.passed && q.duplicateCheck && !q.duplicateCheck.isDuplicate;\n\n  if (!eligible) {\n    results.push({ json: { ...q, needsJudgeCall: false, judge: { verdict: null, reason: \"skipped (not eligible: failed validation or duplicate)\" } } });\n    continue;\n  }\n\n  try {\n    const lessonContent = await getTopicContent(q.topicSlug, q.language);\n    const judgePrompt = buildJudgePrompt(q, lessonContent);\n    results.push({ json: { ...q, needsJudgeCall: true, judgePrompt } });\n  } catch (e) {\n    // Could not even fetch lesson content to build the prompt -- REJECT-equivalent,\n    // same fail-safe rule as a failed judge call itself. Never default-approve.\n    results.push({ json: { ...q, needsJudgeCall: false, judge: { verdict: \"REJECT\", reason: \"judge prep failed: \" + e.message } } });\n  }\n}\nreturn results;\n"
       },
-      "id": "ai-judge-1",
-      "name": "AI Judge",
+      "id": "ai-judge-prep-1",
+      "name": "AI Judge Prep",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         1960,
-        300
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "needs-judge-call-cond",
+              "leftValue": "={{ $json.needsJudgeCall }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ai-judge-route-1",
+      "name": "AI Judge Route",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.1, messages: [ { role: 'system', content: 'You output only valid JSON. No prose, no markdown code fences, no commentary.' }, { role: 'user', content: $json.judgePrompt } ] } }}",
+        "options": {}
+      },
+      "id": "ai-judge-call-openai-1",
+      "name": "AI Judge Call OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        140
       ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput",
       "credentials": {
         "openAiApi": {
           "id": "sfmqlEISp7fEml6j",
           "name": "OpenAI account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI Judge Parse Verdict -- parses the real OpenAI response from \"AI Judge Call OpenAI\"\n// into the final judge verdict. Same REJECT-on-any-failure fail-safe as the original\n// single-node design: a malformed/missing JSON body, a missing verdict, a missing\n// reason, or an HTTP-level error (the HTTP node uses onError: \"continueRegularOutput\",\n// so a failed call surfaces as an `error` field on the item instead of throwing) all\n// resolve to REJECT -- never a default APPROVE. The HTTP Request node replaces\n// item.json with the raw OpenAI response, so the original question fields are recovered\n// via itemMatching back to \"AI Judge Prep\", the same pattern already used by\n// \"Parse Generated Questions\" (-> \"Build Generation Spec\") elsewhere in this workflow.\nfunction rejectEquivalent(reason) {\n  return { verdict: \"REJECT\", reason };\n}\n\nconst results = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const response = items[i].json;\n  const original = $(\"AI Judge Prep\").itemMatching(i).json;\n  let judge;\n  try {\n    if (response && response.error) {\n      throw new Error(typeof response.error === \"string\" ? response.error : JSON.stringify(response.error));\n    }\n    const raw = response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content;\n    if (!raw) throw new Error(\"no message content in judge response\");\n    const parsed = JSON.parse(raw);\n    if (parsed.verdict !== \"APPROVE\" && parsed.verdict !== \"REJECT\") {\n      throw new Error(\"judge returned an unrecognized verdict: \" + JSON.stringify(parsed.verdict));\n    }\n    if (!parsed.reason || typeof parsed.reason !== \"string\") {\n      throw new Error(\"judge response missing a reason string\");\n    }\n    judge = { verdict: parsed.verdict, reason: parsed.reason };\n  } catch (e) {\n    judge = rejectEquivalent(\"judge call failed or returned invalid output: \" + e.message);\n  }\n  const { judgePrompt, needsJudgeCall, ...rest } = original;\n  results.push({ json: { ...rest, judge } });\n}\nreturn results;\n"
+      },
+      "id": "ai-judge-parse-verdict-1",
+      "name": "AI Judge Parse Verdict",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2620,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      },
+      "id": "ai-judge-merge-1",
+      "name": "AI Judge Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2840,
+        220
+      ]
     },
     {
       "parameters": {
@@ -261,7 +344,7 @@
       "main": [
         [
           {
-            "node": "AI Judge",
+            "node": "AI Judge Prep",
             "type": "main",
             "index": 0
           }
@@ -279,22 +362,73 @@
         ]
       ]
     },
-    "AI Judge": {
+    "Post-Ingest Status Decision": {
       "main": [
         [
           {
-            "node": "Submit Valid Questions",
+            "node": "Record Results",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Post-Ingest Status Decision": {
+    "AI Judge Prep": {
       "main": [
         [
           {
-            "node": "Record Results",
+            "node": "AI Judge Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Judge Route": {
+      "main": [
+        [
+          {
+            "node": "AI Judge Call OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Judge Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Judge Call OpenAI": {
+      "main": [
+        [
+          {
+            "node": "AI Judge Parse Verdict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Judge Parse Verdict": {
+      "main": [
+        [
+          {
+            "node": "AI Judge Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Judge Merge": {
+      "main": [
+        [
+          {
+            "node": "Submit Valid Questions",
             "type": "main",
             "index": 0
           }
