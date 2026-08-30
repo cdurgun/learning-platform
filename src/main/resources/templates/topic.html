@@ -170,8 +170,9 @@
                      çıkarıldı (Quiz Area'nın quiz-play.html'iyle PAYLAŞILIYOR) -- bu th:replace
                      üretilen HTML'i (id/class/data-* isimleri dahil) BİREBİR aynı tutar,
                      quiz.js'te hiçbir değişiklik gerektirmez. -->
-                <div th:if="${quiz != null and quizQuestions != null and !#lists.isEmpty(quizQuestions)}"
-                     th:replace="~{fragments/quiz :: quizSection(${quizQuestions}, @{/{lang}/topics/{topicSlug}/quiz/{quizSlug}/submit(lang=${language.code}, topicSlug=${topic.slug}, quizSlug=${quiz.slug()})})}"></div>
+                <th:block th:if="${quiz != null and quizQuestions != null and !#lists.isEmpty(quizQuestions)}">
+                    <div th:replace="~{fragments/quiz :: quizSection(${quizQuestions}, @{/{lang}/topics/{topicSlug}/quiz/{quizSlug}/submit(lang=${language.code}, topicSlug=${topic.slug}, quizSlug=${quiz.slug()})})}"></div>
+                </th:block>
 
                 <nav class="d-flex justify-content-between mt-5 pt-3 border-top" aria-label="Konu navigasyonu">
                     <a th:if="${previousTopic != null}"
