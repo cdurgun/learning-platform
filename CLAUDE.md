@@ -805,6 +805,47 @@ bekleniyor. Testler **92/92**. Migration'lar hâlâ V1'den **V430'a kadar
 boşluksuz** (bu Faz'da migration YOK). Ayrıntılı uygulama akışı için
 `docs/phase-log.md`'de "Faz 148"i grep'le.
 
+**GÜNCELLEME (Faz 150):** **`git-github` kursunun TÜM 11 topic'i (2
+kategori: `git-fundamentals` 6/6, `advanced-git` 5/5) artık "Test Your
+Knowledge" quiz'ine sahip -- kurs artık uçtan uca 220 soruyla (110 EN +
+110 TR) tamamlandı.** Bu Faz'da 9 topic (`undoing-changes`,
+`branches-and-merging`, `github-and-remotes`, `pull-requests`,
+`rebase-and-squash`, `merge-conflicts`, `stash`,
+`advanced-git-and-best-practices`, `practical-git-github-workflow`) --
+`git-fundamentals`/`working-with-commits` zaten Faz 148'den önce
+tamamlanmıştı (bkz. V467-V470) -- ayrı kullanıcı isteklerinde, AYNI
+kurulmuş desenle işlendi: her topic için 10 EN + 10 TR soru (genelde
+7 SINGLE_CHOICE + 3 MULTIPLE_CHOICE, MULTIPLE_CHOICE'ta her zaman tam
+2 doğru şık) gerçek AI-Judge auto-publish endpoint'i (`POST
+/api/internal/questions/{id}/auto-publish`) ile PUBLISHED edildi,
+sonra V467-V468'in portable promotion-migration deseniyle (topic/quiz
+slug'larından dinamik id çözümü, `NOT EXISTS` + `ON CONFLICT DO
+NOTHING` duplicate-güvenliği) mevcut sabit quiz'e pozisyon 1-10'da
+link'lendi. **4 topic'te (`stash` 1, `advanced-git-and-best-practices`
+2, `practical-git-github-workflow` 1) CODE_OUTPUT tipi soru da
+kullanıldı** -- her biri dersin GERÇEKTEN gömdüğü bir komut çıktısı
+örneğine (`git stash list`, `git reflog`, `git blame`,
+`FullWorkflowDemo.sh`'ın rebase-conflict çıktısı) dayanıyor, hiçbiri
+zorlama değil (proje kuralı: CODE_OUTPUT yalnızca genuine bir
+komut-çıktısı yorumlama senaryosu varsa kullanılır). Her topic
+sonrasında AYNI doğrulama seti çalıştırıldı: yapısal SQL kontrolü (4
+şık, tip başına doğru sayısı), near-duplicate taraması (yalnızca
+boilerplate soru-kalıbı örtüşmesi olan yanlış pozitifler elendi),
+doğru-cevap harf dağılımının hesaplanıp raporlanması (her topic'te
+dengeliydi, tek bir harf en fazla 4/13 -- matematiksel olarak
+kaçınılmaz), atılabilir bir `postgres:16-alpine` container'ında
+sıfırdan fresh-DB migration doğrulaması + idempotency re-run,
+mevcut dev DB'de idempotency re-run, gerçek HTTP quiz submit'i (tam
+doğru → tam skor, kısmi MULTIPLE_CHOICE → o soru yanlış), ve `mvn
+test` (Faz 140 workaround'uyla, her seferinde 100/100). Migration'lar
+şu an V1'den **V488'e kadar boşluksuz**. Bu Faz sırasında bir gerçek,
+sandbox-özel bulgu keşfedildi: `mvn -o flyway:migrate`'in
+`target/classes`'ı (derlenmiş çıktı) taradığı, `src/main/resources`'ı
+DEĞİL -- yeni bir migration eklenip hemen disposable-DB doğrulamasına
+geçilirse migration SESSİZCE atlanıyor (bkz.
+`docs/known-constraints.md` "Faz 149"). Ayrıntılı uygulama akışı için
+`docs/phase-log.md`'de "Faz 150"yi grep'le.
+
 ## Proje Yapısı
 
 ```
