@@ -15,7 +15,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Topic Selection stage -- a small, hand-curated array for THIS run, never\n// \"all topics\" (same explicit-batch philosophy as scripts/export_approved_questions.py,\n// Faz 143). Every run generates BOTH EN and TR independently (each grounded in its own\n// real content/{lang}/{slug}.md file, per the originally approved design -- never a\n// translation pass). Edit topicSlug (and optionally add onlyLanguage/overrideCount for\n// a scoped top-up run) here before each real run.\n//\n// This run's target: java/java-basics -> Wrapper Classes & Autoboxing (topic slug\n// \"wrapper-classes\") -- first real generation run for this topic (empty existing\n// pool). overrideCount=8 requests 8 candidate questions per language, matching the\n// requested batch size -- both EN and TR generate independently.\nreturn [\n  { json: { topicSlug: \"wrapper-classes\", overrideCount: 8 } }\n];"
+        "jsCode": "// Scoped TR-only top-up run for file-reading -- the first attempt's TR\n// candidates (dev ids 452-458) all came back with the known n8n HTTP\n// transport-layer CJK-mangling bug (bkz. docs/known-constraints.md \"Faz 148\":\n// Turkish text occasionally, deterministically corrupted into CJK-range\n// characters). Retrying with onlyLanguage/overrideCount (the existing,\n// already-approved top-up mechanism from Faz 146/153) to attempt clean TR\n// content -- EN is untouched, already fully generated and reviewed in the\n// prior run.\nreturn [\n  { json: { topicSlug: \"file-reading\", onlyLanguage: \"tr\", overrideCount: 8 } }\n];"
       },
       "id": "topic-selection-1",
       "name": "Topic Selection",
