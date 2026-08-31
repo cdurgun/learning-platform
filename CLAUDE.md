@@ -846,6 +846,63 @@ geçilirse migration SESSİZCE atlanıyor (bkz.
 `docs/known-constraints.md` "Faz 149"). Ayrıntılı uygulama akışı için
 `docs/phase-log.md`'de "Faz 150"yi grep'le.
 
+**GÜNCELLEME (Faz 154):** java/spring-boot/react/ai/postgresql/git-github'den
+sonra YEDİNCİ Course olarak **`docker` kursu eklendi** (`course.sort_order=7`)
+-- Java/Spring Boot'u zaten bilen ama Docker'ı bilmeyen bir geliştirici için,
+yalnızca komut listesi değil Docker'ın gerçek Java geliştirme akışına nasıl
+oturduğunu öğreten bir müfredat. **2 kategori, 9 topic, hepsi TR+EN, tek
+seferde tüm kurs değil topic-topic kullanıcı onayıyla inşa edildi**
+(kullanıcının açık pacing kararı, postgresql/git-github'daki desenle aynı):
+`docker-fundamentals` (sort_order=1, 4 topic -- `what-is-docker`,
+`docker-cli-fundamentals`, `docker-images-and-dockerfiles`,
+`dockerizing-a-spring-boot-application`) ve `docker-in-practice`
+(sort_order=2, 5 topic -- `docker-networking`, `docker-volumes`,
+`docker-compose`, `production-docker-for-java-applications`,
+`docker-practical-project`). Migration'lar V493-V519 (course+category+topic
+shell → code_example/quiz-shell sections → publish-english, git-github'ın
+V432/V433/V434 üçlü-dosya deseninin BİREBİR aynısı; `docker-networking`'in
+V505'i AYRICA 2. kategoriyi de kuruyor, `rebase-and-squash`'ın V450'siyle
+aynı desen). **İçerik bu projenin kendi gerçek gerçeklerine sıkı sıkıya
+topraklandı** -- jenerik Docker örnekleri değil: `pom.xml`'deki gerçek
+coordinate'ler (`com.cdurgun:learning-platform:0.1.0-SNAPSHOT`, Java 21),
+`application-prod.yml`'in kendi gerçek yorumu (sırların ortam
+değişkenlerinden okunması), ve Spring Data JPA kursundaki gerçek topic
+başlıklarına ("Entities and the Repository Abstraction", "JPA, Hibernate,
+and Spring Data JPA") doğrulanmış çapraz referanslar. `docker-practical-
+project` (kapanış dersi), React kategorilerinin ayrı-repo/tag konvansiyonu
+(Faz 30) yerine BİLİNÇLİ OLARAK gömülü kaldı -- deliverable config + küçük
+bir uygulama olduğu için, ayrı bir build/tag yaşam döngüsü gerektiren bir
+client-side proje değil; kendi self-contained "task tracker" Spring Boot +
+PostgreSQL uygulaması (tek dosyada nested `@Entity`/`Repository`/
+`@RestController`, bu kodun kendi çok-sınıflı örnek konvansiyonuyla aynı,
+bkz. `EnumeratedFieldExample.java`), kursun her önceki dersinin (multi-stage
+build, non-root user, `HEALTHCHECK`, named volume, otomatik networking,
+sağlık-koşullu `depends_on`) üzerine hiçbir yeni mekanizma eklemeden inşa
+ediyor. **Kullanıcının ayrı bir "full-course review" isteği üzerine
+kapsamlı, salt-okunur bir doğrulama geçişi yapıldı** (migration sıralaması,
+FK çözümlemesi, quiz shell tutarlılığı, `code_example`↔`{{}}` embed 1:1
+karşılığı, TR/EN self-reference doğruluğu, script reproducibility) ve GERÇEK
+4 sorun bulundu/düzeltildi: (1) `docker-images-and-dockerfiles`'ta 2
+`code_example` satırı (`CmdOnlyDockerfile`, `EntrypointDefaultCmdDockerfile`)
+hiçbir `{{}}` embed'ine karşılık gelmiyordu -- CMD vs ENTRYPOINT içeriği
+yanlışlıkla elle tekrar yazılmıştı, gerçek embed'lerle değiştirildi; (2)
+`docker-cli-fundamentals`'ta iki kesik self-reference (`docker stop`/`docker
+start` ve `docker ps` komut soneki eksikti); (3)
+`production-docker-for-java-applications`'ta bir kesik self-reference
+(`(Layer Caching)` soneki eksikti); (4) `docker-volumes`'un
+`VolumePersistenceDemo.sh`'ı, kendi oluşturmadığı bir `--network`'e bağımlıydı
+-- temiz bir ortamda tek başına çalıştırılırsa başarısız olurdu, flag
+kaldırıldı. **Bu geçişte ayrıca bu sandbox'ta GERÇEKTEN çalışan bir Docker
+Engine olduğu keşfedildi** (`docker --version` → 29.6.2, ZATEN çalışan
+gerçek container'lar: `postgres:16-alpine` adıyla `learning-platform-db`,
+ve n8n) -- bkz. `docs/known-constraints.md` "Faz 154", bu daha önce hiç
+doğrulanmamış, gelecekteki Docker kursu bakımı için önemli bir yetenek.
+Tüm değişiklikler tek bir commit'te (`17531cb`) birleştirildi -- projenin
+iki önceden var olan ilgisiz untracked dosyası (`AGENTS.md`,
+`scripts/promote-published-questions.sql`) BİLİNÇLİ OLARAK commit'e dahil
+edilmedi. Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 154"i
+grep'le.
+
 ## Proje Yapısı
 
 ```
@@ -894,7 +951,7 @@ src/main/java/com/cdurgun/learning/
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
     examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V430,
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V519,
                                    quiz-area/ -- Faz 139, question-promotion/ -- promotion
                                    script'inin ürettiği migration'lar için, Faz 143)
     templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
@@ -965,6 +1022,13 @@ bash ile yeniden doğrula** (ör. `mvn -version`, `curl -I https://repo.maven.ap
   (`.jsx`) ve Node/TypeScript (MCP SDK gibi) kodu `npm install` ile gerçekten
   kurulup derlenip çalıştırılarak doğrulanabilir; bu, Java/Spring'in aksine
   gerçek bir uçtan uca doğrulama imkânı sunar (bkz. Faz 41, 72).
+- **Bu sandbox'ta gerçek, çalışan bir Docker Engine var** (Faz 154'te
+  keşfedildi, `docker --version` → 29.6.2) — `docker` kursunun örnekleri
+  (`docker build`/`docker run`/`docker compose up` gibi) burada gerçekten
+  çalıştırılıp doğrulanabilir. Zaten çalışan iki container var:
+  `learning-platform-db` (`postgres:16-alpine`, bu projenin kendi dev
+  veritabanı) ve bir `n8n` container'ı — yeni bir test container'ı bunlarla
+  çakışmayan bir `--name` almalı, ikisi durdurulup kaldırılmamalı.
 - **`cdn.jsdelivr.net` bu sandbox'ta ERİŞİLEMİYOR** (Faz 68'de keşfedildi) —
   Playwright ile bir sayfa doğrulaması Bootstrap'e bağımlıysa, CDN linki
   kullanma; önce `npm install bootstrap@{sürüm} --no-save` ile yerel bir kopya

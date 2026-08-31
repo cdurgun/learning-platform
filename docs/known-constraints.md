@@ -1160,3 +1160,22 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   hâlâ `NULL`, `status` hâlâ `PENDING_REVIEW`) doğrulamayla teyit edildiği
   üzere hiç değiştirilmedi; 4 gerçek REJECT side-effect'i de (343/344/345/347)
   aynı şekilde `PENDING_REVIEW` bırakıldı, override edilmedi.
+- **GÜNCELLEME (Faz 154): bu sandbox'ta gerçekten çalışan, kullanılabilir bir
+  Docker Engine olduğu doğrulandı** -- daha önce hiçbir Faz'da test
+  edilmemişti, bu yeni Docker kursunun (`docker`, 7. course) tam-kurs
+  review'ı sırasında `docker --version`/`docker ps` ile keşfedildi:
+  `Docker version 29.6.2, build dfc4efb`, VE zaten çalışan, bu sandbox'ın
+  kendi gerçek dev ortamına ait iki container: `postgres:16-alpine` (adı
+  `learning-platform-db` -- bu projenin kendi dev veritabanı, `docker-cli-
+  fundamentals`/`docker-networking`/`docker-volumes` derslerindeki örnek
+  container adıyla BİREBİR aynı isim, tesadüf değil, bilinçli grounding) ve
+  bir `n8n` container'ı (n8n workflow'larının -- Faz 145-153 -- çalıştığı
+  container). **Sonuç:** Maven Central'ın engelli olmasının aksine (bkz.
+  yukarısı), Docker burada gerçek bir kısıt DEĞİL -- gelecekte bu kursun
+  `docker build`/`docker run`/`docker compose up`/`docker network create`
+  gibi örnekleri, git-fundamentals'ın kendi CLI komutlarının canlı
+  doğrulandığı gibi (bkz. Faz 150), bu sandbox'ta GERÇEKTEN çalıştırılıp
+  doğrulanabilir -- yalnızca `learning-platform-db`/`n8n` adlarının
+  kullanımda olduğu unutulmamalı (yeni bir test container'ı farklı bir
+  `--name` almalı, ya da mevcut olanlar durdurulup temizlenmemeli, kullanıcının
+  kendi dev ortamının bir parçası olabilirler).
