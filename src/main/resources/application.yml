@@ -11,6 +11,18 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    placeholder-replacement: false
+    # Bu proje Flyway placeholder mekanizmasını (${...}) hiçbir migration'da
+    # KASITLI OLARAK kullanmıyor (bkz. CLAUDE.md "Migration dosyalarında
+    # literal ${...} yazma" kuralı). spring-mvc-views-thymeleaf konusunun
+    # quiz soruları, dersin kendi konusu gereği gerçek Thymeleaf `${...}`
+    # sözdizimini soru metni/code_snippet içinde göstermek ZORUNDA -- bu
+    # ayar olmadan Flyway bunu bir placeholder sanıp "No value provided for
+    # placeholder: ${topic.title}" hatasıyla TÜM uygulamanın başlamasını
+    # engelliyor (question-promotion/V699'da GERÇEKTEN doğrulandı).
+    # placeholder-replacement: false, bu mekanizmayı proje genelinde
+    # devre dışı bırakır -- hiçbir mevcut migration ona bağımlı olmadığı
+    # için güvenli, geriye dönük uyumlu bir değişiklik.
 
 server:
   port: 8080
