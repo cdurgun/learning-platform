@@ -903,6 +903,32 @@ iki önceden var olan ilgisiz untracked dosyası (`AGENTS.md`,
 edilmedi. Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 154"i
 grep'le.
 
+**GÜNCELLEME (Faz 155-159):** Faz 154'ten sonra beş ayrı Faz'da, `ai`
+kursunun kalan dört kategorisi (`ai-fundamentals`+`large-language-models`
+Faz 155'te, `tools-mcp`+`ai-agents` Faz 156'da), `docker` kursunun 8 quiz-
+uygun topic'i (`docker-practical-project` hariç, Faz 157'de) ve `postgresql`
+kursunun HER İKİ kategorisi (`postgresql-foundations` Faz 158'de,
+`advanced-postgresql` Faz 159'da) için quiz soruları eklendi -- git-github'ın
+Faz 150'deki desenin AYNISI (n8n/OpenAI/AI Judge KULLANILMADI, tüm sorular
+doğrudan bir Claude Code oturumunda üretilip kendi kendine review edildi).
+**Faz 159 ile birlikte `postgresql` kursu 14/14 topic'le (Foundations 10 +
+Advanced 4) uçtan uca quiz kapsamına kavuştu** -- git-github'ın Faz 150'deki
+milestone'uyla aynı nitelikte. **Faz 157'de kurulan, kalıcı bir konvansiyon:**
+topic başına soru sayısı artık her kategoride sabit 7 değil, dersin gerçek
+uzunluğuna/kavram yoğunluğuna göre 4-7 arasında ESNEK belirleniyor (EN=TR
+eşitliği her topic için hâlâ korunarak) -- `docker`/`postgresql` batch'lerinin
+ikisi de bu deseni kullandı, `ai` kursunun Faz 155/156'daki batch'leri henüz
+eski sabit-7 deseniyle yazılmıştı. **Faz 157'de GERÇEK bir hata bulunup
+düzeltildi:** `docker` kursunun topic-oluşturma migration'ları (git-github
+gibi, ama `ai`/`postgresql`'in aksine) her topic için quiz shell'ini İÇERİK
+YAZILIRKEN zaten ekliyormuş -- ilk taslağın kendi shell migration'ı bu yüzden
+disposable-DB'de gerçek bir `duplicate key` hatasıyla çakıştı, 8 fazladan
+dosya silinip batch yeniden numaralandırıldı (bkz. `docs/known-constraints.md`
+"Faz 157"). **Kalıcı kural:** yeni bir kursa/topic'e quiz soruları eklemeden
+önce, o topic'in var olan migration'larında `grep -rl "INSERT INTO quiz"` ile
+shell'in zaten var olup olmadığı ÖNCE kontrol edilmeli. Ayrıntılı uygulama
+akışı için `docs/phase-log.md`'de "Faz 155" ile "Faz 159" arasını grep'le.
+
 ## Proje Yapısı
 
 ```

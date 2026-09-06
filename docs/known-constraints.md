@@ -1179,3 +1179,24 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   kullanımda olduğu unutulmamalı (yeni bir test container'ı farklı bir
   `--name` almalı, ya da mevcut olanlar durdurulup temizlenmemeli, kullanıcının
   kendi dev ortamının bir parçası olabilirler).
+- **GÜNCELLEME (Faz 157): bazı kursların topic-oluşturma migration'ları,
+  quiz sorusu eklenmeden ÇOK ÖNCE, o topic için EN+TR quiz shell'ini
+  (`INSERT INTO quiz ...`, `slug='default'`) ZATEN ekliyor -- bu her kurs
+  için doğru değil, ve önceden varsayılmamalı.** `docker` kursunun quiz
+  soruları hazırlanırken, önceki kategorilerde (ör. `ai`, git-github)
+  kurulmuş standart dört-dosyalık desen (promotion + quiz-shell + EN link +
+  TR link) hiç sorgulanmadan tekrarlandı, ve disposable-DB doğrulaması
+  GERÇEKTEN `duplicate key value violates unique constraint
+  "quiz_topic_id_language_slug_key"` hatasıyla başarısız oldu -- `docker`
+  kursunun kendi topic-oluşturma migration'ları (`V494`, `V497`, `V500`, ...
+  her topic'in kendi `..._sections.sql`'i, Faz 154'ten) o topic için
+  EN+TR quiz shell'ini içerik yazılırken zaten ekliyormuş (git-github'ın da
+  kendi topic-oluşturma migration'larında aynı deseni kullandığı, ama
+  `postgresql`/`ai` kurslarının kullanmadığı sonradan doğrulandı). **Kalıcı
+  ders:** bir kursa/topic'e yeni quiz soruları eklemeden önce, o topic'in
+  var olan migration'larında `grep -rl "INSERT INTO quiz"` ile ÖNCE
+  taranmalı -- shell zaten varsa yalnızca promotion + link migration'ları
+  yazılmalı (shell migration'ı ATLANMALI), yoksa dört-dosyalık standart
+  desenin tamamı yazılmalı. Bu kontrol Faz 158/159'da (`postgresql` kursu)
+  draft'tan ÖNCE yapıldı ve gerçekten hiçbir shell bulunmadığı doğrulandı,
+  standart dört-dosyalık desen sorunsuz kullanıldı.
