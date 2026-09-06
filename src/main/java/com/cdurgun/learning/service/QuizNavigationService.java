@@ -29,6 +29,18 @@ import java.util.stream.Collectors;
  * bir key, {@code NoSuchMessageException} fırlatıp TÜM sayfayı kırmak yerine ham slug'a
  * düşer (4 parametreli {@code getMessage} overload'u ile) -- bu liste artık sitewide
  * olduğu için (bkz. {@code GlobalModelAttributes}) bu savunma önemli.</p>
+ *
+ * <p><b>Grup başlığı (course seviyesi):</b> varsayılan olarak {@code quiz.courseGroup}
+ * ({@code "{0} Sınavı"}/{@code "{0} Quiz"}) doğrudan {@code course.getName()} ile
+ * doldurulur (Java için "Java Sınavı" üretir, `course.name`="Java" olduğu için).
+ * Bir kursun görünen adı ile Quiz Area'daki istenen grup etiketi birbirinden
+ * sapıyorsa (örn. `course.name`="Spring Boot" ama etiketin "Spring Sınavı" olması
+ * isteniyorsa), `quiz.courseGroup.{course.slug}` anahtarı ÖNCE denenir -- bu anahtar
+ * tanımlıysa doğrudan (parametre doldurmadan) kullanılır, tanımlı değilse (4.
+ * parametre olarak {@code null} default ile, bu yüzden eksik anahtar
+ * {@code NoSuchMessageException} FIRLATMAZ, sessizce {@code null} döner) genel
+ * `quiz.courseGroup` şablonuna düşülür. Java'nın hiçbir override anahtarı yok, bu
+ * yüzden bu davranış Java için BİREBİR AYNI kalır.</p>
  */
 @Service
 public class QuizNavigationService {
@@ -52,7 +64,7 @@ public class QuizNavigationService {
         List<QuizNav> nav = new ArrayList<>();
         for (List<QuizDefinition> group : byCourseId.values()) {
             Course course = group.get(0).getCourse();
-            String groupLabel = messageSource.getMessage("quiz.courseGroup", new Object[]{course.getName()}, locale);
+            String groupLabel = resolveGroupLabel(course, locale);
             List<QuizNav.QuizDefinitionNavItem> items = group.stream()
                     .map(d -> new QuizNav.QuizDefinitionNavItem(d.getSlug(),
                             messageSource.getMessage("quiz.def." + d.getSlug() + ".title", null, d.getSlug(), locale)))
@@ -60,5 +72,13 @@ public class QuizNavigationService {
             nav.add(new QuizNav(groupLabel, course.getSlug(), items));
         }
         return nav;
+    }
+
+    private String resolveGroupLabel(Course course, Locale locale) {
+        String override = messageSource.getMessage("quiz.courseGroup." + course.getSlug(), null, null, locale);
+        if (override != null) {
+            return override;
+        }
+        return messageSource.getMessage("quiz.courseGroup", new Object[]{course.getName()}, locale);
     }
 }
