@@ -66,8 +66,8 @@
         <div th:replace="~{fragments/layout :: sidebar}"></div>
 
         <main class="col-12 col-lg-10 p-4">
-            <h1 class="mb-2" th:text="#{home.heading}">Java Öğrenim Platformu</h1>
-            <p class="text-muted mb-4" th:text="#{home.subheading}">Türkçe ve İngilizce, ücretsiz Java içerikleri.</p>
+            <h1 class="mb-2" th:text="#{home.heading}">Yazılım geliştirme becerilerini şekillendir.</h1>
+            <p class="text-muted mb-4" th:text="#{home.subheading}">Türkçe ve İngilizce pratik öğrenme içerikleri.</p>
 
             <div th:if="${#lists.isEmpty(nav)}" class="alert alert-secondary" th:text="#{home.noCourses}">
                 Henüz yayınlanmış bir kurs yok.
