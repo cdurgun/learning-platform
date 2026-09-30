@@ -45,11 +45,17 @@
 
             <div th:each="group : ${quizNav}" class="mb-4">
                 <h2 class="h5" th:text="${group.groupLabel()}">Java Quiz</h2>
+                <p th:if="${!group.accessible()}" class="text-muted small" th:text="#{nav.loginRequired}">Sign in to access</p>
                 <div class="d-flex flex-wrap gap-2">
-                    <a th:each="def : ${group.definitions()}"
-                       class="btn btn-outline-primary"
-                       th:href="@{/{lang}/quiz/{slug}(lang=${language.code}, slug=${def.slug()})}"
-                       th:text="${def.title()}">Basic Java</a>
+                    <th:block th:each="def : ${group.definitions()}">
+                        <a th:if="${group.accessible()}"
+                           class="btn btn-outline-primary"
+                           th:href="@{/{lang}/quiz/{slug}(lang=${language.code}, slug=${def.slug()})}"
+                           th:text="${def.title()}">Basic Java</a>
+                        <span th:if="${!group.accessible()}"
+                              class="btn btn-outline-secondary disabled" aria-disabled="true"
+                              th:text="${def.title()}">Basic Java</span>
+                    </th:block>
                 </div>
             </div>
 

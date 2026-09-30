@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
@@ -110,4 +111,13 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
                                                                   @Param("difficulty") String difficulty,
                                                                   @Param("type") String type,
                                                                   @Param("count") int count);
+
+    /**
+     * {@code PracticeService#submit}'in course erişim kontrolü için -- submit edilen
+     * soru id'lerinin ait olduğu kursların slug'ları. Soru içeriği/şıkları/doğru
+     * cevapları YÜKLENMEDEN önce çağrılır (bkz. {@code CourseAccessPolicy}).
+     */
+    @Query("select distinct c.slug from Question q join q.topic t join t.category cat join cat.course c " +
+            "where q.id in :questionIds")
+    List<String> findDistinctCourseSlugsByQuestionIds(@Param("questionIds") Collection<Long> questionIds);
 }

@@ -1,5 +1,6 @@
 package com.cdurgun.learning.controller;
 
+import com.cdurgun.learning.config.CourseAccessPolicy;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.TopicTranslation;
 import com.cdurgun.learning.repository.TopicTranslationRepository;
@@ -26,17 +27,23 @@ import java.util.TreeMap;
  * {@code topic.html}'deki hreflang mantığıyla birebir aynı kural: yalnızca GERÇEKTEN
  * yayında olan diller birbirine bağlanır, x-default İngilizce'ye (yoksa mevcut tek dile)
  * işaret eder.</p>
+ *
+ * <p>Yalnızca anonim erişime açık kursların ({@link CourseAccessPolicy#isPublicCourse})
+ * konuları listelenir.</p>
  */
 @RestController
 public class SitemapController {
 
     private final TopicTranslationRepository topicTranslationRepository;
     private final String baseUrl;
+    private final CourseAccessPolicy courseAccessPolicy;
 
     public SitemapController(TopicTranslationRepository topicTranslationRepository,
-                              @Value("${app.base-url}") String baseUrl) {
+                              @Value("${app.base-url}") String baseUrl,
+                              CourseAccessPolicy courseAccessPolicy) {
         this.topicTranslationRepository = topicTranslationRepository;
         this.baseUrl = baseUrl;
+        this.courseAccessPolicy = courseAccessPolicy;
     }
 
     @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
@@ -46,6 +53,11 @@ public class SitemapController {
         // her istek/deploy'da aynı sitemap üretilsin, diff'lenebilir kalsın.
         Map<String, Set<Language>> availableLanguagesBySlug = new TreeMap<>();
         for (TopicTranslation translation : topicTranslationRepository.findAllPublishedWithTopic()) {
+            // Yalnızca anonim erişime açık kursların konuları -- botlar giriş yapmaz,
+            // korunan bir URL onlar için yalnızca login'e yönlendirme olurdu.
+            if (!courseAccessPolicy.isPublicCourse(translation.getTopic().getCategory().getCourse().getSlug())) {
+                continue;
+            }
             availableLanguagesBySlug
                     .computeIfAbsent(translation.getTopic().getSlug(), slug -> EnumSet.noneOf(Language.class))
                     .add(translation.getLanguage());

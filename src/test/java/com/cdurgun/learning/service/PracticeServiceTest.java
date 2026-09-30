@@ -1,5 +1,8 @@
 package com.cdurgun.learning.service;
 
+import com.cdurgun.learning.config.CourseAccessPolicy;
+import com.cdurgun.learning.domain.Category;
+import com.cdurgun.learning.domain.Course;
 import com.cdurgun.learning.domain.Difficulty;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Question;
@@ -7,6 +10,7 @@ import com.cdurgun.learning.domain.QuestionOption;
 import com.cdurgun.learning.domain.QuestionStatus;
 import com.cdurgun.learning.domain.QuestionType;
 import com.cdurgun.learning.domain.Topic;
+import com.cdurgun.learning.repository.CourseRepository;
 import com.cdurgun.learning.repository.QuestionOptionRepository;
 import com.cdurgun.learning.repository.QuestionRepository;
 import com.cdurgun.learning.repository.TopicRepository;
@@ -30,6 +34,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,9 +48,20 @@ class PracticeServiceTest {
     private QuestionOptionRepository questionOptionRepository;
     @Mock
     private TopicRepository topicRepository;
+    @Mock
+    private CourseRepository courseRepository;
+    @Mock
+    private CourseAccessPolicy courseAccessPolicy;
 
+    /**
+     * Var olan testler tam havuz yolunu (girişli kullanıcı) doğrular -- anonim/Java-only
+     * havuz kapsamı ve erişim reddi {@code CourseAccessControlTest}'te, gerçek güvenlik
+     * zinciriyle test ediliyor.
+     */
     private PracticeService newService() {
-        return new PracticeService(questionRepository, questionOptionRepository, topicRepository);
+        lenient().when(courseAccessPolicy.currentUserCanAccessAllCourses()).thenReturn(true);
+        return new PracticeService(questionRepository, questionOptionRepository, topicRepository,
+                courseRepository, courseAccessPolicy);
     }
 
     // ---- draw(): filtreler, count sınırlaması, PUBLISHED zorunluluğu ----
@@ -75,8 +91,10 @@ class PracticeServiceTest {
 
     @Test
     void drawResolvesTopicSlugToTopicIdAndPassesAllFilters() {
-        Topic topic = Topic.builder().id(42L).slug("enum").build();
-        when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(topic));
+        Course java = Course.builder().id(1L).slug("java").build();
+        Topic topic = Topic.builder().id(42L).slug("enum")
+                .category(Category.builder().id(7L).course(java).build()).build();
+        when(topicRepository.findBySlugWithCategoryAndCourse("enum")).thenReturn(Optional.of(topic));
         when(questionRepository.findRandomPublishedPool(eq(42L), eq("tr"), eq("ADVANCED"), eq("MULTIPLE_CHOICE"), eq(5)))
                 .thenReturn(List.of());
 
@@ -87,7 +105,7 @@ class PracticeServiceTest {
 
     @Test
     void drawThrowsNotFoundForUnknownTopicSlug() {
-        when(topicRepository.findBySlug("does-not-exist")).thenReturn(Optional.empty());
+        when(topicRepository.findBySlugWithCategoryAndCourse("does-not-exist")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> newService().draw(Language.EN, "does-not-exist", null, null, null))
                 .isInstanceOf(ResponseStatusException.class)

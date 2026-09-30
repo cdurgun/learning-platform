@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -11,19 +12,23 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 import java.io.IOException;
 
 /**
  * Session-based, form-login kimlik doğrulaması (bkz. auth planı bölüm "Authentication
  * architecture" — JWT/OAuth2 BİLİNÇLİ OLARAK kullanılmıyor, bu sunucu tarafında render
- * edilen bir Thymeleaf uygulaması). Var olan kamuya açık öğrenim deneyimi (anasayfa,
- * kurs/kategori/konu sayfaları, mevcut quiz submit uç noktası) tamamen anonim erişime
- * açık kalır — kimlik doğrulama yalnızca login/register akışı için eklenen opsiyonel
- * bir katman, mevcut hiçbir rotanın önüne bir kapı KONMADI.
+ * edilen bir Thymeleaf uygulaması). Anasayfa ve Java kursu tamamen anonim erişime
+ * açık; Java dışındaki kursların içeriği (konu sayfaları, PDF, quiz'ler, Practice)
+ * giriş gerektirir -- kural {@link CourseAccessPolicy}'de.
  *
  * <p>Login/register/logout URL'leri, projenin geri kalanıyla aynı desende
  * {@code {lang:en|tr}} path değişkeni taşır (bkz. CLAUDE.md "Mimari" — dil her zaman
@@ -38,13 +43,15 @@ import java.io.IOException;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String LOGIN_PAGE = "/en/login";
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CourseAccessPolicy courseAccessPolicy) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         // Question Review (Faz A, henüz UI/controller'ı yok -- yalnızca kural
@@ -54,10 +61,21 @@ public class SecurityConfig {
                         // kullanan tek kural. .anyRequest().permitAll()'dan ÖNCE gelmeli --
                         // Spring Security zincirinde ilk eşleşen kural kazanır.
                         .requestMatchers("/{lang:en|tr}/admin/**").hasRole("ADMIN")
-                        // Şu an gated başka hiçbir öğrenim kaynağı yok -- kimlik doğrulama v1'de
-                        // yalnızca opsiyonel bir yetenek. Var olan tüm rotalar (anasayfa,
-                        // konu sayfaları, sabit quiz submit, PDF export, AI ingestion --
-                        // kendi X-Api-Key interceptor'ıyla zaten korunuyor) anonim erişime açık.
+                        // Course seviyesi erişim: anonim kullanıcı yalnızca Java kursuna,
+                        // girişli kullanıcı tüm kurslara. Kural CourseAccessPolicy'de -- burada
+                        // yalnızca course'u URL'den belirlenebilen rotalara bağlanıyor. topics
+                        // kalıbı sayfa + PDF + sabit quiz submit'i kapsar (eski /topics/{slug}
+                        // 301'i buraya iner); quiz kalıbı Quiz Area oynatma + submit'i kapsar,
+                        // /{lang}/quiz kataloğu eşleşmez (yalnızca isim listeler). Course'u
+                        // istek gövdesinden/havuzdan belirlenen Practice ve Quiz Area submit'in
+                        // soru-id kontrolü PracticeService'te, AYNI policy ile.
+                        .requestMatchers("/{lang:en|tr}/topics/{slug}", "/{lang:en|tr}/topics/{slug}/**")
+                        .access(courseAccessPolicy.topicAccess())
+                        .requestMatchers("/{lang:en|tr}/quiz/{definitionSlug}", "/{lang:en|tr}/quiz/{definitionSlug}/**")
+                        .access(courseAccessPolicy.quizDefinitionAccess())
+                        // Geri kalan her şey (anasayfa, Java içeriği, Practice API -- course
+                        // kontrolü serviste --, AI ingestion -- kendi X-Api-Key interceptor'ıyla
+                        // zaten korunuyor) anonim erişime açık.
                         .anyRequest().permitAll())
                 .csrf(csrf -> csrf
                         // Bu dört uç nokta, anonim JSON POST'lar: ingestion n8n'den (tarayıcı
@@ -77,10 +95,27 @@ public class SecurityConfig {
                                 "/{lang:en|tr}/topics/*/quiz/*/submit",
                                 "/{lang:en|tr}/practice/submit",
                                 "/{lang:en|tr}/quiz/*/submit"))
+                // Korunan bir kaynağa anonim erişim: sayfalar login sayfasına 302 ile yönlenir
+                // (formLogin'in varsayılanıyla aynı -- /admin/** dahil), ama JSON uç noktaları
+                // (quiz.js'in fetch() ile çağırdığı submit'ler + Practice API) yönlendirme
+                // yerine gövdesiz 401 alır -- aksi halde fetch() yönlendirmeyi sessizce takip
+                // edip login HTML'ini 200 olarak alırdı. Varsayılan entry point AÇIKÇA login
+                // sayfası olarak veriliyor: yalnızca defaultAuthenticationEntryPointFor(...)
+                // eklemek, ilk kaydı (401) TÜM diğer istekler için varsayılan yapıyordu.
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(DelegatingAuthenticationEntryPoint.builder()
+                                .addEntryPointFor(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                        new OrRequestMatcher(
+                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/topics/*/quiz/*/submit"),
+                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/quiz/*/submit"),
+                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/practice/submit"),
+                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/practice")))
+                                .defaultEntryPoint(new LoginUrlAuthenticationEntryPoint(LOGIN_PAGE))
+                                .build()))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .formLogin(form -> form
-                        .loginPage("/en/login")
+                        .loginPage(LOGIN_PAGE)
                         .loginProcessingUrl("/{lang:en|tr}/login")
                         .successHandler(loginSuccessHandler())
                         .failureHandler(loginFailureHandler())

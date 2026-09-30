@@ -61,7 +61,8 @@ class QuizDefinitionServiceTest {
     private TopicRepository topicRepository;
 
     private QuizDefinitionService newService() {
-        PracticeService practiceService = new PracticeService(questionRepository, questionOptionRepository, topicRepository);
+        PracticeService practiceService = new PracticeService(questionRepository, questionOptionRepository, topicRepository,
+                null, null);
         return new QuizDefinitionService(quizDefinitionRepository, questionRepository, practiceService);
     }
 

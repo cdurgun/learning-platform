@@ -1,5 +1,7 @@
 package com.cdurgun.learning.service;
 
+import com.cdurgun.learning.config.CourseAccessPolicy;
+import com.cdurgun.learning.domain.Course;
 import com.cdurgun.learning.domain.Difficulty;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Question;
@@ -7,6 +9,7 @@ import com.cdurgun.learning.domain.QuestionOption;
 import com.cdurgun.learning.domain.QuestionStatus;
 import com.cdurgun.learning.domain.QuestionType;
 import com.cdurgun.learning.domain.Topic;
+import com.cdurgun.learning.repository.CourseRepository;
 import com.cdurgun.learning.repository.QuestionOptionRepository;
 import com.cdurgun.learning.repository.QuestionRepository;
 import com.cdurgun.learning.repository.TopicRepository;
@@ -44,13 +47,19 @@ public class PracticeService {
     private final QuestionRepository questionRepository;
     private final QuestionOptionRepository questionOptionRepository;
     private final TopicRepository topicRepository;
+    private final CourseRepository courseRepository;
+    private final CourseAccessPolicy courseAccessPolicy;
 
     public PracticeService(QuestionRepository questionRepository,
                             QuestionOptionRepository questionOptionRepository,
-                            TopicRepository topicRepository) {
+                            TopicRepository topicRepository,
+                            CourseRepository courseRepository,
+                            CourseAccessPolicy courseAccessPolicy) {
         this.questionRepository = questionRepository;
         this.questionOptionRepository = questionOptionRepository;
         this.topicRepository = topicRepository;
+        this.courseRepository = courseRepository;
+        this.courseAccessPolicy = courseAccessPolicy;
     }
 
     /**
@@ -58,24 +67,37 @@ public class PracticeService {
      * OPSİYONELDİR -- yalnızca dolu olanlar uygulanır. {@code count} null/<=0 ise
      * {@link #DEFAULT_COUNT}'a düşer, {@link #MAX_COUNT}'u aşamaz (tek istekte aşırı
      * büyük bir çekimle DB'yi zorlamayı önlemek için).
+     *
+     * <p>Course erişimi ({@link CourseAccessPolicy}): {@code topicSlug} verilmişse o
+     * konunun kursuna erişim soru çekilmeden ÖNCE kontrol edilir; verilmemişse ve
+     * kullanıcı tüm kurslara erişemiyorsa (anonim) havuz yalnızca herkese açık kursla
+     * sınırlanır -- var olan course-kapsamlı Quiz Area sorgusu yeniden kullanılarak.</p>
      */
     public List<QuestionView> draw(Language language, String topicSlug, Difficulty difficulty,
                                     QuestionType type, Integer count) {
         Long topicId = null;
         if (topicSlug != null && !topicSlug.isBlank()) {
-            Topic topic = topicRepository.findBySlug(topicSlug)
+            Topic topic = topicRepository.findBySlugWithCategoryAndCourse(topicSlug)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Konu bulunamadı: " + topicSlug));
+            courseAccessPolicy.checkCurrentUserCanAccess(List.of(topic.getCategory().getCourse().getSlug()));
             topicId = topic.getId();
         }
 
         int resolvedCount = (count == null || count <= 0) ? DEFAULT_COUNT : Math.min(count, MAX_COUNT);
+        String difficultyName = difficulty == null ? null : difficulty.name();
+        String typeName = type == null ? null : type.name();
 
-        List<Question> questions = questionRepository.findRandomPublishedPool(
-                topicId,
-                language.getCode(),
-                difficulty == null ? null : difficulty.name(),
-                type == null ? null : type.name(),
-                resolvedCount);
+        List<Question> questions;
+        if (topicId == null && !courseAccessPolicy.currentUserCanAccessAllCourses()) {
+            Course publicCourse = courseRepository.findBySlug(courseAccessPolicy.publicCourseSlug())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "public course not found: " + courseAccessPolicy.publicCourseSlug()));
+            questions = questionRepository.findRandomPublishedPoolByCourseAndCategories(
+                    publicCourse.getId(), null, language.getCode(), difficultyName, typeName, resolvedCount);
+        } else {
+            questions = questionRepository.findRandomPublishedPool(
+                    topicId, language.getCode(), difficultyName, typeName, resolvedCount);
+        }
 
         return toQuestionViews(questions);
     }
@@ -136,6 +158,13 @@ public class PracticeService {
                         "duplicate selectedOptionIds for questionId " + answer.questionId());
             }
         }
+
+        // Course erişimi, soru/şık/doğru cevap/açıklama YÜKLENMEDEN ve puanlama
+        // yapılmadan önce -- anonim kullanıcı Java dışı bir soru id'si gönderirse
+        // (Quiz Area submit'i de bu metodu kullanır, URL'deki quiz slug'ı soru id'lerini
+        // sınırlamaz) burada reddedilir.
+        courseAccessPolicy.checkCurrentUserCanAccess(
+                questionRepository.findDistinctCourseSlugsByQuestionIds(answeredQuestionIds));
 
         List<Question> questions = questionRepository.findAllById(answeredQuestionIds);
         if (questions.size() != answeredQuestionIds.size()) {

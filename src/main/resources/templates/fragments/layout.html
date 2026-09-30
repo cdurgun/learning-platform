@@ -50,8 +50,14 @@
                 th:aria-label="#{nav.close}"></button>
     </div>
     <div class="offcanvas-body p-3 d-block">
-        <div th:each="course : ${nav}" class="mb-4">
+        <!-- locked: kurs mevcut kullanıcıya kapalı (CourseAccessPolicy -- anonim + Java
+             dışı kurs). Görünür kalır ama devre dışı: kategori butonları disabled, konular
+             href'siz span -- tıklamak hiçbir istek göndermez. Gerçek erişim kontrolü
+             SecurityConfig'te, bu yalnızca UI yansıması. -->
+        <div th:each="course : ${nav}" th:with="locked=${!course.accessible()}"
+             class="mb-4" th:classappend="${locked} ? 'opacity-50' : ''">
             <h6 class="text-uppercase text-muted small fw-bold" th:text="${course.name()}">Kurs</h6>
+            <p th:if="${locked}" class="text-muted small mb-1" th:text="#{nav.loginRequired}">Sign in to access</p>
             <div th:each="category : ${course.categories()}"
                  th:with="categoryId=${'cat-' + course.slug() + '-' + category.slug()},
                           categoryIsActive=${activeTopicSlug != null and !category.topics().?[#this.slug() == #vars.activeTopicSlug].isEmpty()}"
@@ -61,17 +67,20 @@
                         data-bs-toggle="collapse"
                         th:data-bs-target="'#' + ${categoryId}"
                         th:aria-expanded="${categoryIsActive}"
-                        th:aria-controls="${categoryId}">
+                        th:aria-controls="${categoryId}"
+                        th:disabled="${locked}">
                     <span th:text="${category.name()}">Kategori</span>
                     <span class="chevron" aria-hidden="true">&rsaquo;</span>
                 </button>
                 <div class="collapse" th:classappend="${categoryIsActive} ? 'show' : ''" th:id="${categoryId}">
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item" th:each="topicItem : ${category.topics()}">
-                            <a class="nav-link py-1 px-2"
+                            <a th:unless="${locked}" class="nav-link py-1 px-2"
                                th:classappend="${activeTopicSlug != null and activeTopicSlug == topicItem.slug()} ? 'fw-bold text-primary' : ''"
                                th:href="@{/{lang}/topics/{slug}(lang=${language.code}, slug=${topicItem.slug()})}"
                                th:text="${topicItem.title()}">Konu</a>
+                            <span th:if="${locked}" class="nav-link disabled py-1 px-2" aria-disabled="true"
+                                  th:text="${topicItem.title()}">Konu</span>
                         </li>
                     </ul>
                 </div>
@@ -84,21 +93,25 @@
              yukarıdaki course ağacıyla AYNI toggle/chevron/collapse deseni kullanılır. -->
         <div th:if="${!#lists.isEmpty(quizNav) or isAdmin}" class="mb-4">
             <h6 class="text-uppercase text-muted small fw-bold" th:text="#{nav.quiz}">QUIZ</h6>
-            <div th:each="group : ${quizNav}" th:with="groupId=${'quiz-' + group.groupSlug()}" class="mb-1">
+            <div th:each="group : ${quizNav}" th:with="groupId=${'quiz-' + group.groupSlug()}, locked=${!group.accessible()}"
+                 class="mb-1" th:classappend="${locked} ? 'opacity-50' : ''">
                 <button class="sidebar-toggle btn btn-sm d-flex align-items-center justify-content-between w-100 px-2 py-1 fw-semibold small text-start border-0 bg-transparent"
                         type="button"
                         data-bs-toggle="collapse"
                         th:data-bs-target="'#' + ${groupId}"
-                        th:aria-controls="${groupId}">
+                        th:aria-controls="${groupId}"
+                        th:disabled="${locked}">
                     <span th:text="${group.groupLabel()}">Java Quiz</span>
                     <span class="chevron" aria-hidden="true">&rsaquo;</span>
                 </button>
                 <div class="collapse" th:id="${groupId}">
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item" th:each="def : ${group.definitions()}">
-                            <a class="nav-link py-1 px-2"
+                            <a th:unless="${locked}" class="nav-link py-1 px-2"
                                th:href="@{/{lang}/quiz/{slug}(lang=${language.code}, slug=${def.slug()})}"
                                th:text="${def.title()}">Basic Java</a>
+                            <span th:if="${locked}" class="nav-link disabled py-1 px-2" aria-disabled="true"
+                                  th:text="${def.title()}">Basic Java</span>
                         </li>
                     </ul>
                 </div>

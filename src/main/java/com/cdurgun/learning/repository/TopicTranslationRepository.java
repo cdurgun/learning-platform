@@ -13,13 +13,14 @@ public interface TopicTranslationRepository extends JpaRepository<TopicTranslati
     Optional<TopicTranslation> findByTopicIdAndLanguage(Long topicId, Language language);
 
     /**
-     * sitemap.xml için: yayında olan HER çeviriyi, ilişkili {@code Topic}'iyle (yalnızca
-     * {@code slug} lazım) birlikte, join fetch ile tek sorguda getirir — N+1'e düşmeden.
-     * `Topic.category`/`Course` gerekmiyor, sitemap URL'i yalnızca `{lang}` + `slug`'a
-     * ihtiyaç duyuyor (bkz. {@code SitemapController}). Sıra önemli değil; controller
+     * sitemap.xml için: yayında olan HER çeviriyi, ilişkili {@code Topic}'iyle birlikte,
+     * join fetch ile tek sorguda getirir — N+1'e düşmeden. {@code Topic.category.course}
+     * de fetch ediliyor: sitemap yalnızca anonim erişime açık kursların konularını
+     * listeliyor (bkz. {@code CourseAccessPolicy#isPublicCourse}, {@code SitemapController}). Sıra önemli değil; controller
      * kendi içinde slug'a göre gruplayıp dil kümelerini (hreflang cross-reference için)
      * çıkarıyor.
      */
-    @Query("select tt from TopicTranslation tt join fetch tt.topic where tt.published = true")
+    @Query("select tt from TopicTranslation tt join fetch tt.topic t join fetch t.category c join fetch c.course " +
+            "where tt.published = true")
     List<TopicTranslation> findAllPublishedWithTopic();
 }

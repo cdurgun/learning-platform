@@ -254,9 +254,9 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `docs/known-constraints.md`) — kod defektiyle İLGİSİZ, kullanıcının kendi
   ortamı asıl doğrulama kaynağı.
 - **Kullanıcı kimlik doğrulaması Faz 138'de eklendi, opsiyonel bir katman —
-  var olan public öğrenim deneyimi (anasayfa, kurs/kategori/konu sayfaları,
-  sabit quiz submit) anonim erişime tamamen açık kalır, hiçbir mevcut rotanın
-  önüne bir "giriş yap" kapısı KONMADI.** Spring Security, session-based form
+  anasayfa ve Java kursu anonim erişime tamamen açık kalır. GÜNCELLEME (Faz
+  160): Java DIŞINDAKİ kursların içeriği artık giriş gerektiriyor** (aşağıdaki
+  Faz 160 maddesine bakın). Spring Security, session-based form
   login — JWT/OAuth2 bilinçli olarak kullanılmıyor (sunucu tarafında render
   edilen bir Thymeleaf uygulaması için gereksiz karmaşıklık olurdu). Kullanıcı
   hesabı `User` entity'si (`app_user` tablosu — `user` Postgres'te ayrılmış
@@ -283,6 +283,22 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   (sabit quiz submit, Practice submit, AI ingestion) `SecurityConfig`'te
   `csrf().ignoringRequestMatchers(...)` ile bilinçli olarak muaf tutuldu — yeni
   bir anonim/oturumsuz POST API eklenirse aynı muafiyet listesine eklenmeli.
+
+- **Course seviyesi erişim kuralı (Faz 160): anonim kullanıcı yalnızca `java`
+  kursuna, girişli kullanıcı tüm kurslara erişir.** Kuralın TEK kaynağı
+  `config/CourseAccessPolicy` — "java herkese açık" bilgisi controller/template/
+  servis/sitemap'te TEKRAR YAZILMAZ, hepsi policy'ye sorar. Zorlama iki katmanda:
+  course'u URL'den belirlenebilen rotalar (`/{lang}/topics/{slug}[/**]` — sayfa,
+  PDF, sabit quiz submit; `/{lang}/quiz/{definitionSlug}[/**]` — Quiz Area)
+  `SecurityConfig`'te policy'nin `AuthorizationManager`'larıyla; course'u istek
+  gövdesinden/havuzdan belirlenen yerler (`PracticeService.draw`/`submit` —
+  Practice ve Quiz Area submit'i) serviste, soru içeriği yüklenmeden/puanlamadan
+  ÖNCE. Anonim + korunan sayfa GET → login'e 302; anonim + korunan JSON uç noktası
+  (3 submit + `/{lang}/practice`) → gövdesiz, yönlendirmesiz 401. Menüde kilitli
+  kurslar GİZLENMEZ, `CourseNav`/`QuizNav.accessible()` ile devre dışı çizilir;
+  sitemap yalnızca herkese açık kursun topic'lerini listeler. Course'u yeni bir
+  yoldan açığa çıkaran bir rota/özellik eklenirse AYNI policy'ye bağlanmalı
+  (ayrıntı: `docs/phase-log.md` "Faz 160").
 
 ## Token ve Bağlam Verimliliği (Faz 75'ten itibaren, kullanıcı+ChatGPT kararı)
 

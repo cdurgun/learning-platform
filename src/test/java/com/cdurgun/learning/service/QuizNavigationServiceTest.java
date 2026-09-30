@@ -1,5 +1,6 @@
 package com.cdurgun.learning.service;
 
+import com.cdurgun.learning.config.CourseAccessPolicy;
 import com.cdurgun.learning.domain.Course;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.QuizDefinition;
@@ -34,9 +35,11 @@ class QuizNavigationServiceTest {
     private QuizDefinitionRepository quizDefinitionRepository;
     @Mock
     private MessageSource messageSource;
+    @Mock
+    private CourseAccessPolicy courseAccessPolicy;
 
     private QuizNavigationService service() {
-        return new QuizNavigationService(quizDefinitionRepository, messageSource);
+        return new QuizNavigationService(quizDefinitionRepository, messageSource, courseAccessPolicy);
     }
 
     @Test

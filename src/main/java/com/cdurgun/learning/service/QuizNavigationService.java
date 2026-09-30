@@ -1,5 +1,6 @@
 package com.cdurgun.learning.service;
 
+import com.cdurgun.learning.config.CourseAccessPolicy;
 import com.cdurgun.learning.domain.Course;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.QuizDefinition;
@@ -47,8 +48,11 @@ public class QuizNavigationService {
 
     private final QuizDefinitionRepository quizDefinitionRepository;
     private final MessageSource messageSource;
+    private final CourseAccessPolicy courseAccessPolicy;
 
-    public QuizNavigationService(QuizDefinitionRepository quizDefinitionRepository, MessageSource messageSource) {
+    public QuizNavigationService(QuizDefinitionRepository quizDefinitionRepository, MessageSource messageSource,
+                                  CourseAccessPolicy courseAccessPolicy) {
+        this.courseAccessPolicy = courseAccessPolicy;
         this.quizDefinitionRepository = quizDefinitionRepository;
         this.messageSource = messageSource;
     }
@@ -69,7 +73,8 @@ public class QuizNavigationService {
                     .map(d -> new QuizNav.QuizDefinitionNavItem(d.getSlug(),
                             messageSource.getMessage("quiz.def." + d.getSlug() + ".title", null, d.getSlug(), locale)))
                     .toList();
-            nav.add(new QuizNav(groupLabel, course.getSlug(), items));
+            nav.add(new QuizNav(groupLabel, course.getSlug(),
+                    courseAccessPolicy.currentUserCanAccess(course.getSlug()), items));
         }
         return nav;
     }
