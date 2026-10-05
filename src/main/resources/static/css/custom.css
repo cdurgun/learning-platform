@@ -140,3 +140,8 @@ body {
         display: none;
     }
 }
+
+/* Sabit bilgi sayfaları (page.html): düz yazı, okunabilir satır uzunluğu. */
+.static-page {
+    max-width: 46rem;
+}

@@ -60,6 +60,31 @@ class SeoBasicsTest {
     }
 
     @Test
+    void staticPagesRenderInBothLanguagesAndAreLinkedFromFooter() throws Exception {
+        for (String page : new String[]{"about", "contact", "privacy", "terms"}) {
+            mockMvc.perform(get("/en/" + page)).andExpect(status().isOk());
+            mockMvc.perform(get("/tr/" + page)).andExpect(status().isOk());
+            mockMvc.perform(get("/en")).andExpect(content().string(containsString("href=\"/en/" + page + "\"")));
+        }
+        mockMvc.perform(get("/tr/privacy"))
+                .andExpect(content().string(containsString("<title>Gizlilik Politikası | LearnForgeX</title>")))
+                .andExpect(content().string(containsString("mailto:learnforgex@gmail.com")));
+        mockMvc.perform(get("/en/imprint")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void placeholderAboutPageIsNoindexAndLeftOutOfSitemap() throws Exception {
+        mockMvc.perform(get("/en/about"))
+                .andExpect(content().string(containsString("<meta name=\"robots\" content=\"noindex\"/>")));
+        mockMvc.perform(get("/en/privacy"))
+                .andExpect(content().string(not(containsString("noindex"))));
+        mockMvc.perform(get("/sitemap.xml"))
+                .andExpect(content().string(containsString("/en/privacy</loc>")))
+                .andExpect(content().string(containsString("/tr/terms</loc>")))
+                .andExpect(content().string(not(containsString("/about</loc>"))));
+    }
+
+    @Test
     void homePageHasItsOwnMetaDescription() throws Exception {
         mockMvc.perform(get("/en"))
                 .andExpect(content().string(containsString(

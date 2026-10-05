@@ -3,6 +3,7 @@ package com.cdurgun.learning.controller;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.TopicTranslation;
 import com.cdurgun.learning.repository.TopicTranslationRepository;
+import com.cdurgun.learning.web.StaticPage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +61,7 @@ public class SitemapController {
                 .append("xmlns:xhtml=\"http://www.w3.org/1999/xhtml\">\n");
 
         appendHomeUrls(xml);
+        appendStaticPageUrls(xml);
         for (Map.Entry<String, Set<Language>> entry : availableLanguagesBySlug.entrySet()) {
             String slug = entry.getKey();
             Set<Language> availableLanguages = entry.getValue();
@@ -89,6 +91,30 @@ public class SitemapController {
                     .append(baseUrl).append("/en\"/>\n");
             xml.append("  </url>\n");
         }
+    }
+
+    /** Sabit bilgi sayfaları -- yalnızca gerçek içeriği olanlar (bkz. {@link StaticPage#isIndexable}). */
+    private void appendStaticPageUrls(StringBuilder xml) {
+        for (StaticPage page : StaticPage.values()) {
+            if (!page.isIndexable()) {
+                continue;
+            }
+            for (Language language : Language.values()) {
+                xml.append("  <url>\n");
+                xml.append("    <loc>").append(pageUrl(language, page)).append("</loc>\n");
+                xml.append("    <xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"")
+                        .append(pageUrl(Language.EN, page)).append("\"/>\n");
+                xml.append("    <xhtml:link rel=\"alternate\" hreflang=\"tr\" href=\"")
+                        .append(pageUrl(Language.TR, page)).append("\"/>\n");
+                xml.append("    <xhtml:link rel=\"alternate\" hreflang=\"x-default\" href=\"")
+                        .append(pageUrl(Language.EN, page)).append("\"/>\n");
+                xml.append("  </url>\n");
+            }
+        }
+    }
+
+    private String pageUrl(Language language, StaticPage page) {
+        return baseUrl + '/' + language.getCode() + '/' + page.getSlug();
     }
 
     private void appendTopicUrl(StringBuilder xml, Language language, String slug, Set<Language> availableLanguages) {

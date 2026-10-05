@@ -123,6 +123,12 @@
 </aside>
 
 <footer th:fragment="footer" class="border-top mt-5 py-3 text-center text-muted small">
+    <nav class="mb-1" th:with="footerLang=${language != null ? language.code : 'en'}">
+        <a class="link-secondary mx-2" th:href="@{/{lang}/about(lang=${footerLang})}" th:text="#{page.about.title}">About</a>
+        <a class="link-secondary mx-2" th:href="@{/{lang}/contact(lang=${footerLang})}" th:text="#{page.contact.title}">Contact</a>
+        <a class="link-secondary mx-2" th:href="@{/{lang}/privacy(lang=${footerLang})}" th:text="#{page.privacy.title}">Privacy Policy</a>
+        <a class="link-secondary mx-2" th:href="@{/{lang}/terms(lang=${footerLang})}" th:text="#{page.terms.title}">Terms of Use</a>
+    </nav>
     <span>&copy; 2026 Learn<span class="brand-accent">Forge</span>X</span>
 </footer>
 

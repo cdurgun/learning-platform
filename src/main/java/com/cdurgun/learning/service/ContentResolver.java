@@ -21,6 +21,7 @@ import java.util.Optional;
 public class ContentResolver {
 
     private static final String PATH_TEMPLATE = "classpath:content/%s/%s.md";
+    private static final String PAGE_PATH_TEMPLATE = "classpath:pages/%s/%s.md";
 
     private final ResourceLoader resourceLoader;
 
@@ -29,7 +30,15 @@ public class ContentResolver {
     }
 
     public Optional<String> resolve(String topicSlug, Language language) {
-        String path = PATH_TEMPLATE.formatted(language.getCode(), topicSlug);
+        return read(PATH_TEMPLATE.formatted(language.getCode(), topicSlug));
+    }
+
+    /** Sabit bilgi sayfaları (bkz. {@code StaticPage}): {@code classpath:pages/{language}/{pageSlug}.md}. */
+    public Optional<String> resolvePage(String pageSlug, Language language) {
+        return read(PAGE_PATH_TEMPLATE.formatted(language.getCode(), pageSlug));
+    }
+
+    private Optional<String> read(String path) {
         Resource resource = resourceLoader.getResource(path);
         if (!resource.exists()) {
             return Optional.empty();

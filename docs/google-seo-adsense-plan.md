@@ -174,16 +174,24 @@ sebeplerinin en yaygın olanlarını kapatır.
 Hepsi projenin `/{lang:en|tr}/...` desenine uymalı, footer'dan linklenmeli ve
 sitemap'e eklenmeli.
 
-- [ ] **Gizlilik Politikası** (`/{lang}/privacy`): toplanan veriler (hesap
-  e-postası, oturum çerezi), Google Analytics ve AdSense'in çerez kullanımı,
-  üçüncü taraf reklam sağlayıcıları, kullanıcının reklam kişiselleştirmeyi
-  kapatma yolu, iletişim adresi. KVKK ve GDPR'a atıf.
-- [ ] **Hakkında** (`/{lang}/about`): sitenin ne olduğu, kimin yazdığı, içeriğin
-  nasıl üretildiği. Yazarın gerçek kimliği ve deneyimi güven sinyalidir.
-- [ ] **İletişim** (`/{lang}/contact`): en azından bir e-posta adresi.
-- [ ] **Kullanım Koşulları** (`/{lang}/terms`).
-- [ ] Footer'ı (`fragments/layout.html`, satır 134) bu dört linki içerecek şekilde
-  genişlet.
+- [x] **Gizlilik Politikası** (`/{lang}/privacy`) — sitenin BUGÜNKÜ durumunu anlatıyor
+  (hesap verisi, zorunlu oturum çerezi, barındırma, jsDelivr CDN). Analitik ve
+  reklam "ileride eklenebilir" diye geçiyor.
+- [ ] **Gizlilik Politikası'nı GA4/AdSense açılmadan ÖNCE güncelle:** Google'ın
+  çerez kullanımı, üçüncü taraf reklam sağlayıcıları ve kişiselleştirilmiş reklamı
+  kapatma yolu açıkça yazılmalı (AdSense bunu şart koşuyor).
+- [ ] **Hakkında** (`/{lang}/about`) — sayfa var ama içeriği "yapım aşamasında".
+  Bu hâliyle `noindex` ve sitemap dışında. Gerçek metin yazılınca
+  `StaticPage.ABOUT`'un `indexable` değeri `true` yapılmalı. **AdSense başvurusundan
+  önce doldurulmalı.**
+- [x] **İletişim** (`/{lang}/contact`) — learnforgex@gmail.com.
+- [x] **Kullanım Koşulları** (`/{lang}/terms`).
+- [x] Footer bu dört sayfaya link veriyor (tüm sayfalarda).
+- [ ] Gizlilik ve Koşullar metinleri taslaktır, hukuki incelemeden geçmedi; yayına
+  almadan önce bir kez okunmalı.
+
+Metinler `src/main/resources/pages/{lang}/{slug}.md` dosyalarında; değiştirmek için
+yalnızca o dosyayı düzenlemek yeterli.
 
 ### Çerez onayı
 
@@ -284,7 +292,7 @@ verilmesi gerekir.
 1. Aşama 0 — teknik düzeltmeler (www yönlendirmesi dışında yapıldı).
 2. Aşama 2 — login duvarı kararı (yapıldı); deploy et ve canlıda doğrula.
 3. Aşama 1 — Search Console doğrulaması, sitemap gönderimi, GA4.
-4. Aşama 3 — yasal sayfalar, footer, çerez onayı.
+4. Aşama 3 — yasal sayfalar ve footer (yapıldı; Hakkında metni eksik), çerez onayı.
 5. Aşama 4 — başlık/açıklama, iç linkleme, kurs sayfaları; trafiği izle.
 6. Aşama 5 — AdSense başvurusu, onay sonrası reklam yerleşimi ve `ads.txt`.
 7. Aşama 6 — ölçüm, gerekirse alternatif gelir.
@@ -300,3 +308,6 @@ verilmesi gerekir.
   statik önbellek, tek `<h1>`, anasayfa description'ı, 404 sayfası). Açık kalan tek
   madde www'siz host yönlendirmesi. Yerelde çalışan uygulamaya karşı doğrulandı;
   canlıya henüz çıkmadı.
+- **2026-10-05** — Hakkında / İletişim / Gizlilik Politikası / Kullanım Koşulları
+  sayfaları ve footer linkleri eklendi (EN/TR). Hakkında şimdilik "yapım aşamasında"
+  ve `noindex`.
