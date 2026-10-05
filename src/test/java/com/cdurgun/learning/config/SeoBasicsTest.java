@@ -85,6 +85,13 @@ class SeoBasicsTest {
     }
 
     @Test
+    void topicPdfIsNotIndexable() throws Exception {
+        mockMvc.perform(get("/en/topics/enum/pdf"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Robots-Tag", "noindex"));
+    }
+
+    @Test
     void homePageHasItsOwnMetaDescription() throws Exception {
         mockMvc.perform(get("/en"))
                 .andExpect(content().string(containsString(

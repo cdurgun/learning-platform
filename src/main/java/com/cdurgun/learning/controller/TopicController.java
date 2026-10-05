@@ -215,6 +215,9 @@ public class TopicController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                // PDF, ders sayfasının birebir kopyasıdır; arama motorları onu ayrı bir sonuç
+                // olarak indexlemesin (kopya içerik) -- indexlenen adres ders sayfasının kendisi.
+                .header("X-Robots-Tag", "noindex")
                 .body(pdfBytes);
     }
 

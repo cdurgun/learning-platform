@@ -113,6 +113,12 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
 - [x] **Anasayfa description'ını yeniden yaz** — yeni `home.metaDescription` mesajı
   (EN/TR), kursları adıyla sayıyor.
 - [x] **Özel 404 sayfası ekle** — `templates/error/404.html`, iki dilli, `noindex`.
+- [x] **PDF'lerin indexlenmesini engelle** — her dersin "PDF İndir" bağlantısı, ders
+  sayfasının birebir kopyası olan bir PDF döndürüyor ve yanıtta indexlemeyi engelleyen
+  bir başlık yoktu (336 kopya sayfa riski; ayrıca bot her taramada sunucuya PDF
+  ürettirir). PDF yanıtına `X-Robots-Tag: noindex` eklendi (`TopicController.pdf`),
+  2026-10-05'te kodda; **deploy bekliyor**. Search Console'a sitemap göndermeden önce
+  canlıda olmalı.
 - [ ] (Opsiyonel) Sitemap'e `<lastmod>` eklemek için `topic_translation`'a bir
   `updated_at` kolonu.
 
@@ -198,6 +204,13 @@ sitemap'e eklenmeli.
 Metinler `src/main/resources/pages/{lang}/{slug}.md` dosyalarında; değiştirmek için
 yalnızca o dosyayı düzenlemek yeterli.
 
+### Kayıt formu
+
+- [ ] **Kayıt formuna açık onay satırı ekle:** formun içinde "kayıt olarak Kullanım
+  Koşulları'nı ve Gizlilik Politikası'nı kabul ediyorum" satırı ve iki link. Şu an bu
+  sayfalara yalnızca footer'dan ulaşılıyor. E-posta toplandığı için KVKK/GDPR açısından
+  beklenen bir adım; kesin gereklilikler için hukuki görüş alınmalı.
+
 ### Çerez onayı
 
 - [ ] AB, Birleşik Krallık ve İsviçre'den gelen ziyaretçilere kişiselleştirilmiş
@@ -235,6 +248,10 @@ yalnızca o dosyayı düzenlemek yeterli.
 - [ ] **Kurs ve kategori açılış sayfaları** (`/{lang}/courses/{slug}`): şu an
   indexlenebilir bir "Java kursu" sayfası yok; bunlar geniş sorgular için giriş
   noktası olur.
+- [ ] **`BreadcrumbList` yapılandırılmış verisi:** ders sayfalarında `LearningResource`
+  ve `Course` var, ama arama sonucunda yolu (Kurs › Kategori › Ders) gösteren
+  `BreadcrumbList` yok. Kurs açılış sayfalarıyla birlikte eklenmeli, çünkü yoldaki
+  kurs/kategori adımlarının gidecek gerçek bir adresi olmalı.
 - [ ] **Search Console → Performans** raporunu ayda bir incele: gösterimi yüksek
   ama tıklaması düşük sorguların başlık/açıklamasını iyileştir.
 - [ ] **Türkçe tarafı önceliklendir:** Türkçe teknik içerikte rekabet çok daha az;
@@ -259,6 +276,15 @@ düzenli (az da olsa) organik trafik gelmeye başlamışken. Resmi bir asgari tr
 - [ ] İnceleme birkaç günden birkaç haftaya kadar sürebilir. Ret gelirse sebep
   genelde "değeri düşük içerik" ya da "site gezinmesi" olur; e-postadaki sebebi
   giderip yeniden başvurulur.
+
+**Hesap tarafı (başvuruyla birlikte, AdSense panelinde):**
+
+- [ ] Hesap sahibinin yaş şartını karşıladığını ve ödeme alacak kişinin/adresin doğru
+  girildiğini doğrula.
+- [ ] Vergi bilgisi formunu doldur.
+- [ ] Ödeme yöntemini ekle (Türkiye için güncel seçenekler panelde görülür).
+- [ ] Kazanç doğrulama eşiğine ulaşınca posta ile gelen adres (PIN) doğrulamasını tamamla;
+  PIN girilmeden ödeme yapılmaz.
 
 **Yerleşim önerisi (onay sonrası):**
 
@@ -285,6 +311,20 @@ verilmesi gerekir.
 **Aylık takip edilecekler:** indexlenen sayfa sayısı, organik tıklama ve gösterim
 (Search Console); sayfa görüntüleme ve ülke dağılımı (GA4); RPM ve toplam gelir
 (AdSense); aylık Railway faturası.
+
+**İzleme ve işletme:**
+
+- [ ] **Uptime izleme kur:** site çökerse ya da bir deployment başlamazsa haber veren
+  bir şey yok. Ücretsiz bir uptime servisiyle anasayfa ve bir ders sayfası izlenmeli;
+  uzun kesintiler hem indexlemeyi hem AdSense incelemesini etkiler.
+- [ ] **Deployment sonrası kontrol listesi / `deploy-check` skill'i:** her push'tan sonra
+  canlıda neye bakılacağı (başlık, sitemap adedi, yönlendirmeler, sıkıştırma, önbellek)
+  ve deployment başlamazsa nereye bakılacağı yazılı olmalı. 2026-10-05'te Railway eski
+  branch adını izlediği için deployment 24 dakika başlamadı; ilk bakılacak yer servis
+  ayarlarındaki bağlı branch. Geri alma: Railway panelinden önceki deployment'a dönmek
+  (uygulanmış migration'lar geri alınmaz).
+- [ ] **Reklam eklendikten sonra hızı yeniden ölç:** reklam kodu sayfayı yavaşlatır;
+  PageSpeed Insights ile reklam öncesi ve sonrası karşılaştırılmalı.
 
 **AdSense tek başına yetmezse:**
 
@@ -330,3 +370,7 @@ verilmesi gerekir.
   önbelleklenen statik dosyalar, tek `<h1>`, dört yeni sayfa, HTML 404 sayfası, yeni
   anasayfa description'ı. Deployment 24 dakika gecikti: Railway hâlâ eski branch adını
   izliyordu, `main` olarak düzeltildi. Sıradaki adım Search Console kaydı.
+- **2026-10-05** — Plan canlı siteye karşı yeniden gözden geçirildi; eksik bulunan yedi
+  madde eklendi: PDF'lerin indexlenmesi (kodda düzeltildi, deploy bekliyor), kayıt
+  formunda açık onay, uptime izleme, deployment sonrası kontrol listesi, `BreadcrumbList`,
+  AdSense'in hesap tarafındaki adımlar, reklam sonrası hız ölçümü.
