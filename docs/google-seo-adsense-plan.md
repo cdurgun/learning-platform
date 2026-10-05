@@ -92,24 +92,22 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
 - [x] **`<title>` hatasını düzelt** (`templates/topic.html:6`) — 2026-10-05'te kodda
   düzeltildi, **deploy bekliyor**. Diğer şablonların başlıkları kontrol edildi,
   aynı hata yok.
-- [ ] **Proxy başlıklarını tanıt** (`application-prod.yml`):
-  `server.forward-headers-strategy: native`. Sonra login yönlendirmesinin doğrudan
-  `https://` ile döndüğü `curl -I` ile doğrulanmalı.
-- [ ] **Sıkıştırmayı aç** (`application-prod.yml`): `server.compression.enabled: true`
-  ve HTML/CSS/JS/JSON/XML mime tipleri.
-- [ ] **Statik dosyalara önbellek süresi ver**
-  (`spring.web.resources.cache.cachecontrol.max-age`). Spring Security'nin
-  varsayılan `no-store` başlığının statik kaynaklarda artık yazılmadığı canlıda
-  doğrulanmalı. CSS/JS değişince eski kopya kalmaması için içerik hash'li
-  versiyonlama (`spring.web.resources.chain.strategy.content`) eklenmeli.
+- [x] **Proxy başlıklarını tanıt** — `application-prod.yml`'e
+  `server.forward-headers-strategy: framework` eklendi. Yerelde
+  `X-Forwarded-Proto: https` ile login yönlendirmesinin `https://` döndüğü doğrulandı.
+- [x] **Sıkıştırmayı aç** — `application.yml`. Yerelde anasayfa 280 KB → 32 KB.
+- [x] **Statik dosyalara önbellek süresi ver** — `/css`, `/js`, `/img` bir yıl
+  önbellekleniyor, linkler içerik hash'i taşıyor (`/css/custom-<hash>.css`), dosya
+  değişince adres de değişiyor (`WebConfig`). `robots.txt` gibi kök dosyalar
+  bilinçli olarak kapsam dışı.
 - [ ] **www'siz host'u www'ye 301 yap** (Railway/DNS seviyesinde ya da küçük bir
   filtreyle).
-- [ ] **Tek `<h1>` bırak:** ya şablondaki başlık `<h1>` olmaktan çıkarılır ya da
-  markdown'ın H1'i render'da gizlenir.
-- [ ] **Anasayfa description'ını yeniden yaz** (`messages*.properties`): kursları
-  adıyla sayan, 150–160 karakterlik bir cümle (EN ve TR ayrı).
-- [ ] **Özel 404 sayfası ekle** (`templates/error/404.html`, anasayfaya ve kurs
-  listesine link veren).
+- [x] **Tek `<h1>` bırak** — markdown'dan gelen başlık, görünümü değişmeden başlık
+  olmayan bir öğeye çevriliyor (`MarkdownService.demoteH1`); sayfanın tek `<h1>`'i
+  şablondaki ders başlığı.
+- [x] **Anasayfa description'ını yeniden yaz** — yeni `home.metaDescription` mesajı
+  (EN/TR), kursları adıyla sayıyor.
+- [x] **Özel 404 sayfası ekle** — `templates/error/404.html`, iki dilli, `noindex`.
 - [ ] (Opsiyonel) Sitemap'e `<lastmod>` eklemek için `topic_translation`'a bir
   `updated_at` kolonu.
 
@@ -283,7 +281,7 @@ verilmesi gerekir.
 
 ## 10. Özet Sıra
 
-1. Aşama 0 — `<title>` hatası (yapıldı) ve diğer teknik düzeltmeler.
+1. Aşama 0 — teknik düzeltmeler (www yönlendirmesi dışında yapıldı).
 2. Aşama 2 — login duvarı kararı (yapıldı); deploy et ve canlıda doğrula.
 3. Aşama 1 — Search Console doğrulaması, sitemap gönderimi, GA4.
 4. Aşama 3 — yasal sayfalar, footer, çerez onayı.
@@ -298,3 +296,7 @@ verilmesi gerekir.
 - **2026-10-05** — Login duvarı kararı verildi: (a). Ders içeriği tüm kurslarda
   anonim okumaya açıldı, topic `<title>` hatası düzeltildi (Faz 161). İkisi de
   kodda tamam ve testleri geçiyor; canlıya henüz çıkmadı.
+- **2026-10-05** — Aşama 0'ın kalanı kodda tamamlandı (proxy başlıkları, sıkıştırma,
+  statik önbellek, tek `<h1>`, anasayfa description'ı, 404 sayfası). Açık kalan tek
+  madde www'siz host yönlendirmesi. Yerelde çalışan uygulamaya karşı doğrulandı;
+  canlıya henüz çıkmadı.

@@ -26,6 +26,10 @@ spring:
 
 server:
   port: 8080
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,text/plain,text/xml,application/xml,application/javascript,application/json,image/svg+xml
+    min-response-size: 1024
 
 # Şema+host içeren mutlak URL üretmek gereken yerlerde (hreflang, canonical,
 # Open Graph/Twitter meta, JSON-LD, sitemap.xml) kullanılır -- bkz. Faz 65 notu.
@@ -33,6 +37,9 @@ server:
 # `application-prod.yml` production değerini (https://www.learnforgex.com) eziyor.
 app:
   base-url: http://localhost:8080
+  # Statik dosyaların hash'li adres çözümlemesi bellekte tutulsun mu (bkz. WebConfig).
+  # Dev'de kapalı: bir CSS/JS dosyası değişince yeniden başlatmadan yeni hash üretilsin.
+  cache-static-resource-chain: false
 
 # Faz D: AI/n8n'in soru havuzuna yazdığı /api/internal/questions/ingest rotasını
 # korur (bkz. QuizIngestApiKeyInterceptor). Ortam değişkeni verilmezse BOŞ kalır

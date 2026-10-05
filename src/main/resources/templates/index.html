@@ -4,7 +4,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title th:text="'LearnForgeX — ' + #{home.heading}">LearnForgeX</title>
-    <meta name="description" th:content="#{home.subheading}"/>
+    <meta name="description" th:content="#{home.metaDescription}"/>
 
     <!-- Anasayfanın iki dil sürümü (EN/TR) her zaman var (bkz. HomeController#index) —
          topic sayfasındaki gibi otherLanguageAvailable kontrolüne gerek yok. -->
@@ -16,7 +16,7 @@
     <meta property="og:type" content="website"/>
     <meta property="og:site_name" content="LearnForgeX"/>
     <meta property="og:title" th:content="'LearnForgeX — ' + #{home.heading}"/>
-    <meta property="og:description" th:content="#{home.subheading}"/>
+    <meta property="og:description" th:content="#{home.metaDescription}"/>
     <meta property="og:url" th:content="${baseUrl + '/' + language.code}"/>
     <meta property="og:image" th:content="${baseUrl + '/img/og-image.png'}"/>
     <meta property="og:image:width" content="1200"/>
@@ -25,7 +25,7 @@
     <meta property="og:locale:alternate" th:content="${language.code == 'tr'} ? 'en_US' : 'tr_TR'"/>
     <meta name="twitter:card" content="summary_large_image"/>
     <meta name="twitter:title" th:content="'LearnForgeX — ' + #{home.heading}"/>
-    <meta name="twitter:description" th:content="#{home.subheading}"/>
+    <meta name="twitter:description" th:content="#{home.metaDescription}"/>
     <meta name="twitter:image" th:content="${baseUrl + '/img/og-image.png'}"/>
 
     <!-- th:inline="javascript" + /*[[expr]]*/ işaretçileri: bu proje HTML5 (XHTML strict

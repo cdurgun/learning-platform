@@ -61,6 +61,8 @@ public class MarkdownService {
 
     private static final Pattern STRIP_TAGS = Pattern.compile("<[^>]+>");
 
+    private static final Pattern H1_HEADING = Pattern.compile("<h1(\\s[^>]*)?>(.*?)</h1>", Pattern.DOTALL);
+
     private final List<Extension> extensions = List.of(HeadingAnchorExtension.create());
     private final Parser parser = Parser.builder().extensions(extensions).build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
@@ -141,6 +143,16 @@ public class MarkdownService {
     }
 
     /** Sağdaki "Bu sayfada" navigasyonunda bir satır: çapa id'si ve görünen başlık. */
+    /**
+     * Web sayfasında başlığı zaten şablonun kendi {@code <h1>}'i veriyor; bazı markdown
+     * dosyaları ayrıca kendi {@code # Başlık} satırıyla başladığı için sayfada iki
+     * {@code <h1>} oluşuyordu. Markdown'dan geleni, görünümü değiştirmeden (Bootstrap
+     * {@code .h1}) başlık olmayan bir öğeye çevirir; id'si (anchor) korunur.
+     */
+    public static String demoteH1(String html) {
+        return H1_HEADING.matcher(html).replaceAll("<p class=\"h1\"$1>$2</p>");
+    }
+
     public record TocEntry(String id, String text) {
     }
 

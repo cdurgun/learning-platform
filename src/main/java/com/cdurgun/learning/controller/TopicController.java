@@ -140,7 +140,7 @@ public class TopicController {
         model.addAttribute("translation", translation.get());
 
         MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown.get(), slug);
-        model.addAttribute("contentHtml", rendered.html());
+        model.addAttribute("contentHtml", MarkdownService.demoteH1(rendered.html()));
         model.addAttribute("toc", rendered.toc());
 
         Optional<QuizSummary> quiz = quizService.findQuiz(topic.getId(), language);

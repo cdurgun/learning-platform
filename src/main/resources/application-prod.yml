@@ -11,8 +11,14 @@ spring:
   thymeleaf:
     cache: true
 
+# Uygulama TLS'i sonlandıran bir proxy'nin (Railway) arkasında çalışır. Bu ayar olmadan
+# Spring, isteği düz http sanıp yönlendirmeleri (ör. login'e 302) "http://" ile üretiyordu.
+server:
+  forward-headers-strategy: framework
+
 app:
   base-url: https://www.learnforgex.com
+  cache-static-resource-chain: true
 
 logging:
   level:
