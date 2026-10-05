@@ -40,11 +40,12 @@ TWO_CORRECT_SLOTS = [(0, 1), (2, 3), (1, 2), (0, 3), (0, 2), (1, 3)]
 SECTION_REF = re.compile(r"""(['"])([^'"\n]{3,120})\1\s*(?:bölüm\w*|section\b)""", re.I)
 # Şık harfine atıf: "A ve B", "A, C", "şık B", "option C", "B şıkkı", "(D)", "A)".
 # Satır içi kod (`A`) önce çıkarılır: bir kodun çıktısı olan harf atıf değildir.
+# Harfler büyük/küçük duyarlı aranır ("a `break` or a `return`" atıf değildir).
 OPTION_LETTER = re.compile(
-    r"\b[A-D]\s*(?:,|ve|and|ile|ya da|veya|or)\s*[A-D]\b"
-    r"|\b(?:şık|şıkkı|şıklar|seçenek|seçeneği|option|options|choice|answer)\s+[A-D]\b"
-    r"|\b[A-D]\s+(?:şıkkı|şıkları|seçeneği|option|choice)\b"
-    r"|\([A-D]\)|(?<![\w`])[A-D]\)", re.I)
+    r"\b[A-D]\s*(?:,|(?i:ve|and|ile|ya da|veya|or))\s*[A-D]\b"
+    r"|\b(?i:şık|şıkkı|şıklar|seçenek|seçeneği|option|options|choice|answer)\s+[A-D]\b"
+    r"|\b[A-D]\s+(?i:şıkkı|şıkları|seçeneği|option|choice)\b"
+    r"|\([A-D]\)|(?<![\w`])[A-D]\)")
 JAVA_TIMEOUT_SECONDS = 20
 CATCH_ALL = re.compile(r"all of the above|none of the above|hepsi|hiçbiri|yukarıdakilerin", re.I)
 
@@ -154,7 +155,9 @@ def run_java(code):
     else:
         name = "Snippet"
         body = "\n".join("        " + line for line in code.split("\n"))
-        source = f"public class Snippet {{\n    public static void main(String[] args) throws Exception {{\n{body}\n    }}\n}}\n"
+        # `throws` bilerek yok: checked exception fırlatan bir parça (ör. `join()`) bu sarmalayıcıyla
+        # derlenmez; öyle bir kod, okuyucunun da derleyebileceği tam bir sınıf olarak yazılmalıdır.
+        source = f"public class Snippet {{\n    public static void main(String[] args) {{\n{body}\n    }}\n}}\n"
     with tempfile.TemporaryDirectory(prefix="quiz-java-") as directory:
         (Path(directory) / f"{name}.java").write_text(source, encoding="utf-8")
         try:
@@ -197,6 +200,18 @@ def verify_code_output(item, tag, errors, notes):
     if expect == "compile-error":
         notes.append(f"{tag}: kod derlenmiyor (beklendiği gibi)")
         return
+    if expect == "exception":
+        wanted = item.get("expectedException")
+        if not wanted:
+            errors.append(f"{tag}: expect 'exception' için expectedException (sınıf adı) yazılmalı -- gerçek hata: "
+                          f"{detail.split(chr(10))[0]}")
+            return
+        if wanted not in detail:
+            errors.append(f"{tag}: beklenen exception '{wanted}' değil -- gerçek hata: {detail.split(chr(10))[0]}")
+            return
+        if wanted not in item["correct"][0]:
+            errors.append(f"{tag}: doğru şık fırlatılan exception'ı ('{wanted}') anmıyor")
+            return
     if "expectedOutput" not in item:
         errors.append(f"{tag}: expectedOutput yok -- kodun gerçek çıktısı: {stdout.rstrip()!r}")
         return
@@ -223,7 +238,7 @@ def code_terms(text):
     terms = set()
     for span in spans:
         terms.update(re.findall(r"[A-Za-z_]\w+", span))
-        terms.update(re.findall(r"==|!=|<=|>=|&&|\|\||->|::|\?", span))
+        terms.update(re.findall(r"\+\+|--|\+=|-=|\*=|/=|==|!=|<=|>=|&&|\|\||->|::|\?|%", span))
     return terms
 
 
@@ -337,7 +352,13 @@ def check(spec, run_code=True):
             heading = norm(declared.get(lang, ""))
             if heading in sections[lang]:
                 own_terms = code_terms(" ".join([question, explanation] + options)) | code_terms(f"`{code or ''}`")
-                section_terms = code_terms(section_body(lang, slug, heading))
+                body = section_body(lang, slug, heading)
+                # Bölümün gömdüğü örnek dosyalar da o bölümün anlattığı şeydir.
+                embedded = "".join(
+                    (RES / "examples" / slug / f"{name}.{ext}").read_text(encoding="utf-8")
+                    for name, ext in re.findall(r"\{\{(\w+)\.(\w+)}}", body)
+                    if (RES / "examples" / slug / f"{name}.{ext}").is_file())
+                section_terms = code_terms(body) | code_terms(f"`{embedded.replace('`', ' ')}`")
                 if own_terms and section_terms and not own_terms & section_terms:
                     errors.append(f"{tag}: sorudaki kod terimlerinin hiçbiri \"{heading}\" bölümünde geçmiyor -- "
                                   f"soru bu bölüme dayanmıyor olabilir")

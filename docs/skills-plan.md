@@ -150,7 +150,31 @@ En çok tekrarlanan iş, bu yüzden en yüksek kazanç burada.
 
 - [x] Skill yazıldı (`.claude/skills/quiz-questions/`: `SKILL.md` + `build_quiz.py`)
 - [x] İlk gerçek işte denendi: `if-else` (2026-10-05)
-- [ ] İlk kullanım sonrası gözden geçirme (ikinci gerçek konuyla birlikte)
+- [x] İlk kullanım sonrası gözden geçirme: `switch` ve ardından 14 konu ile (2026-10-05)
+
+**Toplu kullanım (2026-10-05):** `switch` (12 soru, `V1073`–`V1076`) ve quiz'i olmayan
+kalan 14 konu (148 soru, `V1077`–`V1132`) aynı skill ile yazıldı. Böylece yayındaki
+derslerden quiz'i olmayan yalnızca bilerek dışarıda bırakılan ikisi kaldı:
+`claude-code-cli-commands` (İngilizcesi yayında değil) ve `docker-practical-project`.
+
+Bu kullanımda skill'de yapılan düzeltmeler:
+
+- Şık harfi kontrolü büyük/küçük harfe duyarlı yapıldı ("a `break` or a `return`" artık
+  harf atfı sayılmıyor).
+- "Soru bağlandığı bölüme dayanıyor mu" kontrolü operatörleri (`++`, `+=`) ve bölümün
+  gömdüğü örnek dosyaları da hesaba katıyor.
+- Exception fırlatan kod soruları için `expectedException` doğrulaması eklendi.
+- Kod sarmalayıcısından `throws Exception` kaldırıldı: checked exception fırlatan kod
+  artık tam bir sınıf olarak yazılmak zorunda, çünkü okuyucunun gördüğü parça da tek
+  başına derlenebilmeli (kullanıcı `join()` içeren iki örnekte fark etti).
+- Yazım kurallarına "kesinlik" bölümü eklendi: mutlak ifadeler için karşı örnek aramak,
+  belirli bir aracı zorunlu mekanizma gibi sunmamak.
+
+Bu kullanımın ortaya çıkardığı ders hataları (hepsi düzeltildi): `switch` dersi
+`case Role.ADMIN`'in derleme hatası olduğunu söylüyordu (Java 21'de derleniyor);
+`introduction-to-exceptions` her exception'ın mesaj taşıdığını ima ediyordu;
+`jsx` Babel'i Vite'ın JSX dönüşüm mekanizması olarak sunuyordu. İlki, soruların dayandığı
+iddiaları derleyerek doğrularken; diğer ikisi kullanıcının soru incelemesinde bulundu.
 
 **Nasıl çalışıyor (planlanandan farklı çıktı):** şablon SQL dosyaları yerine tek bir
 script var. Sorular SQL olarak değil, kısa bir JSON tanım dosyasına yazılıyor;
@@ -298,3 +322,6 @@ Yazım sırasında kurulu `skill-creator` ve `writing-for-agents` skill'lerinden
   `V1069`–`V1072`). Kullanıcının isteğiyle dört kural eklendi: şık harfi yasağı, kod
   çıktısının gerçekten çalıştırılarak doğrulanması, EN/TR çiftinin aynı bölüme bağlanması,
   doğru şık dağılımının yumuşak hedef olması.
+- **2026-10-05** — `quiz-questions` ile `switch` ve kalan 14 konu yazıldı (160 soru,
+  `V1073`–`V1132`); skill dört yerde düzeltildi; üç derste soru yazımı sırasında bulunan
+  yanlışlıklar giderildi. Sıradaki skill: `new-topic` (bir sonraki gerçek konuyla).

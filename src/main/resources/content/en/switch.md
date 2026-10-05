@@ -52,7 +52,7 @@ Attaching multiple values to one `case` with commas (`case SATURDAY, SUNDAY -> .
 
 ## Using switch with String and Enum
 
-Besides primitives like `int`/`char`, `switch` also works with `String` and enum constants. A `switch` on a `String` compares CONTENT (like `.equals()`, NOT like `==`) -- see "Comparison Operators" in the "if / else" lesson. In a `switch` over an enum, `case` labels are written WITHOUT the enum name prefix (`case ADMIN ->`, not `case Role.ADMIN ->`) -- this same behavior is also shown in the enum lesson's own "Usage with switch" section.
+Besides primitives like `int`/`char`, `switch` also works with `String` and enum constants. A `switch` on a `String` compares CONTENT (like `.equals()`, NOT like `==`) -- see "Comparison Operators" in the "if / else" lesson. In a `switch` over an enum, `case` labels are conventionally written WITHOUT the enum name prefix (`case ADMIN ->` rather than `case Role.ADMIN ->`) -- the same form the enum lesson's own "Usage with switch" section uses. Before Java 21 the prefixed form was a COMPILE ERROR; since Java 21 it is accepted too, but the short form remains the usual style.
 
 {{SwitchOnStringAndEnumExample.java}}
 
@@ -68,7 +68,7 @@ Besides primitives like `int`/`char`, `switch` also works with `String` and enum
 
 - **Forgetting `break` at the end of a `case` in classic syntax, causing unwanted fall-through.** Execution "falls" into the next cases as well, even if they don't match.
 - **Assuming a `switch` on a `String` compares like `==`.** It actually compares content -- the `String` reference trap does NOT apply here.
-- **Accidentally prefixing enum `case` labels with the enum name** (`case ADMIN ->`, not `case Role.ADMIN ->`) -- this is a compile error.
+- **Prefixing enum `case` labels with the enum name on a Java version older than 21** (`case Role.ADMIN ->` instead of `case ADMIN ->`). There it is a compile error; since Java 21 both forms compile, and the unprefixed one is the conventional choice.
 - **Forgetting `yield` in a switch EXPRESSION's block body.** The compiler has no way to know which value the block should produce.
 
 ## Summary, Cheat Sheet, and Glossary

@@ -14,10 +14,10 @@ kullanır:
 {{JsxHelloWorldExample.jsx}}
 
 Bu kod HTML gibi görünüyor, ama aslında bir JavaScript değişkenine
-(`element`) bir değer atanıyor. Tarayıcı JSX'i doğrudan anlamaz -- Vite
-projede otomatik olarak çalışan bir derleyici (Babel), bu kodu tarayıcının
-anlayacağı sade bir JavaScript fonksiyon çağrısına çevirir. Bunu elle
-yapman gerekmez, arka planda otomatik olur.
+(`element`) bir değer atanıyor. Tarayıcı JSX'i doğrudan anlamaz --
+projenin build araçları (bu kursta Vite), bu kodu tarayıcının anlayacağı
+sade bir JavaScript fonksiyon çağrısına otomatik olarak dönüştürür. Bunu
+elle yapman gerekmez, arka planda otomatik olur.
 
 ## HTML vs JSX
 

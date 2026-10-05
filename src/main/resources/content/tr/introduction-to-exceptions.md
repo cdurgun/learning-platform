@@ -14,7 +14,7 @@ Yapılandırılmış bir dil özelliği olarak exception handling, Java'dan onla
 
 ## Bir Exception'ın Anatomisi: Throwable, Mesaj ve Stack Trace
 
-Her exception nesnesi -- spesifik sınıfından bağımsız olarak -- aynı üç bilgiyi taşır. Bir MESAJ: ne yanlış gittiğini anlatan, genellikle exception oluşturulurken ayarlanan, insan tarafından okunabilir bir string. Bir CAUSE (neden): bunu TETİKLEYEN başka bir exception'a opsiyonel bir referans (ne zaman ve neden kullanılacağı için "Exception Handling Best Practices" dersine bakınız). Ve bir STACK TRACE: exception nesnesinin oluşturulduğu anda tam olarak hangi metotların, hangi sırayla aktif olduğunun otomatik bir anlık görüntüsü.
+Her exception nesnesi -- spesifik sınıfından bağımsız olarak -- aynı üç bilgi için yer barındırır. Bir MESAJ: ne yanlış gittiğini anlatan, genellikle exception oluşturulurken ayarlanan, insan tarafından okunabilir bir string -- ama garanti değildir: mesaj verilmeden oluşturulan bir exception'da `getMessage()` `null` döndürür. Bir CAUSE (neden): bunu TETİKLEYEN başka bir exception'a opsiyonel bir referans (ne zaman ve neden kullanılacağı için "Exception Handling Best Practices" dersine bakınız). Ve bir STACK TRACE: exception nesnesinin oluşturulduğu anda tam olarak hangi metotların, hangi sırayla aktif olduğunun otomatik bir anlık görüntüsü.
 
 {{ExceptionAnatomyExample.java}}
 

@@ -15,9 +15,9 @@ should look like:
 
 This code looks like HTML, but it's really assigning a value to a
 JavaScript variable (`element`). The browser can't understand JSX
-directly -- a compiler (Babel) that runs automatically inside a Vite
-project turns this code into plain JavaScript function calls the browser
-understands. You never need to do this step by hand.
+directly -- the project's build tooling (Vite, in this course)
+automatically transforms this code into plain JavaScript function calls
+the browser understands. You never need to do this step by hand.
 
 ## HTML vs. JSX
 

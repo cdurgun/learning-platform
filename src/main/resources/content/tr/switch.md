@@ -52,7 +52,7 @@ Bir `case`'e virgülle birden fazla değer bağlamak (`case SATURDAY, SUNDAY -> 
 
 ## switch ile String ve Enum Üzerinde Çalışmak
 
-`switch`, `int`/`char` gibi ilkellerin yanı sıra `String` ve enum sabitleriyle de çalışır. Bir `String` üzerindeki `switch`, İÇERİĞİ karşılaştırır (`.equals()` gibi, `==` gibi DEĞİL) -- bkz. "if / else" dersindeki "Karşılaştırma Operatörleri" bölümü. Bir enum üzerindeki `switch`'te `case` etiketleri enum adı ÖN EKİ OLMADAN yazılır (`case ADMIN ->`, `case Role.ADMIN ->` DEĞİL) -- bu, enum'un kendi "switch ile Kullanım" bölümünde de gösterilen bir davranıştır.
+`switch`, `int`/`char` gibi ilkellerin yanı sıra `String` ve enum sabitleriyle de çalışır. Bir `String` üzerindeki `switch`, İÇERİĞİ karşılaştırır (`.equals()` gibi, `==` gibi DEĞİL) -- bkz. "if / else" dersindeki "Karşılaştırma Operatörleri" bölümü. Bir enum üzerindeki `switch`'te `case` etiketleri alışılmış olarak enum adı ÖN EKİ OLMADAN yazılır (`case Role.ADMIN ->` yerine `case ADMIN ->`) -- enum'un kendi "switch ile Kullanım" bölümünde de bu biçim kullanılır. Java 21'den önce ön ekli biçim bir DERLEME HATASIYDI; Java 21'den itibaren o da kabul edilir, ama kısa biçim yaygın tercih olmayı sürdürür.
 
 {{SwitchOnStringAndEnumExample.java}}
 
@@ -68,7 +68,7 @@ Bir `case`'e virgülle birden fazla değer bağlamak (`case SATURDAY, SUNDAY -> 
 
 - **Klasik sözdizimde bir `case`'in sonuna `break` koymayı unutup istenmeyen fall-through yaşamak.** Çalışma, eşleşmeyen sonraki `case`'lere de "düşer".
 - **`String` üzerindeki bir `switch`'i `==` ile karşılaştırma yapıyormuş gibi düşünmek.** Aslında içerik karşılaştırması yapılır, `String` referans tuzağı burada geçerli DEĞİLDİR.
-- **Enum `case` etiketlerinin önüne yanlışlıkla enum adını eklemek** (`case Role.ADMIN ->` yerine `case ADMIN ->` olmalı) -- bu bir derleme hatasıdır.
+- **Java 21'den eski bir sürümde enum `case` etiketlerinin önüne enum adını eklemek** (`case ADMIN ->` yerine `case Role.ADMIN ->`). O sürümlerde bu bir derleme hatasıdır; Java 21'den itibaren iki biçim de derlenir, alışılmış olan ön eksiz biçimdir.
 - **Bir `switch` İFADESİNİN blok gövdesinde `yield` yazmayı unutmak** -- derleyici, bloğun hangi değeri ürettiğini bilemez.
 
 ## Özet, Cheat Sheet ve Terimler Sözlüğü

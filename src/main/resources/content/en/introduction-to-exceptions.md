@@ -14,7 +14,7 @@ Exception handling as a structured language feature predates Java by decades -- 
 
 ## The Anatomy of an Exception: Throwable, Message, and Stack Trace
 
-Every exception object -- regardless of its specific class -- carries the same three pieces of information. A MESSAGE: a human-readable string describing what went wrong, usually set when the exception is created. A CAUSE: an optional reference to another exception that TRIGGERED this one (see "Exception Handling Best Practices" for when and why to use it). And a STACK TRACE: an automatic snapshot of exactly which methods were active, and in what order, at the moment the exception object was created.
+Every exception object -- regardless of its specific class -- has room for the same three pieces of information. A MESSAGE: a human-readable string describing what went wrong, usually set when the exception is created -- but not guaranteed: an exception created without one returns `null` from `getMessage()`. A CAUSE: an optional reference to another exception that TRIGGERED this one (see "Exception Handling Best Practices" for when and why to use it). And a STACK TRACE: an automatic snapshot of exactly which methods were active, and in what order, at the moment the exception object was created.
 
 {{ExceptionAnatomyExample.java}}
 

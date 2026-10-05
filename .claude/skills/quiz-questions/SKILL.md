@@ -78,9 +78,13 @@ bir alternatiftir, bu skill onu kullanmaz). SQL elle yazılmaz: sorular bir JSON
 derleyip çalıştırır ve üç şeyi karşılaştırır: gerçek çıktı `expectedOutput` ile aynı mı, gerçek
 çıktının her satırı doğru şıkta geçiyor mu, yanlış şıklardan biri gerçek çıktıyla aynı mı.
 
-- Kod bir sınıf içermiyorsa script onu bir `main` metoduna sarar; sınıf içeriyorsa olduğu gibi
-  derler.
+- Kod bir sınıf içermiyorsa script onu `throws` içermeyen bir `main` metoduna sarar; sınıf
+  içeriyorsa olduğu gibi derler. Checked exception fırlatan kod (`join()`, `sleep()`, dosya
+  işlemleri) bu yüzden parça olarak derlenmez: `throws` ya da `try`/`catch` içeren tam bir sınıf
+  olarak yazılmalıdır, çünkü okuyucunun gördüğü kod da kendi başına derlenebilir olmalıdır.
 - Beklenen sonuç çıktı değilse `"expect": "compile-error"` ya da `"expect": "exception"` yaz.
+  `exception` için `expectedException` (ör. `"NullPointerException"`) zorunludur; `expectedOutput`
+  o noktaya kadar yazdırılan çıktıdır ve doğru şık exception'ın adını içermelidir.
 - Java dışındaki diller (bash, sql, jsx...) otomatik çalıştırılmaz. Bunlarda
   `manualVerification` alanına çıktının nasıl doğrulandığını yaz (ör. gerçek terminal çıktısı);
   alan boşsa `check` hata verir. Çıktıyı doğrulayamıyorsan o soruyu yazma.
@@ -106,6 +110,14 @@ derleyip çalıştırır ve üç şeyi karşılaştırır: gerçek çıktı `exp
 - `CODE_OUTPUT` kodu kısa olsun. Çıktısı elle tahmin edilmez, `check` tarafından çalıştırılarak
   doğrulanır (bkz. "Kod çıktısı doğrulaması"). Cevabı bir koda dayanan ama `CODE_OUTPUT`
   olmayan bir iddia yazıyorsan ("şu satır derlenmez") onu da ayrıca çalıştırıp doğrula.
+
+**Kesinlik**
+- Dersin sadeleştirerek söylediği bir şeyi soruda mutlak bir iddiaya çevirme. "Her zaman",
+  "yalnızca", "asla", "neredeyse hiç" içeren her şık ve soru için karşı örnek ara: bir
+  exception'ın mesajı `null` olabilir; `for (;;)` bir exception'la da biter; bir race condition
+  sonucu "çoğunlukla" değil "olabilir" diye ifade edilir.
+- Belirli bir aracı (Babel, esbuild...) bir işin zorunlu ya da varsayılan mekanizması gibi sunma;
+  ders öyle dese bile soruda mekanizmayı değil sonucu sor.
 
 **Şıklar ve açıklama**
 - Yanlış şıklar gerçekçi olsun: bir öğrencinin gerçekten düşebileceği yanılgılar. Bariz saçma
