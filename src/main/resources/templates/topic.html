@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="${contentAvailable ? (translation.seoTitle ?: translation.title) : topic.slug} + ' | LearnForgeX'">Konu</title>
+    <title th:text="${pageTitle}">Konu</title>
     <meta th:if="${contentAvailable and translation.seoDescription != null}"
           name="description" th:content="${translation.seoDescription}"/>
 

@@ -215,10 +215,15 @@ yalnızca o dosyayı düzenlemek yeterli.
 
 İçerik zaten var; iş onu bulunur kılmak.
 
-- [ ] **Başlık ve açıklamaları doldur:** her topic için arama niyetine uygun
-  `seo_title` (50–60 karakter) ve `seo_description` (150–160 karakter). Boş
-  olanları bulmak için tek bir SQL sorgusu yeterli. Yeni bir migration ile
-  güncellenir.
+- [x] **Başlıkları kısalt** (2026-10-05). Eksik `seo_title`/`seo_description` yoktu;
+  sorun uzunluktu. ` | LearnForgeX` eki artık yalnızca başlık 60 karaktere sığıyorsa
+  ekleniyor, ve 70 karakteri aşan 64 başlık 60'ın altına indirildi (`seo/V1065`).
+  61–70 karakter arasında 65 başlık kaldı; ek almıyorlar, arama sonucunda sonları
+  hafifçe kesilebilir.
+- [ ] **Açıklamaları kısalt:** 335 `seo_description`'ın 250'si 160 karakteri aşıyor
+  (ortalama ~220, en uzunu 491); 29'u arama sonucunda anlamsız kalan "bu projenin
+  kendi şeması" gibi ifadeler içeriyor. Search Console'da birkaç haftalık veri
+  biriktikten sonra, gösterim alan sayfalardan başlayarak yeniden yazılacak.
 - [ ] **İç linkleme:** dersler birbirine zaten isimle atıf yapıyor; bu atıfları
   gerçek linke çevirmek hem kullanıcıya hem Google'a yardımcı olur. Topic sonuna
   "önceki / sonraki ders" linkleri.
@@ -311,3 +316,6 @@ verilmesi gerekir.
 - **2026-10-05** — Hakkında / İletişim / Gizlilik Politikası / Kullanım Koşulları
   sayfaları ve footer linkleri eklendi (EN/TR). Hakkında şimdilik "yapım aşamasında"
   ve `noindex`.
+- **2026-10-05** — SEO başlık/açıklama denetimi: eksik alan yok. Başlıklar kısaltıldı
+  (şablon eki + 64 başlık, `seo/V1065`); açıklamaların kısaltılması arama verisi
+  gelene kadar ertelendi.

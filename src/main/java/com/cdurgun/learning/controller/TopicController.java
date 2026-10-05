@@ -38,6 +38,9 @@ import java.util.Optional;
 @Controller
 public class TopicController {
 
+    private static final String TITLE_SITE_SUFFIX = " | LearnForgeX";
+    private static final int MAX_TITLE_LENGTH = 60;
+
     private final TopicRepository topicRepository;
     private final TopicTranslationRepository topicTranslationRepository;
     private final ContentResolver contentResolver;
@@ -120,6 +123,8 @@ public class TopicController {
         Optional<TopicTranslation> translation = topicTranslationRepository
                 .findByTopicIdAndLanguage(topic.getId(), language)
                 .filter(TopicTranslation::isPublished);
+
+        model.addAttribute("pageTitle", pageTitle(translation.map(this::seoTitleOrTitle).orElse(slug)));
 
         if (translation.isEmpty()) {
             // Konu var ama bu dilde yayında değil: 404 değil, kullanıcı dostu bir sayfa.
@@ -236,6 +241,19 @@ public class TopicController {
 
         model.addAttribute("previousTopic", previous);
         model.addAttribute("nextTopic", next);
+    }
+
+    private String seoTitleOrTitle(TopicTranslation translation) {
+        return translation.getSeoTitle() != null ? translation.getSeoTitle() : translation.getTitle();
+    }
+
+    /**
+     * Arama motorları başlığın kabaca ilk 60 karakterini gösterir. Site adı eki yalnızca
+     * sığıyorsa eklenir -- uzun bir başlıkta asıl anahtar kelimelerin yerini almasın.
+     */
+    static String pageTitle(String title) {
+        String withSiteName = title + TITLE_SITE_SUFFIX;
+        return withSiteName.length() <= MAX_TITLE_LENGTH ? withSiteName : title;
     }
 
     private Language resolveLegacyLanguage(String lang) {

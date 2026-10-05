@@ -172,8 +172,10 @@ class CourseAccessControlTest {
     @Test
     void topicPageTitleIsRenderedFromTranslation() throws Exception {
         mockMvc.perform(get("/en/topics/" + JAVA_TOPIC))
-                .andExpect(content().string(not(containsString("<title>translation.seoTitle"))))
-                .andExpect(content().string(containsString(" | LearnForgeX</title>")));
+                .andExpect(content().string(containsString("<title>What is a Java Enum? | With Examples | LearnForgeX</title>")));
+        // Site adı eki yalnızca başlık 60 karaktere sığıyorsa eklenir.
+        mockMvc.perform(get("/en/topics/" + SPRING_TOPIC))
+                .andExpect(content().string(containsString("<title>What Are Dependency Injection &amp; IoC? | With Examples</title>")));
     }
 
     @Test
