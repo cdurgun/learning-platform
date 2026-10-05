@@ -145,13 +145,50 @@ En çok tekrarlanan iş, bu yüzden en yüksek kazanç burada.
 - Sorular yazıldıktan sonra `content-check` tek konu modunda çalıştırılır.
 - Başlamadan önce quiz shell'in zaten var olup olmadığı kontrol edilir
   (`grep -rl "INSERT INTO quiz"`); Faz 157'deki `duplicate key` hatasının sebebi buydu.
-- Dosyalar: `SKILL.md`, `templates/promote.sql`, `templates/link.sql`,
-  `scripts/check_questions.py` (4 şık, tip başına doğru sayısı, yakın-kopya, harf dağılımı).
 - Varsayılan yol: sorular Claude Code oturumunda yazılır. n8n/OpenAI hattı ayrı bir
-  seçenek olarak kalır (bkz. Açık Kararlar).
+  seçenek olarak kalır.
 
-- [ ] Skill ve şablonlar yazıldı
-- [ ] Bir sonraki gerçek quiz işinde denendi
+- [x] Skill yazıldı (`.claude/skills/quiz-questions/`: `SKILL.md` + `build_quiz.py`)
+- [x] İlk gerçek işte denendi: `if-else` (2026-10-05)
+- [ ] İlk kullanım sonrası gözden geçirme (ikinci gerçek konuyla birlikte)
+
+**Nasıl çalışıyor (planlanandan farklı çıktı):** şablon SQL dosyaları yerine tek bir
+script var. Sorular SQL olarak değil, kısa bir JSON tanım dosyasına yazılıyor;
+`build_quiz.py check | preview | generate` onu denetliyor, okunabilir biçimde gösteriyor
+ve var olan konvansiyondaki dört migration'ı (promote, quiz shell, EN link, TR link)
+üretiyor. Önceden her soru metni elle üç kez yazılıyordu; artık tek yerde.
+
+**`check`'in zorunlu tuttuğu kurallar:**
+
+- 4 şık; tip başına doğru sayısı; `code` yalnızca `CODE_OUTPUT`'ta.
+- Soru, şık ve açıklamada şık harfine (A/B/C/D) atıf yasak. Arayüzde harf yok ve mevcut 77
+  sorunun açıklaması bu yüzden okuyucu için anlamsız (dokunulmadı).
+- Java kod çıktısı soruları JDK 21 ile gerçekten derlenip çalıştırılır: gerçek çıktı beyan
+  edilenle aynı olmalı, doğru şık gerçek çıktıyı içermeli, yanlış bir şık gerçek çıktıyla
+  aynı olmamalı. Java dışı dillerde doğrulamanın nasıl yapıldığı yazılmadan geçmez.
+- Her çift dersin iki dildeki aynı bölümüne bağlanır (`section`); iki başlığın da var
+  olduğu ve aynı sırada olduğu doğrulanır. Anlamca aynı kavramı ölçtükleri mekanik olarak
+  doğrulanamaz; akışta ayrı bir gözle kontrol adımı var.
+- Bölüm atıfları o dildeki dersin gerçek başlığıyla birebir.
+- Havuzda zaten bulunan soru reddedilir; quiz shell bir migration'da varsa yenisi üretilmez.
+- Doğru şıkların A–D dağılımı yumuşak hedeftir: script dengelemeye çalışır, dengesizlik
+  yalnızca bilgi olarak raporlanır.
+
+**İlk kullanım — `if-else`:** 6 kavram çifti, 12 soru (dil başına 3 tek seçimli, 1 çok
+seçimli, 2 kod çıktısı); `V1069`–`V1072`. Dört kod parçası çalıştırılarak doğrulandı.
+Temiz test veritabanında migration'lar uygulandı, sorular ve bağlantılar sayıldı,
+`content-check` bu konu için 0 kesin bulgu verdi, testler 129/129.
+
+**İlk kullanımdan notlar:**
+
+- Soruların kullanıcıya gösterilmesi ve onayı migration'dan önce ayrı bir adım olarak
+  işe yaradı; akışta kalmalı.
+- İlk taslakta kod çıktıları elle izlenmişti; hepsi doğru çıktı ama kullanıcının isteğiyle
+  çalıştırarak doğrulama zorunlu hâle getirildi. Bu, `CLAUDE.md`'deki "`.java` dosyaları
+  varsayılan olarak derlenmez" notunun quiz kodu için bilinçli bir istisnası.
+- Quiz'i eksik 16 konu daha var (`java`: `control-flow`'un kalan 5 dersi, `exceptions` 2,
+  `threads`; `react` 6; `ai-development-tools` 2). `control-flow`'un kalanı skill'in ikinci
+  kullanımı için doğal aday.
 
 ### 4.3 `new-topic` — bir konuyu uçtan uca yazmak
 
@@ -257,3 +294,7 @@ Yazım sırasında kurulu `skill-creator` ve `writing-for-agents` skill'lerinden
   Türkçe quiz sorusu; `V1067`, `V1068`), denetim çift tırnaklı quiz atıflarını ve numaralı
   adım listelerini ayırt edecek şekilde geliştirildi. Kesin bulgu 15 → 0. `AGENTS.md`
   silindi. Sıradaki skill: `quiz-questions`.
+- **2026-10-05** — `quiz-questions` yazıldı ve `if-else` ile denendi (12 soru,
+  `V1069`–`V1072`). Kullanıcının isteğiyle dört kural eklendi: şık harfi yasağı, kod
+  çıktısının gerçekten çalıştırılarak doğrulanması, EN/TR çiftinin aynı bölüme bağlanması,
+  doğru şık dağılımının yumuşak hedef olması.
