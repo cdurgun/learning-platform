@@ -2,7 +2,7 @@
 
 Bu kategorideki her ders şu ana kadar kavramsaldı: "Tools and Function
 Calling" döngüyü anlattı, "MCP'ye Giriş" rolleri ve primitive'leri
-anlattı, ve "MCP Architecture" telde gerçekte neyin gidip geldiğini
+anlattı, ve "MCP Mimarisi" telde gerçekte neyin gidip geldiğini
 anlattı. Bu ders, resmi TypeScript SDK'sını (`@modelcontextprotocol/sdk`)
 kullanarak gerçek bir MCP server ve onunla konuşan gerçek bir client inşa
 ediyor -- bu kursun AI kategorisindeki ilk çalıştırılabilir kod, ve
@@ -179,8 +179,7 @@ ama zorunludur.
 
 Proje klasöründe `GeoFactsServer.ts` adında bir dosya oluşturun ve şu
 kodu içine koyun. Bir server `McpServer` ile inşa edilir ve tool'ları
-`registerTool()` ile sunar, her birine "Defining a Tool: Name,
-Description, and Schema"nın anlattığı tam olarak üç parçayı vererek --
+`registerTool()` ile sunar, her birine "Bir Tool Tanımlamak: Ad, Açıklama ve Şema"nın anlattığı tam olarak üç parçayı vererek --
 bir isim, bir açıklama, ve `zod` tabanlı bir parameter schema:
 
 {{GeoFactsServer.ts}}
@@ -196,7 +195,7 @@ Bu server iki tool sunuyor:
   denememesi gereken kesin bir hesaplamayı gerçekleştiren bir tool'u
   gösteriyor.
 
-İkisi de "Tools and Function Calling"deki "Why Does It Exist?"
+İkisi de "Tools and Function Calling"deki "Neden Var?"
 bölümünün motivasyonuyla doğrudan eşleşiyor. Kurulumu bir
 `createGeoFactsServer()` fonksiyonuna sarmak (top-level kod olarak
 çalıştırmak yerine), aynı server'ın gerçek bir stdio-bağlantılı process
@@ -207,7 +206,7 @@ yeniden kullanılabilmesini sağlayan şeydir.
 
 Aynı proje klasöründe, `GeoFactsServer.ts` ile yan yana, ikinci bir
 dosya oluşturun: `RunServerWithClient.ts`. Server'ı gerçekten alıştırmak
-için, bu ders "MCP Architecture"da tanıtılan **in-memory transport**'u
+için, bu ders "MCP Mimarisi"nde tanıtılan **in-memory transport**'u
 kullanarak gerçek bir `Client` bağlar:
 
 ```text
@@ -223,9 +222,8 @@ geçer:
 
 {{RunServerWithClient.ts}}
 
-`client.listTools()`, "The Connection Lifecycle: Initialize, Discover,
-Invoke"daki `tools/list` discovery adımını gerçekleştirir; her
-`callTool()`, tam olarak "From Concepts to Wire Format: JSON-RPC 2.0"da
+`client.listTools()`, "Bağlantı Yaşam Döngüsü: Initialize, Discover, Invoke"daki `tools/list` discovery adımını gerçekleştirir; her
+`callTool()`, tam olarak "Kavramlardan Wire Format'a: JSON-RPC 2.0"da
 telde gösterildiği gibi bir `tools/call` invocation'ı gerçekleştirir. Son
 call, `GeoFactsServer.ts`'teki `isError: true` yolunun gerçekten client'a
 ulaştığını göstermek için, bilinçli olarak `CAPITALS` içinde olmayan bir
@@ -309,7 +307,7 @@ MCP Server
 Client
 ```
 
-Bu, önceki "MCP Architecture" dersinde öğrendiğimiz initialize/discover/
+Bu, önceki "MCP Mimarisi" dersinde öğrendiğimiz initialize/discover/
 invoke yaşam döngüsünün çalışan bir örneğidir.
 
 ## 'Wakanda' Örneği Neden Var?
@@ -366,7 +364,7 @@ kendi fonksiyonunda tutmanın amacı da budur. Aynı server'ı bir demo
 client yerine gerçek bir host uygulaması için çalıştırmak için, yalnızca
 transport değişir: `server`'ı bir `StdioServerTransport`'a bağlamak ve
 dosyayı kendi process'i olarak çalıştırmak, böylece bir host onu tam
-olarak "Transports: stdio and Streamable HTTP"ın anlattığı gibi bir
+olarak "Transport'lar: stdio ve Streamable HTTP"nin anlattığı gibi bir
 subprocess olarak başlatabilir. Tool tanımları (`get_capital_city`,
 `calculate_sum`), schema'ları ve davranışları tamamen değişmeden kalır
 -- yalnızca aynı JSON-RPC mesajlarını hangi transport'un taşıdığı

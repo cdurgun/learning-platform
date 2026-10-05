@@ -6,10 +6,9 @@ veri bağlantısı ya da dünyada gerçekten bir şey *yapma* yolu yoktur. Tek
 başına bir model yalnızca daha fazla metin üretebilir. **Tools** (**function
 calling** olarak da adlandırılır), bu açığı kapatan mekanizmadır -- bir
 modelin, modelin dışında çalışan gerçek kodu tetiklemesine ve sonucunu
-kullanmasına izin verir. Bu ders, standart protokolü ele alan "Introduction
-to MCP"den önce, tool use'un aslında ne olduğunu ele alıyor.
+kullanmasına izin verir. Bu ders, standart protokolü ele alan "MCP'ye Giriş"ten önce, tool use'un aslında ne olduğunu ele alıyor.
 
-## What Is Tool Use (Function Calling)?
+## Tool Use (Function Calling) Nedir?
 
 Tool use, bir LLM'in yalnızca nihai bir cevap üretmek yerine, belirli bir
 fonksiyonu çağırmak için *yapılandırılmış bir istek* üretebildiği -- bu
@@ -31,7 +30,7 @@ olarak tanınacak şekilde bilinçli olarak biçimlendirilmiş olmasıdır. Bu
 adlandırılması sağlayıcıya göre değişir, ama altında yatan fikir burada
 anlatılanla aynıdır.
 
-## Why Does It Exist?
+## Neden Var?
 
 "LLM Yetenekleri ve Sınırlamaları"dan hatırlayın: bir modelin bilgisi
 **knowledge cutoff**'unda durur, ve model gerçekleri doğrulayamaz, ölçekte
@@ -47,7 +46,7 @@ model bu bilgiyi eğitilmiş bilgisinden üretmeye HİÇ çalışmaz. Bir tool'u
 çalıştırılmasını ister, ve modelin tahmini değil, *tool'un* çıktısı cevap
 olur.
 
-## The Tool-Calling Loop
+## Tool-Calling Döngüsü
 
 Bir tool call tek bir adım değildir -- model ile onu barındıran uygulama
 arasında kısa bir döngüdür:
@@ -74,7 +73,7 @@ Context Window'lar"). Kritik olan: model bu döngüde hiçbir zaman hiçbir
 şeyi kendisi çalıştırmaz -- 4. adım her zaman modelin doğrudan erişimi
 olmayan, sıradan uygulama kodunda gerçekleşir.
 
-## Defining a Tool: Name, Description, and Schema
+## Bir Tool Tanımlamak: Ad, Açıklama ve Şema
 
 Bir tool modele üç parçayla tarif edilir, ve modelin bunu doğru
 kullanabilmesi tamamen bunların ne kadar iyi yazıldığına bağlıdır:
@@ -103,7 +102,7 @@ tahmin yürütme değildir -- model, verilen bir schema'yla eşleşen tool
 call'lar üretmek için özel olarak eğitilmiştir, ve pratikte schema
 kalitesinin bu kadar önemli olmasının nedeni de budur.
 
-## Tool Use vs. Agents
+## Tool Use ve Agent Karşılaştırması
 
 Tek bir tool call -- havayı al, cevabı döndür -- bu kursun ilerleyen
 bölümlerinde **agent** olarak adlandırdığı şey HENÜZ DEĞİLDİR. Tool
@@ -121,30 +120,26 @@ olması gerektiğini ele alıyor.
 
 - Tool açıklamalarını bir değişkeni isimlendirir gibi değil, tool'u yeni
   bir takım arkadaşına anlatır gibi yazın -- belirsiz açıklamalar,
-  modelin yanlış tool'u çağırmasının en yaygın nedenidir (bkz. "Defining
-  a Tool: Name, Description, and Schema").
+  modelin yanlış tool'u çağırmasının en yaygın nedenidir (bkz. "Bir Tool Tanımlamak: Ad, Açıklama ve Şema").
 - Bir tool'un parameter schema'sını, gerçek fonksiyonun izin verdiği kadar
   dar ve tipli tutun -- üç geçerli değerden oluşan bir enum, modele
   kısıtsız bir serbest metin alanından çok daha az geçersiz call üretme
   alanı bırakır.
-- Tek bir call için değil, döngü için tasarlayın (bkz. "The Tool-Calling
-  Loop") -- bir tool'un sonucu başka bir tool call'ı tetikleyebilir, bu
+- Tek bir call için değil, döngü için tasarlayın (bkz. "Tool-Calling Döngüsü") -- bir tool'un sonucu başka bir tool call'ı tetikleyebilir, bu
   yüzden bir tool'un çıktısı, ham bir veri dökümü değil, modelin makul
   şekilde akıl yürütebileceği bir şey olmalıdır.
 
 ## Yaygın Hatalar
 
-- **Modelin tool'u kendisinin çalıştırdığını varsaymak.** "The
-  Tool-Calling Loop"un anlattığı gibi, model yalnızca bir istek üretir --
+- **Modelin tool'u kendisinin çalıştırdığını varsaymak.** "Tool-Calling Döngüsü"nün anlattığı gibi, model yalnızca bir istek üretir --
   kodu gerçekten çalıştıran ve bunu güvenli şekilde yapmaktan sorumlu olan
   her zaman etrafındaki uygulamadır.
 - **Tek satırlık bir tool açıklaması yazıp güvenilir bir seçim
-  beklemek.** "Defining a Tool: Name, Description, and Schema" açıklama
+  beklemek.** "Bir Tool Tanımlamak: Ad, Açıklama ve Şema" açıklama
   kalitesinin, modelin tool'lar arasında seçim yaparken kullandığı ana
   sinyal olduğunu gösterdi -- yetersiz tanımlanmış bir açıklama, yanlış
   tool'un çağrılmasının en yaygın gerçek dünya nedenidir.
-- **Bir tool'un herhangi bir şekilde kullanımına "agent" demek.** "Tool
-  Use vs. Agents" bölümünün açıkladığı gibi, tool use mekanizmadır; agent
+- **Bir tool'un herhangi bir şekilde kullanımına "agent" demek.** "Tool Use ve Agent Karşılaştırması" bölümünün açıkladığı gibi, tool use mekanizmadır; agent
   ise onunla kurulmuş, bu kursun ilerleyen bölümlerinde ele alınan belirli
   bir tür sistemdir.
 

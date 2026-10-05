@@ -1,4 +1,4 @@
-# MCP Architecture
+# MCP Mimarisi
 
 "MCP'ye Giriş" üç rolü -- host, client ve server -- ve bir server'ın
 sunabileceği üç primitive'i anlatmıştı. Bu ders bir katman daha derine
@@ -8,7 +8,7 @@ hiçbir şeyi değiştirmiyor -- bu, onun altındaki mekanik katman, ve bu
 kategorinin son dersi olan "TypeScript ile MCP Sunucusu Oluşturma"nın
 gerçek, çalışan kodla doğrudan alıştıracağı şey.
 
-## From Concepts to Wire Format: JSON-RPC 2.0
+## Kavramlardan Wire Format'a: JSON-RPC 2.0
 
 Bir client ile server'ın değiş tokuş ettiği her mesaj bir **JSON-RPC
 2.0** mesajıdır -- request yapmak ve response almak için küçük, köklü,
@@ -52,7 +52,7 @@ ama bu ders seviyesinde onların ayrıntısına girmiyoruz). Bu, "TypeScript
 ile MCP Sunucusu Oluşturma"nın SDK kodunun sıradan fonksiyon call'larının
 arkasına gizlediği katmandır -- ama altta gerçekten gönderilen şey budur.
 
-## Transports: stdio and Streamable HTTP
+## Transport'lar: stdio ve Streamable HTTP
 
 JSON-RPC mesajlarının üzerinde seyahat edecek gerçek bir kanala ihtiyacı
 vardır -- MCP buna **transport** der, ve bu bilinçli olarak üstündeki her
@@ -68,7 +68,7 @@ Hangi transport'un kullanıldığı, tool-calling mantığının kendisi için
 görünmezdir -- bir tool'un `name`'i, `description`'ı ve davranışı her iki
 durumda da aynıdır.
 
-## The Connection Lifecycle: Initialize, Discover, Invoke
+## Bağlantı Yaşam Döngüsü: Initialize, Discover, Invoke
 
 Aşağıdaki, MCP protokolünün olası bütün mesaj türlerinin eksiksiz bir
 dökümü değil -- bu derste tool/resource kullanımını anlamak için yeterli,
@@ -86,7 +86,7 @@ bağımsız olarak, bir MCP bağlantısı bu üç aşamadan geçer:
 3. **Invoke** -- client bir şeyi gerçekten kullanmak için bir request
    gönderir -- bir tool'u çalıştırmak için `tools/call`, bir resource'u
    getirmek için `resources/read` -- ve server gerçek işi yapıp sonucu
-   döndürür, tam olarak "MCP and the Tool-Calling Loop"un kavramsal
+   döndürür, tam olarak "MCP ve Tool-Calling Döngüsü"nün kavramsal
    olarak anlattığı gibi.
 
 Tek bir bağlantı tipik olarak bir kez initialize aşamasından geçer, sonra
@@ -106,7 +106,7 @@ belirli bir server'ın gerçekten deklare ettiği yeteneklere hazırlanmak
 zorundadır, protokolün teorik olarak destekleyebileceği her yeteneğe
 değil.
 
-## Where Our Hands-On Example Fits (In-Memory Transport)
+## Uygulamalı Örneğimiz Nereye Oturuyor (In-Memory Transport)
 
 "TypeScript ile MCP Sunucusu Oluşturma", resmi TypeScript SDK'sını
 kullanarak gerçek bir client ve server inşa eder, ve bunları bir
@@ -123,12 +123,11 @@ transport değişir.
 ## Best Practices
 
 - MCP davranışı hakkında akıl yürütürken belirli bir transport
-  varsaymayın -- "Transports: stdio and Streamable HTTP"ın gösterdiği
+  varsaymayın -- "Transport'lar: stdio ve Streamable HTTP"nin gösterdiği
   gibi, bağlantı yerel (stdio) ya da uzak (Streamable HTTP) olsun, aynı
   server mantığı ve mesaj biçimleri geçerlidir.
 - Bir bağlantı beklenmedik davranınca, hangi yaşam döngüsü aşamasında
-  olduğunu kontrol edin (bkz. "The Connection Lifecycle: Initialize,
-  Discover, Invoke") -- `initialize` sırasındaki bir başarısızlık, bir
+  olduğunu kontrol edin (bkz. "Bağlantı Yaşam Döngüsü: Initialize, Discover, Invoke") -- `initialize` sırasındaki bir başarısızlık, bir
   `tools/call` invocation'ı sırasındakinden çok farklı bir sorundur.
 - Bir server'ın her MCP özelliğini desteklediğini varsaymak yerine
   capability negotiation'a güvenin -- bir client, bir server'ı kullanmaya
@@ -137,17 +136,14 @@ transport değişir.
 
 ## Yaygın Hatalar
 
-- **JSON-RPC'nin MCP'nin icat ettiği bir şey olduğunu düşünmek.** "From
-  Concepts to Wire Format: JSON-RPC 2.0"ın açıkladığı gibi, JSON-RPC 2.0
+- **JSON-RPC'nin MCP'nin icat ettiği bir şey olduğunu düşünmek.** "Kavramlardan Wire Format'a: JSON-RPC 2.0"ın açıkladığı gibi, JSON-RPC 2.0
   önceden var olan, genel amaçlı bir mesaj biçimidir -- MCP yeni bir
   tane tasarlamak yerine onu benimsemiştir.
 - **In-memory bir transport'un MCP'nin normalde nasıl deploy edildiği
-  olduğunu varsaymak.** "Where Our Hands-On Example Fits (In-Memory
-  Transport)" özellikle bu kursun örneğini kendi kendine yeten tutmak
+  olduğunu varsaymak.** "Uygulamalı Örneğimiz Nereye Oturuyor (In-Memory Transport)" özellikle bu kursun örneğini kendi kendine yeten tutmak
   için seçildi -- gerçek deployment'lar neredeyse her zaman stdio ya da
   Streamable HTTP kullanır, server gerçekten ayrı bir process olarak.
-- **Bir bağlantıyı hata ayıklarken doğrudan invocation'a atlamak.** "The
-  Connection Lifecycle: Initialize, Discover, Invoke"ın ortaya koyduğu
+- **Bir bağlantıyı hata ayıklarken doğrudan invocation'a atlamak.** "Bağlantı Yaşam Döngüsü: Initialize, Discover, Invoke"ın ortaya koyduğu
   gibi, initialize ve discovery önce gerçekleşir -- bir invocation
   hatasının gerçek nedeni genellikle bu önceki aşamalardan birindedir.
 

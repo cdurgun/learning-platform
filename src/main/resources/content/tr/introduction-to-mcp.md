@@ -9,7 +9,7 @@ yaşadığında ve uygulama birden fazla AI modeli ya da sağlayıcıyla
 konuştuğunda. **Model Context Protocol (MCP)**, bu soruya açık ve
 standartlaştırılmış bir cevaptır.
 
-## What Is MCP?
+## MCP Nedir?
 
 MCP, bir AI uygulamasının dış tool'lara, veri kaynaklarına ve prompt
 şablonlarına nasıl bağlanacağını standartlaştıran açık bir protokoldür.
@@ -23,7 +23,7 @@ dersteki tool-calling loop'un yerini almaz; onun *sunucu tarafını*
 standartlaştırır, böylece aynı tool implementasyonu herhangi bir
 MCP-uyumlu uygulama tarafından yeniden kullanılabilir.
 
-## Why Does It Exist?
+## Neden Var?
 
 Paylaşılan bir standart olmadan, *M* farklı AI uygulamasını *N* farklı
 tool ve veri kaynağına bağlamak, çok sayıda ayrı, özel entegrasyon
@@ -44,7 +44,7 @@ güncel bilgiye ulaşmanın ve gerçek eylemler almanın güvenilir bir yoluna
 ihtiyacı vardır, ve bu erişim her uygulama ve her tool için yeniden inşa
 edilmek yerine yeniden kullanılabilir olmalıdır.
 
-## Host, Client, and Server
+## Host, Client ve Server
 
 MCP, her kurulumda aynı kalan üç rol tanımlar:
 
@@ -65,7 +65,7 @@ Bu ayrım, "bir kez yaz, her yerde kullan" özelliğinin çalışmasını sağla
 server, sonunda onu çağıracak belirli chat uygulaması, IDE ya da LLM
 hakkında hiçbir şey bilmesine gerek duymaz.
 
-## What a Server Exposes: Tools, Resources, and Prompts
+## Bir Server Ne Sunar: Tool'lar, Resource'lar ve Prompt'lar
 
 Bir MCP server üç tür primitive sunabilir, ama belirli bir server yalnızca
 birini sunmakta serbesttir:
@@ -88,7 +88,7 @@ tool'lara odaklanıyor, çünkü bunlar "Tools and Function Calling"e en
 doğrudan şekilde bağlanıyor -- ama gerçek bir server, üç primitive türünü
 birleştirmekte serbesttir.
 
-## MCP and the Tool-Calling Loop
+## MCP ve Tool-Calling Döngüsü
 
 MCP, önceki dersteki tool-calling loop'u değiştirmez; onun iki adımını
 standartlaştırır. O döngünün 1. adımı -- uygulamanın hangi tool'ların
@@ -100,7 +100,7 @@ bir fonksiyon çalıştırması -- client'ın aynı bağlantı üzerinden server
 yapılandırılmış bir call göndermesi ve server'ın gerçek kodu çalıştırıp
 sonucu döndürmesi haline gelir. Arada olan her şey (modelin bir tool'u
 çağırıp çağırmayacağına ve nasıl çağıracağına karar vermesi) değişmez ve
-hâlâ tam olarak "The Tool-Calling Loop"da anlatıldığı gibi gerçekleşir --
+hâlâ tam olarak "Tool-Calling Döngüsü"nde anlatıldığı gibi gerçekleşir --
 MCP, tool'ların NASIL keşfedildiğini ve çağrıldığını standartlaştırır,
 modelin onları nasıl kullanmaya karar verdiğini değil.
 
@@ -109,31 +109,29 @@ modelin onları nasıl kullanmaya karar verdiğini değil.
 - Bir MCP server'ı, bire bir entegrasyon değil, yeniden kullanılabilir
   altyapı olarak düşünün -- onu belirli bir host uygulamasının
   ihtiyaçlarına göre değil, altta yatan veri kaynağının ya da sistemin
-  gerçekten neler yapabildiğine göre tasarlayın (bkz. "Why Does It
-  Exist?").
+  gerçekten neler yapabildiğine göre tasarlayın (bkz. "Neden Var?").
 - Hata ayıklarken host/client/server ayrımını aklınızda tutun: bir
   client her zaman tek bir server'la konuşur, bu yüzden birden fazla
   server'a bağlı bir host, aslında paralel olarak birden fazla bağımsız
-  client bağlantısı çalıştırıyordur (bkz. "Host, Client, and Server").
+  client bağlantısı çalıştırıyordur (bkz. "Host, Client ve Server").
 - İş için doğru primitive'i seçin -- modelin yalnızca okuması gereken
   veri, aynı veriyi döndüren bir tool'a değil, bir resource'a aittir,
-  çünkü bir tool çalıştırılabilir bir eylemi ima eder (bkz. "What a
-  Server Exposes: Tools, Resources, and Prompts").
+  çünkü bir tool çalıştırılabilir bir eylemi ima eder (bkz. "Bir Server Ne Sunar: Tool'lar, Resource'lar ve Prompt'lar").
 
 ## Yaygın Hatalar
 
 - **MCP'nin belirli bir AI modeli ya da yeni bir tool-calling biçimi
-  olduğunu varsaymak.** "What Is MCP?" bölümünün açıkladığı gibi, MCP,
+  olduğunu varsaymak.** "MCP Nedir?" bölümünün açıkladığı gibi, MCP,
   mevcut tool-calling kavramlarının ("Tools and Function Calling"dan)
   nasıl keşfedildiğini ve çağrıldığını standartlaştıran bir protokoldür --
   tool use'un altında yatan fikrin yerini almaz ya da onunla yarışmaz.
 - **"Server"ı istemci-yüzlü bir web sunucusu anlamına geliyor olarak
-  görmek.** MCP terimleriyle, "Host, Client, and Server"ın tanımladığı
+  görmek.** MCP terimleriyle, "Host, Client ve Server"ın tanımladığı
   gibi, bir server, tool'ları, resource'ları ya da prompt'ları bir
   client'a sunan HERHANGİ BİR programdır -- küçük, yerel bir process kadar
   kolay, uzak bir web servisi de olabilir.
 - **Her data kaynağı için bir server yerine, her host uygulaması için bir
-  server inşa etmek.** "Why Does It Exist?" MCP'nin tüm değerinin, bir
+  server inşa etmek.** "Neden Var?" MCP'nin tüm değerinin, bir
   server'ın host'lar arasında yeniden kullanılabilir olmasından geldiğini
   gösterdi -- tek bir host'un tuhaflıklarına göre tasarlamak, bu yeniden
   kullanılabilirliği çöpe atar.

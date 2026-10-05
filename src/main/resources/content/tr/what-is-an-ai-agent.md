@@ -3,8 +3,7 @@
 Bu kategoriye daha önce birkaç yerden atıfta bulunuldu, ama hiçbir yerde
 tanımlanmadı. "Tools and Function Calling", tek bir tool call ile "bir hedefe
 doğru birden fazla adım planlayabilen daha geniş bir sistem" arasına bir
-çizgi çekmişti, ama ikincisini tanımlamadan bırakmıştı (bkz. "Tool Use vs.
-Agents" bölümü). "Machine Learning"deki "Üç Öğrenme Türü: Supervised,
+çizgi çekmişti, ama ikincisini tanımlamadan bırakmıştı (bkz. "Tool Use ve Agent Karşılaştırması" bölümü). "Machine Learning"deki "Üç Öğrenme Türü: Supervised,
 Unsupervised, Reinforcement" bölümü, reinforcement learning'in *agent*'ının
 bu kavrama kavramsal olarak en yakın, halihazırda var olan fikir olduğunu
 belirtmişti. "Generative AI Ne Değildir?" bölümü, tek bir prompt'ta bir
@@ -57,11 +56,11 @@ loop'tur:
    argümanlarla belirli bir tool'u çağırmak, ya da hedefin karşılandığı
    sonucuna varıp nihai bir yanıt üretmek.
 3. **Eyleme geç (Act)** -- bir tool seçildiyse, gerçekten çalıştırılır (bu
-   loop'u saran uygulama tarafından, tam olarak "The Tool-Calling Loop"un
+   loop'u saran uygulama tarafından, tam olarak "Tool-Calling Döngüsü"nün
    anlattığı gibi -- modelin kendisi yine hiçbir şeyi hiçbir zaman
    çalıştırmaz), ve gerçek sonucu bir sonraki gözlemin parçası olur.
 
-Bu, "The Tool-Calling Loop"un doğrudan bir genellemesidir: bir kez çalışıp
+Bu, "Tool-Calling Döngüsü"nün doğrudan bir genellemesidir: bir kez çalışıp
 durmak yerine, aynı gözle-karar ver-eyleme geç döngüsü, her seferinde
 kendinden önce olan her şeyle bilgilendirilerek tekrarlanır -- ta ki "Karar
 ver" adımı hedefin karşılandığı sonucuna varana kadar (ya da, bu
@@ -70,7 +69,7 @@ anlattığı gibi, bir güvenlik sınırına ulaşılana kadar).
 
 ## Tek Bir Tool Call'dan Agent'a
 
-"Tool Use vs. Agents" bu çizgiyi zaten yüksek seviyede çizmişti; yukarıdaki
+"Tool Use ve Agent Karşılaştırması" bu çizgiyi zaten yüksek seviyede çizmişti; yukarıdaki
 loop artık masadayken bunu tam olarak yeniden ifade etmekte fayda var. Tek
 bir request/response alışverişi içinde bir tool'u bir kez kullanmak, bir
 şeyi agent yapan şey değildir -- bugünün havasını sorulduğunda arayan
@@ -124,7 +123,7 @@ tool'larını yeniden kullanarak.
 
 ## Yaygın Hatalar
 
-- **Bir tool kullanan her sisteme "agent" demek.** "Tool Use vs. Agents" ve
+- **Bir tool kullanan her sisteme "agent" demek.** "Tool Use ve Agent Karşılaştırması" ve
   "Tek Bir Tool Call'dan Agent'a"nın ikisinin de açıkladığı gibi, sıradan
   bir alışveriş içindeki tek bir tool call bir agent değildir -- ayırt edici
   özellik, tool use'un kendisi değil, kendi kendini yönlendiren loop'tur.
@@ -150,7 +149,7 @@ tool'larını yeniden kullanarak.
   bilinemediği ve önceki adımların sonucuna bağlı olduğu problemler için
   var.
 - Agent loop -- gözlemle, karar ver, eyleme geç -- "Tools and Function
-  Calling"deki "The Tool-Calling Loop"un doğrudan bir genellemesidir, bir
+  Calling"deki "Tool-Calling Döngüsü"nün doğrudan bir genellemesidir, bir
   kez çalışmak yerine sistemin kendi kontrolü altında tekrarlanır.
 - Bir agent'ı tek bir tool call'dan ayıran şey, o loop'un kendi başına
   çalışması, yalnızca bir tool call'ın varlığı değildir.

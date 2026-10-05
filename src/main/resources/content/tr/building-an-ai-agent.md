@@ -40,8 +40,7 @@ olarak ne anlama geldiği şu:
   Eyleme Geç"deki gözlemle-karar ver-eyleme geç döngüsü -- `AgentLoop.ts`
   içinde gerçekten, adım adım çalışıyor.
 - **Gerçek:** her tool call. `AgentLoop.ts`, gerçek MCP `Client`'ının
-  `callTool()`'unu çağırıyor, bu da ("From Concepts to Wire Format:
-  JSON-RPC 2.0"ın anlattığı gibi) gerçek bir `tools/call` mesajını gerçek
+  `callTool()`'unu çağırıyor, bu da ("Kavramlardan Wire Format'a: JSON-RPC 2.0"ın anlattığı gibi) gerçek bir `tools/call` mesajını gerçek
   `GeoFactsServer.ts` server'ına gönderiyor, o da gerçekten
   `get_capital_city`'yi ya da `calculate_sum`'ı çalıştırıp gerçek bir sonuç
   döndürüyor.
@@ -230,7 +229,7 @@ production versiyonunun ihtiyaç duyacağı tek değişikliktir -- `runAgentLoop
 `GeoFactsServer.ts`, ve `RunAgentDemo.ts`'deki MCP bağlantı kodu tamamen
 aynı kalırdı, çünkü hiçbiri kararın nasıl verildiğine bağlı değil. Gerçek
 bir uygulama, modele hedefi, tool açıklamalarını ("Tools and Function
-Calling"deki "Defining a Tool: Name, Description, and Schema"nın anlattığı
+Calling"deki "Bir Tool Tanımlamak: Ad, Açıklama ve Şema"nın anlattığı
 gibi name + description + schema), ve o ana kadarki geçmişi gönderir, ve
 sıradaki eylemi bir regex yerine modelin kendi akıl yürütmesinin --
 "Agent Planlama ve Akıl Yürütme Kalıpları"ndaki kalıplardan birini izleyerek
