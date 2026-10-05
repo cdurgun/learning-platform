@@ -57,7 +57,9 @@ DB'ye dayanan bulgular eski veriyi yansıtır.
 - **atif** — tırnak içindeki bölüm/ders atıfları o dildeki bir başlıkla **birebir** eşleşiyor mu.
   "Bölüme atıf gibi ama eşleşmiyor" bulgularının çoğu, başlığın kısaltılarak anılmasıdır
   ("Alanları Okumak" ↔ "Alanları (Fields) Okumak") ve gerçek ihlaldir; bir kısmı ise başlık
-  olmayan sıradan bir alıntıdır. Yayındaki quiz sorularının metni de aynı şekilde taranır.
+  olmayan sıradan bir alıntıdır. Numaralı adım listesindeki eşleşmeyen atıflar HATA değil OLASI
+  sayılır: orada tırnaklı "X bölümü" çoğunlukla bir aracın arayüzündeki bölümdür. Yayındaki quiz
+  sorularının metni de (tek ve çift tırnaklı atıflar) aynı şekilde taranır.
 - **markdown** — tablo (render edilmez), Tip/Warning blockquote'unun çok paragraflı olması ya da
   kod bloğu içermesi (alert'e çevrilmez), kapanmamış kod bloğu.
 - **migration** — sürüm numarası çakışması, hatalı dosya adı, dolar-süslü-parantez.

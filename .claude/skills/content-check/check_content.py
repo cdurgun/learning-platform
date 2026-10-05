@@ -52,6 +52,7 @@ QUIZ_SECTION_REFS = (
 )
 REF_AFTER = re.compile(r"^[\w'’]*\s*\(?(bölüm\w*|başlıklı|section\b)", re.I)
 REF_BEFORE = re.compile(r"(bkz\.?|see(\s+the)?|section|bölümündeki)\s*\(?$", re.I)
+ORDERED_LIST_ITEM = re.compile(r"^\s*\d+[.)]\s")
 NUMBERED_REF = re.compile(r"\b(Bölüm|Section)\s+\d+\b|\b\d+\.\s*bölüm(de|ünde|ü)?\b")
 TABLE_SEPARATOR = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$")
 CALLOUT_START = re.compile(r"^>\s*(💡|⚠️|⚠)\s*(\S+)?")
@@ -322,6 +323,18 @@ def check_headings(docs, db, f, slugs):
                   f"H1 \"{h1[0]}\" ile DB başlığı \"{title}\" farklı (sayfada ikisi alt alta görünür)")
 
 
+def ordered_list_lines(paragraph):
+    """Paragrafın her satırı için: numaralı bir liste maddesinin (ya da girintili devamının) parçası mı."""
+    flags, inside = [], False
+    for line in paragraph.split("\n"):
+        if ORDERED_LIST_ITEM.match(line):
+            inside = True
+        elif not line.startswith((" ", "\t")):
+            inside = False
+        flags.append(inside)
+    return flags
+
+
 def check_references(docs, db, f, slugs):
     # Geçerli hedefler dil başına: o dildeki TÜM içerik dosyalarının başlıkları + DB başlıkları.
     # --slug ile daraltılmış olsa bile hedef kümesi tüm içerikten kurulur.
@@ -374,6 +387,7 @@ def check_references(docs, db, f, slugs):
         for start, para in doc.prose_paragraphs():
             if para.lstrip().startswith("#"):
                 continue
+            step_lines = ordered_list_lines(para)
             for m in QUOTED.finditer(para):
                 text = clean_quote(m.group(1))
                 before = norm(para[max(0, m.start() - 30):m.start()])
@@ -381,8 +395,17 @@ def check_references(docs, db, f, slugs):
                 is_reference = bool(REF_AFTER.match(after) or REF_BEFORE.search(before))
                 result = classify(lang, text, is_reference)
                 if result:
-                    line = start + para[:m.start()].count("\n")
-                    f.add("atif", result[0], doc.path, line, result[1])
+                    offset = para[:m.start()].count("\n")
+                    severity, message = result
+                    # Numaralı adım listeleri bir araçtaki işlem sırasını anlatır; oradaki
+                    # tırnaklı "X bölümü" çoğunlukla dersin değil aracın arayüzündeki bir
+                    # bölümdür ("Environment Variables" bölümüne ekle). Tüm içerikteki ~1250
+                    # bölüm atfının yalnızca 3'ü numaralı adımın içinde. Bulgu atılmaz,
+                    # yalnızca "kesin" sayılmaz.
+                    if severity == "HATA" and step_lines[offset]:
+                        severity = "OLASI"
+                        message += " (numaralı adım listesinde: bir aracın arayüzündeki bölüm olabilir)"
+                    f.add("atif", severity, doc.path, start + offset, message)
             for m in NUMBERED_REF.finditer(para):
                 line = start + para[:m.start()].count("\n")
                 f.add("atif", "OLASI", doc.path, line,
