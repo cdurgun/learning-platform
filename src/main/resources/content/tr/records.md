@@ -337,7 +337,7 @@ reflection ile alanları doğrudan doldurmaz, **canonical constructor'ı çağı
 {{SerializableRecordExample.java}}
 
 > 💡 Tip
-> Bu, pratikte önemli bir güvenlik avantajı sağlar: "Constructors" bölümündeki compact
+> Bu, pratikte önemli bir güvenlik avantajı sağlar: "Constructors (Canonical, Compact, Validation)" bölümündeki compact
 > constructor doğrulaman (örneğin `points < 0` kontrolü), deserialization sırasında da
 > **atlanamaz**. Klasik bir `Serializable` sınıfta, elle yazılmış bir `readObject()`
 > olmadığı sürece, saldırgan kontrollü bir byte akışı doğrulamaları by-pass ederek
@@ -607,7 +607,7 @@ ama altta yatan mekanizma ve esneklik önemli noktalarda ayrışıyor:
 - **Pattern matching:** Yalnızca gerçek record'lar, Java'nın `switch`/`instanceof` örüntü
   eşleştirmesiyle (bkz. **Record Patterns** eki) doğrudan çalışır — Lombok'un ürettiği
   sınıflar bu mekanizmadan yararlanamaz, çünkü derleyici onları "record" olarak tanımaz.
-- **Doğrulama garantisi:** "Constructors" bölümünde gördüğümüz gibi, record'da ek
+- **Doğrulama garantisi:** "Constructors (Canonical, Compact, Validation)" bölümünde gördüğümüz gibi, record'da ek
   constructor'lar mutlaka canonical'a delege etmek zorundadır — tek giriş noktası
   derleyici tarafından zorlanır. Lombok'ta benzer bir garanti için elle constructor
   yazıp `@Value`'i alanlara uygulaman gerekir, bu da disipline dayanır, derleyici

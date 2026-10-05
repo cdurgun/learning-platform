@@ -12,7 +12,7 @@ Reading/writing an element by index can be done with a direct address calculatio
 
 ## History
 
-Arrays have been a core part of Java since version 1.0 (1996) -- one of the oldest structures, alongside `String`. The `Arrays` utility class (with its static `sort()`/`binarySearch()`/`equals()` methods) arrived with the Collections Framework in Java 1.2 (1998). Varargs (`Type... args`, syntax that makes an array parameter convenient to use at the call site) was added in Java 5 (2004). Java 8 (2014) connected arrays directly to the Stream API with `Arrays.stream()` (see the "Stream Fundamentals" lesson).
+Arrays have been a core part of Java since version 1.0 (1996) -- one of the oldest structures, alongside `String`. The `Arrays` utility class (with its static `sort()`/`binarySearch()`/`equals()` methods) arrived with the Collections Framework in Java 1.2 (1998). Varargs (`Type... args`, syntax that makes an array parameter convenient to use at the call site) was added in Java 5 (2004). Java 8 (2014) connected arrays directly to the Stream API with `Arrays.stream()` (see the "Stream API Fundamentals" lesson).
 
 ## Basic Usage: Creation, Access, Default Values
 

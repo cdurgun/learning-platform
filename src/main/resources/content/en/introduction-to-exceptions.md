@@ -55,7 +55,7 @@ A handful of words describe this whole process precisely, and this series uses t
 
 ## Common Mistakes
 
-- **Assuming an exception always means a bug in YOUR code.** Plenty of exceptions represent a genuinely exceptional but valid situation (a file that doesn't exist yet, user input that isn't a number) -- see "Checked vs. Unchecked Exceptions" for how Java's own type system reflects this distinction.
+- **Assuming an exception always means a bug in YOUR code.** Plenty of exceptions represent a genuinely exceptional but valid situation (a file that doesn't exist yet, user input that isn't a number) -- see "Checked vs Unchecked Exceptions" for how Java's own type system reflects this distinction.
 - **Ignoring the stack trace and only reading the exception's message.** The message alone often isn't enough to find WHERE the problem happened -- the stack trace is what pinpoints it.
 - **Thinking an exception "skips" the rest of the current method silently.** It doesn't skip quietly -- every line after the throw point in every propagating method genuinely never executes, which is why `PropagationThroughCallChainExample`'s "Order processed." line never prints.
 - **Confusing an exception being thrown with the program simply printing an error message and continuing.** Without a handler, execution does not continue past the throw point at all -- see the warning in "What Happens When an Exception Goes Uncaught?".

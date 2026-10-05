@@ -355,7 +355,7 @@ Monolit (ya da modüler monolit) lehine ağırlık basan sinyaller:
 - Uygulama henüz küçük/orta ölçekli, gerçek bir ölçeklenme ya da ekip-koordinasyonu
   problemi yaşanmıyor.
 
-Pratikte deneyimli birçok mimar, "en baştan mikroservislerle başlamayı" değil, "Modüler
+Pratikte deneyimli birçok mimar, "en baştan mikroservislerle başlamayı" değil, "'Modüler
 Monolith': Bir Ara Yol" bölümündeki yaklaşımla başlayıp, gerçek bir ihtiyaç (ölçüde,
 ekipte ya da deploy sıklığında somut bir sıkıntı) ortaya çıktığında kademeli olarak
 mikroservislere geçmeyi önerir.

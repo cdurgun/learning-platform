@@ -40,7 +40,7 @@ There are two ways to find the number of lines in a file: `Files.readAllLines(pa
 
 ## Searching a File for a Word
 
-Combining `Files.readAllLines()` with the Stream API (see the "Stream Fundamentals" lesson) reduces searching a file for a keyword to a single line: FILTER the lines, keep only the ones containing the word.
+Combining `Files.readAllLines()` with the Stream API (see the "Stream API Fundamentals" lesson) reduces searching a file for a keyword to a single line: FILTER the lines, keep only the ones containing the word.
 
 {{SearchWordInFileExample.java}}
 
