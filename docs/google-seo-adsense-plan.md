@@ -32,6 +32,11 @@ indexlenme ve organik trafik → AdSense başvurusu → reklam yerleşimi.
 
 ## 2. Mevcut Durum (2026-10-05'te canlı siteye karşı doğrulandı)
 
+> **Güncelleme (2026-10-05 akşamı, deploy sonrası):** aşağıdaki "Sorunlar" listesindeki
+> 1–5 ve 7–9. maddeler ile zorunlu sayfaların eksikliği giderildi ve canlıda doğrulandı.
+> Açık kalanlar: 6 (www'siz host yönlendirmesi), 10 (`<lastmod>`), çerez onayı, `ads.txt`,
+> Search Console ve Analytics. Liste, başlangıç durumunun kaydı olarak aşağıda duruyor.
+
 ### Zaten iyi olanlar
 
 - `robots.txt` var ve `Sitemap:` satırı doğru.
@@ -90,7 +95,7 @@ Bunlar küçük, birbirinden bağımsız işler. İlk ikisi yapılmadan Search C
 sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
 
 - [x] **`<title>` hatasını düzelt** (`templates/topic.html:6`) — 2026-10-05'te kodda
-  düzeltildi, **deploy bekliyor**. Diğer şablonların başlıkları kontrol edildi,
+  düzeltildi ve canlıda doğrulandı. Diğer şablonların başlıkları kontrol edildi,
   aynı hata yok.
 - [x] **Proxy başlıklarını tanıt** — `application-prod.yml`'e
   `server.forward-headers-strategy: framework` eklendi. Yerelde
@@ -154,15 +159,15 @@ ve `SecurityConfig` hepsi ona soruyor. (a) seçilirse değişiklik dar kalır:
 policy'de topic sayfası erişimi açılır, submit/practice uç noktaları korunmaya
 devam eder, sitemap otomatik olarak tüm kursları listeler.
 
-**Karar (2026-10-05): (a) seçildi ve kodda uygulandı, deploy bekliyor.** Ders
+**Karar (2026-10-05): (a) seçildi, uygulandı ve canlıda.** Ders
 sayfaları ve PDF'ler tüm kurslarda herkese açık; Java dışı kursların quiz'leri,
 Quiz Area'sı ve Practice'i giriş istemeye devam ediyor. Anonim ziyaretçi bu
 derslerin sonunda sorular yerine "quiz için giriş yap" çağrısı görüyor. Sitemap
 artık yayındaki tüm kursları listeliyor.
 
-- [ ] Deploy sonrası doğrula: `/en/topics/what-is-docker` anonim istekte 200
-  dönmeli, `/sitemap.xml`'deki URL sayısı 92'den ~330'a çıkmalı, bir topic
-  sayfasının `<title>`'ı gerçek başlığı göstermeli.
+- [x] Deploy sonrası doğrulandı (2026-10-05): `/en/topics/what-is-docker` anonim
+  istekte 200 dönüyor, `/sitemap.xml`'deki URL sayısı 92'den 343'e çıktı, ders
+  sayfalarının `<title>`'ı gerçek başlığı gösteriyor.
 
 ## 6. Aşama 3 — AdSense'e Hazırlık
 
@@ -294,9 +299,9 @@ verilmesi gerekir.
 
 ## 10. Özet Sıra
 
-1. Aşama 0 — teknik düzeltmeler (www yönlendirmesi dışında yapıldı).
-2. Aşama 2 — login duvarı kararı (yapıldı); deploy et ve canlıda doğrula.
-3. Aşama 1 — Search Console doğrulaması, sitemap gönderimi, GA4.
+1. Aşama 0 — teknik düzeltmeler (yapıldı ve canlıda; www yönlendirmesi açık).
+2. Aşama 2 — login duvarı kararı (yapıldı ve canlıda).
+3. Aşama 1 — Search Console doğrulaması, sitemap gönderimi, GA4. **← sıradaki adım**
 4. Aşama 3 — yasal sayfalar ve footer (yapıldı; Hakkında metni eksik), çerez onayı.
 5. Aşama 4 — başlık/açıklama, iç linkleme, kurs sayfaları; trafiği izle.
 6. Aşama 5 — AdSense başvurusu, onay sonrası reklam yerleşimi ve `ads.txt`.
@@ -319,3 +324,9 @@ verilmesi gerekir.
 - **2026-10-05** — SEO başlık/açıklama denetimi: eksik alan yok. Başlıklar kısaltıldı
   (şablon eki + 64 başlık, `seo/V1065`); açıklamaların kısaltılması arama verisi
   gelene kadar ertelendi.
+- **2026-10-05** — İlk deploy canlıya çıktı (`9003b9b`) ve canlı sitede doğrulandı: ders
+  başlıkları, Java dışı derslerin girişsiz açılması, sitemap (343 URL), `https` ile
+  dönen giriş yönlendirmesi, sıkıştırma (anasayfa 287 KB → 32 KB), hash'li ve bir yıl
+  önbelleklenen statik dosyalar, tek `<h1>`, dört yeni sayfa, HTML 404 sayfası, yeni
+  anasayfa description'ı. Deployment 24 dakika gecikti: Railway hâlâ eski branch adını
+  izliyordu, `main` olarak düzeltildi. Sıradaki adım Search Console kaydı.
