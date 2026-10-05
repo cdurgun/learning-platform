@@ -26,9 +26,9 @@ import java.io.IOException;
 /**
  * Session-based, form-login kimlik doğrulaması (bkz. auth planı bölüm "Authentication
  * architecture" — JWT/OAuth2 BİLİNÇLİ OLARAK kullanılmıyor, bu sunucu tarafında render
- * edilen bir Thymeleaf uygulaması). Anasayfa ve Java kursu tamamen anonim erişime
- * açık; Java dışındaki kursların içeriği (konu sayfaları, PDF, quiz'ler, Practice)
- * giriş gerektirir -- kural {@link CourseAccessPolicy}'de.
+ * edilen bir Thymeleaf uygulaması). Anasayfa ve TÜM kursların ders içeriği (konu
+ * sayfaları, PDF) anonim erişime açık; Java dışındaki kursların quiz'leri ve
+ * Practice'i giriş gerektirir -- kural {@link CourseAccessPolicy}'de.
  *
  * <p>Login/register/logout URL'leri, projenin geri kalanıyla aynı desende
  * {@code {lang:en|tr}} path değişkeni taşır (bkz. CLAUDE.md "Mimari" — dil her zaman
@@ -61,19 +61,20 @@ public class SecurityConfig {
                         // kullanan tek kural. .anyRequest().permitAll()'dan ÖNCE gelmeli --
                         // Spring Security zincirinde ilk eşleşen kural kazanır.
                         .requestMatchers("/{lang:en|tr}/admin/**").hasRole("ADMIN")
-                        // Course seviyesi erişim: anonim kullanıcı yalnızca Java kursuna,
-                        // girişli kullanıcı tüm kurslara. Kural CourseAccessPolicy'de -- burada
-                        // yalnızca course'u URL'den belirlenebilen rotalara bağlanıyor. topics
-                        // kalıbı sayfa + PDF + sabit quiz submit'i kapsar (eski /topics/{slug}
-                        // 301'i buraya iner); quiz kalıbı Quiz Area oynatma + submit'i kapsar,
-                        // /{lang}/quiz kataloğu eşleşmez (yalnızca isim listeler). Course'u
-                        // istek gövdesinden/havuzdan belirlenen Practice ve Quiz Area submit'in
-                        // soru-id kontrolü PracticeService'te, AYNI policy ile.
-                        .requestMatchers("/{lang:en|tr}/topics/{slug}", "/{lang:en|tr}/topics/{slug}/**")
-                        .access(courseAccessPolicy.topicAccess())
+                        // Course seviyesi quiz erişimi: anonim kullanıcı yalnızca Java kursunun,
+                        // girişli kullanıcı tüm kursların quiz'lerine. Kural CourseAccessPolicy'de
+                        // -- burada yalnızca course'u URL'den belirlenebilen rotalara bağlanıyor.
+                        // Ders içeriğinin kendisi (topic sayfası + PDF) BİLİNÇLİ OLARAK bu kalıpların
+                        // dışında, tüm kurslarda anonim okumaya açık (arama motorları dahil). topics
+                        // kalıbı yalnızca sabit quiz submit'i kapsar; quiz kalıbı Quiz Area oynatma +
+                        // submit'i kapsar, /{lang}/quiz kataloğu eşleşmez (yalnızca isim listeler).
+                        // Course'u istek gövdesinden/havuzdan belirlenen Practice ve Quiz Area
+                        // submit'in soru-id kontrolü PracticeService'te, AYNI policy ile.
+                        .requestMatchers("/{lang:en|tr}/topics/{slug}/quiz/**")
+                        .access(courseAccessPolicy.topicQuizAccess())
                         .requestMatchers("/{lang:en|tr}/quiz/{definitionSlug}", "/{lang:en|tr}/quiz/{definitionSlug}/**")
                         .access(courseAccessPolicy.quizDefinitionAccess())
-                        // Geri kalan her şey (anasayfa, Java içeriği, Practice API -- course
+                        // Geri kalan her şey (anasayfa, ders içeriği, Practice API -- course
                         // kontrolü serviste --, AI ingestion -- kendi X-Api-Key interceptor'ıyla
                         // zaten korunuyor) anonim erişime açık.
                         .anyRequest().permitAll())

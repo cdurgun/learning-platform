@@ -254,9 +254,9 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `docs/known-constraints.md`) — kod defektiyle İLGİSİZ, kullanıcının kendi
   ortamı asıl doğrulama kaynağı.
 - **Kullanıcı kimlik doğrulaması Faz 138'de eklendi, opsiyonel bir katman —
-  anasayfa ve Java kursu anonim erişime tamamen açık kalır. GÜNCELLEME (Faz
-  160): Java DIŞINDAKİ kursların içeriği artık giriş gerektiriyor** (aşağıdaki
-  Faz 160 maddesine bakın). Spring Security, session-based form
+  anasayfa ve tüm kursların ders içeriği anonim erişime tamamen açık kalır.
+  GÜNCELLEME (Faz 160/161): Java DIŞINDAKİ kursların quiz'leri ve Practice'i
+  giriş gerektiriyor** (aşağıdaki Faz 160 maddesine bakın). Spring Security, session-based form
   login — JWT/OAuth2 bilinçli olarak kullanılmıyor (sunucu tarafında render
   edilen bir Thymeleaf uygulaması için gereksiz karmaşıklık olurdu). Kullanıcı
   hesabı `User` entity'si (`app_user` tablosu — `user` Postgres'te ayrılmış
@@ -284,21 +284,28 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `csrf().ignoringRequestMatchers(...)` ile bilinçli olarak muaf tutuldu — yeni
   bir anonim/oturumsuz POST API eklenirse aynı muafiyet listesine eklenmeli.
 
-- **Course seviyesi erişim kuralı (Faz 160): anonim kullanıcı yalnızca `java`
-  kursuna, girişli kullanıcı tüm kurslara erişir.** Kuralın TEK kaynağı
-  `config/CourseAccessPolicy` — "java herkese açık" bilgisi controller/template/
-  servis/sitemap'te TEKRAR YAZILMAZ, hepsi policy'ye sorar. Zorlama iki katmanda:
-  course'u URL'den belirlenebilen rotalar (`/{lang}/topics/{slug}[/**]` — sayfa,
-  PDF, sabit quiz submit; `/{lang}/quiz/{definitionSlug}[/**]` — Quiz Area)
-  `SecurityConfig`'te policy'nin `AuthorizationManager`'larıyla; course'u istek
-  gövdesinden/havuzdan belirlenen yerler (`PracticeService.draw`/`submit` —
-  Practice ve Quiz Area submit'i) serviste, soru içeriği yüklenmeden/puanlamadan
-  ÖNCE. Anonim + korunan sayfa GET → login'e 302; anonim + korunan JSON uç noktası
-  (3 submit + `/{lang}/practice`) → gövdesiz, yönlendirmesiz 401. Menüde kilitli
-  kurslar GİZLENMEZ, `CourseNav`/`QuizNav.accessible()` ile devre dışı çizilir;
-  sitemap yalnızca herkese açık kursun topic'lerini listeler. Course'u yeni bir
-  yoldan açığa çıkaran bir rota/özellik eklenirse AYNI policy'ye bağlanmalı
-  (ayrıntı: `docs/phase-log.md` "Faz 160").
+- **Course seviyesi erişim kuralı (Faz 160, Faz 161'de DARALTILDI): ders içeriği
+  (topic sayfası + PDF) TÜM kurslarda anonim okumaya açıktır; giriş yalnızca Java
+  DIŞINDAKİ kursların etkileşimli özellikleri (sabit quiz, Quiz Area, Practice)
+  için gerekir.** Faz 161'deki daraltma bilinçli bir SEO/AdSense kararı (bkz.
+  `docs/google-seo-adsense-plan.md`) -- ders sayfaları yanlışlıkla yeniden login
+  arkasına ALINMAMALI, aksi hâlde arama motorları içeriğin çoğunu göremez. Kuralın
+  TEK kaynağı `config/CourseAccessPolicy` -- "java herkese açık" bilgisi
+  controller/template/serviste TEKRAR YAZILMAZ, hepsi policy'ye sorar. Zorlama iki
+  katmanda: course'u URL'den belirlenebilen rotalar
+  (`/{lang}/topics/{slug}/quiz/**` -- sabit quiz submit;
+  `/{lang}/quiz/{definitionSlug}[/**]` -- Quiz Area) `SecurityConfig`'te policy'nin
+  `AuthorizationManager`'larıyla; course'u istek gövdesinden/havuzdan belirlenen
+  yerler (`PracticeService.draw`/`submit`) serviste, soru içeriği
+  yüklenmeden/puanlamadan ÖNCE. Anonim + korunan sayfa GET (Quiz Area) → login'e
+  302; anonim + korunan JSON uç noktası (3 submit + `/{lang}/practice`) →
+  gövdesiz, yönlendirmesiz 401. Anonim bir ziyaretçi Java dışı bir topic
+  sayfasında quiz sorularını GÖRMEZ (`TopicController` soruları hiç yüklemez,
+  `quizLocked` ile bir giriş çağrısı gösterilir). Menüde kurs/konu linkleri
+  herkese açık; kilitli Quiz Area grupları GİZLENMEZ, `QuizNav.accessible()` ile
+  devre dışı çizilir. Sitemap yayındaki TÜM kursların topic'lerini listeler.
+  Quiz/soru içeriğini yeni bir yoldan açığa çıkaran bir rota/özellik eklenirse
+  AYNI policy'ye bağlanmalı (ayrıntı: `docs/phase-log.md` "Faz 160", "Faz 161").
 
 ## Token ve Bağlam Verimliliği (Faz 75'ten itibaren, kullanıcı+ChatGPT kararı)
 

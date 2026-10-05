@@ -1,6 +1,5 @@
 package com.cdurgun.learning.service;
 
-import com.cdurgun.learning.config.CourseAccessPolicy;
 import com.cdurgun.learning.domain.Category;
 import com.cdurgun.learning.domain.Course;
 import com.cdurgun.learning.domain.Language;
@@ -35,14 +34,11 @@ public class NavigationService {
     private final CategoryRepository categoryRepository;
     private final TopicRepository topicRepository;
     private final TopicTranslationRepository topicTranslationRepository;
-    private final CourseAccessPolicy courseAccessPolicy;
 
     public NavigationService(CourseRepository courseRepository,
                               CategoryRepository categoryRepository,
                               TopicRepository topicRepository,
-                              TopicTranslationRepository topicTranslationRepository,
-                              CourseAccessPolicy courseAccessPolicy) {
-        this.courseAccessPolicy = courseAccessPolicy;
+                              TopicTranslationRepository topicTranslationRepository) {
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
         this.topicRepository = topicRepository;
@@ -76,8 +72,7 @@ public class NavigationService {
             }
 
             if (!categoryNavs.isEmpty()) {
-                nav.add(new CourseNav(course.getName(), course.getSlug(),
-                        courseAccessPolicy.currentUserCanAccess(course.getSlug()), categoryNavs));
+                nav.add(new CourseNav(course.getName(), course.getSlug(), categoryNavs));
             }
         }
 

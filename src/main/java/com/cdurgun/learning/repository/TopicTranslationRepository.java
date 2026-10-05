@@ -14,9 +14,7 @@ public interface TopicTranslationRepository extends JpaRepository<TopicTranslati
 
     /**
      * sitemap.xml için: yayında olan HER çeviriyi, ilişkili {@code Topic}'iyle birlikte,
-     * join fetch ile tek sorguda getirir — N+1'e düşmeden. {@code Topic.category.course}
-     * de fetch ediliyor: sitemap yalnızca anonim erişime açık kursların konularını
-     * listeliyor (bkz. {@code CourseAccessPolicy#isPublicCourse}, {@code SitemapController}). Sıra önemli değil; controller
+     * join fetch ile tek sorguda getirir — N+1'e düşmeden. Sıra önemli değil; controller
      * kendi içinde slug'a göre gruplayıp dil kümelerini (hreflang cross-reference için)
      * çıkarıyor.
      */

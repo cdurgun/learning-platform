@@ -15,12 +15,14 @@ import java.util.Collection;
 import java.util.Optional;
 
 /**
- * Course seviyesinde erişim kuralının TEK doğruluk kaynağı: anonim bir kullanıcı
- * yalnızca {@link #PUBLIC_COURSE_SLUG} kursuna (Java) erişebilir, girişli bir
- * kullanıcı tüm kurslara. "java herkese açık" bilgisi YALNIZCA burada yaşar --
- * SecurityConfig (URL kuralları), PracticeService (havuz kapsamı + submit kontrolü),
- * NavigationService/QuizNavigationService (menüde kilitli/açık durumu) ve
- * SitemapController bu sınıfa sorar, kuralı kendileri tekrar etmez.
+ * Course seviyesinde erişim kuralının TEK doğruluk kaynağı. Ders içeriği (konu
+ * sayfası, PDF) TÜM kurslarda herkese açıktır ve bu sınıfa hiç sorulmaz; kural
+ * yalnızca etkileşimli özellikleri (sabit quiz, Quiz Area, Practice) kapsar: anonim
+ * bir kullanıcı yalnızca {@link #PUBLIC_COURSE_SLUG} kursununkilere (Java) erişebilir,
+ * girişli bir kullanıcı tüm kurslarınkilere. "java herkese açık" bilgisi YALNIZCA
+ * burada yaşar -- SecurityConfig (URL kuralları), TopicController (konu sayfasındaki
+ * quiz), PracticeService (havuz kapsamı + submit kontrolü) ve QuizNavigationService
+ * (menüde kilitli/açık durumu) bu sınıfa sorar, kuralı kendileri tekrar etmez.
  *
  * <p>Course, veritabanı id'siyle değil slug'ıyla tanınır (V2'den beri sabit,
  * unique). Bilinmeyen bir topic/quiz slug'ı burada REDDEDİLMEZ -- controller'ın
@@ -44,8 +46,7 @@ public class CourseAccessPolicy {
         return PUBLIC_COURSE_SLUG;
     }
 
-    /** Anonim bir ziyaretçinin (ör. arama motoru botu) görebildiği kurs mu -- sitemap bunu kullanır. */
-    public boolean isPublicCourse(String courseSlug) {
+    private boolean isPublicCourse(String courseSlug) {
         return PUBLIC_COURSE_SLUG.equals(courseSlug);
     }
 
@@ -77,8 +78,8 @@ public class CourseAccessPolicy {
         }
     }
 
-    /** {@code /{lang}/topics/{slug}[/**]} -- topic sayfası, PDF, sabit quiz submit. */
-    public AuthorizationManager<RequestAuthorizationContext> topicAccess() {
+    /** {@code /{lang}/topics/{slug}/quiz/**} -- sabit quiz submit. */
+    public AuthorizationManager<RequestAuthorizationContext> topicQuizAccess() {
         return (authentication, context) -> decide(
                 topicRepository.findBySlugWithCategoryAndCourse(context.getVariables().get("slug"))
                         .map(topic -> topic.getCategory().getCourse().getSlug()),

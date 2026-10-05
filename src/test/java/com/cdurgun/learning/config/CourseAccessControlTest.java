@@ -41,11 +41,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Course seviyesi erişim kuralı ({@link CourseAccessPolicy}) -- anonim: yalnızca Java,
- * girişli: tüm kurslar. Gerçek güvenlik zinciri + gerçek Flyway verisiyle, her giriş
- * noktası için (topic sayfası/PDF/eski URL, sabit quiz submit, Quiz Area, Practice,
- * navigasyon, sitemap). Korunan sayfa GET'leri login'e 302, korunan JSON uç noktaları
- * yönlendirmesiz, gövdesiz 401 bekler -- gövdede doğru cevap/açıklama/skor OLMAMALI.
+ * Course seviyesi erişim kuralı ({@link CourseAccessPolicy}) -- ders içeriği (topic
+ * sayfası/PDF) tüm kurslarda herkese açık; quiz'ler ve Practice için anonim: yalnızca
+ * Java, girişli: tüm kurslar. Gerçek güvenlik zinciri + gerçek Flyway verisiyle, her
+ * giriş noktası için (topic sayfası/PDF/eski URL, sabit quiz submit, Quiz Area,
+ * Practice, navigasyon, sitemap). Korunan sayfa GET'leri login'e 302, korunan JSON uç
+ * noktaları yönlendirmesiz, gövdesiz 401 bekler -- gövdede doğru cevap/açıklama/skor
+ * OLMAMALI.
  *
  * <p>Fixture'lar gerçek seed verisinden: {@code enum} (Java) ve
  * {@code dependency-injection} (Spring Boot) topic'leri, ikisinin de {@code default}
@@ -149,19 +151,29 @@ class CourseAccessControlTest {
     }
 
     @Test
-    void anonymousIsRedirectedToLoginForNonJavaTopicPageAndPdf() throws Exception {
-        assertRedirectsToLogin(mockMvc.perform(get("/en/topics/" + SPRING_TOPIC)));
-        assertRedirectsToLogin(mockMvc.perform(get("/tr/topics/" + SPRING_TOPIC)));
-        assertRedirectsToLogin(mockMvc.perform(get("/en/topics/" + SPRING_TOPIC + "/pdf")));
+    void anonymousCanReadNonJavaTopicPageAndPdf() throws Exception {
+        mockMvc.perform(get("/en/topics/" + SPRING_TOPIC)).andExpect(status().isOk());
+        mockMvc.perform(get("/tr/topics/" + SPRING_TOPIC)).andExpect(status().isOk());
+        mockMvc.perform(get("/en/topics/" + SPRING_TOPIC + "/pdf")).andExpect(status().isOk());
     }
 
     @Test
-    void legacyTopicUrlCannotBypassRestriction() throws Exception {
-        String location = mockMvc.perform(get("/topics/" + SPRING_TOPIC).param("lang", "en"))
-                .andExpect(status().isMovedPermanently())
-                .andReturn().getResponse().getHeader("Location");
-        assertThat(location).isEqualTo("/en/topics/" + SPRING_TOPIC);
-        assertRedirectsToLogin(mockMvc.perform(get(location)));
+    void anonymousNonJavaTopicPageShowsSignInPromptInsteadOfQuiz() throws Exception {
+        mockMvc.perform(get("/en/topics/" + SPRING_TOPIC))
+                .andExpect(content().string(containsString("Sign in to take the quiz for this lesson.")))
+                .andExpect(content().string(not(containsString("id=\"quiz-section\""))));
+        mockMvc.perform(get("/en/topics/" + JAVA_TOPIC))
+                .andExpect(content().string(containsString("id=\"quiz-section\"")));
+        mockMvc.perform(get("/en/topics/" + SPRING_TOPIC).session(loggedInSession()))
+                .andExpect(content().string(containsString("id=\"quiz-section\"")))
+                .andExpect(content().string(not(containsString("Sign in to take the quiz for this lesson."))));
+    }
+
+    @Test
+    void topicPageTitleIsRenderedFromTranslation() throws Exception {
+        mockMvc.perform(get("/en/topics/" + JAVA_TOPIC))
+                .andExpect(content().string(not(containsString("<title>translation.seoTitle"))))
+                .andExpect(content().string(containsString(" | LearnForgeX</title>")));
     }
 
     @Test
@@ -275,19 +287,17 @@ class CourseAccessControlTest {
     // ---- navigasyon ----
 
     @Test
-    void loggedOutNavigationShowsJavaEnabledAndOtherCoursesVisibleButDisabled() throws Exception {
+    void loggedOutNavigationLinksAllCourseTopicsButKeepsNonJavaQuizzesDisabled() throws Exception {
         mockMvc.perform(get("/en"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("href=\"/en/topics/" + JAVA_TOPIC + "\"")))
-                .andExpect(content().string(containsString("Spring Boot")))
-                .andExpect(content().string(not(containsString("href=\"/en/topics/" + SPRING_TOPIC + "\""))))
-                .andExpect(content().string(containsString("aria-disabled=\"true\"")))
-                .andExpect(content().string(containsString("Sign in to access")));
+                .andExpect(content().string(containsString("href=\"/en/topics/" + SPRING_TOPIC + "\"")));
 
         mockMvc.perform(get("/en/quiz"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("href=\"/en/quiz/" + JAVA_QUIZ_DEFINITION + "\"")))
-                .andExpect(content().string(not(containsString("href=\"/en/quiz/" + SPRING_QUIZ_DEFINITION + "\""))));
+                .andExpect(content().string(not(containsString("href=\"/en/quiz/" + SPRING_QUIZ_DEFINITION + "\""))))
+                .andExpect(content().string(containsString("Sign in to access")));
     }
 
     @Test
@@ -296,21 +306,21 @@ class CourseAccessControlTest {
         mockMvc.perform(get("/en").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("href=\"/en/topics/" + JAVA_TOPIC + "\"")))
-                .andExpect(content().string(containsString("href=\"/en/topics/" + SPRING_TOPIC + "\"")))
-                .andExpect(content().string(not(containsString("Sign in to access"))));
+                .andExpect(content().string(containsString("href=\"/en/topics/" + SPRING_TOPIC + "\"")));
 
         mockMvc.perform(get("/en/quiz").session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("href=\"/en/quiz/" + SPRING_QUIZ_DEFINITION + "\"")));
+                .andExpect(content().string(containsString("href=\"/en/quiz/" + SPRING_QUIZ_DEFINITION + "\"")))
+                .andExpect(content().string(not(containsString("Sign in to access"))));
     }
 
     // ---- sitemap ----
 
     @Test
-    void sitemapListsOnlyPublicJavaTopics() throws Exception {
+    void sitemapListsTopicsOfAllCourses() throws Exception {
         mockMvc.perform(get("/sitemap.xml"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("/en/topics/" + JAVA_TOPIC + "</loc>")))
-                .andExpect(content().string(not(containsString("/topics/" + SPRING_TOPIC))));
+                .andExpect(content().string(containsString("/en/topics/" + SPRING_TOPIC + "</loc>")));
     }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="(${contentAvailable} ? (translation.seoTitle ?: translation.title) : topic.slug) + ' | LearnForgeX'">Konu</title>
+    <title th:text="${contentAvailable ? (translation.seoTitle ?: translation.title) : topic.slug} + ' | LearnForgeX'">Konu</title>
     <meta th:if="${contentAvailable and translation.seoDescription != null}"
           name="description" th:content="${translation.seoDescription}"/>
 
@@ -173,6 +173,14 @@
                 <th:block th:if="${quiz != null and quizQuestions != null and !#lists.isEmpty(quizQuestions)}">
                     <div th:replace="~{fragments/quiz :: quizSection(${quizQuestions}, @{/{lang}/topics/{topicSlug}/quiz/{quizSlug}/submit(lang=${language.code}, topicSlug=${topic.slug}, quizSlug=${quiz.slug()})})}"></div>
                 </th:block>
+                <!-- Ders içeriği herkese açık, ama Java dışı kursların quiz'i giriş ister
+                     (CourseAccessPolicy) -- anonim ziyaretçiye sorular yerine giriş çağrısı. -->
+                <section th:if="${quizLocked}" class="mt-5 pt-4 border-top">
+                    <h2 class="h4" th:text="#{quiz.title}">Test Your Knowledge</h2>
+                    <p class="text-muted" th:text="#{quiz.loginRequired}">Sign in to take this quiz.</p>
+                    <a class="btn btn-primary btn-sm" th:href="@{/{lang}/login(lang=${language.code})}"
+                       th:text="#{auth.signIn}">Sign in</a>
+                </section>
 
                 <nav class="d-flex justify-content-between mt-5 pt-3 border-top" aria-label="Konu navigasyonu">
                     <a th:if="${previousTopic != null}"

@@ -1,5 +1,6 @@
 package com.cdurgun.learning.controller;
 
+import com.cdurgun.learning.config.CourseAccessPolicy;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Topic;
 import com.cdurgun.learning.domain.TopicTranslation;
@@ -45,6 +46,7 @@ public class TopicController {
     private final MessageSource messageSource;
     private final PdfExportService pdfExportService;
     private final QuizService quizService;
+    private final CourseAccessPolicy courseAccessPolicy;
 
     public TopicController(TopicRepository topicRepository,
                             TopicTranslationRepository topicTranslationRepository,
@@ -53,7 +55,8 @@ public class TopicController {
                             NavigationService navigationService,
                             MessageSource messageSource,
                             PdfExportService pdfExportService,
-                            QuizService quizService) {
+                            QuizService quizService,
+                            CourseAccessPolicy courseAccessPolicy) {
         this.topicRepository = topicRepository;
         this.topicTranslationRepository = topicTranslationRepository;
         this.contentResolver = contentResolver;
@@ -62,6 +65,7 @@ public class TopicController {
         this.messageSource = messageSource;
         this.pdfExportService = pdfExportService;
         this.quizService = quizService;
+        this.courseAccessPolicy = courseAccessPolicy;
     }
 
     /**
@@ -140,8 +144,13 @@ public class TopicController {
         model.addAttribute("toc", rendered.toc());
 
         Optional<QuizSummary> quiz = quizService.findQuiz(topic.getId(), language);
-        model.addAttribute("quiz", quiz.orElse(null));
-        model.addAttribute("quizQuestions", quiz.map(q -> quizService.loadQuiz(q.id())).orElse(List.of()));
+        // Ders içeriği herkese açık, quiz ise CourseAccessPolicy'ye tabi: erişimi olmayan
+        // ziyaretçi için sorular hiç yüklenmez, template bir giriş çağrısı gösterir.
+        boolean quizAccessible = courseAccessPolicy.currentUserCanAccess(topic.getCategory().getCourse().getSlug());
+        model.addAttribute("quiz", quizAccessible ? quiz.orElse(null) : null);
+        model.addAttribute("quizQuestions",
+                quizAccessible ? quiz.map(q -> quizService.loadQuiz(q.id())).orElse(List.of()) : List.of());
+        model.addAttribute("quizLocked", quiz.isPresent() && !quizAccessible);
 
         addPreviousAndNext(model, topic, slug, language);
 
