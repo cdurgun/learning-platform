@@ -43,7 +43,13 @@ ANY_DOUBLE_BRACE = re.compile(r"\{\{[^{}\n]*}}")
 FENCE = re.compile(r"^\s*(```|~~~)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 QUOTED = re.compile(r'"([^"]{2,160})"')
-SINGLE_QUOTED_SECTION = re.compile(r"'([^'\n]{3,120})'\s*(bölüm\w*|section)", re.I)
+# Quiz soru metinlerinde bölüm adı hem tek hem çift tırnakla yazılıyor; arkasından
+# "bölümü/bölümüne" ya da "section" gelmesi atıf olduğunu gösterir. Tek tırnaklı biçimde
+# ad kendi içinde kesme işareti taşıyabildiği için ("Agent'lar") çift tırnak ayrı desendir.
+QUIZ_SECTION_REFS = (
+    re.compile(r"'([^'\n]{3,120})'\s*(?:bölüm\w*|section\b)", re.I),
+    re.compile(r'"([^"\n]{3,120})"\s*(?:bölüm\w*|section\b)', re.I),
+)
 REF_AFTER = re.compile(r"^[\w'’]*\s*\(?(bölüm\w*|başlıklı|section\b)", re.I)
 REF_BEFORE = re.compile(r"(bkz\.?|see(\s+the)?|section|bölümündeki)\s*\(?$", re.I)
 NUMBERED_REF = re.compile(r"\b(Bölüm|Section)\s+\d+\b|\b\d+\.\s*bölüm(de|ünde|ü)?\b")
@@ -389,11 +395,12 @@ def check_references(docs, db, f, slugs):
         if (slugs and slug not in slugs) or lang not in targets:
             continue
         for field, body in (("soru", question), ("açıklama", explanation)):
-            for m in SINGLE_QUOTED_SECTION.finditer(body):
-                result = classify(lang, norm(m.group(1)), True)
-                if result:
-                    f.add("atif", result[0], f"DB question id={qid} ({slug}, {lang})", None,
-                          f"{field} metni: {result[1]}")
+            for pattern in QUIZ_SECTION_REFS:
+                for m in pattern.finditer(body):
+                    result = classify(lang, norm(m.group(1)), True)
+                    if result:
+                        f.add("atif", result[0], f"DB question id={qid} ({slug}, {lang})", None,
+                              f"{field} metni: {result[1]}")
 
 
 def check_markdown(docs, db, f, slugs):
