@@ -64,6 +64,10 @@ DB'ye dayanan bulgular eski veriyi yansıtır.
   kod bloğu içermesi (alert'e çevrilmez), kapanmamış kod bloğu.
 - **migration** — sürüm numarası çakışması, hatalı dosya adı, dolar-süslü-parantez.
   `application.yml`'de `placeholder-replacement: false` olduğu sürece sonuncusu yalnızca BİLGİ'dir.
+- **soru** — yayındaki quiz sorularında şık harfine (A/B/C/D) atıf. Açıklamanın "A ve B..." diye
+  başlaması HATA'dır: arayüzde harf yoktur ve harfler gerçek doğru şıkların konumunu bile
+  göstermeyebilir. Metnin içinde geçen tek harfler OLASI'dır; çoğu zaman soruda adı geçen bir
+  şeydir ("Model A", tip parametresi `A`, `A LEFT JOIN B`).
 - **seo** — boş ya da tekrar eden `seo_title`/`seo_description` (HATA); 60 / 160 karakteri aşan
   başlık / açıklama ve "bu proje" ifadesi (OLASI — bunlar arama sonucu için öneridir, eski
   içerik bu sınırlarla yazılmadı).

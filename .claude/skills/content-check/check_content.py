@@ -5,7 +5,7 @@ Kullanım:
     python3 .claude/skills/content-check/check_content.py [seçenekler]
 
     --slug SLUG      yalnızca bu konu(lar) (virgülle ayrılabilir)
-    --only KONTROL   yalnızca bu kontrol(ler): dosya,embed,baslik,atif,markdown,migration,seo
+    --only KONTROL   yalnızca bu kontrol(ler): dosya,embed,baslik,atif,markdown,migration,seo,soru
     --all            her kontrolde tüm bulguları yaz (varsayılan: kontrol başına ilk 15)
     --report DOSYA   tam raporu (tüm bulgular) bu markdown dosyasına da yaz
     --no-db          veritabanı gerektiren kontrolleri atla
@@ -68,6 +68,15 @@ STRONG_ENGLISH_WORDS = {
 }
 WEAK_ENGLISH_WORDS = {"a", "an", "or", "to", "with", "without", "in", "on", "for", "it", "its", "by", "at", "as", "do"}
 ALLOWED_ENGLISH_HEADINGS = {"Best Practices"}
+# Quiz arayüzünde şıkların yanında harf yoktur ve sıra sonradan değişebilir; açıklamanın
+# "A ve B doğrudur" diye başlaması okuyucuya bir şey söylemez, harfler yanlış şıkları bile
+# gösterebilir. Harfler büyük/küçük duyarlı aranır, satır içi kod önce çıkarılır.
+LEADING_OPTION_LETTERS = re.compile(r"^\s*[A-D]\s*(?:,|ve|and)\s*[A-D]\b")
+OPTION_LETTER = re.compile(
+    r"\b[A-D]\s*(?:,|(?i:ve|and|ile|ya da|veya|or))\s*[A-D]\b"
+    r"|\b(?i:şık|şıkkı|şıklar|seçenek|seçeneği|option|options|choice|answer)\s+[A-D]\b"
+    r"|\b[A-D]\s+(?i:şıkkı|şıkları|seçeneği|option|choice)\b"
+    r"|\([A-D]\)|(?<![\w`])[A-D]\)")
 SEO_TITLE_MAX = 60
 SEO_DESCRIPTION_MAX = 160
 SEVERITIES = ("HATA", "OLASI", "BİLGİ")
@@ -79,6 +88,7 @@ CHECKS = {
     "markdown": "Markdown render sorunları",
     "migration": "Migration dosyaları",
     "seo": "SEO başlık ve açıklamaları",
+    "soru": "Yayındaki quiz sorularının metni",
 }
 
 
@@ -544,8 +554,30 @@ def check_seo(docs, db, f, slugs):
                   f"aynı seo_title {len(slug_list)} konuda: \"{title}\" ({', '.join(slug_list)})")
 
 
+def check_questions(docs, db, f, slugs):
+    if not db.available:
+        return
+    rows = db.query("select q.id, t.slug, q.language, q.question, q.explanation from question q "
+                    "join topic t on t.id = q.topic_id where q.status = 'PUBLISHED'")
+    for qid, slug, lang, question, explanation in rows:
+        if slugs and slug not in slugs:
+            continue
+        where = f"DB question id={qid} ({slug}, {lang})"
+        if LEADING_OPTION_LETTERS.match(explanation):
+            f.add("soru", "HATA", where, None,
+                  f"açıklama şık harfleriyle başlıyor: \"{norm(explanation)[:60]}...\" -- arayüzde harf yok")
+            continue
+        for field, text in (("soru", question), ("açıklama", explanation)):
+            hit = OPTION_LETTER.search(re.sub(r"`[^`]*`", " ", text))
+            if hit:
+                f.add("soru", "OLASI", where, None,
+                      f"{field} metninde şık harfine atıf olabilir: \"{hit.group(0)}\" "
+                      f"(soruda geçen bir ad da olabilir: Model A, tip parametresi A...)")
+                break
+
+
 RUNNERS = {"dosya": check_files, "embed": check_embeds, "baslik": check_headings, "atif": check_references,
-           "markdown": check_markdown, "migration": check_migrations, "seo": check_seo}
+           "markdown": check_markdown, "migration": check_migrations, "seo": check_seo, "soru": check_questions}
 
 
 # --------------------------------------------------------------------------------- çıktı

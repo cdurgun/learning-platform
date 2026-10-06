@@ -132,6 +132,17 @@ ve sitemap göndermektir. Ücretsizdir.
   kaydı eklenerek yapılır. Domain property; http/https ve www/www'siz tüm
   varyantları tek seferde kapsar.
 - [ ] **Sitemap gönder:** "Sitemaps" bölümüne `https://www.learnforgex.com/sitemap.xml`.
+  **Durum (2026-10-06):** gönderildi, Search Console "Couldn't fetch" gösteriyor. Canlı uç
+  nokta dışarıdan incelendi ve sorun bulunmadı: 200, `application/xml`, geçerli XML, 357
+  URL, Googlebot user agent'ıyla aynı yanıt, yönlendirme/engel/hız sınırı yok. En olası
+  açıklama yeni mülkte henüz işlenmemiş gönderimin gösterdiği geçici durum. Ayırt etmek
+  için: URL Denetimi → "Canlı URL'yi test et" ve Railway HTTP loglarında `/sitemap.xml`
+  için Googlebot istekleri. Dosya tarayıcıda düz metin gibi GÖRÜNÜR (hreflang için
+  kullanılan `xhtml:link` öğeleri yüzünden); bu bir görüntüleme etkisidir, XML geçerlidir.
+- [ ] **Kök alan adındaki DNS kaydını düzelt:** `learnforgex.com` (www'siz) için Namecheap'te
+  NS/SOA/TXT kayıtlarıyla birlikte bir CNAME duruyor; DNS standardı buna izin vermez ve
+  çözücüler farklı davranıyor (Google Public DNS, kök için NS sorgusuna CNAME döndürüyor).
+  `www` etkilenmiyor. www'siz adresin www'ye yönlendirilmesi maddesiyle birlikte ele alınmalı.
 - [ ] **URL Denetimi** ile anasayfaları (`/en`, `/tr`) ve en önemli 5–10 topic
   sayfasını tek tek "Dizine eklenmesini iste".
 - [ ] 1–2 hafta sonra **Sayfalar (Pages)** raporunu kontrol et: indexlenen sayfa
@@ -385,3 +396,6 @@ verilmesi gerekir.
   Politikası). Kodda tamam, deploy bekliyor.
 - **2026-10-06** — Kurs açılış sayfaları, `BreadcrumbList`, kurs/kategori adlarının
   Türkçe/İngilizce gösterimi ve kayıt formundaki onay kutusu tek commit'te eklendi.
+- **2026-10-06** — Search Console'daki "Couldn't fetch" durumu incelendi; uç noktada sorun
+  yok, sitemap değiştirilmedi (XML olarak ayrıştıran testler eklendi). Kök alan adında
+  standart dışı bir CNAME kaydı bulundu ve açık madde olarak eklendi.

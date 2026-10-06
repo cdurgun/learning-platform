@@ -254,8 +254,11 @@ Temiz test veritabanında migration'lar uygulandı, sorular ve bağlantılar say
 
 - **`run-local`** — uygulamayı JDK 21 ile boş bir portta başlatıp `curl` ile doğrulamak ve
   kapatmak. 2026-10-05'te aynı kurulum üç kez elle yapıldı.
-- **`deploy-check`** — her push sonrası canlı site duman testi: durum kodları, `<title>`,
-  sitemap adedi, yönlendirmeler, sıkıştırma ve önbellek başlıkları.
+- **`deploy-check`** — **yazıldı (2026-10-06)**, `.claude/skills/deploy-check/`. Railway
+  deployment'ının bitmesini GitHub deployment kayıtlarından bekler (`--wait`), sonra canlıda
+  29 kontrol çalıştırır: temel sayfalar, 404, ders sayfası, erişim kuralı, sitemap,
+  sıkıştırma, önbellek, PDF, yanıt süresi, kayıt formu. Deployment başlamazsa nereye
+  bakılacağını (Railway'de bağlı branch) söyler.
 - **`seo-audit`** — başlık/açıklama uzunluk ve tekrar raporu; Search Console verisi
   geldiğinde açıklamaların yeniden yazımı (`docs/google-seo-adsense-plan.md`, Aşama 4).
 - **`tr-review`** — bir Türkçe dersi dil açısından gözden geçirip düzeltmek (çevrilmemiş
@@ -325,3 +328,6 @@ Yazım sırasında kurulu `skill-creator` ve `writing-for-agents` skill'lerinden
 - **2026-10-05** — `quiz-questions` ile `switch` ve kalan 14 konu yazıldı (160 soru,
   `V1073`–`V1132`); skill dört yerde düzeltildi; üç derste soru yazımı sırasında bulunan
   yanlışlıklar giderildi. Sıradaki skill: `new-topic` (bir sonraki gerçek konuyla).
+- **2026-10-06** — `deploy-check` skill'i yazıldı. `content-check`'e "soru" kontrolü eklendi
+  (yayındaki soruların açıklamasında şık harfi atfı); bulduğu 76 açıklama `V1134` ile
+  düzeltildi.
