@@ -1,6 +1,6 @@
 # File Reading
 
-Java Basics kategorisinin altıncı konusu File I/O -- iki topic'e bölündü: bu topic OKUMA (`File Reading`), bir sonraki topic ise YAZMA (`File Writing`) tarafını kapsıyor. Bu ayrım, `functional-interfaces-streams` ve `collections` kategorilerinde uygulanan "kısa, bağımsız alt konuları TEK topic'te birleştirme" pratiğinin tam tersi bir karar -- burada tersine, tek bir konu (File I/O) YETERİNCE GENİŞ olduğu için iki topic'e AYRILDI.
+Java Temelleri kategorisinin altıncı konusu File I/O -- iki topic'e bölündü: bu topic OKUMA (`File Reading`), bir sonraki topic ise YAZMA (`File Writing`) tarafını kapsıyor. Bu ayrım, `functional-interfaces-streams` ve `collections` kategorilerinde uygulanan "kısa, bağımsız alt konuları TEK topic'te birleştirme" pratiğinin tam tersi bir karar -- burada tersine, tek bir konu (File I/O) YETERİNCE GENİŞ olduğu için iki topic'e AYRILDI.
 
 ## File I/O Nedir?
 

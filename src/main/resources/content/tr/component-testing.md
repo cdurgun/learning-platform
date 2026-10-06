@@ -89,7 +89,7 @@ matcher'lardır.
 
 ## Koşullu Render'ı Test Etmek
 
-State & Events dersinde gördüğümüz koşullu render deseni, en sık test
+State ve Event'ler kategorisinde gördüğümüz koşullu render deseni, en sık test
 edilen senaryolardan biridir -- her durumun DOĞRU metni gösterdiğini
 ayrı ayrı doğrularız:
 

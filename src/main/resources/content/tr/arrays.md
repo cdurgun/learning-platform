@@ -1,6 +1,6 @@
 # Arrays
 
-Java Basics kategorisinin ikinci konusu `Array` (dizi) -- `String` gibi çok temel ama altında dilin en eski, en düşük seviyeli veri yapısını barındırır. Diziler, `ArrayList`/`HashMap` gibi tüm koleksiyonların İÇİNDE kullanılan yapı taşıdır; onları anlamak, Collections kategorisindeki `O(1)` erişim gibi performans iddialarının GERÇEKTE nereden geldiğini de netleştirir.
+Java Temelleri kategorisinin ikinci konusu `Array` (dizi) -- `String` gibi çok temel ama altında dilin en eski, en düşük seviyeli veri yapısını barındırır. Diziler, `ArrayList`/`HashMap` gibi tüm koleksiyonların İÇİNDE kullanılan yapı taşıdır; onları anlamak, Koleksiyonlar kategorisindeki `O(1)` erişim gibi performans iddialarının GERÇEKTE nereden geldiğini de netleştirir.
 
 ## Array Nedir?
 

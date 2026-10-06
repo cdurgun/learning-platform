@@ -22,7 +22,7 @@ inference zamanında şekillendirmenin *tek* kanalı olduğunu hatırlayın; bir
 prompt, basitçe, o context'in sizin -- modeli kullanan kişinin ya da
 sistemin -- doğrudan yazdığı ve kontrol ettiği kısmıdır (bir sistemin
 ayrıca ekleyebileceği arka plan bilgisinin aksine, bunu bu kursun ilerleyen
-"Tools & MCP" kategorisi kapsıyor). İyi yazılmış bir prompt sihirli bir
+"Tool'lar ve MCP" kategorisi kapsıyor). İyi yazılmış bir prompt sihirli bir
 ifade değildir -- görevin net, eksiksiz bir spesifikasyonudur, modelin
 in-context learning'ine ("Large Language Model'ler Nasıl Çalışır?"a bakın)
 üzerinde çalışacak yeterli malzemeyi verecek şekilde yazılır.

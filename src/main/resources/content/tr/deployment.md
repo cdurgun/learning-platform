@@ -1,6 +1,6 @@
 # Deployment
 
-Bu Microservices kategorisindeki her ders, order-service, inventory-service, eureka-server, config-server, api-gateway ve Kafka'nın zaten bir yerde çalıştığını, `localhost`'ta ulaşılabilir olduğunu varsaydı. Bu varsayım tüm bu süre boyunca sessizce gerçek bir iş yaptı -- ve bu parçalardan herhangi biri AYNI makine OLMAYAN bir yerde çalışması gerektiği anda geçerliliğini yitiriyor. Bu kapanış dersi, bu kategorinin inşa ettiği sistemin gerçekte nasıl deploy edildiğini kapsıyor.
+Bu Mikroservisler kategorisindeki her ders, order-service, inventory-service, eureka-server, config-server, api-gateway ve Kafka'nın zaten bir yerde çalıştığını, `localhost`'ta ulaşılabilir olduğunu varsaydı. Bu varsayım tüm bu süre boyunca sessizce gerçek bir iş yaptı -- ve bu parçalardan herhangi biri AYNI makine OLMAYAN bir yerde çalışması gerektiği anda geçerliliğini yitiriyor. Bu kapanış dersi, bu kategorinin inşa ettiği sistemin gerçekte nasıl deploy edildiğini kapsıyor.
 
 ## Bir Mikroservis Sistemi İçin Deployment Ne Demek?
 

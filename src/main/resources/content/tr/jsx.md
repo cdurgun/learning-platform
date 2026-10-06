@@ -79,7 +79,7 @@ karar verir). Bunun yerine, sonuç üreten bir ternary (`? :`) kullanılır:
 {{JsxConditionalIntroExample.jsx}}
 
 Burada yalnızca kısa bir örnek gördük -- koşula göre farklı arayüz
-göstermeyi ("conditional rendering"), State & Events kategorisindeki
+göstermeyi ("conditional rendering"), State ve Event'ler kategorisindeki
 "Conditional Rendering" dersinde çok daha detaylı işleyeceğiz.
 
 ## Özet ve Terimler Sözlüğü

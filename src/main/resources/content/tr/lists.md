@@ -1,6 +1,6 @@
 # Lists
 
-Java Basics kategorisinde tekil değerleri, sabit sayıda alanları ve özel davranışları nasıl modelleyeceğini gördün. Ama gerçek programların çoğu, sayısı önceden bilinmeyen, çalışma zamanında büyüyüp küçülen veri toplulukları tutar -- bir alışveriş sepetindeki ürünler, bir formdan gelen hata mesajları, bir API'den dönen kayıtlar. Bu, Collections kategorisinin konusu; ilk durağımız da Java'nın en çok kullanılan koleksiyon tipi: `List`.
+Java Temelleri kategorisinde tekil değerleri, sabit sayıda alanları ve özel davranışları nasıl modelleyeceğini gördün. Ama gerçek programların çoğu, sayısı önceden bilinmeyen, çalışma zamanında büyüyüp küçülen veri toplulukları tutar -- bir alışveriş sepetindeki ürünler, bir formdan gelen hata mesajları, bir API'den dönen kayıtlar. Bu, Koleksiyonlar kategorisinin konusu; ilk durağımız da Java'nın en çok kullanılan koleksiyon tipi: `List`.
 
 ## List Nedir?
 

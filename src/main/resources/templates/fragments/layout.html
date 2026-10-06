@@ -51,7 +51,11 @@
     </div>
     <div class="offcanvas-body p-3 d-block">
         <div th:each="course : ${nav}" class="mb-4">
-            <h6 class="text-uppercase text-muted small fw-bold" th:text="${course.name()}">Kurs</h6>
+            <h6 class="text-uppercase small fw-bold">
+                <a class="text-muted text-decoration-none"
+                   th:href="@{/{lang}/courses/{slug}(lang=${language.code}, slug=${course.slug()})}"
+                   th:text="${course.name()}">Kurs</a>
+            </h6>
             <div th:each="category : ${course.categories()}"
                  th:with="categoryId=${'cat-' + course.slug() + '-' + category.slug()},
                           categoryIsActive=${activeTopicSlug != null and !category.topics().?[#this.slug() == #vars.activeTopicSlug].isEmpty()}"

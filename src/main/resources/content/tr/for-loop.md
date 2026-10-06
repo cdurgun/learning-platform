@@ -1,6 +1,6 @@
 # for Loop
 
-Control Flow kategorisinin üçüncü konusu for döngüsü -- bir kod bloğunu, önceden bilinen ya da sayılabilen bir sayıda TEKRARLAMAYI sağlayan kontrol yapısı. `if`/`else` (bkz. "if / else" dersi) ve `switch` (bkz. "switch" dersi) bir kod yolunu YALNIZCA BİR KEZ çalıştırıp çalıştırmayacağına karar verirken, `for` aynı bloğu BİRDEN FAZLA KEZ, bir sayaç değişkeninin ilerlemesine bağlı olarak çalıştırır. Bu ders, klasik `for` sözdizimini, `break`/`continue` ile döngü akışını kontrol etmeyi, ve bir dizi (array) üzerinde indeks tabanlı gezinmeyi ele alıyor.
+Kontrol Akışı kategorisinin üçüncü konusu for döngüsü -- bir kod bloğunu, önceden bilinen ya da sayılabilen bir sayıda TEKRARLAMAYI sağlayan kontrol yapısı. `if`/`else` (bkz. "if / else" dersi) ve `switch` (bkz. "switch" dersi) bir kod yolunu YALNIZCA BİR KEZ çalıştırıp çalıştırmayacağına karar verirken, `for` aynı bloğu BİRDEN FAZLA KEZ, bir sayaç değişkeninin ilerlemesine bağlı olarak çalıştırır. Bu ders, klasik `for` sözdizimini, `break`/`continue` ile döngü akışını kontrol etmeyi, ve bir dizi (array) üzerinde indeks tabanlı gezinmeyi ele alıyor.
 
 ## for Döngüsü Nedir?
 

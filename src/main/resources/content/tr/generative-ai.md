@@ -1,6 +1,6 @@
 # Generative AI
 
-"AI Fundamentals" kategorisi, iç içe geçmiş dört daireden oluşan bir haritayla
+"AI Temelleri" kategorisi, iç içe geçmiş dört daireden oluşan bir haritayla
 açılmıştı: AI, Machine Learning, Deep Learning ve Generative AI. İlk üç ders
 dıştan içe doğru ilerledi -- AI'ın ne olduğu, arkasındaki Machine Learning
 mekanizması, ve bugünün en yetenekli sistemlerini mümkün kılan Deep Learning
@@ -8,7 +8,7 @@ tekniği (neural network'ler). Bu ders, dördüncü ve en içteki daireyi kapsı
 Generative AI. Diğer üçünden farklı olarak, Generative AI ayrı bir *teknik*
 değildir -- zaten bildiğiniz tekniklerin, farklı bir tür göreve yönelik bir
 *uygulamasıdır*. Bu ayrımı anlamak, bu dersin tamamının anahtarıdır, ve bu
-kursun geri kalanının (Large Language Models, Tools & MCP, AI Agents) üzerine
+kursun geri kalanının (Büyük Dil Modelleri, Tool'lar ve MCP, AI Agent'lar) üzerine
 inşa edileceği zemini kurar.
 
 ## Generative AI Nedir?
@@ -37,7 +37,7 @@ Generative AI
 └── Kod
 ```
 
-Bu kategorideki dördüncü ve son ders ("Large Language Models") yalnızca
+Bu kategorideki dördüncü ve son ders ("Büyük Dil Modelleri") yalnızca
 en üstteki dala -- metne uygulanan generative AI'a -- odaklanıyor; diğer
 dallar bu ders kapsamı dışında, ama aynı temel fikrin (yeni içerik üretmek
 üzere eğitilmiş modeller) farklı veri türlerine uygulanmasıdır.
@@ -103,7 +103,7 @@ model olarak sunuluyor -- LLM'lerin gerçekte nasıl eğitildiği (pretraining),
 bir modelin talimatları takip etmesini sağlayan ayrı bir aşama
 (post-training / instruction tuning), "context"in inference sırasında
 modelin davranışını nasıl şekillendirdiği, ve inference'ın kendisi, hepsi bu
-kursun sıradaki kategorisi olan "Large Language Models"da tek tek ele
+kursun sıradaki kategorisi olan "Büyük Dil Modelleri"nde tek tek ele
 alınacak. Bu kategori bu sistemlerin gerçekte nasıl çalıştığına, bir
 "prompt"un gerçekte ne yaptığına, ve belirli yeteneklerine/sınırlamalarına
 tamamen ayrılmıştır -- bu ders yalnızca LLM'lerin, ayrı bir kavram değil,
@@ -131,7 +131,7 @@ belirtmeye değer:
   yanıt olarak bir paragraf metin ya da bir görüntü üreten bir sistem, tek
   başına, dünyada otonom kararlar almıyor ya da çok adımlı eylemler
   gerçekleştirmiyor -- bu, generative modellerin *üzerine* inşa edilen ama
-  ayrı, ek bir mekanizma ekleyen, bu kursun ilerleyen "AI Agents"
+  ayrı, ek bir mekanizma ekleyen, bu kursun ilerleyen "AI Agent'lar"
   kategorisinin konusudur.
 
 ## Generative AI'ın Günümüzdeki Yaygın Kullanımları

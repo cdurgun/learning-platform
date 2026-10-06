@@ -41,6 +41,17 @@
                            type="password" id="password" th:field="*{password}"/>
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password error</div>
                 </div>
+                <!-- Linkler yeni sekmede açılır: kullanıcı metni okumak için formdan ayrılıp
+                     girdiği değerleri kaybetmesin. -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" th:classappend="${#fields.hasErrors('termsAccepted')} ? 'is-invalid' : ''"
+                           type="checkbox" id="termsAccepted" th:field="*{termsAccepted}"/>
+                    <label class="form-check-label small" for="termsAccepted"
+                           th:utext="#{auth.register.terms(@{/{lang}/terms(lang=${language.code})}, @{/{lang}/privacy(lang=${language.code})})}">
+                        I accept the Terms of Use and have read the Privacy Policy.
+                    </label>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('termsAccepted')}" th:errors="*{termsAccepted}">Terms error</div>
+                </div>
                 <button class="btn btn-primary w-100" type="submit" th:text="#{auth.register.submit}">Register</button>
             </form>
 

@@ -1,5 +1,6 @@
 package com.cdurgun.learning.web.auth;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -29,4 +30,13 @@ public class RegisterForm {
     @NotBlank(message = "{auth.validation.displayName.required}")
     @Size(max = 255, message = "{auth.validation.displayName.size}")
     private String displayName;
+
+    /**
+     * Kullanım Koşulları'nın kabulü ve Gizlilik Politikası'nın okunduğu beyanı. Hesap bu
+     * kutu işaretlenmeden oluşturulamaz; bu yüzden ayrı bir kolonda saklanmaz -- bu kuralın
+     * eklendiği tarihten sonra açılan her hesap için {@code created_at} aynı zamanda kabul
+     * anıdır.
+     */
+    @AssertTrue(message = "{auth.validation.terms.required}")
+    private boolean termsAccepted;
 }

@@ -4,7 +4,7 @@
 sırayla çalışıyordu. Ama birçok gerçek problem tek boyutlu değil -- bir tablonun her
 hücresi, bir görüntünün her pikseli, iki listenin her olası eşleşmesi gibi. Bunun için
 bir döngünün gövdesine başka bir döngü koyarız: **iç içe döngüler (nested loops)**.
-Control Flow kategorisinin bu son topic'i, önceki 5 topic'te öğrenilen her şeyi (`for`,
+Kontrol Akışı kategorisinin bu son topic'i, önceki 5 topic'te öğrenilen her şeyi (`for`,
 `break`, `continue`, `while`) bir araya getirip iç içe kullanıldıklarında ortaya çıkan
 yeni davranışları ele alır.
 

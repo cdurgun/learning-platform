@@ -60,7 +60,7 @@ olmanın bir yan etkisi olarak -- öğretir.
 > açıklar: bir LLM, ne kadar kendinden emin cevap verirse versin, eğitim
 > verisi toplandıktan sonraki olaylar hakkında bilgi sahibi olamaz. Bu,
 > yamalanacak bir hata değildir -- pretraining'in nasıl çalıştığının
-> doğrudan bir sonucudur. Bu kursun ilerleyen "Tools & MCP" kategorisi,
+> doğrudan bir sonucudur. Bu kursun ilerleyen "Tool'lar ve MCP" kategorisi,
 > sistemlerin modellere yine de güncel bilgiye erişim sağlamasının nasıl
 > mümkün olduğunu kapsıyor.
 
@@ -109,7 +109,7 @@ her şey ya pretraining'den gelmiştir, ya da şu anda context'inde bir yerdedir
 Bu tek fikir -- context'in yalnızca bir arayüz özelliği değil, mekanizmanın
 kendisi olduğu -- bu kursun geri kalanının üzerine inşa edildiği temeldir:
 bir sonraki ders context'in çok gerçek boyut sınırlarına bakıyor, ve
-ilerleyen "Tools & MCP" kategorisi, sistemlerin *doğru* bilgiyi doğru zamanda
+ilerleyen "Tool'lar ve MCP" kategorisi, sistemlerin *doğru* bilgiyi doğru zamanda
 bir modelin context'ine nasıl soktuğunu tam olarak kapsıyor.
 
 ## Ölçek: Parametreler, Veri ve Hesaplama

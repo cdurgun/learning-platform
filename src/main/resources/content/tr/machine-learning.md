@@ -101,7 +101,7 @@ geniş kategori vardır:
   eylemlerin daha iyi sonuçlara yol açtığını kademeli olarak öğrenir --
   tıpkı oyun oynayan bir AI'ın kendi kendine milyonlarca oyun oynayarak
   strateji öğrenmesi gibi. Bu kategori kavramsal olarak bu kursun ilerleyen
-  "AI Agents" kategorisine en yakın olanıdır, ama orada inşa edeceğiniz
+  "AI Agent'lar" kategorisine en yakın olanıdır, ama orada inşa edeceğiniz
   agent'lar klasik pekiştirmeli öğrenme yerine, büyük dil modelleri
   üzerine kurulu farklı, daha modern bir teknik kümesi kullanır.
 

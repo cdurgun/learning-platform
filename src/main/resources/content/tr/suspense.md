@@ -49,7 +49,7 @@ edilir.
 
 {{SuspenseLimitationsExample.jsx}}
 
-API & Data Fetching dersindeki `useEffect` + `fetch` deseni, Suspense'i
+API ve Veri Çekme kategorisindeki `useEffect` + `fetch` deseni, Suspense'i
 OTOMATİK OLARAK tetiklemez -- Suspense yalnızca `use()` gibi, React'in
 DOĞRUDAN tanıdığı bir Promise kaynağıyla çalışır. `useEffect` içinde
 `fetch` kullanan bir component, kendi `loading` state'ini KENDİSİ

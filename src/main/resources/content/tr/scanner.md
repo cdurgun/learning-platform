@@ -1,6 +1,6 @@
 # Scanner
 
-Java Basics kategorisinin üçüncü konusu `Scanner` -- kullanıcıdan konsoldan girdi almanın, bir dosyayı okumanın ya da elinizdeki bir metni parçalara ayırmanın (tokenize etmenin) en yaygın yolu. Basit bir yardımcı sınıf gibi görünse de, `nextInt()`/`nextLine()` karışıklığı -- neredeyse her Java öğrencisinin bir kez düştüğü klasik bir tuzak -- gibi ince davranışlar barındırır.
+Java Temelleri kategorisinin üçüncü konusu `Scanner` -- kullanıcıdan konsoldan girdi almanın, bir dosyayı okumanın ya da elinizdeki bir metni parçalara ayırmanın (tokenize etmenin) en yaygın yolu. Basit bir yardımcı sınıf gibi görünse de, `nextInt()`/`nextLine()` karışıklığı -- neredeyse her Java öğrencisinin bir kez düştüğü klasik bir tuzak -- gibi ince davranışlar barındırır.
 
 ## Scanner Nedir?
 

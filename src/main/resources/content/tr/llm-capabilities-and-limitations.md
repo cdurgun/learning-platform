@@ -1,6 +1,6 @@
 # LLM Yetenekleri ve Sınırlamaları
 
-Bu, "Large Language Models" kategorisindeki dördüncü ve son ders, ve son üç
+Bu, "Büyük Dil Modelleri" kategorisindeki dördüncü ve son ders, ve son üç
 dersin sessizce üzerine inşa ettiği ders bu. "Large Language Model'ler Nasıl
 Çalışır?" mekanizmayı açıkladı, "Token'lar ve Context Window'lar" onun sert
 sınırlarını kapsadı, ve "Prompting and Prompt Engineering" onu bilinçli
@@ -8,7 +8,7 @@ olarak nasıl kullanacağınızı kapsadı -- bu ders, bir şey için bir LLM'e
 güvenip güvenmeyeceğinize ve nasıl güveneceğinize karar verirken gerçekten
 önemli olan soruyu soruyor: gerçekten neyi iyi yapabilir, ve nerede güvenilir
 biçimde yetersiz kalır? Bu konuda dürüst olmak, sonraki kategoriler için
-gerekli bir zemindir -- "Tools & MCP" ve "AI Agents," ikisi de büyük ölçüde
+gerekli bir zemindir -- "Tool'lar ve MCP" ve "AI Agent'lar," ikisi de büyük ölçüde
 burada kapsanan sınırlamaların etrafından dolaşmak için var.
 
 ## LLM'ler Gerçekten Neyde İyidir?
@@ -60,7 +60,7 @@ genellikle birlikte ortaya çıkar: cutoff'undan sonraki bir şey hakkında
 sorulan bir model ya bilmediğini söyleyebilir, ya da -- daha kötüsü --
 boşluğu tanımak yerine makul görünen ama uydurma bir cevap
 hallucinate edebilir. Bu belirli sınırlama, tam olarak bu kursun ilerleyen
-"Tools & MCP" kategorisini motive eden şeydir: bir modele, yalnızca
+"Tool'lar ve MCP" kategorisini motive eden şeydir: bir modele, yalnızca
 pretraining sırasında gömülü olana güvenmek yerine, araçlar aracılığıyla
 güncel, harici bilgiye erişim sağlamak.
 
@@ -107,8 +107,8 @@ olgu doğrulayıcısı, biçimsel bir mantık motoru, güncel olaylara canlı bi
 bağlantı, ya da açık bir bias düzeltme süreci yoktur. "LLM'ler Gerçekten
 Neyde İyidir?"te kapsanan her güçlü yön ve bu derste kapsanan her
 sınırlama, tam olarak aynı kaynaktan gelir. Bu yeniden çerçeveleme
-pratik olarak önemlidir: bu kursun ilerleyen kategorilerinin (Tools & MCP,
-AI Agents) altta yatan modeli "düzeltmeye" çalışmamasının nedeni budur --
+pratik olarak önemlidir: bu kursun ilerleyen kategorilerinin (Tool'lar ve MCP,
+AI Agent'lar) altta yatan modeli "düzeltmeye" çalışmamasının nedeni budur --
 bunun yerine, güncel bilgi sağlayan, çıktıları doğrulayan ve modelin ne
 yapmasına izin verildiğini kısıtlayan sistemleri modelin *etrafına* inşa
 ederler, bu sınırlamaların kendiliğinden ortadan kalkacağını varsaymak

@@ -1,14 +1,14 @@
 # Yapay Zeka Nedir?
 
-Bu, yeni "AI" (Yapay Zeka) kursunun ilk dersi ve "AI Fundamentals" kategorisinin
+Bu, yeni "AI" (Yapay Zeka) kursunun ilk dersi ve "AI Temelleri" kategorisinin
 ilk konusu. Bu platformda Java, Spring ya da React'i zaten öğrenmiş olabilirsin --
 güçlü bir teknik geçmişle bu kursa giriyorsun, ama konunun kendisi burada
-tamamen yeni, bu yüzden sıfırdan başlıyoruz -- tıpkı "React Fundamentals"ın
+tamamen yeni, bu yüzden sıfırdan başlıyoruz -- tıpkı "React Temelleri"nin
 React için yaptığı gibi. Bu derste hiç kod yok. Amaç henüz bir şey yazmak değil
 -- "yapay zeka"nın gerçekte ne anlama geldiğine dair doğru bir zihinsel harita
 kurmak; bundan sonraki üç ders (Machine Learning, Deep Learning, Generative AI)
 bu haritanın her bir parçasına ayrı ayrı yakınlaşacak, ilerideki kategoriler
-(Large Language Models, Tools & MCP, AI Agents) ise bunun üzerine gerçek,
+(Büyük Dil Modelleri, Tool'lar ve MCP, AI Agent'lar) ise bunun üzerine gerçek,
 çalıştırılabilir sistemler kuracak.
 
 ## Yapay Zeka Nedir?
@@ -71,7 +71,7 @@ görüntü tanımada eski yaklaşımları çarpıcı biçimde geride bırakmaya 
 O an, modern AI çağını başlattı; bu çağ 2020'lerde büyük dil modelleriyle
 (large language models) daha da hızlandı -- devasa miktarda metinle eğitilmiş,
 insan gibi dil ve kod yazabilen, akıl yürütebilen ve üretebilen sistemler
-(bu kursun bir sonraki kategorisi "Large Language Models"ın konusu).
+(bu kursun bir sonraki kategorisi "Büyük Dil Modelleri"nin konusu).
 
 ## AI ile Geleneksel Yazılım
 

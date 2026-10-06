@@ -1,6 +1,6 @@
 # Primitive & Parallel Streams
 
-Bu, **Functional Interfaces & Streams** kategorisinin son konusu. İki ayrı ama ilişkili konuyu bir araya getiriyor: `int`/`long`/`double` gibi primitive tipler için özelleşmiş stream'ler, ve bir stream pipeline'ını birden çok thread'e dağıtan paralel stream'ler.
+Bu, **Functional Interface'ler ve Stream'ler** kategorisinin son konusu. İki ayrı ama ilişkili konuyu bir araya getiriyor: `int`/`long`/`double` gibi primitive tipler için özelleşmiş stream'ler, ve bir stream pipeline'ını birden çok thread'e dağıtan paralel stream'ler.
 
 ## Primitive Stream Nedir?
 

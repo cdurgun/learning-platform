@@ -158,7 +158,7 @@ bölümlerde tekrar karşınıza çıkacaklar:
   kursta ilerleyen bölümlerde ele alınan hemen hemen her büyük dil modelinin
   (large language model) arkasındaki mimaridir -- bu ders nasıl
   çalıştıklarına daha derin girmeyecek, ama ismini şimdiden bilmeye değer,
-  çünkü "Large Language Models" kategorisi doğrudan bunun üzerine inşa
+  çünkü "Büyük Dil Modelleri" kategorisi doğrudan bunun üzerine inşa
   edilecek.
 
 ## Deep Learning 2010'larda Neden Patladı?

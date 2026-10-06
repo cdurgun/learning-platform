@@ -1,6 +1,6 @@
 # Wrapper Classes & Autoboxing
 
-Java Basics kategorisinin dördüncü konusu Wrapper Classes (Sarmalayıcı Sınıflar) ve Autoboxing (otomatik kutulama) -- `int`, `double`, `boolean` gibi ilkel (primitive) tiplerin NESNE karşılıkları ve derleyicinin bu ikisi arasında sizin için otomatik yaptığı dönüşüm. Basit görünse de, `Integer` önbelleklemesi (`==` tuzağı) ve `null` unboxing'in fırlattığı gerçek `NullPointerException`'lar gibi ince davranışlar barındırır.
+Java Temelleri kategorisinin dördüncü konusu Wrapper Classes (Sarmalayıcı Sınıflar) ve Autoboxing (otomatik kutulama) -- `int`, `double`, `boolean` gibi ilkel (primitive) tiplerin NESNE karşılıkları ve derleyicinin bu ikisi arasında sizin için otomatik yaptığı dönüşüm. Basit görünse de, `Integer` önbelleklemesi (`==` tuzağı) ve `null` unboxing'in fırlattığı gerçek `NullPointerException`'lar gibi ince davranışlar barındırır.
 
 ## Wrapper Class Nedir?
 

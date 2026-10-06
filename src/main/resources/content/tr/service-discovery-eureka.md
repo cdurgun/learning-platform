@@ -1,6 +1,6 @@
 # Service Discovery ve Eureka
 
-Microservices kategorisinin "wave 1"i (`microservices-fundamentals`, `spring-boot-microservice-basics`, `inter-service-communication`) `order-service`'in `inventory-service`'i BULMASI için sabit kodlanmış bir URL kullandı (`@Value("${services.inventory-service.url}")`, bkz. "Servisler Arası İletişim" dersinin "order-service'ten inventory-service'e: RestClient ile Senkron Çağrı" bölümü). Bu, İKİ sabit servis için gayet iyi çalışır -- ama gerçek dünyada servisler ÇOĞALIR (aynı servisin birden fazla kopyası, yük dengeleme için), TAŞINIR (konteynerler yeniden başladığında IP'ler değişir), ve ÖLÇEKLENİR. Bu ders, o probleme Java/Spring ekosisteminin klasik cevabını -- Service Discovery ve Netflix Eureka'yı -- tanıtıyor.
+Mikroservisler kategorisinin "wave 1"i (`microservices-fundamentals`, `spring-boot-microservice-basics`, `inter-service-communication`) `order-service`'in `inventory-service`'i BULMASI için sabit kodlanmış bir URL kullandı (`@Value("${services.inventory-service.url}")`, bkz. "Servisler Arası İletişim" dersinin "order-service'ten inventory-service'e: RestClient ile Senkron Çağrı" bölümü). Bu, İKİ sabit servis için gayet iyi çalışır -- ama gerçek dünyada servisler ÇOĞALIR (aynı servisin birden fazla kopyası, yük dengeleme için), TAŞINIR (konteynerler yeniden başladığında IP'ler değişir), ve ÖLÇEKLENİR. Bu ders, o probleme Java/Spring ekosisteminin klasik cevabını -- Service Discovery ve Netflix Eureka'yı -- tanıtıyor.
 
 ## Service Discovery Nedir?
 

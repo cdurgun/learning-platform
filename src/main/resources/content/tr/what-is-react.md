@@ -58,7 +58,7 @@ elle takip etmek zorlaşır.
 
 React, bu takibi senin yerine yapar: sen "arayüz şu anda böyle görünmeli"
 dersin, React hangi kısmın değiştiğini kendisi bulup günceller. Bunu
-gelecek derslerde ("State & Events" kategorisinde) canlı örneklerle
+gelecek derslerde ("State ve Event'ler" kategorisinde) canlı örneklerle
 göreceğiz.
 
 ## SPA (Single Page Application) Nedir?

@@ -62,7 +62,7 @@ normal bir fonksiyonu `Greeting({ name: "Ayşe" })` diye çağırırken, bir
 component'i JSX içinde `<Greeting name="Ayşe" />` diye "çağırırsın". Ayrıca
 önemli bir kural var: props'lar **salt okunurdur** (read-only) -- bir
 component, kendisine gelen bir prop'u asla değiştirmemelidir. Veriyi
-değiştirmek istiyorsan, bunun yolu "state" -- onu State & Events
+değiştirmek istiyorsan, bunun yolu "state" -- onu State ve Event'ler
 kategorisinde göreceğiz.
 
 ## Özet ve Terimler Sözlüğü

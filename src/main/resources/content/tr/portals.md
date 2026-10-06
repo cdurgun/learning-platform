@@ -1,6 +1,6 @@
 # Portals
 
-Advanced React kategorisinin son konusu -- bir component'i, React
+İleri React kategorisinin son konusu -- bir component'i, React
 ağacındaki KONUMUNDAN farklı bir DOM düğümüne render etmenin yolu:
 **Portal**'lar.
 

@@ -1,4 +1,4 @@
-PostgreSQL Foundations, günlük SQL araç kutusunu inşa etti -- `SELECT`, `JOIN`, `GROUP BY`. Burada başlayan Advanced PostgreSQL, PostgreSQL'e özgü derinliğin yoğunlaştığı yer. Subquery'ler, CTE'ler, ve window fonksiyonları tek bir fikri paylaşır: bir satır kümesi üzerinde bir şey hesaplamak, `GROUP BY`nin yaptığı gibi onları daha az satıra ÇÖKERTMEDEN -- her biri, yalnızca o tek satırın ötesine bakması gereken bir soruyu cevaplarken bile her orijinal satırı bozulmadan tutar.
+PostgreSQL Temelleri, günlük SQL araç kutusunu inşa etti -- `SELECT`, `JOIN`, `GROUP BY`. Burada başlayan İleri PostgreSQL, PostgreSQL'e özgü derinliğin yoğunlaştığı yer. Subquery'ler, CTE'ler, ve window fonksiyonları tek bir fikri paylaşır: bir satır kümesi üzerinde bir şey hesaplamak, `GROUP BY`nin yaptığı gibi onları daha az satıra ÇÖKERTMEDEN -- her biri, yalnızca o tek satırın ötesine bakması gereken bir soruyu cevaplarken bile her orijinal satırı bozulmadan tutar.
 
 ## Subquery'ler: Bir Sorgu İçindeki Bir Sorgu, Tekrar
 

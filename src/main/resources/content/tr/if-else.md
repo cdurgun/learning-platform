@@ -1,6 +1,6 @@
 # if / else
 
-Java kursunun yeni "Control Flow" kategorisinin ilk konusu if / else -- bir programın farklı koşullara göre farklı kod yollarını çalıştırmasını sağlayan en temel karar verme (decision making) yapısı. `if`, bir koşul `true` olduğunda bir kod bloğunu çalıştırır; `else` ise o koşul `false` olduğunda çalışacak alternatif bir blok tanımlar. Bu ders, `String`/`Arrays`/`Scanner` gibi Java Basics konularının örneklerinde zaten örtük olarak karşılaşmış olabileceğin bu yapıyı ilk kez baştan sona, sistematik olarak ele alıyor.
+Java kursunun yeni "Kontrol Akışı" kategorisinin ilk konusu if / else -- bir programın farklı koşullara göre farklı kod yollarını çalıştırmasını sağlayan en temel karar verme (decision making) yapısı. `if`, bir koşul `true` olduğunda bir kod bloğunu çalıştırır; `else` ise o koşul `false` olduğunda çalışacak alternatif bir blok tanımlar. Bu ders, `String`/`Arrays`/`Scanner` gibi Java Temelleri konularının örneklerinde zaten örtük olarak karşılaşmış olabileceğin bu yapıyı ilk kez baştan sona, sistematik olarak ele alıyor.
 
 ## if / else Nedir?
 

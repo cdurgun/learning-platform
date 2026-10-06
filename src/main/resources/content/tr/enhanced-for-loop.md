@@ -1,6 +1,6 @@
 # Enhanced for Loop
 
-Control Flow kategorisinin dördüncü konusu enhanced for (for-each) döngüsü -- bir dizinin ya da koleksiyonun her elemanını, bir sayaç değişkeni YAZMADAN gezmeyi sağlayan, klasik "for Loop" dersinin üzerine kurulu bir sözdizimi. Klasik `for`, KONUMA (indekse) ihtiyaç duyulan her durumda gereklidir; enhanced for ise yalnızca DEĞERLERİN kendisiyle ilgilenildiğinde -- konumun hiç önemi olmadığında -- aynı işi çok daha az kodla yapar. Bu ders, temel sözdizimini, üç gerçek SINIRINI (indekssizlik, döngü değişkeninin bir kopya olması, paralel gezinememe), ve klasik `for` ile aralarındaki seçimi ele alıyor.
+Kontrol Akışı kategorisinin dördüncü konusu enhanced for (for-each) döngüsü -- bir dizinin ya da koleksiyonun her elemanını, bir sayaç değişkeni YAZMADAN gezmeyi sağlayan, klasik "for Loop" dersinin üzerine kurulu bir sözdizimi. Klasik `for`, KONUMA (indekse) ihtiyaç duyulan her durumda gereklidir; enhanced for ise yalnızca DEĞERLERİN kendisiyle ilgilenildiğinde -- konumun hiç önemi olmadığında -- aynı işi çok daha az kodla yapar. Bu ders, temel sözdizimini, üç gerçek SINIRINI (indekssizlik, döngü değişkeninin bir kopya olması, paralel gezinememe), ve klasik `for` ile aralarındaki seçimi ele alıyor.
 
 ## Enhanced for Loop Nedir?
 

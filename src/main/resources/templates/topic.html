@@ -73,13 +73,46 @@
           "educationalLevel": /*[[${topic.difficulty}]]*/ "BEGINNER",
           "isPartOf": {
             "@type": "Course",
-            "name": /*[[${topic.category.course.name}]]*/ "Java"
+            "name": /*[[${courseName}]]*/ "Java",
+            "url": /*[[${baseUrl + '/' + language.code + '/courses/' + topic.category.course.slug}]]*/ "https://www.learnforgex.com"
           },
           "provider": {
             "@type": "Organization",
             "name": "LearnForgeX",
             "url": /*[[${baseUrl}]]*/ "https://www.learnforgex.com"
           }
+        }
+        </script>
+        <!-- Sayfadaki görünür breadcrumb ile aynı yol: Ana Sayfa > Kurs > Kategori > Konu. -->
+        <script type="application/ld+json" th:inline="javascript">
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": /*[[#{breadcrumb.home}]]*/ "Home",
+              "item": /*[[${baseUrl + '/' + language.code}]]*/ "https://www.learnforgex.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": /*[[${courseName}]]*/ "Kurs",
+              "item": /*[[${baseUrl + '/' + language.code + '/courses/' + topic.category.course.slug}]]*/ "https://www.learnforgex.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": /*[[${categoryName}]]*/ "Kategori",
+              "item": /*[[${baseUrl + '/' + language.code + '/courses/' + topic.category.course.slug + '#' + topic.category.slug}]]*/ "https://www.learnforgex.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": /*[[${translation.title}]]*/ "Konu"
+            }
+          ]
         }
         </script>
     </th:block>
@@ -108,7 +141,14 @@
                     <li class="breadcrumb-item">
                         <a th:href="@{/{lang}(lang=${language.code})}" th:text="#{breadcrumb.home}">Ana Sayfa</a>
                     </li>
-                    <li class="breadcrumb-item" th:text="${categoryName}">Kategori</li>
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/{lang}/courses/{slug}(lang=${language.code}, slug=${topic.category.course.slug})}"
+                           th:text="${courseName}">Kurs</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/{lang}/courses/{slug}(lang=${language.code}, slug=${topic.category.course.slug})} + '#' + ${topic.category.slug}"
+                           th:text="${categoryName}">Kategori</a>
+                    </li>
                     <li class="breadcrumb-item active" aria-current="page"
                         th:text="${contentAvailable} ? ${translation.title} : ${topic.slug}">Konu</li>
                 </ol>

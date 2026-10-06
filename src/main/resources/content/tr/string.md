@@ -1,6 +1,6 @@
 # String
 
-Java Basics kategorisinin ilk konusu `String` -- muhtemelen her Java programcısının ilk karşılaştığı sınıf. Basit görünse de, altında yatan IMMUTABLE (değişmez) tasarım, "string pool" adlı özel bir bellek optimizasyonu, ve `==` ile `equals()` arasındaki fark, yeni başlayanların en sık düştüğü tuzaklardan bazılarını barındırır.
+Java Temelleri kategorisinin ilk konusu `String` -- muhtemelen her Java programcısının ilk karşılaştığı sınıf. Basit görünse de, altında yatan IMMUTABLE (değişmez) tasarım, "string pool" adlı özel bir bellek optimizasyonu, ve `==` ile `equals()` arasındaki fark, yeni başlayanların en sık düştüğü tuzaklardan bazılarını barındırır.
 
 ## String Nedir?
 

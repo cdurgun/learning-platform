@@ -5,6 +5,7 @@ import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Topic;
 import com.cdurgun.learning.domain.TopicTranslation;
 import com.cdurgun.learning.repository.TopicRepository;
+import com.cdurgun.learning.service.CatalogNames;
 import com.cdurgun.learning.repository.TopicTranslationRepository;
 import com.cdurgun.learning.service.ContentResolver;
 import com.cdurgun.learning.service.MarkdownService;
@@ -50,6 +51,7 @@ public class TopicController {
     private final PdfExportService pdfExportService;
     private final QuizService quizService;
     private final CourseAccessPolicy courseAccessPolicy;
+    private final CatalogNames catalogNames;
 
     public TopicController(TopicRepository topicRepository,
                             TopicTranslationRepository topicTranslationRepository,
@@ -59,7 +61,8 @@ public class TopicController {
                             MessageSource messageSource,
                             PdfExportService pdfExportService,
                             QuizService quizService,
-                            CourseAccessPolicy courseAccessPolicy) {
+                            CourseAccessPolicy courseAccessPolicy,
+                            CatalogNames catalogNames) {
         this.topicRepository = topicRepository;
         this.topicTranslationRepository = topicTranslationRepository;
         this.contentResolver = contentResolver;
@@ -69,6 +72,7 @@ public class TopicController {
         this.pdfExportService = pdfExportService;
         this.quizService = quizService;
         this.courseAccessPolicy = courseAccessPolicy;
+        this.catalogNames = catalogNames;
     }
 
     /**
@@ -118,7 +122,8 @@ public class TopicController {
         // Breadcrumb: Ana Sayfa > Kategori > Konu (Kurs crumb'ını bilerek eklemedik —
         // şu an tek kurs var ve o zaten "Ana Sayfa" ile aynı adrese gidiyor, iki crumb'ın
         // aynı linke gitmesi kafa karıştırırdı).
-        model.addAttribute("categoryName", topic.getCategory().getName());
+        model.addAttribute("categoryName", catalogNames.category(topic.getCategory(), language));
+        model.addAttribute("courseName", catalogNames.course(topic.getCategory().getCourse(), language));
 
         Optional<TopicTranslation> translation = topicTranslationRepository
                 .findByTopicIdAndLanguage(topic.getId(), language)

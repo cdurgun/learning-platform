@@ -1,5 +1,6 @@
 package com.cdurgun.learning.config;
 
+import com.cdurgun.learning.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +16,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,6 +37,8 @@ class AuthenticationFlowTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     void anonymousUserCanReachHomePage() throws Exception {
@@ -55,6 +60,7 @@ class AuthenticationFlowTest {
                         .param("email", email)
                         .param("password", "correct-password")
                         .param("displayName", "Test User")
+                        .param("termsAccepted", "true")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/en/login?registered"));
@@ -82,6 +88,36 @@ class AuthenticationFlowTest {
     }
 
     @Test
+    void registrationWithoutAcceptingTermsIsRejected() throws Exception {
+        String email = "noterms-" + UUID.randomUUID() + "@example.com";
+
+        mockMvc.perform(post("/en/register")
+                        .param("email", email)
+                        .param("password", "correct-password")
+                        .param("displayName", "No Terms")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Accept the Terms of Use to create an account.")));
+
+        assertThat(userRepository.existsByEmail(email)).isFalse();
+
+        mockMvc.perform(post("/tr/register")
+                        .param("email", email)
+                        .param("password", "correct-password")
+                        .param("displayName", "No Terms")
+                        .with(csrf()))
+                .andExpect(content().string(containsString("Kullanım Koşulları&#39;nı kabul etmelisin.")));
+    }
+
+    @Test
+    void registerPageLinksTermsAndPrivacyInsideTheForm() throws Exception {
+        mockMvc.perform(get("/tr/register"))
+                .andExpect(content().string(containsString(
+                        "<a href=\"/tr/terms\" target=\"_blank\" rel=\"noopener\">Kullanım Koşulları</a>'nı kabul ediyorum")))
+                .andExpect(content().string(containsString("href=\"/tr/privacy\" target=\"_blank\"")));
+    }
+
+    @Test
     void duplicateEmailRegistrationIsRejected() throws Exception {
         String email = "dup-" + UUID.randomUUID() + "@example.com";
 
@@ -89,6 +125,7 @@ class AuthenticationFlowTest {
                         .param("email", email)
                         .param("password", "correct-password")
                         .param("displayName", "First")
+                        .param("termsAccepted", "true")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection());
 
@@ -96,6 +133,7 @@ class AuthenticationFlowTest {
                         .param("email", email)
                         .param("password", "another-password")
                         .param("displayName", "Second")
+                        .param("termsAccepted", "true")
                         .with(csrf()))
                 .andExpect(status().isOk());
     }
@@ -108,6 +146,7 @@ class AuthenticationFlowTest {
                         .param("email", email)
                         .param("password", "correct-password")
                         .param("displayName", "Test User")
+                        .param("termsAccepted", "true")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection());
 

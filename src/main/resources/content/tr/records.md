@@ -682,6 +682,6 @@ static String describe(Shape shape) {
 
 ---
 
-*Java Basics kapsamındaki Record konusu tamamlandı — 17 ana bölüm + 2 ek bölümün tümü
+*Java Temelleri kapsamındaki Record konusu tamamlandı — 17 ana bölüm + 2 ek bölümün tümü
 yazıldı. Sıradaki adaylar: bu konunun İngilizce çevirisi (şu an taslak) ya da yeni bir
-Java Basics konusu.*
+Java Temelleri konusu.*

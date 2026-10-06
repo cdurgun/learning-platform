@@ -1,6 +1,6 @@
 # Queues & Collections Utility
 
-Collections kategorisinin son durağında iki farklı ama birbirini tamamlayan konuyu bir araya getiriyoruz: `Queue`/`Deque` (elemanları belirli bir sırada -- FIFO, LIFO, ya da önceliğe göre -- işlemek için tasarlanmış koleksiyonlar) ve `Collections` yardımcı sınıfı (herhangi bir koleksiyon üzerinde çalışan hazır statik metotlar). İkisi de kısa, bağımsız konular olduğu için tek bir topic'te birleştirildi -- tıpkı "Primitive & Parallel Streams" dersinde uygulanan aynı gerekçeyle.
+Koleksiyonlar kategorisinin son durağında iki farklı ama birbirini tamamlayan konuyu bir araya getiriyoruz: `Queue`/`Deque` (elemanları belirli bir sırada -- FIFO, LIFO, ya da önceliğe göre -- işlemek için tasarlanmış koleksiyonlar) ve `Collections` yardımcı sınıfı (herhangi bir koleksiyon üzerinde çalışan hazır statik metotlar). İkisi de kısa, bağımsız konular olduğu için tek bir topic'te birleştirildi -- tıpkı "Primitive & Parallel Streams" dersinde uygulanan aynı gerekçeyle.
 
 ## Queue ve Deque Nedir?
 

@@ -349,6 +349,15 @@ def check_references(docs, db, f, slugs):
         for (name,) in db.query("select name from category union select name from course"):
             for lang in LANGS:
                 targets[lang].add(norm(name))
+    # Kurs/kategori adlarının dile göre gösterilen hâli mesaj dosyalarındadır
+    # (course.{slug}.name, category.{slug}.name -- bkz. CatalogNames).
+    for lang in LANGS:
+        messages = RES / f"messages_{lang}.properties"
+        if messages.is_file():
+            for line in read_lines(messages):
+                m = re.match(r"(?:course|category)\.[\w-]+\.name=(.+)", line)
+                if m:
+                    targets[lang].add(norm(m.group(1)))
     loose_index = {lang: defaultdict(set) for lang in LANGS}
     for lang in LANGS:
         for t in targets[lang]:

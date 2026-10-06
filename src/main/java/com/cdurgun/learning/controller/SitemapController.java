@@ -49,7 +49,14 @@ public class SitemapController {
         // kurmak için). TreeMap: çıktı slug'a göre alfabetik ve deterministik olsun —
         // her istek/deploy'da aynı sitemap üretilsin, diff'lenebilir kalsın.
         Map<String, Set<Language>> availableLanguagesBySlug = new TreeMap<>();
+        // Kurs açılış sayfaları: bir kursun sayfası, o dilde yayında en az bir konusu varsa vardır
+        // (bkz. CourseController) -- aynı sorgunun sonucundan türetilir.
+        Map<String, Set<Language>> availableLanguagesByCourse = new TreeMap<>();
         for (TopicTranslation translation : topicTranslationRepository.findAllPublishedWithTopic()) {
+            availableLanguagesByCourse
+                    .computeIfAbsent(translation.getTopic().getCategory().getCourse().getSlug(),
+                            slug -> EnumSet.noneOf(Language.class))
+                    .add(translation.getLanguage());
             availableLanguagesBySlug
                     .computeIfAbsent(translation.getTopic().getSlug(), slug -> EnumSet.noneOf(Language.class))
                     .add(translation.getLanguage());
@@ -62,6 +69,11 @@ public class SitemapController {
 
         appendHomeUrls(xml);
         appendStaticPageUrls(xml);
+        for (Map.Entry<String, Set<Language>> entry : availableLanguagesByCourse.entrySet()) {
+            for (Language language : entry.getValue()) {
+                appendUrl(xml, language, "/courses/" + entry.getKey(), entry.getValue());
+            }
+        }
         for (Map.Entry<String, Set<Language>> entry : availableLanguagesBySlug.entrySet()) {
             String slug = entry.getKey();
             Set<Language> availableLanguages = entry.getValue();
@@ -128,6 +140,22 @@ public class SitemapController {
         }
         xml.append("    <xhtml:link rel=\"alternate\" hreflang=\"x-default\" href=\"")
                 .append(topicUrl(xDefault, slug)).append("\"/>\n");
+        xml.append("  </url>\n");
+    }
+
+    /** Dil ön ekinden sonraki yolu verilen bir sayfa için, yalnızca var olan dillere hreflang veren girdi. */
+    private void appendUrl(StringBuilder xml, Language language, String path, Set<Language> availableLanguages) {
+        Language xDefault = availableLanguages.contains(Language.EN) ? Language.EN : Language.TR;
+
+        xml.append("  <url>\n");
+        xml.append("    <loc>").append(baseUrl).append('/').append(language.getCode()).append(path).append("</loc>\n");
+        for (Language alternate : availableLanguages) {
+            xml.append("    <xhtml:link rel=\"alternate\" hreflang=\"").append(alternate.getCode())
+                    .append("\" href=\"").append(baseUrl).append('/').append(alternate.getCode()).append(path)
+                    .append("\"/>\n");
+        }
+        xml.append("    <xhtml:link rel=\"alternate\" hreflang=\"x-default\" href=\"")
+                .append(baseUrl).append('/').append(xDefault.getCode()).append(path).append("\"/>\n");
         xml.append("  </url>\n");
     }
 

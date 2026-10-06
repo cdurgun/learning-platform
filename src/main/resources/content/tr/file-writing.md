@@ -1,6 +1,6 @@
 # File Writing
 
-Java Basics kategorisinin yedinci konusu File I/O'nun YAZMA yarısı -- "File Reading" dersinin doğrudan devamı. O derste dosyaları okumanın iki yolunu (`java.nio.file.Files` ve klasik `java.io.BufferedReader`) gördük; burada aynı iki API ailesiyle dosyalara YAZMAYI, dosyaları KOPYALAMAYI, ve dizinleri YÖNETMEYİ ele alıyoruz.
+Java Temelleri kategorisinin yedinci konusu File I/O'nun YAZMA yarısı -- "File Reading" dersinin doğrudan devamı. O derste dosyaları okumanın iki yolunu (`java.nio.file.Files` ve klasik `java.io.BufferedReader`) gördük; burada aynı iki API ailesiyle dosyalara YAZMAYI, dosyaları KOPYALAMAYI, ve dizinleri YÖNETMEYİ ele alıyoruz.
 
 ## File Writing Nedir?
 

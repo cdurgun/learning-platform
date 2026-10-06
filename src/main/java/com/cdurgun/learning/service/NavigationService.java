@@ -34,11 +34,14 @@ public class NavigationService {
     private final CategoryRepository categoryRepository;
     private final TopicRepository topicRepository;
     private final TopicTranslationRepository topicTranslationRepository;
+    private final CatalogNames catalogNames;
 
     public NavigationService(CourseRepository courseRepository,
                               CategoryRepository categoryRepository,
                               TopicRepository topicRepository,
-                              TopicTranslationRepository topicTranslationRepository) {
+                              TopicTranslationRepository topicTranslationRepository,
+                              CatalogNames catalogNames) {
+        this.catalogNames = catalogNames;
         this.courseRepository = courseRepository;
         this.categoryRepository = categoryRepository;
         this.topicRepository = topicRepository;
@@ -67,12 +70,12 @@ public class NavigationService {
                 }
 
                 if (!topicItems.isEmpty()) {
-                    categoryNavs.add(new CategoryNav(category.getName(), category.getSlug(), topicItems));
+                    categoryNavs.add(new CategoryNav(catalogNames.category(category, language), category.getSlug(), topicItems));
                 }
             }
 
             if (!categoryNavs.isEmpty()) {
-                nav.add(new CourseNav(course.getName(), course.getSlug(), categoryNavs));
+                nav.add(new CourseNav(catalogNames.course(course, language), course.getSlug(), categoryNavs));
             }
         }
 

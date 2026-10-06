@@ -1,6 +1,6 @@
 # Microservices Temelleri
 
-Bu, `spring-boot` kursunun yeni "Microservices" kategorisinin ilk dersi. Bu derste hiç kod
+Bu, `spring-boot` kursunun yeni "Mikroservisler" kategorisinin ilk dersi. Bu derste hiç kod
 yazmayacağız -- Spring Core ve Spring MVC kategorilerindeki derslerin aksine, burada amaç bir
 API'yi ya da bir mekanizmayı kod üzerinden göstermek değil, mikroservis mimarisinin *neden*
 var olduğunu, *hangi problemi* çözdüğünü ve *hangi yeni problemleri* beraberinde getirdiğini

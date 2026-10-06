@@ -3,7 +3,7 @@
 "Interface" dersinin "Functional Interface ve Lambda" bölümünde lambda'yı kısaca
 tanımıştık: tam olarak tek soyut metotlu bir interface'in (*functional interface*)
 ayrı bir sınıf yazmadan, doğrudan bir ifadeyle örneklenmesi. Bu ders, Java kursunun yeni
-kategorisi **Functional Interfaces & Streams**'in ilk konusu -- orada bilerek kısa
+kategorisi **Functional Interface'ler ve Stream'ler**'in ilk konusu -- orada bilerek kısa
 tutulan syntax'ı burada tam olarak açıyoruz: parametreler nasıl yazılır, gövde hangi iki
 biçimi alabilir, `return` ne zaman zorunlu, ve lambda dış scope'taki değişkenlere nasıl
 erişir. Bu kategori, kod örnekleri açısından bu kursun geri kalanından biraz farklı --

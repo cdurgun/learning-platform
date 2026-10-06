@@ -8,7 +8,7 @@ sert, pratik sınırları olduğu ortaya çıkıyor -- ona bir kerede ne kadar b
 verebileceğiniz, bir isteğin ne kadara mal olduğu, ve bir modelin çok uzun
 bir sohbetin başındaki bir şeyi neden "unutabildiği." Bu sınırları anlamak,
 hemen sonraki "Prompting and Prompt Engineering" dersi ve bu kursun ilerleyen
-"Tools & MCP" kategorisi için gerekli bir zemindir -- o kategori büyük ölçüde
+"Tool'lar ve MCP" kategorisi için gerekli bir zemindir -- o kategori büyük ölçüde
 bir modelin sınırlı context'ine neyin gireceğini yönetmek üzerine kurulu.
 
 ## Token Tam Olarak Nedir?
@@ -90,7 +90,7 @@ Nasıl Kullanır?"ı hatırlayın) model her tek yanıtta context'in tamamını
 yeniden okur. Context'te gerçekten olması
 gereken şey konusunda bilinçli olmak -- "ne olur ne olmaz" diye her şeyi
 dahil etmek yerine -- bu yüzden yalnızca bir doğruluk sorunu değil, gerçek
-bir maliyet ve hız sorunudur; "Tools & MCP" kategorisi, sistemlerin bir
+bir maliyet ve hız sorunudur; "Tool'lar ve MCP" kategorisi, sistemlerin bir
 modele hangi bilgiyi vereceğini nasıl seçtiğini kapsarken bu temaya geri
 dönüyor.
 

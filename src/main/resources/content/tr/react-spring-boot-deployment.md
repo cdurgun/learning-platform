@@ -27,7 +27,7 @@ GERÇEK adresi gösterir. Kodun kendisi hiç değişmez.
 
 ## Deploy Edilmiş Backend'den Veri Çekmek
 
-API & Data Fetching dersindeki `useEffect`+`fetch`+loading/error deseni,
+API ve Veri Çekme kategorisindeki `useEffect`+`fetch`+loading/error deseni,
 artık gerçek bir deploy'a karşı çalışıyor:
 
 {{FetchFromDeployedBackendExample.jsx}}

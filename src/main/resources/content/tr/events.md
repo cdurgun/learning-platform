@@ -1,6 +1,6 @@
 # Events
 
-Components & Props kategorisinde component'leri nasıl birleştireceğimizi
+Component'ler ve Props kategorisinde component'leri nasıl birleştireceğimizi
 gördük. Şimdi arayüzü GERÇEKTEN etkileşimli hale getirmeye başlıyoruz --
 kullanıcının tıklamalarına, yazdıklarına, form göndermelerine nasıl tepki
 vereceğimizi. Bu ders, React'in olay (event) sistemini anlatıyor.

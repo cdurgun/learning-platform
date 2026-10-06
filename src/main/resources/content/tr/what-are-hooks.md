@@ -1,6 +1,6 @@
 # What Are Hooks?
 
-State & Events kategorisinde `useState`'i defalarca kullandık, ama hiç
+State ve Event'ler kategorisinde `useState`'i defalarca kullandık, ama hiç
 "hook nedir" diye durup bakmadık. Bu ders, hook kavramını baştan
 anlatıyor -- ve bu noktadan sonra React kursunda konular biraz daha
 derinleşecek.

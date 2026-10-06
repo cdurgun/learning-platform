@@ -64,13 +64,16 @@ public class PdfExportService {
     private final ITemplateEngine templateEngine;
     private final MessageSource messageSource;
     private final String baseUrl;
+    private final CatalogNames catalogNames;
 
     public PdfExportService(ITemplateEngine templateEngine,
                              MessageSource messageSource,
-                             @Value("${app.base-url}") String baseUrl) {
+                             @Value("${app.base-url}") String baseUrl,
+                             CatalogNames catalogNames) {
         this.templateEngine = templateEngine;
         this.messageSource = messageSource;
         this.baseUrl = baseUrl;
+        this.catalogNames = catalogNames;
     }
 
     /**
@@ -111,8 +114,8 @@ public class PdfExportService {
                 messageSource.getMessage("difficulty." + topic.getDifficulty(), null, locale));
         context.setVariable("estimatedMinutes", topic.getEstimatedMinutes());
         context.setVariable("minutesShortLabel", messageSource.getMessage("time.minutesShort", null, locale));
-        context.setVariable("courseName", topic.getCategory().getCourse().getName());
-        context.setVariable("categoryName", topic.getCategory().getName());
+        context.setVariable("courseName", catalogNames.course(topic.getCategory().getCourse(), language));
+        context.setVariable("categoryName", catalogNames.category(topic.getCategory(), language));
         context.setVariable("contentHtml", contentHtml);
 
         String canonicalUrl = baseUrl + "/" + language.getCode() + "/topics/" + topic.getSlug();

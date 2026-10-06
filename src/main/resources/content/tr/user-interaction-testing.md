@@ -23,7 +23,7 @@ yüzden RTL'in resmî dokümantasyonu artık `fireEvent` yerine
 
 ## Tıklamayı Test Etmek
 
-State & Events dersindeki `Counter` component'ini, bu kez gerçek bir
+State ve Event'ler kategorisindeki `Counter` component'ini, bu kez gerçek bir
 tıklama simüle ederek test edelim:
 
 {{UserEventClickExample.jsx}}

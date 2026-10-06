@@ -206,10 +206,14 @@ yalnızca o dosyayı düzenlemek yeterli.
 
 ### Kayıt formu
 
-- [ ] **Kayıt formuna açık onay satırı ekle:** formun içinde "kayıt olarak Kullanım
-  Koşulları'nı ve Gizlilik Politikası'nı kabul ediyorum" satırı ve iki link. Şu an bu
-  sayfalara yalnızca footer'dan ulaşılıyor. E-posta toplandığı için KVKK/GDPR açısından
-  beklenen bir adım; kesin gereklilikler için hukuki görüş alınmalı.
+- [x] **Kayıt formuna açık onay satırı** (2026-10-05, kodda; deploy bekliyor): formda
+  zorunlu bir onay kutusu var: "Kullanım Koşulları'nı kabul ediyorum, Gizlilik
+  Politikası'nı okudum", iki metne de yeni sekmede açılan linklerle. Kutu işaretlenmeden
+  hesap oluşturulmuyor (sunucu tarafında doğrulanıyor). Kabul anı ayrı bir kolonda
+  tutulmuyor: bu tarihten sonra açılan her hesap için `created_at` aynı zamanda kabul
+  anıdır. Bu tarihten önce açılmış hesaplar onay vermedi.
+- [ ] Onay metninin ve kapsamının KVKK/GDPR açısından yeterliliği için hukuki görüş al
+  (ör. Gizlilik Politikası için "okudum" beyanı yeterli mi, ayrı açık rıza gerekir mi).
 
 ### Çerez onayı
 
@@ -245,13 +249,16 @@ yalnızca o dosyayı düzenlemek yeterli.
 - [ ] **İç linkleme:** dersler birbirine zaten isimle atıf yapıyor; bu atıfları
   gerçek linke çevirmek hem kullanıcıya hem Google'a yardımcı olur. Topic sonuna
   "önceki / sonraki ders" linkleri.
-- [ ] **Kurs ve kategori açılış sayfaları** (`/{lang}/courses/{slug}`): şu an
-  indexlenebilir bir "Java kursu" sayfası yok; bunlar geniş sorgular için giriş
-  noktası olur.
-- [ ] **`BreadcrumbList` yapılandırılmış verisi:** ders sayfalarında `LearningResource`
-  ve `Course` var, ama arama sonucunda yolu (Kurs › Kategori › Ders) gösteren
-  `BreadcrumbList` yok. Kurs açılış sayfalarıyla birlikte eklenmeli, çünkü yoldaki
-  kurs/kategori adımlarının gidecek gerçek bir adresi olmalı.
+- [x] **Kurs açılış sayfaları** (2026-10-06): `/{lang}/courses/{slug}`, yedi kurs × iki
+  dil. Kursa özel başlık ve açıklama, kategorilere göre ders kartları, canonical, hreflang
+  ve `Course` yapılandırılmış verisi; sitemap'te (343 → 357 URL). Anasayfa ve yan menüdeki
+  kurs adları bu sayfalara link veriyor. Kategori için ayrı sayfa yok; kategoriler kurs
+  sayfasında `#kategori-slug` ile hedeflenebilen bölümler.
+- [x] **`BreadcrumbList` yapılandırılmış verisi** (2026-10-06): ders sayfalarında görünür
+  breadcrumb "Ana Sayfa › Kurs › Kategori › Ders" oldu ve aynı yol yapılandırılmış veri
+  olarak da veriliyor.
+- [x] **Kurs ve kategori adları dile göre** (2026-10-06): Türkçe sayfalarda Türkçe adlar
+  (ör. "Kontrol Akışı", "Yapay Zeka"); slug'lar ve adresler değişmedi.
 - [ ] **Search Console → Performans** raporunu ayda bir incele: gösterimi yüksek
   ama tıklaması düşük sorguların başlık/açıklamasını iyileştir.
 - [ ] **Türkçe tarafı önceliklendir:** Türkçe teknik içerikte rekabet çok daha az;
@@ -374,3 +381,7 @@ verilmesi gerekir.
   madde eklendi: PDF'lerin indexlenmesi (kodda düzeltildi, deploy bekliyor), kayıt
   formunda açık onay, uptime izleme, deployment sonrası kontrol listesi, `BreadcrumbList`,
   AdSense'in hesap tarafındaki adımlar, reklam sonrası hız ölçümü.
+- **2026-10-05** — Kayıt formuna zorunlu onay kutusu eklendi (Koşullar + Gizlilik
+  Politikası). Kodda tamam, deploy bekliyor.
+- **2026-10-06** — Kurs açılış sayfaları, `BreadcrumbList`, kurs/kategori adlarının
+  Türkçe/İngilizce gösterimi ve kayıt formundaki onay kutusu tek commit'te eklendi.

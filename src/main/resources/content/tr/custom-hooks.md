@@ -44,7 +44,7 @@ mantığını sarmalayan `useFetch`:
 `useFetch`, `useState` (veri ve yükleniyor durumu için) ile `useEffect`i
 (veriyi çekmek için) bir araya getiriyor ve bunları her component'te
 tekrar yazmak yerine tek bir yerde topluyor. Bu, basitleştirilmiş bir
-örnek -- hata yönetimi gibi konuları ileride "API & Data Fetching"
+örnek -- hata yönetimi gibi konuları ileride "API ve Veri Çekme"
 kategorisinde daha detaylı göreceğiz.
 
 ## Özet ve Terimler Sözlüğü
