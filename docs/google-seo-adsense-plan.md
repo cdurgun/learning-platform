@@ -36,6 +36,12 @@ indexlenme ve organik trafik → AdSense başvurusu → reklam yerleşimi.
 > 1–5 ve 7–9. maddeler ile zorunlu sayfaların eksikliği giderildi ve canlıda doğrulandı.
 > Açık kalanlar: 6 (www'siz host yönlendirmesi), 10 (`<lastmod>`), çerez onayı, `ads.txt`,
 > Search Console ve Analytics. Liste, başlangıç durumunun kaydı olarak aşağıda duruyor.
+>
+> **Güncelleme (2026-10-08):** Search Console kaydı tamamlandı (Domain property doğrulandı,
+> sitemap "Success", 357 sayfa bulundu; bkz. Aşama 1). Sitemap artık 357 URL listeliyor
+> (aşağıdaki 92, başlangıç değeridir). 6. madde de kapandı: www'siz adres Cloudflare'da 301
+> ile www'ye yönleniyor ve alan adı Cloudflare DNS'ine taşındı (bkz. Aşama 0 ve Aşama 1).
+> Açık kalanlar: 10 (`<lastmod>`), çerez onayı, `ads.txt`, Analytics (GA4).
 
 ### Zaten iyi olanlar
 
@@ -105,8 +111,13 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
   önbellekleniyor, linkler içerik hash'i taşıyor (`/css/custom-<hash>.css`), dosya
   değişince adres de değişiyor (`WebConfig`). `robots.txt` gibi kök dosyalar
   bilinçli olarak kapsam dışı.
-- [ ] **www'siz host'u www'ye 301 yap** (Railway/DNS seviyesinde ya da küçük bir
-  filtreyle).
+- [x] **www'siz host'u www'ye 301 yap** — Cloudflare Redirect Rules'ta "Apex to WWW"
+  kuralı aktif (2026-10-08): `learnforgex.com` → `https://www.learnforgex.com`, 301, yol
+  ve sorgu parametreleri korunuyor. Kalıp `http*://learnforgex.com/*`, hedef
+  `https://www.learnforgex.com/${2}` (`${1}` şema jokeridir; ilk kurulumda `${1}`
+  kullanıldığı için tüm `https` istekleri `/s` adresine gidip 404 veriyordu). HTTP ve
+  HTTPS için, kök adres, derin linkler ve `/sitemap.xml` ile canlıda `curl` ile doğrulandı.
+  Uygulama kodunda değişiklik yok; kök adresin `/en`'e 302'si (`HomeController`) aynı.
 - [x] **Tek `<h1>` bırak** — markdown'dan gelen başlık, görünümü değişmeden başlık
   olmayan bir öğeye çevriliyor (`MarkdownService.demoteH1`); sayfanın tek `<h1>`'i
   şablondaki ders başlığı.
@@ -116,9 +127,8 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
 - [x] **PDF'lerin indexlenmesini engelle** — her dersin "PDF İndir" bağlantısı, ders
   sayfasının birebir kopyası olan bir PDF döndürüyor ve yanıtta indexlemeyi engelleyen
   bir başlık yoktu (336 kopya sayfa riski; ayrıca bot her taramada sunucuya PDF
-  ürettirir). PDF yanıtına `X-Robots-Tag: noindex` eklendi (`TopicController.pdf`),
-  2026-10-05'te kodda; **deploy bekliyor**. Search Console'a sitemap göndermeden önce
-  canlıda olmalı.
+  ürettirir). PDF yanıtına `X-Robots-Tag: noindex` eklendi (`TopicController.pdf`,
+  2026-10-05, `3a77abc`). Canlıda; `deploy-check` her çalıştırmada bu başlığı doğruluyor.
 - [ ] (Opsiyonel) Sitemap'e `<lastmod>` eklemek için `topic_translation`'a bir
   `updated_at` kolonu.
 
@@ -127,24 +137,33 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
 "Google'a kaydetmek" pratikte Google Search Console'da site sahipliğini doğrulamak
 ve sitemap göndermektir. Ücretsizdir.
 
-- [ ] https://search.google.com/search-console adresinde **Domain property** olarak
-  `learnforgex.com` ekle. Doğrulama, domain sağlayıcısının DNS paneline bir TXT
-  kaydı eklenerek yapılır. Domain property; http/https ve www/www'siz tüm
-  varyantları tek seferde kapsar.
-- [ ] **Sitemap gönder:** "Sitemaps" bölümüne `https://www.learnforgex.com/sitemap.xml`.
-  **Durum (2026-10-06):** gönderildi, Search Console "Couldn't fetch" gösteriyor. Canlı uç
-  nokta dışarıdan incelendi ve sorun bulunmadı: 200, `application/xml`, geçerli XML, 357
-  URL, Googlebot user agent'ıyla aynı yanıt, yönlendirme/engel/hız sınırı yok. En olası
-  açıklama yeni mülkte henüz işlenmemiş gönderimin gösterdiği geçici durum. Ayırt etmek
-  için: URL Denetimi → "Canlı URL'yi test et" ve Railway HTTP loglarında `/sitemap.xml`
-  için Googlebot istekleri. Dosya tarayıcıda düz metin gibi GÖRÜNÜR (hreflang için
-  kullanılan `xhtml:link` öğeleri yüzünden); bu bir görüntüleme etkisidir, XML geçerlidir.
-- [ ] **Kök alan adındaki DNS kaydını düzelt:** `learnforgex.com` (www'siz) için Namecheap'te
-  NS/SOA/TXT kayıtlarıyla birlikte bir CNAME duruyor; DNS standardı buna izin vermez ve
-  çözücüler farklı davranıyor (Google Public DNS, kök için NS sorgusuna CNAME döndürüyor).
-  `www` etkilenmiyor. www'siz adresin www'ye yönlendirilmesi maddesiyle birlikte ele alınmalı.
-- [ ] **URL Denetimi** ile anasayfaları (`/en`, `/tr`) ve en önemli 5–10 topic
-  sayfasını tek tek "Dizine eklenmesini iste".
+- [x] https://search.google.com/search-console adresinde **Domain property** olarak
+  `learnforgex.com` eklendi ve sahiplik doğrulandı. Domain property; http/https ve
+  www/www'siz tüm varyantları tek seferde kapsar.
+- [x] **Sitemap gönderildi:** `https://www.learnforgex.com/sitemap.xml`. **Durum
+  (Search Console, 2026-10-08):** "Success", son okuma 7 Ekim 2026, 357 sayfa bulundu,
+  0 video. İlk gönderimde (2026-10-06) "Couldn't fetch" görünmüştü; uç nokta incelendi,
+  sorun bulunmadı ve sitemap değiştirilmedi. Durum kendiliğinden düzeldi: yeni mülkte
+  henüz işlenmemiş gönderimin geçici durumuydu. Dosya tarayıcıda düz metin gibi GÖRÜNÜR
+  (hreflang için kullanılan `xhtml:link` öğeleri yüzünden); bu bir görüntüleme etkisidir,
+  XML geçerlidir (`SitemapXmlTest` yanıtı XML olarak ayrıştırıp doğruluyor).
+- [x] **Anasayfalar:** `/tr` Google dizininde. `/en` için "Canlı URL'yi test et" başarılı
+  oldu ve "Dizine eklenmesini iste" gönderildi.
+- [ ] **`/en`'in dizine eklenmesi bekleniyor** (istek gönderildi; yapılacak bir iş yok,
+  Sayfalar raporunda izlenecek).
+- [ ] **URL Denetimi** ile en önemli 5–10 topic sayfası için, gerektiğinde, tek tek
+  "Dizine eklenmesini iste". Search Console tarafında sıradaki tek iş bu.
+- [x] **Kök alan adındaki DNS kaydı:** alan adı Namecheap BasicDNS'ten Cloudflare DNS'ine
+  taşındı (2026-10-08'de doğrulandı); nameserver'lar `derek.ns.cloudflare.com` ve
+  `janet.ns.cloudflare.com`. Namecheap'teyken kökte NS/SOA/TXT kayıtlarıyla birlikte duran
+  standart dışı CNAME sorunu böylece kapandı: kök alan adı artık dışarıya CNAME değil, A
+  kaydı olarak yanıt veriyor (Google Public DNS ve 1.1.1.1 ile doğrulandı). www'siz adresin
+  www'ye yönlendirilmesi de Cloudflare'da (bkz. Aşama 0).
+
+> **Eski tarama kayıtları hakkında:** site bir süre Railway'de kapalıydı. Search Console'da
+> o döneme ait 404 / "bilinmeyen URL" sonuçları (ör. `/en` için eski bir 404 kaydı) bu
+> yüzden görünüyor. Bunlar geçmiş taramaların kaydıdır, canlı sitedeki güncel bir hata
+> değildir; yeniden tarandıkça kendiliğinden güncellenir.
 - [ ] 1–2 hafta sonra **Sayfalar (Pages)** raporunu kontrol et: indexlenen sayfa
   sayısı, "Tarandı – şu anda dizine eklenmedi" ve "Yönlendirmeli sayfa" uyarıları.
 - [ ] **Geliştirmeler** altında yapılandırılmış veri (JSON-LD) hatalarına bak.
@@ -217,7 +236,7 @@ yalnızca o dosyayı düzenlemek yeterli.
 
 ### Kayıt formu
 
-- [x] **Kayıt formuna açık onay satırı** (2026-10-05, kodda; deploy bekliyor): formda
+- [x] **Kayıt formuna açık onay satırı** (2026-10-06, `179f9e3`; canlıda): formda
   zorunlu bir onay kutusu var: "Kullanım Koşulları'nı kabul ediyorum, Gizlilik
   Politikası'nı okudum", iki metne de yeni sekmede açılan linklerle. Kutu işaretlenmeden
   hesap oluşturulmuyor (sunucu tarafında doğrulanıyor). Kabul anı ayrı bir kolonda
@@ -335,12 +354,14 @@ verilmesi gerekir.
 - [ ] **Uptime izleme kur:** site çökerse ya da bir deployment başlamazsa haber veren
   bir şey yok. Ücretsiz bir uptime servisiyle anasayfa ve bir ders sayfası izlenmeli;
   uzun kesintiler hem indexlemeyi hem AdSense incelemesini etkiler.
-- [ ] **Deployment sonrası kontrol listesi / `deploy-check` skill'i:** her push'tan sonra
-  canlıda neye bakılacağı (başlık, sitemap adedi, yönlendirmeler, sıkıştırma, önbellek)
-  ve deployment başlamazsa nereye bakılacağı yazılı olmalı. 2026-10-05'te Railway eski
-  branch adını izlediği için deployment 24 dakika başlamadı; ilk bakılacak yer servis
-  ayarlarındaki bağlı branch. Geri alma: Railway panelinden önceki deployment'a dönmek
-  (uygulanmış migration'lar geri alınmaz).
+- [x] **Deployment sonrası kontrol: `deploy-check` skill'i** (2026-10-06,
+  `.claude/skills/deploy-check/`). Railway deployment'ının bitmesini bekler, sonra canlıda
+  29 kontrol çalıştırır (sayfalar, yönlendirmeler, sitemap, yapılandırılmış veri,
+  sıkıştırma, önbellek, PDF başlığı, erişim kuralı, kayıt formu). İlk gerçek kullanım
+  `c8e386b` push'unda: 29/29. Deployment başlamazsa ilk bakılacak yer Railway servis
+  ayarlarındaki bağlı branch (2026-10-05'te eski branch adı yüzünden 24 dakika başlamadı).
+  Geri alma: Railway panelinden önceki deployment'a dönmek (uygulanmış migration'lar geri
+  alınmaz).
 - [ ] **Reklam eklendikten sonra hızı yeniden ölç:** reklam kodu sayfayı yavaşlatır;
   PageSpeed Insights ile reklam öncesi ve sonrası karşılaştırılmalı.
 
@@ -357,11 +378,15 @@ verilmesi gerekir.
 
 ## 10. Özet Sıra
 
-1. Aşama 0 — teknik düzeltmeler (yapıldı ve canlıda; www yönlendirmesi açık).
+1. Aşama 0 — teknik düzeltmeler (yapıldı ve canlıda; opsiyonel `<lastmod>` dışında açık
+   madde yok).
 2. Aşama 2 — login duvarı kararı (yapıldı ve canlıda).
-3. Aşama 1 — Search Console doğrulaması, sitemap gönderimi, GA4. **← sıradaki adım**
-4. Aşama 3 — yasal sayfalar ve footer (yapıldı; Hakkında metni eksik), çerez onayı.
-5. Aşama 4 — başlık/açıklama, iç linkleme, kurs sayfaları; trafiği izle.
+3. Aşama 1 — Search Console doğrulaması ve sitemap gönderimi (yapıldı); açık kalanlar:
+   indexlenmenin izlenmesi, Bing Webmaster Tools, GA4. **← sıradaki adım**
+4. Aşama 3 — yasal sayfalar, footer ve kayıt onayı (yapıldı; Hakkında metni eksik),
+   çerez onayı.
+5. Aşama 4 — başlıklar, kurs sayfaları ve breadcrumb (yapıldı); açıklamalar ve iç
+   linkleme açık; trafiği izle.
 6. Aşama 5 — AdSense başvurusu, onay sonrası reklam yerleşimi ve `ads.txt`.
 7. Aşama 6 — ölçüm, gerekirse alternatif gelir.
 
@@ -399,3 +424,14 @@ verilmesi gerekir.
 - **2026-10-06** — Search Console'daki "Couldn't fetch" durumu incelendi; uç noktada sorun
   yok, sitemap değiştirilmedi (XML olarak ayrıştıran testler eklendi). Kök alan adında
   standart dışı bir CNAME kaydı bulundu ve açık madde olarak eklendi.
+- **2026-10-08** — Doküman gerçek durumla eşitlendi (yalnızca doküman; kod ve sitemap
+  değişmedi). Search Console: Domain property doğrulandı, sitemap "Success" (son
+  okuma 7 Ekim, 357 sayfa), `/tr` dizinde, `/en` için dizine ekleme isteği gönderildi.
+  "Deploy bekliyor" notları kaldırıldı (PDF `noindex`, kayıt onayı canlıda);
+  `deploy-check` maddesi tamamlandı olarak işaretlendi. Sitenin kapalı olduğu döneme ait
+  eski tarama kayıtlarının güncel bir hata olmadığı not edildi.
+- **2026-10-08** — www'siz adres yönlendirmesi ve DNS maddeleri kapandı. Alan adı
+  Cloudflare DNS'ine taşındı; Cloudflare'daki "Apex to WWW" kuralı `learnforgex.com`'u
+  301 ile www'ye yönlendiriyor. Kuralın ilk hâli hedefte `${1}` kullandığı için `https`
+  istekleri `/s` adresine gidip 404 veriyordu; `${2}` ile düzeltildi ve canlıda doğrulandı.
+  Uygulama kodu değişmedi.
