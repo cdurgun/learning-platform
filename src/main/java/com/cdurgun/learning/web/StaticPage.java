@@ -13,7 +13,7 @@ import java.util.Optional;
  */
 public enum StaticPage {
 
-    ABOUT("about", false),
+    ABOUT("about", true),
     CONTACT("contact", true),
     PRIVACY("privacy", true),
     TERMS("terms", true);

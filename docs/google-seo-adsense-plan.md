@@ -221,10 +221,12 @@ sitemap'e eklenmeli.
 - [ ] **Gizlilik Politikası'nı GA4/AdSense açılmadan ÖNCE güncelle:** Google'ın
   çerez kullanımı, üçüncü taraf reklam sağlayıcıları ve kişiselleştirilmiş reklamı
   kapatma yolu açıkça yazılmalı (AdSense bunu şart koşuyor).
-- [ ] **Hakkında** (`/{lang}/about`) — sayfa var ama içeriği "yapım aşamasında".
-  Bu hâliyle `noindex` ve sitemap dışında. Gerçek metin yazılınca
-  `StaticPage.ABOUT`'un `indexable` değeri `true` yapılmalı. **AdSense başvurusundan
-  önce doldurulmalı.**
+- [x] **Hakkında** (`/{lang}/about`) — gerçek metin yazıldı (2026-10-08, EN/TR): platformu
+  kimin oluşturduğu (Cemalettin Durgun), yedi kursun kurs sayfalarına linkli listesi,
+  erişim kuralı, yaklaşım ve İletişim sayfasına link. `StaticPage.ABOUT` artık
+  `indexable=true`: sayfa `noindex` taşımıyor ve sitemap'te (357 → 359 URL). Metin ders
+  sayısını "160'tan fazla" olarak veriyor; ders sayısı bu ifadeyi geçersiz kılacak kadar
+  değişirse ya da yeni bir kurs eklenirse sayfa güncellenmeli.
 - [x] **İletişim** (`/{lang}/contact`) — learnforgex@gmail.com.
 - [x] **Kullanım Koşulları** (`/{lang}/terms`).
 - [x] Footer bu dört sayfaya link veriyor (tüm sayfalarda).
@@ -383,8 +385,7 @@ verilmesi gerekir.
 2. Aşama 2 — login duvarı kararı (yapıldı ve canlıda).
 3. Aşama 1 — Search Console doğrulaması ve sitemap gönderimi (yapıldı); açık kalanlar:
    indexlenmenin izlenmesi, Bing Webmaster Tools, GA4. **← sıradaki adım**
-4. Aşama 3 — yasal sayfalar, footer ve kayıt onayı (yapıldı; Hakkında metni eksik),
-   çerez onayı.
+4. Aşama 3 — yasal sayfalar, Hakkında, footer ve kayıt onayı (yapıldı); çerez onayı açık.
 5. Aşama 4 — başlıklar, kurs sayfaları ve breadcrumb (yapıldı); açıklamalar ve iç
    linkleme açık; trafiği izle.
 6. Aşama 5 — AdSense başvurusu, onay sonrası reklam yerleşimi ve `ads.txt`.
@@ -435,3 +436,5 @@ verilmesi gerekir.
   301 ile www'ye yönlendiriyor. Kuralın ilk hâli hedefte `${1}` kullandığı için `https`
   istekleri `/s` adresine gidip 404 veriyordu; `${2}` ile düzeltildi ve canlıda doğrulandı.
   Uygulama kodu değişmedi.
+- **2026-10-08** — Hakkında sayfasının gerçek metni yazıldı (EN/TR) ve sayfa indexlemeye
+  açıldı; sitemap 357 → 359 URL.

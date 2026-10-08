@@ -73,15 +73,20 @@ class SeoBasicsTest {
     }
 
     @Test
-    void placeholderAboutPageIsNoindexAndLeftOutOfSitemap() throws Exception {
+    void staticPagesAreIndexableAndListedInSitemap() throws Exception {
         mockMvc.perform(get("/en/about"))
-                .andExpect(content().string(containsString("<meta name=\"robots\" content=\"noindex\"/>")));
+                .andExpect(content().string(not(containsString("noindex"))))
+                .andExpect(content().string(containsString("href=\"/en/courses/java\"")));
+        mockMvc.perform(get("/tr/about"))
+                .andExpect(content().string(not(containsString("noindex"))))
+                .andExpect(content().string(containsString("href=\"/tr/contact\"")));
         mockMvc.perform(get("/en/privacy"))
                 .andExpect(content().string(not(containsString("noindex"))));
         mockMvc.perform(get("/sitemap.xml"))
                 .andExpect(content().string(containsString("/en/privacy</loc>")))
                 .andExpect(content().string(containsString("/tr/terms</loc>")))
-                .andExpect(content().string(not(containsString("/about</loc>"))));
+                .andExpect(content().string(containsString("/en/about</loc>")))
+                .andExpect(content().string(containsString("/tr/about</loc>")));
     }
 
     @Test
