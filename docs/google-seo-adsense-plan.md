@@ -333,6 +333,16 @@ yalnızca o dosyayı düzenlemek yeterli.
   (ortalama ~220, en uzunu 491); 29'u arama sonucunda anlamsız kalan "bu projenin
   kendi şeması" gibi ifadeler içeriyor. Search Console'da birkaç haftalık veri
   biriktikten sonra, gösterim alan sayfalardan başlayarak yeniden yazılacak.
+  - [x] **İlk tur: en sorunlu 30 dersin EN ve TR açıklaması yeniden yazıldı** (2026-10-08,
+    `V1135`; 60 kayıt). Ölçüt 160 karaktere kesmek değil, okunabilirlikti: 300 karakteri
+    aşan, Markdown ters tırnağı ya da sözdizimi listesi içeren, ya da iç atıf taşıyan
+    açıklamalar seçildi. Yeni metinler 136–178 karakter; aranan soru ilk cümlede. İki
+    içerik hatası da düzeldi: Thymeleaf dersindeki "dollar-brace variable access" (migration
+    kısıtı yüzünden yazılmış dolaylı ifade) ve React + Spring Boot deployment dersindeki,
+    ders metninde hiç geçmeyen "Docker". Atılabilir bir PostgreSQL container'ında tüm
+    migration'lar sıfırdan çalıştırılarak tam bu 60 kaydın değiştiği doğrulandı.
+  - [ ] Kalan 27 ders (çoğu "bu projenin kendi…" ifadesi ya da ters tırnak içeren, daha
+    kısa açıklamalar) ve ikinci tur adayı ~36 kayıt (251–300 karakter, başka kusuru yok).
 - [ ] **İç linkleme:** dersler birbirine zaten isimle atıf yapıyor; bu atıfları
   gerçek linke çevirmek hem kullanıcıya hem Google'a yardımcı olur. Topic sonuna
   "önceki / sonraki ders" linkleri.
@@ -506,3 +516,5 @@ verilmesi gerekir.
 - **2026-10-08** — Cloudflare'ın kendiliğinden eklediği RUM beacon'ı, "Disable RUM" adlı
   Configuration Rule ile kapatıldı; canlıda dört sayfada script'in ve `/cdn-cgi/rum`
   isteğinin kalktığı doğrulandı. Çerez onayından bağımsız bir Cloudflare ayarı.
+- **2026-10-08** — En sorunlu 30 dersin EN ve TR `seo_description` değeri yeniden yazıldı
+  (`V1135`, 60 kayıt; 136–178 karakter). Kalan 27 ders ve ikinci tur adayları açık.
