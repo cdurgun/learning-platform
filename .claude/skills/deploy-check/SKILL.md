@@ -49,8 +49,10 @@ yönlenir), sitemap (adet, kurs sayfaları, rastgele adreslerin açılması), s�
 uzun önbellekli statik dosyalar, PDF'in indexlemeye kapalı olması, yanıt süresi, kayıt formundaki
 onay kutusu.
 
-Bilinen açık madde: `learnforgex.com` (www'siz) `www`'ye kalıcı yönlenmiyor; script bunu hata
-değil bilgi notu olarak yazar.
+`learnforgex.com` (www'siz) Cloudflare'daki "Apex to WWW" kuralıyla `www`'ye 301 yönleniyor
+(2026-10-08'de doğrulandı; yol ve sorgu parametreleri korunuyor). Yönlendirme uygulamada değil
+Cloudflare'da olduğu için bozulursa bakılacak yer Cloudflare'daki Redirect Rules. Script,
+yönlendirme kaybolursa bunu hata değil bilgi notu olarak yazar.
 
 ## Raporlama
 

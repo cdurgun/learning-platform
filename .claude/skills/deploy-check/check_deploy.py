@@ -177,7 +177,7 @@ def run_checks(base, report):
         status, headers, _ = fetch(bare + "/", follow=False)
         target = headers.get("location", "")
         if not (status in (301, 308) and "://www." in target):
-            report.note(f"www'siz adres www'ye kalıcı yönlenmiyor ({status} {target or '-'}) -- planda açık madde")
+            report.note(f"www'siz adres www'ye kalıcı yönlenmiyor ({status} {target or '-'}) -- Cloudflare'daki 'Apex to WWW' Redirect Rule'unu kontrol et")
 
 
 def main():

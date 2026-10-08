@@ -218,9 +218,19 @@ sitemap'e eklenmeli.
 - [x] **Gizlilik Politikası** (`/{lang}/privacy`) — sitenin BUGÜNKÜ durumunu anlatıyor
   (hesap verisi, zorunlu oturum çerezi, barındırma, jsDelivr CDN). Analitik ve
   reklam "ileride eklenebilir" diye geçiyor.
-- [ ] **Gizlilik Politikası'nı GA4/AdSense açılmadan ÖNCE güncelle:** Google'ın
+- [x] **Gizlilik Politikası, Aşama 1: teknik/içerik güncellemesi** (2026-10-08, EN/TR).
+  Metin sitenin gerçekten kullandığı hizmetlerle eşitlendi: siteyi kimin işlettiği
+  (Cemalettin Durgun), Cloudflare (tüm trafik, olası güvenlik çerezleri), Railway ve
+  Gmail adlarıyla; uygulama ve veritabanının Railway'in ABD'deki altyapısında çalıştığı
+  (`railway status`: iki servis de `sfo`; Railway'in Türkiye bölgesi yok); her veri
+  kategorisinin kullanım amacı; `JSESSIONID`; e-posta yazışmaları; şikâyet hakkı. Bilinçli
+  olarak YOK: ayrı bir hukuki dayanak bölümü ("sözleşmenin ifası", "meşru menfaat", "açık
+  rıza" gibi nitelendirmeler), "veri sorumlusu" terimi, posta adresi. Bu, politikanın
+  tamamlandığı anlamına gelmez; aşağıdaki iki madde açık.
+- [ ] **Gizlilik Politikası, Aşama 2: GA4/AdSense açılmadan ÖNCE güncelle.** Google'ın
   çerez kullanımı, üçüncü taraf reklam sağlayıcıları ve kişiselleştirilmiş reklamı
-  kapatma yolu açıkça yazılmalı (AdSense bunu şart koşuyor).
+  kapatma yolu açıkça yazılmalı (AdSense bunu şart koşuyor); analitik ve reklam
+  çerezlerinin listesi ve onayın nasıl geri alınacağı da eklenmeli.
 - [x] **Hakkında** (`/{lang}/about`) — gerçek metin yazıldı (2026-10-08, EN/TR): platformu
   kimin oluşturduğu (Cemalettin Durgun), yedi kursun kurs sayfalarına linkli listesi,
   erişim kuralı, yaklaşım ve İletişim sayfasına link. `StaticPage.ABOUT` artık
@@ -438,3 +448,6 @@ verilmesi gerekir.
   Uygulama kodu değişmedi.
 - **2026-10-08** — Hakkında sayfasının gerçek metni yazıldı (EN/TR) ve sayfa indexlemeye
   açıldı; sitemap 357 → 359 URL.
+- **2026-10-08** — Gizlilik Politikası'nın Aşama 1 teknik/içerik güncellemesi yapıldı
+  (EN/TR): Cloudflare, Railway (ABD) ve Gmail eklendi, veri kategorilerinin kullanım
+  amaçları yazıldı. GA4/AdSense öncesi güncelleme (Aşama 2) ve hukuki inceleme açık.
