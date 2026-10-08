@@ -89,6 +89,18 @@ class SeoBasicsTest {
                 .andExpect(content().string(containsString("/tr/about</loc>")));
     }
 
+    /** Varsayılan yapılandırmada çerez onayı kapalıdır (açık hâli: {@link CookieConsentTest}). */
+    @Test
+    void cookieConsentIsOffByDefault() throws Exception {
+        for (String path : new String[]{"/en", "/tr", "/en/topics/enum", "/en/login"}) {
+            mockMvc.perform(get(path))
+                    .andExpect(content().string(not(containsString("cookie-consent"))))
+                    .andExpect(content().string(not(containsString("data-consent-open"))))
+                    .andExpect(content().string(not(containsString("consent.js"))))
+                    .andExpect(content().string(not(containsString("/js/consent-"))));
+        }
+    }
+
     @Test
     void topicPdfIsNotIndexable() throws Exception {
         mockMvc.perform(get("/en/topics/enum/pdf"))

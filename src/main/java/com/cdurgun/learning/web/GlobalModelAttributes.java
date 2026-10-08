@@ -44,12 +44,27 @@ public class GlobalModelAttributes {
     private final String baseUrl;
     private final UserRepository userRepository;
     private final QuizNavigationService quizNavigationService;
+    private final boolean consentEnabled;
 
     public GlobalModelAttributes(@Value("${app.base-url}") String baseUrl, UserRepository userRepository,
-                                  QuizNavigationService quizNavigationService) {
+                                  QuizNavigationService quizNavigationService,
+                                  @Value("${app.analytics.consent-enabled:false}") boolean consentEnabled) {
         this.baseUrl = baseUrl;
         this.userRepository = userRepository;
         this.quizNavigationService = quizNavigationService;
+        this.consentEnabled = consentEnabled;
+    }
+
+    /**
+     * Çerez onayı banner'ının ve footer'daki "Çerez ayarları" linkinin render edilip
+     * edilmeyeceği (bkz. {@code fragments/layout.html :: footer}). Varsayılan
+     * {@code false} ve hiçbir yapılandırma dosyasında açılmıyor: sitede henüz analitik
+     * yok, olmayan bir şey için onay sorulmaz. Analitik eklendiği aşamada
+     * {@code app.analytics.consent-enabled} ile birlikte açılacak.
+     */
+    @ModelAttribute("consentEnabled")
+    public boolean consentEnabled() {
+        return consentEnabled;
     }
 
     @ModelAttribute("baseUrl")

@@ -126,15 +126,61 @@
     </div>
 </aside>
 
-<footer th:fragment="footer" class="border-top mt-5 py-3 text-center text-muted small">
-    <nav class="mb-1" th:with="footerLang=${language != null ? language.code : 'en'}">
+<!--/* Sayfa altı. Çerez onayı banner'ı da burada: footer'ı kullanan her şablon onu
+     otomatik alır. Banner ve "Çerez ayarları" linki yalnızca `consentEnabled` true iken
+     render edilir (bkz. GlobalModelAttributes#consentEnabled) -- analitik eklenene kadar
+     kapalıdır, yani sayfada ne banner ne de consent.js bulunur. */-->
+<th:block th:fragment="footer" th:with="footerLang=${language != null ? language.code : 'en'}">
+<footer class="border-top mt-5 py-3 text-center text-muted small">
+    <nav class="mb-1">
         <a class="link-secondary mx-2" th:href="@{/{lang}/about(lang=${footerLang})}" th:text="#{page.about.title}">About</a>
         <a class="link-secondary mx-2" th:href="@{/{lang}/contact(lang=${footerLang})}" th:text="#{page.contact.title}">Contact</a>
         <a class="link-secondary mx-2" th:href="@{/{lang}/privacy(lang=${footerLang})}" th:text="#{page.privacy.title}">Privacy Policy</a>
         <a class="link-secondary mx-2" th:href="@{/{lang}/terms(lang=${footerLang})}" th:text="#{page.terms.title}">Terms of Use</a>
+        <button th:if="${consentEnabled}" type="button" class="btn btn-link link-secondary cookie-consent-link mx-2"
+                data-consent-open th:text="#{consent.settingsLink}">Cookie settings</button>
     </nav>
     <span>&copy; 2026 Learn<span class="brand-accent">Forge</span>X</span>
 </footer>
+
+<th:block th:if="${consentEnabled}">
+    <div id="cookie-consent" class="cookie-consent" role="region" tabindex="-1" data-nosnippet hidden
+         th:aria-label="#{consent.title}">
+        <p class="cookie-consent-title" th:text="#{consent.title}">Cookies</p>
+        <p class="cookie-consent-text">
+            <span th:text="#{consent.description}">Description</span>
+            <a th:href="@{/{lang}/privacy(lang=${footerLang})}" th:text="#{page.privacy.title}">Privacy Policy</a>
+        </p>
+        <div class="cookie-consent-settings" data-consent-settings hidden>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="cookie-consent-required" checked disabled/>
+                <label class="form-check-label" for="cookie-consent-required">
+                    <strong th:text="#{consent.required}">Required</strong>
+                    <span th:text="#{consent.requiredNote}">Always active</span>
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="cookie-consent-analytics" data-consent-analytics/>
+                <label class="form-check-label" for="cookie-consent-analytics">
+                    <strong th:text="#{consent.analytics}">Analytics</strong>
+                    <span th:text="#{consent.analyticsNote}">Helps understand how the site is used</span>
+                </label>
+            </div>
+        </div>
+        <div class="cookie-consent-actions">
+            <button type="button" class="btn btn-sm btn-link link-secondary" data-consent-action="settings"
+                    th:text="#{consent.settings}">Settings</button>
+            <button type="button" class="btn btn-sm btn-outline-dark" data-consent-action="save" hidden
+                    th:text="#{consent.save}">Save preferences</button>
+            <button type="button" class="btn btn-sm btn-dark" data-consent-action="reject"
+                    th:text="#{consent.reject}">Reject</button>
+            <button type="button" class="btn btn-sm btn-dark" data-consent-action="accept"
+                    th:text="#{consent.accept}">Accept</button>
+        </div>
+    </div>
+    <script defer th:src="@{/js/consent.js}"></script>
+</th:block>
+</th:block>
 
 </body>
 </html>

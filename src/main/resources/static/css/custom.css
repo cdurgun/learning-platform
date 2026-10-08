@@ -145,3 +145,60 @@ body {
 .static-page {
     max-width: 46rem;
 }
+
+/* Çerez onayı banner'ı (fragments/layout.html :: footer). position: fixed olduğu için
+   sayfa akışına girmez, içerik kaymaz; tüm ekranı kaplayan bir katman DEĞİL, sağ alt
+   köşede küçük bir kutu. Footer'ın ortalı/soluk yazı stilini devralmasın diye hizalama
+   ve renk burada açıkça verilir. */
+.cookie-consent {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 1030;
+    max-width: 30rem;
+    margin-left: auto;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+    color: #212529;
+    font-size: 0.875rem;
+    text-align: left;
+}
+
+.cookie-consent-title {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.cookie-consent-text {
+    margin-bottom: 0.75rem;
+}
+
+.cookie-consent-settings {
+    margin-bottom: 0.75rem;
+}
+
+.cookie-consent-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Footer'daki "Çerez ayarları": buton, ama yanındaki linklerle aynı görünür. */
+.cookie-consent-link {
+    padding: 0;
+    font-size: inherit;
+    vertical-align: baseline;
+}
+
+@media (max-width: 575.98px) {
+    .cookie-consent {
+        right: 0.5rem;
+        bottom: 0.5rem;
+        left: 0.5rem;
+    }
+}
