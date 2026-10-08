@@ -42,6 +42,12 @@ indexlenme ve organik trafik → AdSense başvurusu → reklam yerleşimi.
 > (aşağıdaki 92, başlangıç değeridir). 6. madde de kapandı: www'siz adres Cloudflare'da 301
 > ile www'ye yönleniyor ve alan adı Cloudflare DNS'ine taşındı (bkz. Aşama 0 ve Aşama 1).
 > Açık kalanlar: 10 (`<lastmod>`), çerez onayı, `ads.txt`, Analytics (GA4).
+>
+> **Güncelleme (2026-10-08, ikinci):** üç teknik iş daha tamamlandı ve canlıda doğrulandı:
+> ders sayfalarında kod renklendirme düzeltildi (bkz. Aşama 0), Cloudflare'ın kendiliğinden
+> eklediği RUM ölçüm script'i kapatıldı ve çerez onayı altyapısının Aşama 1'i eklendi
+> (ikisi için bkz. Aşama 3). Çerez onayı bilinçli olarak kapalı; GA4, Tag Manager ve AdSense
+> hâlâ yok.
 
 ### Zaten iyi olanlar
 
@@ -129,6 +135,16 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
   bir başlık yoktu (336 kopya sayfa riski; ayrıca bot her taramada sunucuya PDF
   ürettirir). PDF yanıtına `X-Robots-Tag: noindex` eklendi (`TopicController.pdf`,
   2026-10-05, `3a77abc`). Canlıda; `deploy-check` her çalıştırmada bu başlığı doğruluyor.
+- [x] **Kod renklendirmeyi (Highlight.js) düzelt** (2026-10-08, `aa574da`; canlıda).
+  Ders, quiz ve soru inceleme sayfaları script'i jsDelivr'de var olmayan bir paket yolundan
+  (`highlight.js@11.9.0/lib/highlight.min.js`, 404) yüklüyordu; `hljs` tanımsız kaldığı için
+  sitedeki hiçbir kod bloğu renklenmiyordu (ilk commit'ten beri). Script artık tarayıcı
+  derlemesini içeren `@highlightjs/cdn-assets@11.9.0` paketinden yükleniyor; aynı paketten
+  Dockerfile dil dosyası da eklendi (varsayılan derlemede yok). Stil dosyasının adresi ve
+  `hljs.highlightAll()` çağrıları değişmedi. Çalışma dizinindeki Highlight.js ve Cookie
+  Consent değişiklikleri birlikteyken `mvn test` 151/151 başarılı oldu; production'da
+  Highlight.js Java ve Dockerfile blokları headless Chrome ile doğrulandı (Java dersinde
+  19/19, Docker dersinde 9/9 Dockerfile bloğu renkli, sayfa hatası yok).
 - [ ] (Opsiyonel) Sitemap'e `<lastmod>` eklemek için `topic_translation`'a bir
   `updated_at` kolonu.
 
@@ -259,6 +275,18 @@ yalnızca o dosyayı düzenlemek yeterli.
 
 ### Çerez onayı
 
+- [x] **Çerez onayı, Aşama 1: altyapı** (2026-10-08, `2efebfa`; canlıda, KAPALI). Ortak
+  footer parçasında küçük, sabit konumlu bir banner (Kabul Et / Reddet / Ayarlar; "Zorunlu"
+  her zaman açık, "Analitik" başlangıçta kapalı), footer'da "Çerez ayarları" linki ve yeni
+  `static/js/consent.js`. Tercih sunucuya gönderilmez, tarayıcının `localStorage`'ında
+  `lfx-consent` anahtarıyla tutulur (sürüm, seçim, tarih). Metinler Türkçe ve İngilizce.
+  **Özellik bilinçli olarak kapalı:** `app.analytics.consent-enabled` varsayılan olarak
+  `false` ve hiçbir yapılandırma dosyasında açılmıyor; bu durumda banner, footer linki ve
+  `consent.js` sayfalara hiç dahil edilmiyor. Canlıda doğrulandı: `consent.js` yüklenmiyor,
+  banner görünmüyor, `lfx-consent` kaydı oluşmuyor. GA4, Tag Manager ve AdSense henüz yok;
+  `consent.js` içinde analitik için yalnızca boş bir genişleme noktası var. Bu altyapı
+  ileride GA4 ve AdSense gibi isteğe bağlı teknolojiler için kullanılacak (aşağıdaki iki
+  madde açık).
 - [ ] AB, Birleşik Krallık ve İsviçre'den gelen ziyaretçilere kişiselleştirilmiş
   reklam gösterebilmek için Google, kendi sertifikalandırdığı bir CMP kullanılmasını
   şart koşuyor. En az zahmetli yol AdSense panelindeki "Gizlilik ve mesajlaşma"
@@ -266,6 +294,23 @@ yalnızca o dosyayı düzenlemek yeterli.
   sırasında teyit edilmeli.
 - [ ] GA4 kodu Consent Mode ile bağlanmalı (onay verilmeden analitik çerezi
   yazılmamalı).
+
+### Cloudflare RUM
+
+- [x] **Cloudflare RUM (Real User Measurements) kapatıldı** (2026-10-08). Cloudflare,
+  ücretsiz planda RUM'u kendiliğinden açıyor: uygulama kodunda olmadığı hâlde HTML
+  sayfalarına `static.cloudflareinsights.com/beacon.min.js` script'ini ekliyor, tarayıcı da
+  her sayfa yüklemesinde `/cdn-cgi/rum` adresine sayfa adresi ve performans ölçümleri
+  gönderiyordu (çerez yazmadan). Kapatmak için Cloudflare'da Configuration Rules altında
+  "Disable RUM" adlı, "All incoming requests" kapsamlı aktif bir kural oluşturuldu.
+  Observatory'deki "Don't enable RUM" seçimi tek başına script'i kaldırmamıştı. Canlıda
+  headless Chrome ile doğrulandı (8 Ekim 2026; `/en`, `/tr`, `/en/topics/enum`,
+  `/en/privacy`): `beacon.min.js` yüklenmiyor, `/cdn-cgi/rum` isteği yapılmıyor, HTML'de
+  `cloudflareinsights`, `beacon.min.js` ve `data-cf-beacon` bulunmuyor; önceki testte var
+  olan beacon tamamen kalktı. Bu, çerez onayından bağımsız bir Cloudflare yapılandırmasıdır;
+  çerez onayı açılıp kapansa da RUM kapalı kalır. Gizlilik Politikası mevcut durumla uyumlu:
+  tarayıcı tarafında Cloudflare'ın ölçüm script'i çalışmıyor. Script yeniden görünürse
+  bakılacak yer bu kural.
 
 ### Diğer
 
@@ -390,12 +435,14 @@ verilmesi gerekir.
 
 ## 10. Özet Sıra
 
-1. Aşama 0 — teknik düzeltmeler (yapıldı ve canlıda; opsiyonel `<lastmod>` dışında açık
-   madde yok).
+1. Aşama 0 — teknik düzeltmeler, kod renklendirme dahil (yapıldı ve canlıda; opsiyonel
+   `<lastmod>` dışında açık madde yok).
 2. Aşama 2 — login duvarı kararı (yapıldı ve canlıda).
 3. Aşama 1 — Search Console doğrulaması ve sitemap gönderimi (yapıldı); açık kalanlar:
    indexlenmenin izlenmesi, Bing Webmaster Tools, GA4. **← sıradaki adım**
-4. Aşama 3 — yasal sayfalar, Hakkında, footer ve kayıt onayı (yapıldı); çerez onayı açık.
+4. Aşama 3 — yasal sayfalar, Hakkında, footer, kayıt onayı, Cloudflare RUM'un kapatılması
+   ve çerez onayı altyapısı (yapıldı; çerez onayı kapalı duruyor). Açık: çerez onayının
+   GA4 ile birlikte açılması, sertifikalı onay platformu, Gizlilik Politikası Aşama 2.
 5. Aşama 4 — başlıklar, kurs sayfaları ve breadcrumb (yapıldı); açıklamalar ve iç
    linkleme açık; trafiği izle.
 6. Aşama 5 — AdSense başvurusu, onay sonrası reklam yerleşimi ve `ads.txt`.
@@ -451,3 +498,11 @@ verilmesi gerekir.
 - **2026-10-08** — Gizlilik Politikası'nın Aşama 1 teknik/içerik güncellemesi yapıldı
   (EN/TR): Cloudflare, Railway (ABD) ve Gmail eklendi, veri kategorilerinin kullanım
   amaçları yazıldı. GA4/AdSense öncesi güncelleme (Aşama 2) ve hukuki inceleme açık.
+- **2026-10-08** — Kod renklendirme düzeltildi (`aa574da`): Highlight.js artık
+  `@highlightjs/cdn-assets@11.9.0` paketinden yükleniyor, Dockerfile dili eklendi; canlıda
+  Java ve Dockerfile bloklarıyla doğrulandı.
+- **2026-10-08** — Çerez onayı Aşama 1 eklendi (`2efebfa`): altyapı canlıda ama kapalı
+  (`app.analytics.consent-enabled=false`); GA4, Tag Manager ve AdSense yok.
+- **2026-10-08** — Cloudflare'ın kendiliğinden eklediği RUM beacon'ı, "Disable RUM" adlı
+  Configuration Rule ile kapatıldı; canlıda dört sayfada script'in ve `/cdn-cgi/rum`
+  isteğinin kalktığı doğrulandı. Çerez onayından bağımsız bir Cloudflare ayarı.
