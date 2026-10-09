@@ -341,8 +341,17 @@ yalnızca o dosyayı düzenlemek yeterli.
     kısıtı yüzünden yazılmış dolaylı ifade) ve React + Spring Boot deployment dersindeki,
     ders metninde hiç geçmeyen "Docker". Atılabilir bir PostgreSQL container'ında tüm
     migration'lar sıfırdan çalıştırılarak tam bu 60 kaydın değiştiği doğrulandı.
-  - [ ] Kalan 27 ders (çoğu "bu projenin kendi…" ifadesi ya da ters tırnak içeren, daha
-    kısa açıklamalar) ve ikinci tur adayı ~36 kayıt (251–300 karakter, başka kusuru yok).
+  - [x] **İkinci tur: 24 dersin EN ve TR açıklaması yeniden yazıldı** (2026-10-09, `V1136`;
+    48 kayıt). Üç grup: "bu projenin kendi…" ifadesi taşıyan 14 ders (3 Docker, 11
+    PostgreSQL), Markdown ters tırnağı içeren 8 Java dersi ve dersi anlatmayacak kadar kısa
+    olan `enum` ile `records`. PostgreSQL açıklamalarının çoğu uzadı: kalıp ifade çıkınca
+    yerine "PostgreSQL" adı ve dersin gerçekten işlediği konular geldi. Yeni metinler
+    122–182 karakter. Atılabilir bir PostgreSQL container'ında tam bu 48 kaydın değiştiği,
+    başka hiçbir kaydın ve alanın değişmediği doğrulandı.
+  - [ ] Bilinçli olarak değiştirilmeyenler: `component-scanning` ve
+    `validation-exception-handling` (uzun ama içerdikleri annotation adları aranan terimler)
+    ile `what-is-an-ai-agent` (sorunsuz). Hâlâ açık: 251–300 karakter arasında olup başka
+    kusuru olmayan ~36 kayıt; Search Console verisi biriktikçe gösterim alanlardan başlanacak.
 - [ ] **İç linkleme:** dersler birbirine zaten isimle atıf yapıyor; bu atıfları
   gerçek linke çevirmek hem kullanıcıya hem Google'a yardımcı olur. Topic sonuna
   "önceki / sonraki ders" linkleri.
@@ -518,3 +527,6 @@ verilmesi gerekir.
   isteğinin kalktığı doğrulandı. Çerez onayından bağımsız bir Cloudflare ayarı.
 - **2026-10-08** — En sorunlu 30 dersin EN ve TR `seo_description` değeri yeniden yazıldı
   (`V1135`, 60 kayıt; 136–178 karakter). Kalan 27 ders ve ikinci tur adayları açık.
+- **2026-10-09** — `seo_description` yeniden yazımının ikinci turu (`V1136`, 24 ders, 48
+  kayıt; 122–182 karakter): "bu proje" ifadeleri, ters tırnaklar ve fazla kısa açıklamalar.
+  `component-scanning` ve `validation-exception-handling` bilinçli olarak değiştirilmedi.
