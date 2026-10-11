@@ -49,6 +49,12 @@ yönlenir), sitemap (adet, kurs sayfaları, rastgele adreslerin açılması), s�
 uzun önbellekli statik dosyalar, PDF'in indexlemeye kapalı olması, yanıt süresi, kayıt formundaki
 onay kutusu.
 
+"Yazar ve güncellenme tarihi" bölümü (4 kontrol): ders sayfasındaki yazar bağlantısı ve "Last
+updated" tarihi, yapılandırılmış verideki `author` ve `dateModified`, sitemap'te `<lastmod>`'un
+yalnızca ders adreslerinde bulunması, ve bu üç yerin aynı tarihi göstermesi. Tarihin kendisinin
+doğru olup olmadığını ölçmez (o, veritabanındaki `updated_at`'tir); yalnızca tutarlılığa bakar.
+`datePublished` bilinçli olarak yayınlanmaz ve aranmaz. Yazar adı script'te sabittir (`AUTHOR`).
+
 `learnforgex.com` (www'siz) Cloudflare'daki "Apex to WWW" kuralıyla `www`'ye 301 yönleniyor
 (2026-10-08'de doğrulandı; yol ve sorgu parametreleri korunuyor). Yönlendirme uygulamada değil
 Cloudflare'da olduğu için bozulursa bakılacak yer Cloudflare'daki Redirect Rules. Script,

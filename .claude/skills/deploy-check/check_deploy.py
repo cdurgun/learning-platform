@@ -27,6 +27,8 @@ ROOT = Path(__file__).resolve().parents[3]
 LIVE = "https://www.learnforgex.com"
 REPO = "cdurgun/learning-platform"
 SITEMAP_SAMPLE = 12
+AUTHOR = "Cemalettin Durgun"
+ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -100,6 +102,55 @@ def json_ld(html):
     return [json.loads(block) for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)]
 
 
+def check_author_and_dates(base, report, lesson_html, sitemap_xml):
+    """Yazar satırı, JSON-LD ve sitemap'in AYNI güncellenme tarihini gösterdiğini doğrular.
+
+    Tarihin doğru olup olmadığını bilemez (o, veritabanındaki updated_at'tir); yalnızca üç yerin
+    birbiriyle tutarlı olduğuna ve <lastmod>'un yalnızca ders adreslerinde bulunduğuna bakar.
+    datePublished bilinçli olarak yayınlanmaz, burada da aranmaz.
+    """
+    print("Yazar ve güncellenme tarihi")
+    byline = (re.search(r'<p class="topic-byline[^"]*">(.*?)</p>', lesson_html, re.S) or [None, ""])[1]
+    shown = re.search(r'<time datetime="([^"]*)">\s*([^<]+?)\s*</time>', byline)
+    page_date = shown.group(1) if shown else None
+    visible = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", byline)).strip()
+    report.check('href="/en/about"' in byline and AUTHOR in byline and "Last updated:" in visible
+                 and bool(page_date) and bool(ISO_DATE.match(page_date)),
+                 "ders sayfasında yazar bağlantısı ve son güncelleme tarihi", visible or "yazar satırı yok")
+
+    try:
+        resource = next((b for b in json_ld(lesson_html) if b.get("@type") == "LearningResource"), {})
+    except ValueError:
+        resource = {}
+    author = resource.get("author") or {}
+    modified = resource.get("dateModified")
+    report.check(author.get("@type") == "Person" and author.get("name") == AUTHOR
+                 and author.get("url") == base + "/en/about"
+                 and isinstance(modified, str) and bool(ISO_DATE.match(modified)) and modified == page_date,
+                 "yapılandırılmış veride yazar ve dateModified (sayfadaki tarihle aynı)",
+                 f"author={author or '-'} dateModified={modified} sayfa={page_date}")
+
+    # Sunucu ile bu makinenin günü farklı olabilir: "gelecekte değil" kontrolünde bir gün pay.
+    latest = time.strftime("%Y-%m-%d", time.gmtime(time.time() + 2 * 86400))
+    wrong = []
+    lesson_lastmod = None
+    for block in re.findall(r"<url>(.*?)</url>", sitemap_xml, re.S):
+        loc = (re.search(r"<loc>(.*?)</loc>", block) or [None, ""])[1]
+        lastmods = re.findall(r"<lastmod>(.*?)</lastmod>", block)
+        if "/topics/" in loc:
+            if len(lastmods) != 1 or not ISO_DATE.match(lastmods[0]) or lastmods[0] > latest:
+                wrong.append(loc)
+            if loc == base + "/en/topics/enum" and lastmods:
+                lesson_lastmod = lastmods[0]
+        elif lastmods:
+            wrong.append(loc)
+    topics = len(re.findall(r"<loc>[^<]*/topics/[^<]*</loc>", sitemap_xml))
+    report.check(topics > 0 and not wrong, f"sitemap'te yalnızca ders adresleri <lastmod> taşıyor ({topics} ders adresi)",
+                 f"{len(wrong)} uyumsuz adres, ör. {', '.join(wrong[:3])}")
+    report.check(bool(page_date) and lesson_lastmod == page_date, "sitemap <lastmod> ile sayfadaki tarih aynı",
+                 f"sitemap={lesson_lastmod} sayfa={page_date}")
+
+
 def run_checks(base, report):
     host = base.split("://", 1)[1]
 
@@ -128,6 +179,8 @@ def run_checks(base, report):
     except (ValueError, KeyError) as error:
         report.check(False, "yapılandırılmış veri geçerli JSON", str(error))
 
+    lesson_html = html
+
     print("Erişim kuralı")
     status, _, body = fetch(base + "/en/topics/what-is-docker")
     html = body.decode("utf-8", "replace")
@@ -141,7 +194,8 @@ def run_checks(base, report):
 
     print("Sitemap")
     status, _, body = fetch(base + "/sitemap.xml")
-    urls = re.findall(r"<loc>(.*?)</loc>", body.decode("utf-8", "replace"))
+    sitemap_xml = body.decode("utf-8", "replace")
+    urls = re.findall(r"<loc>(.*?)</loc>", sitemap_xml)
     courses = [u for u in urls if "/courses/" in u]
     report.check(status == 200 and len(urls) >= 300, f"sitemap {len(urls)} adres içeriyor", str(status))
     report.check(len(courses) >= 14, f"kurs sayfaları sitemap'te ({len(courses)})")
@@ -150,6 +204,8 @@ def run_checks(base, report):
     sample = random.sample(urls, min(SITEMAP_SAMPLE, len(urls)))
     broken = [u for u in sample if fetch(u)[0] != 200]
     report.check(not broken, f"sitemap'ten rastgele {len(sample)} adres açılıyor", ", ".join(broken))
+
+    check_author_and_dates(base, report, lesson_html, sitemap_xml)
 
     print("Performans ve arama motoru başlıkları")
     status, headers, body = fetch(base + "/en", headers={"Accept-Encoding": "gzip"})

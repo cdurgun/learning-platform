@@ -72,6 +72,21 @@ DB'ye dayanan bulgular eski veriyi yansıtır.
   başlık / açıklama ve "bu proje" ifadesi (OLASI — bunlar arama sonucu için öneridir, eski
   içerik bu sınırlarla yazılmadı).
 
+- **tarih** — henüz push edilmemiş değişiklik setine (`origin/main` ile çalışma dizini arası:
+  commit'lenmiş, commit'lenmemiş ve yeni dosyalar) bakar; veritabanı gerekmez. Tarihleri
+  HESAPLAMAZ ve DEĞİŞTİRMEZ, git commit tarihlerini okumaz — git'i yalnızca "hangi dosya değişti"
+  sorusu için kullanır. Üç bulgu: (1) mevcut bir dersin `content/{dil}/{slug}.md` dosyası ya da
+  `examples/{slug}/` altındaki bir dosya değişmiş ama aynı sette o slug için
+  `topic_translation.updated_at`'i ilerleten bir migration yok (OLASI); (2) bir migration bir
+  çeviriyi yayına alıyor (`SET published = true`) ama `updated_at` yazmıyor ve ders aynı sette
+  eklenmemiş (OLASI); (3) bir migration, içeriği bu sette değişmemiş derslerin `updated_at`'ini
+  değiştiriyor (BİLGİ, migration başına tek satır). Yanlış alarm kaynakları: yazım hatası ve
+  mekanik düzeltmeler tarihi bilerek ilerletmez ama (1) yine uyarır — kural için bkz. `CLAUDE.md`,
+  "Mimari". Sınırlar: yalnızca push'tan ÖNCE iş görür (push'tan sonra bulgular kaybolur); slug
+  düzeyinde eşleştirir, yanlış DİLİN tarihinin ilerletilmesini yakalamaz; yerel `origin/main`
+  güncel değilse değişiklik seti olduğundan büyük görünür. Yeni eklenen dersler atlanır
+  (tarihleri `DEFAULT CURRENT_DATE` ile gelir).
+
 ## Raporlama
 
 Kullanıcıya şunları özetle: kontrol başına kaç bulgu ve kaç dosya, hangileri kesin, hangileri

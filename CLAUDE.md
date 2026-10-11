@@ -44,6 +44,27 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `TopicTranslation`'da var — bir dil yayında, diğeri taslak olabilir (örn. TR yayında,
   EN henüz taslak). Yeni bir konu eklerken önce TR'yi `published = true`, EN'i
   `published = false` olarak ekle; EN çevirisi bitince ayrı bir migration'la yayına al.
+- **Her çevirinin iki tarihi vardır: `topic_translation.published_at` ve `updated_at`
+  (`DATE`, `core/V1137`).** `updated_at` ders sayfasındaki "Son güncelleme" satırını,
+  JSON-LD'deki `dateModified`'ı ve sitemap'teki `<lastmod>`'u besler. `published_at`
+  HİÇBİR YERDE YAYINLANMAZ (sayfada, JSON-LD'de `datePublished` olarak ya da sitemap'te) —
+  yalnızca iç kayıttır; gerçek yayın tarihini garanti etmediği için bilinçli bir karar,
+  `datePublished` EKLEME. Bu tarihler
+  OTOMATİK DEĞİLDİR: git'ten ya da çalışma anında türetilmez, yalnızca migration'la
+  değişir (içerik dosyada yaşadığı için DB satırı kendiliğinden değişmez). Kurallar:
+  (1) Bir dersin gövdesi (`content/{lang}/{slug}.md`) ya da sayfada görünen örnek kodu
+  (`examples/{slug}/*`) ANLAMLI biçimde değişirse, aynı commit'te o slug + dil için
+  `updated_at`'i AÇIK bir tarihle (`DATE '2026-11-03'` gibi) ilerleten bir migration
+  yaz. Metin değişikliği yalnızca kendi dilini, örnek kod değişikliği (dosyalar ortak
+  olduğu için) iki dili de ilerletir. Yazım hatası, `seo_title`/`seo_description`,
+  şablon ve stil değişiklikleri tarihi DEĞİŞTİRMEZ. (2) Yeni ders migration'larının
+  `INSERT`'i değişmeden çalışır: iki kolon `DEFAULT CURRENT_DATE` taşır, yani tarih
+  migration'ın o ortamda uygulandığı gün olur. (3) EN çevirisi sonradan yayına alınırken
+  (`publish_{slug}_english` migration'ı) `updated_at` yayın günüyle AÇIKÇA yazılır —
+  taslak satır eklendiği günün tarihini taşır. (4) `published_at` bir
+  kez yazıldıktan sonra değiştirilmez; `updated_at >= published_at` DB kısıtıdır.
+  Mevcut 336 çevirinin `published_at` değeri dosyanın git'teki İLK COMMIT tarihidir,
+  sitenin gerçek yayın tarihi değildir (bkz. `docs/google-seo-adsense-plan.md`).
 - **Dil, Faz 64'ten beri URL path'inin bir parçası, query parametresi değil:**
   gerçek içerik `/en/topics/{slug}` ve `/tr/topics/{slug}` altında (anasayfa: `/en`,
   `/tr`); çıplak `/` bir negotiator, eski `/topics/{slug}?lang=..` URL'leri ise 301 ile

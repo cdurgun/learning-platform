@@ -76,6 +76,12 @@
             "name": /*[[${courseName}]]*/ "Java",
             "url": /*[[${baseUrl + '/' + language.code + '/courses/' + topic.category.course.slug}]]*/ "https://www.learnforgex.com"
           },
+          "author": {
+            "@type": "Person",
+            "name": /*[[#{site.author}]]*/ "Yazar",
+            "url": /*[[${baseUrl + '/' + language.code + '/about'}]]*/ "https://www.learnforgex.com"
+          },
+          "dateModified": /*[[${#temporals.format(translation.updatedAt, 'yyyy-MM-dd')}]]*/ "2026-08-08",
           "provider": {
             "@type": "Organization",
             "name": "LearnForgeX",
@@ -177,6 +183,20 @@
                         <span class="text-muted small ms-2"
                               th:if="${topic.estimatedMinutes != null}"
                               th:text="${topic.estimatedMinutes} + ' ' + #{time.minutesShort}">15 dk</span>
+
+                        <!-- Yazar ve son güncelleme. Yayınlanan tek tarih updatedAt'tir (burada ve
+                             JSON-LD'de dateModified). publishedAt gerçek yayın tarihini garanti
+                             etmediği için ne sayfada ne JSON-LD'de yer alır. -->
+                        <p class="topic-byline text-muted small mt-2 mb-0">
+                            <span th:text="#{topic.byline.by}">Yazan:</span>
+                            <a class="link-secondary" rel="author"
+                               th:href="@{/{lang}/about(lang=${language.code})}"
+                               th:text="#{site.author}">Yazar</a>
+                            <span aria-hidden="true">·</span>
+                            <span th:text="#{topic.byline.updated}">Son güncelleme:</span>
+                            <time th:datetime="${#temporals.format(translation.updatedAt, 'yyyy-MM-dd')}"
+                                  th:text="${#temporals.format(translation.updatedAt, #messages.msg('topic.byline.dateFormat'), #locale)}">6 Ekim 2026</time>
+                        </p>
 
                         <!-- Faz 77: "PDF İndir" — kasıtlı olarak kendi satırında, EN/TR dil
                              butonunun YANINDA değil (topic-header zaten dar bir 2 sütunlu grid,

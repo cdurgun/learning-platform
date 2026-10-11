@@ -10,17 +10,24 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 /**
  * {@code /sitemap.xml}'i elle üretir — projede bunun için hazır bir kütüphane
- * (örn. sitemap4j) yok, ve ihtiyaç (iki dil, ~40 konu, lastmod yok) böyle bir bağımlılığı
- * gerektirmeyecek kadar basit. {@code Topic}'in hiçbir timestamp alanı olmadığı için
- * (bkz. {@code Topic.java}) {@code <lastmod>} ETİKETİ BİLİNÇLİ OLARAK EKLENMEDİ —
- * uydurma/yanlış bir tarih vermektense hiç vermemek tercih edildi (bkz. Faz 65 notu).
+ * (örn. sitemap4j) yok, ve ihtiyaç (iki dil, birkaç yüz adres) böyle bir bağımlılığı
+ * gerektirmeyecek kadar basit.
+ *
+ * <p>{@code <lastmod>} YALNIZCA ders adreslerinde vardır ve o çevirinin
+ * {@link TopicTranslation#getUpdatedAt() updatedAt} değeridir (bkz. {@code V1137}) — ders
+ * sayfasındaki "Son güncelleme" ve JSON-LD'deki {@code dateModified} ile aynı kaynak. Anasayfa,
+ * kurs ve sabit sayfalar için güvenilir bir tarih kaynağı olmadığından onlara BİLİNÇLİ OLARAK
+ * eklenmez: uydurma/yanlış bir tarih vermektense hiç vermemek tercih edildi (bkz. Faz 65 notu).</p>
  *
  * <p>Her URL girdisi, Google'ın çok-dilli sitemap rehberinin önerdiği şekilde kendi
  * {@code <xhtml:link rel="alternate" hreflang="...">} cross-reference'larını taşır —
@@ -52,6 +59,8 @@ public class SitemapController {
         // Kurs açılış sayfaları: bir kursun sayfası, o dilde yayında en az bir konusu varsa vardır
         // (bkz. CourseController) -- aynı sorgunun sonucundan türetilir.
         Map<String, Set<Language>> availableLanguagesByCourse = new TreeMap<>();
+        // slug -> dil -> o çevirinin son güncellenme tarihi (ders adreslerinin <lastmod>'u).
+        Map<String, Map<Language, LocalDate>> updatedAtBySlug = new HashMap<>();
         for (TopicTranslation translation : topicTranslationRepository.findAllPublishedWithTopic()) {
             availableLanguagesByCourse
                     .computeIfAbsent(translation.getTopic().getCategory().getCourse().getSlug(),
@@ -60,6 +69,9 @@ public class SitemapController {
             availableLanguagesBySlug
                     .computeIfAbsent(translation.getTopic().getSlug(), slug -> EnumSet.noneOf(Language.class))
                     .add(translation.getLanguage());
+            updatedAtBySlug
+                    .computeIfAbsent(translation.getTopic().getSlug(), slug -> new EnumMap<>(Language.class))
+                    .put(translation.getLanguage(), translation.getUpdatedAt());
         }
 
         StringBuilder xml = new StringBuilder();
@@ -78,7 +90,7 @@ public class SitemapController {
             String slug = entry.getKey();
             Set<Language> availableLanguages = entry.getValue();
             for (Language language : availableLanguages) {
-                appendTopicUrl(xml, language, slug, availableLanguages);
+                appendTopicUrl(xml, language, slug, availableLanguages, updatedAtBySlug.get(slug).get(language));
             }
         }
 
@@ -129,11 +141,17 @@ public class SitemapController {
         return baseUrl + '/' + language.getCode() + '/' + page.getSlug();
     }
 
-    private void appendTopicUrl(StringBuilder xml, Language language, String slug, Set<Language> availableLanguages) {
+    /**
+     * {@code <lastmod>}, sitemap şemasındaki sıra gereği {@code <loc>}'un hemen ardından gelir.
+     * {@link LocalDate#toString()} W3C tarih biçimini ({@code YYYY-MM-DD}) üretir; saat/saat dilimi yok.
+     */
+    private void appendTopicUrl(StringBuilder xml, Language language, String slug, Set<Language> availableLanguages,
+                                LocalDate lastModified) {
         Language xDefault = availableLanguages.contains(Language.EN) ? Language.EN : Language.TR;
 
         xml.append("  <url>\n");
         xml.append("    <loc>").append(topicUrl(language, slug)).append("</loc>\n");
+        xml.append("    <lastmod>").append(lastModified).append("</lastmod>\n");
         for (Language alternate : availableLanguages) {
             xml.append("    <xhtml:link rel=\"alternate\" hreflang=\"").append(alternate.getCode())
                     .append("\" href=\"").append(topicUrl(alternate, slug)).append("\"/>\n");

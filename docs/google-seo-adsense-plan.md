@@ -48,6 +48,10 @@ indexlenme ve organik trafik → AdSense başvurusu → reklam yerleşimi.
 > eklediği RUM ölçüm script'i kapatıldı ve çerez onayı altyapısının Aşama 1'i eklendi
 > (ikisi için bkz. Aşama 3). Çerez onayı bilinçli olarak kapalı; GA4, Tag Manager ve AdSense
 > hâlâ yok.
+>
+> **Güncelleme (2026-10-11):** 10. madde (`<lastmod>`) ile ders sayfasındaki yazar ve
+> güncellenme tarihi uygulandı ve yerelde doğrulandı (bkz. Aşama 0 ve Aşama 3 "Diğer").
+> Henüz commit/push edilmedi; canlı doğrulama bekliyor.
 
 ### Zaten iyi olanlar
 
@@ -145,8 +149,13 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
   Consent değişiklikleri birlikteyken `mvn test` 151/151 başarılı oldu; production'da
   Highlight.js Java ve Dockerfile blokları headless Chrome ile doğrulandı (Java dersinde
   19/19, Docker dersinde 9/9 Dockerfile bloğu renkli, sayfa hatası yok).
-- [ ] (Opsiyonel) Sitemap'e `<lastmod>` eklemek için `topic_translation`'a bir
-  `updated_at` kolonu.
+- [x] **Sitemap'te ders adreslerine `<lastmod>`** (2026-10-11; yerelde doğrulandı, push ve
+  canlı doğrulama bekliyor). Değer, o çevirinin `topic_translation.updated_at` alanıdır
+  (`YYYY-MM-DD`; kolonlar için bkz. Aşama 3 "Diğer"). Yalnızca 335 ders adresinde vardır;
+  anasayfa, kurs ve statik sayfalara (24 adres) güvenilir bir tarih kaynağı olmadığı için
+  bilinçli olarak eklenmedi. Toplam adres sayısı 359'da kaldı; `<lastmod>` satırları
+  çıkarıldığında yeni sitemap canlıdakiyle bayt bayt aynı (adresler, sıra ve hreflang
+  bağlantıları değişmedi). 335 değerin tamamı onaylanan tarih listesiyle eşleşti.
 
 ## 4. Aşama 1 — Google'a Kayıt (Search Console)
 
@@ -316,7 +325,58 @@ yalnızca o dosyayı düzenlemek yeterli.
 
 - [ ] **`ads.txt`**: AdSense hesabı açıldıktan sonra verilen yayıncı kimliğiyle
   `static/ads.txt` olarak eklenir (`google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`).
-- [ ] Her topic sayfasında yazar ve (varsa) güncellenme tarihi görünür olsun.
+- [x] **Her ders sayfasında yazar ve güncellenme tarihi** (2026-10-11; yerelde doğrulandı,
+  push ve canlı doğrulama bekliyor).
+  - **Veri:** `core/V1137` ile `topic_translation` tablosuna `published_at` ve `updated_at`
+    eklendi (`DATE NOT NULL`, varsayılan `CURRENT_DATE`, kısıt `updated_at >= published_at`);
+    `TopicTranslation` entity'sinde `publishedAt` / `updatedAt` (`LocalDate`). Mevcut 336
+    çevirinin (168 EN + 168 TR) tarihleri git geçmişinden (`d51d527`) bir kez çıkarılıp
+    migration'a sabit değer olarak yazıldı; çalışan uygulama git'e bakmaz.
+    `published_at` 2026-08-08..2026-08-31, `updated_at` 2026-08-09..2026-10-06 aralığında;
+    141 kayıtta `updated_at > published_at`, 49 derste EN ve TR güncellenme tarihi farklı.
+  - **`updated_at` nasıl hesaplandı:** ders dosyasının ve dersin gömdüğü örnek kod
+    dosyalarının son commit tarihlerinden geç olanı. SEO açıklaması (`V1135`, `V1136`),
+    şablon ve stil değişiklikleri sayılmadı. `96d8121` (2026-08-18) ve `179f9e3`
+    (2026-10-06) toplu commit'leri gerçek ders metni değişikliği içerdiği için dahil edildi.
+  - **SINIRLAMA — `published_at` gerçek yayın tarihi değildir.** Ders dosyasının git
+    geçmişinde tespit edilen İLK COMMIT tarihidir. Dersin sitede gerçekten yayına girdiği
+    günü garanti etmez; birkaç gün erken olabilir (bazı EN çeviriler commit edildikten
+    sonra yayına alındı). Bu yüzden HİÇBİR YERDE yayınlanmaz: sayfada gösterilmez,
+    JSON-LD'ye `datePublished` olarak yazılmaz, sitemap'te kullanılmaz. Kolon ve entity
+    alanı yalnızca iç kayıt olarak durur (ileride gerçek yayın tarihleri elde edilirse
+    kullanılabilir). Not: `V1137` dosyasının ilk yorum satırı hâlâ `datePublished`'dan
+    söz eder; uygulanmış bir migration değiştirilmediği için düzeltilmedi.
+  - **Sayfa:** zorluk rozeti ve süre satırının altında tek satır — TR "Yazan: Cemalettin
+    Durgun · Son güncelleme: 6 Ekim 2026", EN "By Cemalettin Durgun · Last updated:
+    October 6, 2026". Ad `/{lang}/about` sayfasına bağlanır; tarih
+    `<time datetime="YYYY-MM-DD">` içindedir. Etiketler ve tarih biçimi mesaj
+    dosyalarından gelir.
+  - **JSON-LD:** `LearningResource` bloğuna `author` (`Person`, ad + Hakkında adresi) ve
+    `dateModified` eklendi; `provider` (LearnForgeX) ve diğer alanlar değişmedi.
+    `datePublished` bilinçli olarak eklenmedi (yukarıdaki sınırlama). Bu alanlar bir
+    Google zengin sonucu üretmez, yalnızca veriyi tamamlar.
+  - **Doğrulama:** V1137, V1136'ya kadar kurulmuş tek kullanımlık PostgreSQL'de denendi
+    (336/336 tarih eşleşti, diğer kolonlar değişmedi, kısıt ve varsayılanlar doğru).
+    `mvn test` 159/159 (151 mevcut + 5 `TopicBylineTest` + 3 `SitemapXmlTest`).
+    `content-check` 0 HATA. `deploy-check` yerel derlemeye karşı 0 hata.
+  - **Bakım kuralı:** tarihler otomatik değildir; içerik anlamlı biçimde değiştiğinde
+    `updated_at` bir migration'la ilerletilir (bkz. `CLAUDE.md`, "Mimari").
+  - [x] **Mobil görünüm doğrulandı** (2026-10-11, yerel derleme; gerçek Chrome, Playwright ile
+    mobil cihaz öykünmesi). `/tr/topics/enum` ve `/en/topics/enum` 390 ve 320 piksel
+    genişlikte: yazar adı, ayırıcı ve tarih eksiksiz görünüyor; satır iki satıra bölünüyor;
+    yatay taşma, kesilme, üst üste binme ve yatay kaydırma yok (sayfanın kaydırılabilir
+    genişliği görüntü alanına eşit). 1280 pikselde tek satır. Önceki kesik ekran görüntüsü
+    görüntü alma yönteminden kaynaklanmıştı. Kozmetik not (düzeltilmedi): dar ekranda satır
+    etiketin ortasından kırılabiliyor ("Son" / "güncelleme: ..."); etiketi bölünmez yapmak
+    320 pikselde uzun tarihlerde taşma riski taşıdığı için bilinçli olarak yapılmadı.
+  - [ ] Canlı doğrulama (deployment, `deploy-check`, 335 adreslik `<lastmod>` taraması).
+  - [x] **Kontrol script'leri** (2026-10-11): `deploy-check`'e "Yazar ve güncellenme tarihi"
+    bölümü eklendi (4 kontrol: yazar satırı, JSON-LD `author` + `dateModified`, `<lastmod>`'un
+    yalnızca ders adreslerinde olması, sayfa ile sitemap tarihinin aynı olması). `content-check`'e
+    `tarih` kontrolü eklendi: push edilmemiş değişiklik setinde içerik değişmiş ama `updated_at`
+    migration'ı yoksa, ya da bir çeviri `updated_at` yazılmadan yayına alınıyorsa uyarır.
+    İkisi de yalnızca raporlar; tarih hesaplamaz, git commit tarihlerini okumaz.
+  - [ ] PDF üzerindeki tarih hâlâ PDF'in üretildiği gündür; ayrı bir iş.
 - [ ] Site gezinmesi boş/yarım sayfa içermesin: yayında olmayan çevirilere menüden
   link verilmediği doğrulanmalı.
 
@@ -454,8 +514,8 @@ verilmesi gerekir.
 
 ## 10. Özet Sıra
 
-1. Aşama 0 — teknik düzeltmeler, kod renklendirme dahil (yapıldı ve canlıda; opsiyonel
-   `<lastmod>` dışında açık madde yok).
+1. Aşama 0 — teknik düzeltmeler, kod renklendirme dahil (yapıldı ve canlıda; ders
+   adreslerindeki `<lastmod>` uygulandı, canlı doğrulaması bekliyor).
 2. Aşama 2 — login duvarı kararı (yapıldı ve canlıda).
 3. Aşama 1 — Search Console doğrulaması ve sitemap gönderimi (yapıldı); açık kalanlar:
    indexlenmenin izlenmesi, Bing Webmaster Tools, GA4. **← sıradaki adım**
@@ -530,3 +590,9 @@ verilmesi gerekir.
 - **2026-10-09** — `seo_description` yeniden yazımının ikinci turu (`V1136`, 24 ders, 48
   kayıt; 122–182 karakter): "bu proje" ifadeleri, ters tırnaklar ve fazla kısa açıklamalar.
   `component-scanning` ve `validation-exception-handling` bilinçli olarak değiştirilmedi.
+- **2026-10-11** — Ders sayfalarına yazar ve "Son güncelleme" satırı, JSON-LD'ye `author` /
+  `dateModified`, sitemap'te 335 ders adresine `<lastmod>` eklendi
+  (`V1137`: `topic_translation.published_at` / `updated_at`, 336 kayıt). `published_at`
+  ilk git commit tarihidir, gerçek yayın tarihi değildir; bu yüzden hiçbir yerde
+  yayınlanmaz (`datePublished` yok). Yerelde doğrulandı (`mvn test`
+  159/159; mobil görünüm 390 ve 320 pikselde kontrol edildi); push ve canlı doğrulama açık.

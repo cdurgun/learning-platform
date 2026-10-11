@@ -1,5 +1,9 @@
 package com.cdurgun.learning.controller;
 
+import com.cdurgun.learning.domain.Language;
+import com.cdurgun.learning.domain.TopicTranslation;
+import com.cdurgun.learning.repository.TopicTranslationRepository;
+import com.cdurgun.learning.web.StaticPage;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,9 +19,13 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -44,6 +52,9 @@ class SitemapXmlTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private TopicTranslationRepository topicTranslationRepository;
 
     private MockHttpServletResponse fetch() throws Exception {
         return mockMvc.perform(get("/sitemap.xml")).andReturn().getResponse();
@@ -123,6 +134,94 @@ class SitemapXmlTest {
                 assertThat(link.getAttribute("hreflang")).isIn("en", "tr", "x-default");
                 assertThat(link.getAttribute("href")).startsWith(BASE + "/");
             }
+        }
+    }
+
+    private static String loc(Element url) {
+        return url.getElementsByTagNameNS(SITEMAP_NS, "loc").item(0).getTextContent();
+    }
+
+    private static boolean isTopicUrl(Element url) {
+        return loc(url).contains("/topics/");
+    }
+
+    @Test
+    void everyTopicUrlHasItsOwnTranslationsUpdatedAtAsLastmod() throws Exception {
+        // adres -> o çevirinin updated_at değeri (EN ve TR ayrı ayrı).
+        Map<String, LocalDate> expected = new HashMap<>();
+        for (TopicTranslation translation : topicTranslationRepository.findAllPublishedWithTopic()) {
+            expected.put(BASE + "/" + translation.getLanguage().getCode() + "/topics/"
+                    + translation.getTopic().getSlug(), translation.getUpdatedAt());
+        }
+
+        Map<String, String> actual = new HashMap<>();
+        for (Element url : urlElements(parse(fetch()))) {
+            if (!isTopicUrl(url)) {
+                continue;
+            }
+            NodeList lastmod = url.getElementsByTagNameNS(SITEMAP_NS, "lastmod");
+            assertThat(lastmod.getLength()).as("one <lastmod> for " + loc(url)).isEqualTo(1);
+            actual.put(loc(url), lastmod.item(0).getTextContent());
+
+            // Şemadaki sıra: <loc>, hemen ardından <lastmod>, sonra xhtml:link'ler.
+            List<String> childNames = new ArrayList<>();
+            for (Node child = url.getFirstChild(); child != null; child = child.getNextSibling()) {
+                if (child.getNodeType() == Node.ELEMENT_NODE) {
+                    childNames.add(child.getLocalName());
+                }
+            }
+            assertThat(childNames.subList(0, 2)).containsExactly("loc", "lastmod");
+            assertThat(childNames.subList(2, childNames.size())).containsOnly("link");
+        }
+
+        assertThat(actual.keySet()).isEqualTo(expected.keySet());
+        assertThat(actual).allSatisfy((loc, lastmod) -> {
+            assertThat(lastmod).as(loc).matches("\\d{4}-\\d{2}-\\d{2}");
+            assertThat(lastmod).as(loc).isEqualTo(expected.get(loc).toString());
+            assertThat(LocalDate.parse(lastmod)).as(loc).isBeforeOrEqualTo(LocalDate.now());
+        });
+        assertThat(actual).containsKeys(BASE + "/en/topics/enum", BASE + "/tr/topics/enum");
+    }
+
+    @Test
+    void onlyTopicUrlsHaveLastmod() throws Exception {
+        List<Element> others = urlElements(parse(fetch())).stream().filter(url -> !isTopicUrl(url)).toList();
+
+        assertThat(others).isNotEmpty();
+        assertThat(others).allSatisfy(url ->
+                assertThat(url.getElementsByTagNameNS(SITEMAP_NS, "lastmod").getLength()).as(loc(url)).isZero());
+        assertThat(others.stream().map(SitemapXmlTest::loc))
+                .contains(BASE + "/en", BASE + "/tr", BASE + "/en/courses/java", BASE + "/tr/about");
+    }
+
+    @Test
+    void urlCountAndHreflangAlternatesAreUnchangedByLastmod() throws Exception {
+        List<TopicTranslation> published = topicTranslationRepository.findAllPublishedWithTopic();
+        long courseUrls = published.stream()
+                .map(tt -> tt.getLanguage().getCode() + "/" + tt.getTopic().getCategory().getCourse().getSlug())
+                .distinct().count();
+        long staticUrls = Arrays.stream(StaticPage.values()).filter(StaticPage::isIndexable).count()
+                * Language.values().length;
+        List<Element> urls = urlElements(parse(fetch()));
+
+        assertThat(urls).hasSize((int) (Language.values().length + staticUrls + courseUrls + published.size()));
+        assertThat(urls.stream().filter(SitemapXmlTest::isTopicUrl)).hasSize(published.size());
+
+        // Her ders adresi: yayındaki her dil için bir alternatif + x-default, biri kendisine işaret eder.
+        Map<String, Long> publishedLanguagesBySlug = new HashMap<>();
+        published.forEach(tt -> publishedLanguagesBySlug.merge(tt.getTopic().getSlug(), 1L, Long::sum));
+        for (Element url : urls) {
+            if (!isTopicUrl(url)) {
+                continue;
+            }
+            String slug = loc(url).substring(loc(url).lastIndexOf('/') + 1);
+            NodeList links = url.getElementsByTagNameNS(XHTML_NS, "link");
+            List<String> hrefs = new ArrayList<>();
+            for (int i = 0; i < links.getLength(); i++) {
+                hrefs.add(((Element) links.item(i)).getAttribute("href"));
+            }
+            assertThat(hrefs).as(loc(url)).hasSize((int) (publishedLanguagesBySlug.get(slug) + 1)).contains(loc(url));
+            assertThat(hrefs).as(loc(url)).allSatisfy(href -> assertThat(href).endsWith("/topics/" + slug));
         }
     }
 }

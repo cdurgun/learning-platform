@@ -5,7 +5,8 @@ Kullanım:
     python3 .claude/skills/content-check/check_content.py [seçenekler]
 
     --slug SLUG      yalnızca bu konu(lar) (virgülle ayrılabilir)
-    --only KONTROL   yalnızca bu kontrol(ler): dosya,embed,baslik,atif,markdown,migration,seo,soru
+    --only KONTROL   yalnızca bu kontrol(ler): dosya,embed,baslik,atif,markdown,migration,
+                     seo,soru,tarih
     --all            her kontrolde tüm bulguları yaz (varsayılan: kontrol başına ilk 15)
     --report DOSYA   tam raporu (tüm bulgular) bu markdown dosyasına da yaz
     --no-db          veritabanı gerektiren kontrolleri atla
@@ -89,6 +90,7 @@ CHECKS = {
     "migration": "Migration dosyaları",
     "seo": "SEO başlık ve açıklamaları",
     "soru": "Yayındaki quiz sorularının metni",
+    "tarih": "Push edilmemiş içerik değişiklikleri <-> updated_at migration'ı",
 }
 
 
@@ -576,8 +578,107 @@ def check_questions(docs, db, f, slugs):
                 break
 
 
+# topic_translation.updated_at'i değiştiren / bir çeviriyi yayına alan UPDATE ifadeleri (tek ifade
+# içinde, yorum satırları ayıklandıktan sonra aranır).
+SETS_UPDATED_AT = re.compile(r"\bUPDATE\s+topic_translation\b[^;]*?\bSET\b[^;]*?\bupdated_at\s*=", re.I | re.S)
+PUBLISHES = re.compile(r"\bUPDATE\s+topic_translation\b[^;]*?\bSET\b[^;]*?\bpublished\s*=\s*true\b[^;]*", re.I | re.S)
+INSERTS_TRANSLATION = re.compile(r"\bINSERT\s+INTO\s+topic_translation\b", re.I)
+
+
+def pending_changes():
+    """origin/main'e göre henüz push edilmemiş değişiklikler: {yol: 'A' | 'M' | 'D'}.
+
+    Commit'lenmiş-ama-push'lanmamış, commit'lenmemiş ve yeni (untracked) dosyaları kapsar. Yalnızca
+    HANGİ dosyaların değiştiğine bakar; commit tarihlerini OKUMAZ. Belirlenemezse None döner.
+    """
+    def git(*args):
+        result = subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True)
+        return result.stdout if result.returncode == 0 else None
+
+    base = git("merge-base", "HEAD", "origin/main")
+    diff = git("diff", "--name-status", "--no-renames", base.strip()) if base else None
+    untracked = git("ls-files", "--others", "--exclude-standard")
+    if diff is None or untracked is None:
+        return None
+    changes = {}
+    for line in diff.splitlines():
+        status, _, path = line.partition("\t")
+        changes[path] = status[0]
+    for path in untracked.splitlines():
+        changes[path] = "A"
+    return changes
+
+
+def check_dates(docs, db, f, slugs):
+    """Tarihleri HESAPLAMAZ ve DEĞİŞTİRMEZ: yalnızca push edilmemiş değişiklik setinde içerik ile
+    updated_at migration'ının birlikte olup olmadığını raporlar (bkz. CLAUDE.md, "Mimari")."""
+    changes = pending_changes()
+    if changes is None:
+        f.add("tarih", "BİLGİ", "git", None, "origin/main'e göre değişiklik seti belirlenemedi; kontrol atlandı")
+        return
+    content_prefix = str(CONTENT.relative_to(ROOT)) + "/"
+    examples_prefix = str(EXAMPLES.relative_to(ROOT)) + "/"
+    migrations_prefix = str(MIGRATIONS.relative_to(ROOT)) + "/"
+    all_slugs = {p.stem for lang in LANGS for p in (CONTENT / lang).glob("*.md")}
+
+    new_docs = set()          # (lang, slug): bu sette eklenen ders dosyaları
+    changed = defaultdict(list)   # slug -> değişen yollar (mevcut derslerin metni / örnek kodu)
+    migrations = {}           # yol -> yorumları ayıklanmış SQL (bu sette eklenen/değişen migration'lar)
+    example_changes = defaultdict(list)
+    for path, status in sorted(changes.items()):
+        if path.startswith(content_prefix) and path.endswith(".md"):
+            lang, _, name = path[len(content_prefix):].partition("/")
+            if status == "A":
+                new_docs.add((lang, name[:-3]))
+            elif status == "M":
+                changed[name[:-3]].append(path)
+        elif path.startswith(examples_prefix):
+            example_changes[path[len(examples_prefix):].split("/", 1)[0]].append(path)
+        elif path.startswith(migrations_prefix) and path.endswith(".sql") and status != "D":
+            lines = (ROOT / path).read_text(encoding="utf-8").splitlines()
+            migrations[path] = "\n".join(line for line in lines if not line.lstrip().startswith("--"))
+    for slug, paths in example_changes.items():
+        if not any((lang, slug) in new_docs for lang in LANGS):   # yeni dersin örnekleri değil
+            changed[slug].extend(paths)
+
+    def mentioned(sql):
+        return {slug for slug in all_slugs if f"'{slug}'" in sql}
+
+    dated = {path: mentioned(sql) for path, sql in migrations.items() if SETS_UPDATED_AT.search(sql)}
+    dated_slugs = set().union(*dated.values()) if dated else set()
+    inserted = set().union(*(mentioned(sql) for sql in migrations.values() if INSERTS_TRANSLATION.search(sql)), set())
+    published = defaultdict(set)   # migration yolu -> yayına aldığı slug'lar
+    for path, sql in migrations.items():
+        for statement in PUBLISHES.findall(sql):
+            published[path] |= mentioned(statement)
+    published_slugs = set().union(*published.values()) if published else set()
+
+    for slug, paths in sorted(changed.items()):
+        if (slugs and slug not in slugs) or slug in dated_slugs:
+            continue
+        what = ", ".join(p.split("/resources/", 1)[-1] for p in paths[:4]) + (" ..." if len(paths) > 4 else "")
+        f.add("tarih", "OLASI", paths[0], None,
+              f"içerik değişti ({what}) ama bu değişiklik setinde '{slug}' için updated_at'i ilerleten bir "
+              f"migration yok -- yazım hatası gibi küçük bir düzeltmeyse yok sayın")
+    for path, mentioned_slugs in sorted(published.items()):
+        missing = sorted(s for s in mentioned_slugs - inserted - dated_slugs if not slugs or s in slugs)
+        if missing:
+            f.add("tarih", "OLASI", path, None,
+                  f"çeviriyi yayına alıyor ama updated_at yazmıyor ({', '.join(missing)}) -- sayfa, taslak "
+                  f"satırın eklendiği günü 'son güncelleme' olarak gösterir")
+    for path, mentioned_slugs in sorted(dated.items()):
+        idle = sorted(s for s in mentioned_slugs - set(changed) - published_slugs
+                      if not any((lang, s) in new_docs for lang in LANGS) and (not slugs or s in slugs))
+        if idle:
+            preview = ", ".join(idle[:5]) + (f" (+{len(idle) - 5})" if len(idle) > 5 else "")
+            f.add("tarih", "BİLGİ", path, None,
+                  f"{len(idle)} dersin updated_at değerini değiştiriyor ama bu değişiklik setinde içerikleri "
+                  f"değişmemiş: {preview}")
+
+
 RUNNERS = {"dosya": check_files, "embed": check_embeds, "baslik": check_headings, "atif": check_references,
-           "markdown": check_markdown, "migration": check_migrations, "seo": check_seo, "soru": check_questions}
+           "markdown": check_markdown, "migration": check_migrations, "seo": check_seo, "soru": check_questions,
+           "tarih": check_dates}
 
 
 # --------------------------------------------------------------------------------- çıktı

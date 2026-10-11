@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 /**
  * Bir konunun tek bir dildeki başlık/özet/SEO metadata'sı ve yayın durumu.
  * {@code published} kasıtlı olarak burada — bir dil yayında iken diğeri taslak olabilir.
@@ -55,4 +57,20 @@ public class TopicTranslation {
 
     @Column(nullable = false)
     private boolean published;
+
+    /**
+     * {@code content/{language}/{slug}.md} dosyasının ilk git commit tarihi (bkz. {@code V1137}).
+     * Sitenin gerçek yayın tarihi DEĞİL; bu yüzden hiçbir sayfada, JSON-LD'de ya da sitemap'te
+     * YAYINLANMAZ. Yalnızca iç kayıttır ({@code updated_at >= published_at} kısıtının alt sınırı).
+     */
+    @Column(name = "published_at", nullable = false)
+    private LocalDate publishedAt;
+
+    /**
+     * Ders metninin ya da sayfada görünen örnek kodun son anlamlı değişikliği. Otomatik
+     * GÜNCELLENMEZ: içerik dosyada yaşadığı için bu satır değişmez, tarih bir migration'la elle
+     * ilerletilir.
+     */
+    @Column(name = "updated_at", nullable = false)
+    private LocalDate updatedAt;
 }
