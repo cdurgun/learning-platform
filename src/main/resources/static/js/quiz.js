@@ -62,11 +62,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 var formCheck = input.closest('.form-check');
                 var isSelected = selectedIds.indexOf(input.value) !== -1;
                 var isCorrectOption = correctIds.indexOf(input.value) !== -1;
-                if (isSelected) {
-                    formCheck.classList.add(result.correct ? 'text-success' : 'text-danger');
-                }
-                if (!result.correct && isCorrectOption) {
+                if (isCorrectOption) {
                     formCheck.classList.add('text-success');
+                } else if (isSelected) {
+                    formCheck.classList.add('text-danger');
                 }
             });
             var feedback = questionEl.querySelector('.quiz-result-feedback');
