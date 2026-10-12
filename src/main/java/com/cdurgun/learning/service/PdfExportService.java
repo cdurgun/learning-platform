@@ -18,7 +18,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -78,7 +77,7 @@ public class PdfExportService {
 
     /**
      * @param topic       dil-bağımsız konu metadata'sı (zorluk, süre, kategori/kurs adı için)
-     * @param translation bu dildeki başlık/özet
+     * @param translation bu dildeki başlık/özet ve son güncelleme tarihi ({@code updatedAt})
      * @param language    hangi dilde üretileceği (yazı yönü değil, mesaj/tarih/URL için)
      * @param contentHtml {@link MarkdownService#render} çıktısı -- web sayfasında gösterilenle
      *                    BİREBİR AYNI HTML (tek doğruluk kaynağı korunur, PDF için ayrı bir
@@ -121,18 +120,18 @@ public class PdfExportService {
         String canonicalUrl = baseUrl + "/" + language.getCode() + "/topics/" + topic.getSlug();
         context.setVariable("canonicalUrl", canonicalUrl);
 
-        String generatedOnLabel = messageSource.getMessage("pdf.generatedOn",
-                new Object[]{formatDate(locale)}, locale);
-        context.setVariable("generatedOnLabel", generatedOnLabel);
+        // Ders sayfasındaki "Son güncelleme" satırıyla AYNI etiket, tarih ve biçim (bkz. topic.html):
+        // dersin updated_at değeri. PDF'in üretildiği gün BİLİNÇLİ OLARAK gösterilmez -- dersin
+        // tarihi sanılabiliyordu.
+        String lastUpdated = translation.getUpdatedAt().format(DateTimeFormatter.ofPattern(
+                messageSource.getMessage("topic.byline.dateFormat", null, locale), locale));
+        context.setVariable("lastUpdatedLabel",
+                messageSource.getMessage("topic.byline.updated", null, locale) + " " + lastUpdated);
         context.setVariable("readOnlineLabel", messageSource.getMessage("pdf.readOnline", null, locale));
         context.setVariable("pageFooterPrefix", messageSource.getMessage("pdf.pageFooterPrefix", null, locale));
         context.setVariable("pageFooterConnector", messageSource.getMessage("pdf.pageFooterConnector", null, locale));
 
         return context;
-    }
-
-    private String formatDate(Locale locale) {
-        return LocalDate.now().format(DateTimeFormatter.ofPattern("d MMMM yyyy", locale));
     }
 
     private void registerFonts(PdfRendererBuilder builder) {

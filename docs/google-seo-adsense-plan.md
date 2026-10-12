@@ -382,7 +382,15 @@ yalnızca o dosyayı düzenlemek yeterli.
     `tarih` kontrolü eklendi: push edilmemiş değişiklik setinde içerik değişmiş ama `updated_at`
     migration'ı yoksa, ya da bir çeviri `updated_at` yazılmadan yayına alınıyorsa uyarır.
     İkisi de yalnızca raporlar; tarih hesaplamaz, git commit tarihlerini okumaz.
-  - [ ] PDF üzerindeki tarih hâlâ PDF'in üretildiği gündür; ayrı bir iş.
+  - [x] **PDF tarihi** (2026-10-12; yerelde doğrulandı, push ve canlı doğrulama bekliyor).
+    PDF'in kapak bloğu artık ders çevirisinin `updated_at` değerini gösterir; etiket ve biçim
+    ders sayfasıyla aynı mesaj anahtarlarından gelir (TR "Son güncelleme: 6 Ekim 2026",
+    EN "Last updated: October 6, 2026"). Eskiden PDF'in üretildiği gün yazıyordu
+    ("Oluşturulma tarihi"), bu dersin tarihi sanılabiliyordu; o satır kaldırıldı, üretim
+    tarihi PDF'te artık hiçbir yerde yok. Yazar adı PDF'te yer almaz. İndirme adresi, dosya
+    adı, başlıklar (`X-Robots-Tag: noindex`) ve her istekte yeniden üretim değişmedi.
+    `TopicPdfDateTest` gerçek PDF çıktısının metnini çıkarıp tarihi veritabanındaki
+    `updated_at` ile karşılaştırır; `mvn test` 163/163.
 - [ ] Site gezinmesi boş/yarım sayfa içermesin: yayında olmayan çevirilere menüden
   link verilmediği doğrulanmalı.
 
@@ -605,3 +613,6 @@ verilmesi gerekir.
 - **2026-10-11** — Yukarıdaki değişiklik (`372b214`) canlıya çıktı ve doğrulandı: production'da
   `V1137` uygulandı, `deploy-check` 33/33, canlı sitemap'te 335/335 ders adresinin `<lastmod>`
   değeri onaylanan tarihlerle aynı.
+- **2026-10-12** — Ders PDF'i artık üretildiği günü değil, ders çevirisinin `updated_at`
+  değerini gösteriyor ("Son güncelleme" / "Last updated"); üretim tarihi satırı kaldırıldı,
+  yazar adı eklenmedi. Yerelde doğrulandı (`mvn test` 163/163); push ve canlı doğrulama açık.
