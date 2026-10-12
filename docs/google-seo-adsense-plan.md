@@ -50,8 +50,8 @@ indexlenme ve organik trafik → AdSense başvurusu → reklam yerleşimi.
 > hâlâ yok.
 >
 > **Güncelleme (2026-10-11):** 10. madde (`<lastmod>`) ile ders sayfasındaki yazar ve
-> güncellenme tarihi uygulandı ve yerelde doğrulandı (bkz. Aşama 0 ve Aşama 3 "Diğer").
-> Henüz commit/push edilmedi; canlı doğrulama bekliyor.
+> güncellenme tarihi uygulandı ve canlıda doğrulandı (`372b214`; bkz. Aşama 0 ve Aşama 3
+> "Diğer"). "Sorunlar" listesinde açık madde kalmadı.
 
 ### Zaten iyi olanlar
 
@@ -149,13 +149,14 @@ sitemap göndermek, Google'ın bozuk başlıkları indexlemesi demek.
   Consent değişiklikleri birlikteyken `mvn test` 151/151 başarılı oldu; production'da
   Highlight.js Java ve Dockerfile blokları headless Chrome ile doğrulandı (Java dersinde
   19/19, Docker dersinde 9/9 Dockerfile bloğu renkli, sayfa hatası yok).
-- [x] **Sitemap'te ders adreslerine `<lastmod>`** (2026-10-11; yerelde doğrulandı, push ve
-  canlı doğrulama bekliyor). Değer, o çevirinin `topic_translation.updated_at` alanıdır
+- [x] **Sitemap'te ders adreslerine `<lastmod>`** (2026-10-11, `372b214`; canlıda). Değer, o çevirinin `topic_translation.updated_at` alanıdır
   (`YYYY-MM-DD`; kolonlar için bkz. Aşama 3 "Diğer"). Yalnızca 335 ders adresinde vardır;
   anasayfa, kurs ve statik sayfalara (24 adres) güvenilir bir tarih kaynağı olmadığı için
   bilinçli olarak eklenmedi. Toplam adres sayısı 359'da kaldı; `<lastmod>` satırları
   çıkarıldığında yeni sitemap canlıdakiyle bayt bayt aynı (adresler, sıra ve hreflang
-  bağlantıları değişmedi). 335 değerin tamamı onaylanan tarih listesiyle eşleşti.
+  bağlantıları değişmedi). 335 değerin tamamı onaylanan tarih listesiyle eşleşti. Aynı
+  karşılaştırmalar deployment sonrası canlı sitemap'e karşı tekrarlandı: 359 adres, 335 ders
+  adresinin `<lastmod>` değeri listeyle aynı, diğer 24 adreste `<lastmod>` yok.
 
 ## 4. Aşama 1 — Google'a Kayıt (Search Console)
 
@@ -325,8 +326,7 @@ yalnızca o dosyayı düzenlemek yeterli.
 
 - [ ] **`ads.txt`**: AdSense hesabı açıldıktan sonra verilen yayıncı kimliğiyle
   `static/ads.txt` olarak eklenir (`google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`).
-- [x] **Her ders sayfasında yazar ve güncellenme tarihi** (2026-10-11; yerelde doğrulandı,
-  push ve canlı doğrulama bekliyor).
+- [x] **Her ders sayfasında yazar ve güncellenme tarihi** (2026-10-11, `372b214`; canlıda).
   - **Veri:** `core/V1137` ile `topic_translation` tablosuna `published_at` ve `updated_at`
     eklendi (`DATE NOT NULL`, varsayılan `CURRENT_DATE`, kısıt `updated_at >= published_at`);
     `TopicTranslation` entity'sinde `publishedAt` / `updatedAt` (`LocalDate`). Mevcut 336
@@ -369,7 +369,13 @@ yalnızca o dosyayı düzenlemek yeterli.
     görüntü alma yönteminden kaynaklanmıştı. Kozmetik not (düzeltilmedi): dar ekranda satır
     etiketin ortasından kırılabiliyor ("Son" / "güncelleme: ..."); etiketi bölünmez yapmak
     320 pikselde uzun tarihlerde taşma riski taşıdığı için bilinçli olarak yapılmadı.
-  - [ ] Canlı doğrulama (deployment, `deploy-check`, 335 adreslik `<lastmod>` taraması).
+  - [x] **Canlı doğrulama** (2026-10-11, `372b214`): Railway deployment'ı başarılı; production
+    log'unda Flyway şemayı 1136'dan aldı ve "Successfully applied 1 migration ... now at
+    version v1137" yazdı. `deploy-check` 33/33 (mevcut 29 + yeni 4). `enum` ve
+    `wrapper-classes` derslerinin EN ve TR sayfalarında yazar satırı, `<time>` değeri ve
+    JSON-LD `author` / `dateModified` onaylanan tarihlerle aynı; sayfalarda `datePublished`
+    yok. Canlı sitemap: 359 adres, 335/335 ders adresinde doğru `<lastmod>`, diğer 24 adreste
+    yok; `<lastmod>` satırları dışında deployment öncesi sitemap ile bayt bayt aynı.
   - [x] **Kontrol script'leri** (2026-10-11): `deploy-check`'e "Yazar ve güncellenme tarihi"
     bölümü eklendi (4 kontrol: yazar satırı, JSON-LD `author` + `dateModified`, `<lastmod>`'un
     yalnızca ders adreslerinde olması, sayfa ile sitemap tarihinin aynı olması). `content-check`'e
@@ -514,8 +520,8 @@ verilmesi gerekir.
 
 ## 10. Özet Sıra
 
-1. Aşama 0 — teknik düzeltmeler, kod renklendirme dahil (yapıldı ve canlıda; ders
-   adreslerindeki `<lastmod>` uygulandı, canlı doğrulaması bekliyor).
+1. Aşama 0 — teknik düzeltmeler, kod renklendirme ve ders adreslerindeki `<lastmod>` dahil
+   (yapıldı ve canlıda; açık madde yok).
 2. Aşama 2 — login duvarı kararı (yapıldı ve canlıda).
 3. Aşama 1 — Search Console doğrulaması ve sitemap gönderimi (yapıldı); açık kalanlar:
    indexlenmenin izlenmesi, Bing Webmaster Tools, GA4. **← sıradaki adım**
@@ -595,4 +601,7 @@ verilmesi gerekir.
   (`V1137`: `topic_translation.published_at` / `updated_at`, 336 kayıt). `published_at`
   ilk git commit tarihidir, gerçek yayın tarihi değildir; bu yüzden hiçbir yerde
   yayınlanmaz (`datePublished` yok). Yerelde doğrulandı (`mvn test`
-  159/159; mobil görünüm 390 ve 320 pikselde kontrol edildi); push ve canlı doğrulama açık.
+  159/159; mobil görünüm 390 ve 320 pikselde kontrol edildi).
+- **2026-10-11** — Yukarıdaki değişiklik (`372b214`) canlıya çıktı ve doğrulandı: production'da
+  `V1137` uygulandı, `deploy-check` 33/33, canlı sitemap'te 335/335 ders adresinin `<lastmod>`
+  değeri onaylanan tarihlerle aynı.
