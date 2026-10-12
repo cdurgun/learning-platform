@@ -382,7 +382,7 @@ yalnızca o dosyayı düzenlemek yeterli.
     `tarih` kontrolü eklendi: push edilmemiş değişiklik setinde içerik değişmiş ama `updated_at`
     migration'ı yoksa, ya da bir çeviri `updated_at` yazılmadan yayına alınıyorsa uyarır.
     İkisi de yalnızca raporlar; tarih hesaplamaz, git commit tarihlerini okumaz.
-  - [x] **PDF tarihi** (2026-10-12; yerelde doğrulandı, push ve canlı doğrulama bekliyor).
+  - [x] **PDF tarihi** (2026-10-12, `6bbdd15`; canlıda).
     PDF'in kapak bloğu artık ders çevirisinin `updated_at` değerini gösterir; etiket ve biçim
     ders sayfasıyla aynı mesaj anahtarlarından gelir (TR "Son güncelleme: 6 Ekim 2026",
     EN "Last updated: October 6, 2026"). Eskiden PDF'in üretildiği gün yazıyordu
@@ -390,7 +390,12 @@ yalnızca o dosyayı düzenlemek yeterli.
     tarihi PDF'te artık hiçbir yerde yok. Yazar adı PDF'te yer almaz. İndirme adresi, dosya
     adı, başlıklar (`X-Robots-Tag: noindex`) ve her istekte yeniden üretim değişmedi.
     `TopicPdfDateTest` gerçek PDF çıktısının metnini çıkarıp tarihi veritabanındaki
-    `updated_at` ile karşılaştırır; `mvn test` 163/163.
+    `updated_at` ile karşılaştırır; `mvn test` 163/163. Canlı doğrulama (2026-10-12):
+    deployment başarılı, migration yok (şema 1137'de kaldı), `deploy-check` 33/33. Canlıdan
+    indirilen `wrapper-classes` PDF'lerinde TR "Son güncelleme: 6 Ekim 2026", EN "Last
+    updated: August 18, 2026" (ikisi de o çevirinin `updated_at` değeri); üretim tarihi ve
+    yazar adı yok; dosya adları ve başlıklar aynı. Sitemap değişmedi (359 adres, 335
+    `<lastmod>`).
 - [ ] Site gezinmesi boş/yarım sayfa içermesin: yayında olmayan çevirilere menüden
   link verilmediği doğrulanmalı.
 
@@ -615,4 +620,5 @@ verilmesi gerekir.
   değeri onaylanan tarihlerle aynı.
 - **2026-10-12** — Ders PDF'i artık üretildiği günü değil, ders çevirisinin `updated_at`
   değerini gösteriyor ("Son güncelleme" / "Last updated"); üretim tarihi satırı kaldırıldı,
-  yazar adı eklenmedi. Yerelde doğrulandı (`mvn test` 163/163); push ve canlı doğrulama açık.
+  yazar adı eklenmedi (`6bbdd15`). Canlıda doğrulandı: `deploy-check` 33/33, canlıdan
+  indirilen TR ve EN PDF'lerde tarih o çevirinin `updated_at` değeriyle aynı.
