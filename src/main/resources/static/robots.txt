@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /media/reels/
 
 Sitemap: https://www.learnforgex.com/sitemap.xml
