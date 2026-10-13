@@ -141,6 +141,60 @@ body {
     }
 }
 
+/* Sosyal medya ikonları (YouTube/Instagram; bkz. fragments/layout.html :: social).
+   Başlangıçta açık gri, hover/focus'ta marka rengi. Navbar'daki kopya yalnızca md+
+   ekranda görünür (d-none d-md-flex); dar ekranda footer'daki kopya kullanılır. */
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.6);
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.social-youtube:hover,
+.social-youtube:focus-visible {
+    color: #ff0000;
+    background-color: rgba(255, 0, 0, 0.12);
+}
+
+.social-instagram:hover,
+.social-instagram:focus-visible {
+    color: #e4405f;
+    background-color: rgba(228, 64, 95, 0.12);
+}
+
+/* Footer açık zeminde: başlangıç rengi navbar'daki koyu zemine göre ayarlanan beyazımsı
+   değil, Bootstrap'in link-secondary tonuna yakın gri. */
+footer .social-link {
+    color: #6c757d;
+}
+
+footer .social-youtube:hover,
+footer .social-youtube:focus-visible {
+    color: #ff0000;
+}
+
+footer .social-instagram:hover,
+footer .social-instagram:focus-visible {
+    color: #e4405f;
+}
+
+.navbar-divider {
+    width: 1px;
+    height: 1.375rem;
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Navbar'daki kullanıcı adı: uzun adlar navbar'ı ikinci satıra taşırmasın diye sınırlı
+   genişlikte, taşan kısım "…" ile kısaltılır (tam ad title'da). */
+.navbar-user-name {
+    max-width: min(12rem, 40vw);
+}
+
 /* Sabit bilgi sayfaları (page.html): düz yazı, okunabilir satır uzunluğu. */
 .static-page {
     max-width: 46rem;
