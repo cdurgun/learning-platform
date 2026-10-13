@@ -53,10 +53,21 @@
         }
     }
 
+    // Banner sabit konumlu (position: fixed) olduğu için sayfanın sonundaki footer'ın üstüne
+    // biner. Açıkken body'nin altına banner'ın o an kapladığı kadar boşluk bırakılır, böylece
+    // footer banner'ın üstüne kaydırılabilir; kapanınca boşluk kalkar. Yükseklik ölçülür,
+    // sabit yazılmaz: ayarlar paneli, dil ve ekran genişliği banner'ın boyunu değiştirir.
+    function reserveSpace() {
+        document.body.style.paddingBottom = banner.hidden
+            ? ''
+            : Math.ceil(document.documentElement.clientHeight - banner.getBoundingClientRect().top) + 'px';
+    }
+
     function showSettings(visible) {
         settings.hidden = !visible;
         saveButton.hidden = !visible;
         settingsButton.hidden = visible;
+        reserveSpace();
     }
 
     function openBanner(withSettings) {
@@ -64,10 +75,12 @@
         analyticsToggle.checked = !!state && state.choice === 'accepted';
         showSettings(withSettings);
         banner.hidden = false;
+        reserveSpace();
     }
 
     function choose(choice) {
         banner.hidden = true;
+        reserveSpace();
         applyConsent(storeConsent(choice));
     }
 
@@ -92,6 +105,8 @@
             choose(analyticsToggle.checked ? 'accepted' : 'rejected');
         }
     });
+
+    window.addEventListener('resize', reserveSpace);
 
     var stored = readConsent();
     if (stored) {
