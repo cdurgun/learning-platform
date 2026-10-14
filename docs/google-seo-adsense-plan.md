@@ -361,6 +361,19 @@ yalnızca o dosyayı düzenlemek yeterli.
   tarayıcı tarafında Cloudflare'ın ölçüm script'i çalışmıyor. Script yeniden görünürse
   bakılacak yer bu kural.
 
+### Cloudflare e-posta gizleme
+
+- [x] **Email Address Obfuscation incelendi, değişiklik yapılmadı** (2026-10-14, salt-okunur).
+  Cloudflare, canlıda Gizlilik, İletişim ve Koşullar sayfalarındaki e-posta adresini HTML'de
+  gizliyor ve sayfaya sitenin kendi alan adından `email-decode.min.js` script'ini ekliyor.
+  Script adresi tarayıcıda `mailto:` bağlantısına geri çeviriyor. Mevcut Gizlilik Politikası'yla
+  çelişmediği gözlemlendi: incelenen sürümünde çerez, ek ağ isteği ya da tarayıcı depolaması
+  kullanılmıyor. **Bilinen erişilebilirlik sınırlaması:** JavaScript kapalıyken adres
+  "[email protected]" olarak görünüyor ve bağlantı Cloudflare'ın bir 404 sayfasına gidiyor.
+  Şu an ne Cloudflare ayarında ne de politikada değişiklik planlanıyor. İletişim bağlantıları
+  ya da Cloudflare yapılandırması değişirse yeniden değerlendirilmeli. Ayarın yeri: Cloudflare
+  Security → Settings → Email Address Obfuscation (panelden okunmadı, davranıştan çıkarıldı).
+
 ### Diğer
 
 - [ ] **`ads.txt`**: AdSense hesabı açıldıktan sonra verilen yayıncı kimliğiyle
@@ -670,6 +683,9 @@ verilmesi gerekir.
   Açık kalanlar: sertifikalı CMP (AdSense kodundan önce önkoşul), rızayı geri alma yolu,
   sağlayıcı listesi, reklam kodu eklendiği gün politika güncellemesi, Koşullar kararı, hukuki
   inceleme. GA4 çerez listesi GA4 maddesine taşındı.
+- **2026-10-14** — Cloudflare e-posta gizleme salt-okunur incelendi (bkz. Aşama 3, "Cloudflare
+  e-posta gizleme"); politikayla çelişki görülmedi, değişiklik yapılmadı. JavaScript kapalıyken
+  çalışmayan e-posta bağlantısı bilinen bir sınırlama olarak kaydedildi.
 - **2026-10-12** — Ders PDF'i artık üretildiği günü değil, ders çevirisinin `updated_at`
   değerini gösteriyor ("Son güncelleme" / "Last updated"); üretim tarihi satırı kaldırıldı,
   yazar adı eklenmedi (`6bbdd15`). Canlıda doğrulandı: `deploy-check` 33/33, canlıdan
