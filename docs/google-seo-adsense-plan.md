@@ -197,7 +197,9 @@ ve sitemap göndermektir. Ücretsizdir.
   var, birkaç dakikalık iş.
 - [ ] **Google Analytics 4** mülkü oluştur ve ölçüm kodunu `fragments/layout.html`'e
   ekle. Çerez onayı gelene kadar (Aşama 3) kod yalnızca onay sonrası çalışacak
-  şekilde bağlanmalı.
+  şekilde bağlanmalı. GA4 eklendiğinde analitik çerezlerinin listesi ve Gizlilik
+  Politikası'nın "Analitik" bölümü aynı işte güncellenir (Gizlilik Politikası Aşama 2'den
+  buraya taşındı).
 
 ## 5. Aşama 2 — Login Duvarı ve Indexlenebilirlik (KARAR VERİLDİ)
 
@@ -242,8 +244,10 @@ Hepsi projenin `/{lang:en|tr}/...` desenine uymalı, footer'dan linklenmeli ve
 sitemap'e eklenmeli.
 
 - [x] **Gizlilik Politikası** (`/{lang}/privacy`) — sitenin BUGÜNKÜ durumunu anlatıyor
-  (hesap verisi, zorunlu oturum çerezi, barındırma, jsDelivr CDN). Analitik ve
-  reklam "ileride eklenebilir" diye geçiyor.
+  (hesap verisi, zorunlu oturum çerezi, barındırma, jsDelivr CDN). Aşama 2'den (2026-10-14)
+  beri AdSense açıklamaları EN/TR politikalarda yer alıyor; metin, GA4'ün eklenmediğini ve
+  AdSense reklam kodunun henüz sitede olmadığını açıkça söylüyor. CMP / onay mesajı, rızayı
+  geri alma yolu ve üçüncü taraf sağlayıcı listesi hâlâ açık (aşağıdaki maddeler).
 - [x] **Gizlilik Politikası, Aşama 1: teknik/içerik güncellemesi** (2026-10-08, EN/TR).
   Metin sitenin gerçekten kullandığı hizmetlerle eşitlendi: siteyi kimin işlettiği
   (Cemalettin Durgun), Cloudflare (tüm trafik, olası güvenlik çerezleri), Railway ve
@@ -253,10 +257,40 @@ sitemap'e eklenmeli.
   olarak YOK: ayrı bir hukuki dayanak bölümü ("sözleşmenin ifası", "meşru menfaat", "açık
   rıza" gibi nitelendirmeler), "veri sorumlusu" terimi, posta adresi. Bu, politikanın
   tamamlandığı anlamına gelmez; aşağıdaki iki madde açık.
-- [ ] **Gizlilik Politikası, Aşama 2: GA4/AdSense açılmadan ÖNCE güncelle.** Google'ın
-  çerez kullanımı, üçüncü taraf reklam sağlayıcıları ve kişiselleştirilmiş reklamı
-  kapatma yolu açıkça yazılmalı (AdSense bunu şart koşuyor); analitik ve reklam
-  çerezlerinin listesi ve onayın nasıl geri alınacağı da eklenmeli.
+- [x] **Gizlilik Politikası, Aşama 2: AdSense açıklamaları** (2026-10-14, EN/TR). Google'ın
+  "Required content" sayfasındaki üç açıklama (üçüncü taraf satıcıların ve Google'ın reklam
+  çerezleri, kişiselleştirilmiş reklamı Ads Settings ve aboutads.info üzerinden kapatma),
+  reklam kodunu içeren sayfada Google'a giden veri, Google'ın kendi belgesinden örnek çerezler
+  (`IDE`, `id`, `DSID`, `_gads`; tam liste değil, kaynak linkli), ayrı "Analitik" bölümü.
+  Mevcut durum metinde açıkça yazılı: "bu güncelleme itibarıyla" reklam kodu yok, reklam ve
+  analitik çerezi yok. Reklam çerezlerinin görünür reklam olmasa da kodu içeren sayfada
+  oluşabileceği yazıldı (AdSense Help "How AdSense uses cookies"). Kişiselleştirme kapalıyken
+  ne olduğu Google'ın kendi ifadesine göre yazıldı (partner-sites: bağlamsal reklam sürer;
+  çerez silmek tek başına kişiselleştirmeyi kapatmaz). AEA/BK/İsviçre için onay şartı mevcut
+  bir özellik olarak DEĞİL, "reklam kodu onay mesajından önce eklenmeyecek" taahhüdü olarak
+  yazıldı. "Satılmaz" yalnızca hesap bilgileriyle sınırlı; hesap bilgilerinin Google'a
+  gönderilmediğine dair güvence ve rızayı geri alma yolu bilinçli olarak YOK. Çerez cümlesi
+  temkinli: uygulama "oturum gerektiğinde" `JSESSIONID` kullanır ("tek çerez" iddiası yok).
+  Bu, kodda (çerez API'si yok, CSRF oturumda) ve canlıda (14 Ekim 2026, `curl`: yalnızca
+  login/kayıt sayfası ve login POST'unda `JSESSIONID`, diğer sayfalarda çerez yok) doğrulandı.
+  Kaynaklar: support.google.com/adsense/answer/1348695, /10502938, /7549925, /13554116;
+  google.com/about/company/user-consent-policy; policies.google.com/technologies/cookies;
+  policies.google.com/technologies/partner-sites.
+- [ ] **Rızayı geri alma yolu.** Google'ın onay mesajının sağladığı gerçek geri alma mekanizması
+  hesap açılınca doğrulanıp politikaya eklenmeli (AB kullanıcı rızası politikası açık geri
+  alma talimatı istiyor). Uydurulmuş bir bağlantı adı yazılmamalı.
+- [ ] **Üçüncü taraf reklam sağlayıcıları.** Politika yalnızca Google'ı adıyla anıyor; liste tam
+  değil. Hesaptaki etkin sağlayıcılar görülünce ad ve bağlantılarıyla tamamlanmalı ya da
+  üçüncü taraf reklam sunumu hakkında karar verilmeli.
+- [ ] **Reklam kodu eklendiği gün politika güncellemesi (zorunlu).** Politikadaki "bu güncelleme
+  itibarıyla reklam kodu eklenmemiştir / reklam ve analitik çerezi yok" cümleleri o gün
+  yanlış olur. Aynı push'ta bu cümleler, "Onayın gerektiği yerler" paragrafı (gerçek onay
+  mesajı ve geri alma yolu) ve tarih güncellenmeli; sitede gerçekten oluşan çerezler
+  tarayıcıda gözlenip politikadaki örneklerle karşılaştırılmalı.
+- [ ] **Kullanım Koşulları'nda reklamdan söz etmek gerekir mi?** Şu an Koşullar ne reklama ne
+  Gizlilik Politikası'na atıf yapıyor; gerekip gerekmediğine karar verilmeli.
+- [ ] **AdSense sözleşmesinin güncel (Türkiye) sürümündeki gizlilik maddesi** başvuru sırasında
+  okunup politikayla karşılaştırılmalı (bu çalışmada bulunan sürüm 2018/ABD idi, kullanılmadı).
 - [x] **Hakkında** (`/{lang}/about`) — gerçek metin yazıldı (2026-10-08, EN/TR): platformu
   kimin oluşturduğu (Cemalettin Durgun), yedi kursun kurs sayfalarına linkli listesi,
   erişim kuralı, yaklaşım ve İletişim sayfasına link. `StaticPage.ABOUT` artık
@@ -302,6 +336,11 @@ yalnızca o dosyayı düzenlemek yeterli.
   şart koşuyor. En az zahmetli yol AdSense panelindeki "Gizlilik ve mesajlaşma"
   bölümünden Google'ın kendi onay mesajını etkinleştirmek. Güncel kapsam başvuru
   sırasında teyit edilmeli.
+  **Önkoşul (AdSense kodundan ÖNCE):** sertifikalı CMP / "Privacy & messaging" onay mesajı
+  etkinleştirilip AEA, BK ve İsviçre için çalıştığı doğrulanmadan AdSense kodu (doğrulama
+  kodu dahil) siteye eklenmemeli. Gizlilik Politikası bunu ziyaretçiye taahhüt ediyor.
+  Bu madde kapanmadan AdSense hazırlığı tamamlanmış sayılmaz. Şu an CMP yok; projedeki kendi
+  onay altyapısı kapalı (`app.analytics.consent-enabled=false`) ve sertifikalı bir CMP değil.
 - [ ] GA4 kodu Consent Mode ile bağlanmalı (onay verilmeden analitik çerezi
   yazılmamalı).
 
@@ -463,7 +502,9 @@ düzenli (az da olsa) organik trafik gelmeye başlamışken. Resmi bir asgari tr
 
 - [ ] https://adsense.google.com üzerinden başvur, siteyi ekle.
 - [ ] Verilen doğrulama kodunu `<head>`'e ekle (`fragments/layout.html` ya da ortak
-  head parçası).
+  head parçası). Önce Aşama 3'teki onay mesajı önkoşulu kapanmış olmalı. Kodla aynı
+  push'ta Gizlilik Politikası güncellenmeli (bkz. Aşama 3, "Reklam kodu eklendiği gün
+  politika güncellemesi").
 - [ ] `ads.txt`'yi yayınla.
 - [ ] İnceleme birkaç günden birkaç haftaya kadar sürebilir. Ret gelirse sebep
   genelde "değeri düşük içerik" ya da "site gezinmesi" olur; e-postadaki sebebi
@@ -539,8 +580,11 @@ verilmesi gerekir.
 3. Aşama 1 — Search Console doğrulaması ve sitemap gönderimi (yapıldı); açık kalanlar:
    indexlenmenin izlenmesi, Bing Webmaster Tools, GA4. **← sıradaki adım**
 4. Aşama 3 — yasal sayfalar, Hakkında, footer, kayıt onayı, Cloudflare RUM'un kapatılması
-   ve çerez onayı altyapısı (yapıldı; çerez onayı kapalı duruyor). Açık: çerez onayının
-   GA4 ile birlikte açılması, sertifikalı onay platformu, Gizlilik Politikası Aşama 2.
+   ve çerez onayı altyapısı (yapıldı; çerez onayı kapalı duruyor), Gizlilik Politikası
+   Aşama 2 (yapıldı). Açık: çerez onayının GA4 ile birlikte açılması, sertifikalı CMP /
+   onay mesajı (AdSense kodundan önce; önkoşul), rızayı geri alma yolu, üçüncü taraf
+   sağlayıcı listesi, reklam kodu eklendiği gün politika güncellemesi, Koşullar'da reklam
+   atfı kararı, hukuki inceleme.
 5. Aşama 4 — başlıklar, kurs sayfaları ve breadcrumb (yapıldı); açıklamalar ve iç
    linkleme açık; trafiği izle.
 6. Aşama 5 — AdSense başvurusu, onay sonrası reklam yerleşimi ve `ads.txt`.
@@ -618,6 +662,14 @@ verilmesi gerekir.
 - **2026-10-11** — Yukarıdaki değişiklik (`372b214`) canlıya çıktı ve doğrulandı: production'da
   `V1137` uygulandı, `deploy-check` 33/33, canlı sitemap'te 335/335 ders adresinin `<lastmod>`
   değeri onaylanan tarihlerle aynı.
+- **2026-10-14** — Gizlilik Politikası'nın Aşama 2 güncellemesi yapıldı (EN/TR): AdSense'in
+  zorunlu çerez ve kişiselleştirme açıklamaları, kapatma yolları, Google kaynaklı örnek çerezler,
+  ayrı "Analitik" bölümü. Metin mevcut durumu açıkça söylüyor (reklam kodu, reklam ve analitik
+  çerezi yok); AEA/BK/İsviçre onayı bir taahhüt olarak yazıldı, mevcut özellik olarak değil.
+  `JSESSIONID` kullanımı kodda ve canlıda doğrulandı, politikada temkinli ifadeyle yazıldı.
+  Açık kalanlar: sertifikalı CMP (AdSense kodundan önce önkoşul), rızayı geri alma yolu,
+  sağlayıcı listesi, reklam kodu eklendiği gün politika güncellemesi, Koşullar kararı, hukuki
+  inceleme. GA4 çerez listesi GA4 maddesine taşındı.
 - **2026-10-12** — Ders PDF'i artık üretildiği günü değil, ders çevirisinin `updated_at`
   değerini gösteriyor ("Son güncelleme" / "Last updated"); üretim tarihi satırı kaldırıldı,
   yazar adı eklenmedi (`6bbdd15`). Canlıda doğrulandı: `deploy-check` 33/33, canlıdan
