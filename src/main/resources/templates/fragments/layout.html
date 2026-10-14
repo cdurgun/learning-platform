@@ -22,7 +22,7 @@
 </div>
 
 <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark px-3 sticky-top">
-    <button class="navbar-toggler d-lg-none me-2" type="button"
+    <button th:unless="${hideMenuToggle}" class="navbar-toggler d-lg-none me-2" type="button"
             data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas"
             aria-controls="sidebarOffcanvas" th:aria-label="#{nav.toggleMenu}">
         <span class="navbar-toggler-icon"></span>

@@ -98,6 +98,16 @@ class QuestionReviewControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Pending Questions: 0")));
     }
 
+    @Test
+    void reviewPageHasNoMenuToggleBecauseItHasNoSidebar() throws Exception {
+        MockHttpSession session = loginAsNewAdmin();
+
+        mockMvc.perform(get("/en/admin/questions").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("navbar-toggler"))));
+    }
+
     // ---- Faz C: Publish/Reject durum geçişleri ----
 
     @Test

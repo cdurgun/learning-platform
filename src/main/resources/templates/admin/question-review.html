@@ -17,7 +17,7 @@
 <!-- Bilinçli olarak yalnızca navbar + footer -- public course/quiz sidebar'ı bu
      ekranla ilgisiz, admin sayfası public sayfalardan görsel olarak ayrışıyor
      (bkz. auth/login.html'deki aynı "sidebar yok" deseni). -->
-<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: navbar(hideMenuToggle=true)}"></div>
 
 <div class="container py-4">
     <h1 class="mb-1" th:text="#{admin.questions.title}">Question Review</h1>
