@@ -448,8 +448,16 @@ yalnızca o dosyayı düzenlemek yeterli.
     updated: August 18, 2026" (ikisi de o çevirinin `updated_at` değeri); üretim tarihi ve
     yazar adı yok; dosya adları ve başlıklar aynı. Sitemap değişmedi (359 adres, 335
     `<lastmod>`).
-- [ ] Site gezinmesi boş/yarım sayfa içermesin: yayında olmayan çevirilere menüden
-  link verilmediği doğrulanmalı.
+- [x] Site gezinmesi boş/yarım sayfa içermesin: yayında olmayan çevirilere menüden
+  link verilmediği doğrulanmalı. **Denetim tamamlandı (2026-10-14, salt-okunur), sorun
+  bulunmadı.** Yan menü, anasayfa/kurs kartları ve prev/next `NavigationService`
+  üzerinden yalnızca `published = true` çevirileri gösteriyor. Canlı tarama: 351 sayfa
+  (2 anasayfa, 14 kurs, 335 ders), 703 benzersiz iç hedef (ders içi linkler dahil);
+  702'si yönlendirmesiz 200, tek istisna beklenen `/cdn-cgi/l/email-protection`
+  (Cloudflare e-posta gizleme). Menüdeki ders kümesi sitemap ve yerel dev DB ile
+  birebir aynı (EN 167, TR 168); yayında olmayan tek çeviri `claude-code-cli-commands`
+  EN'e hiçbir yerden link, hreflang ya da dil butonu yok. Linkler sayfa diliyle
+  tutarlı, canonical/hreflang 351 sayfada doğru. Kodda değişiklik yapılmadı.
 
 ## 7. Aşama 4 — Trafik Büyütme
 
