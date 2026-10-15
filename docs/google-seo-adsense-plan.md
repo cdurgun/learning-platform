@@ -546,6 +546,26 @@ yalnızca o dosyayı düzenlemek yeterli.
     yaptığını belirtiyor. Bu bir korelasyon; nedeni kesinleştirmek için yerelde sorgu
     sayısı/süre profili gerekir. Doğrulanırsa olası çözüm: tek sorgu (fetch-join/projection)
     ve/veya menünün dil başına uygulama içinde önbelleklenmesi.
+  - **Takip — N+1 doğrulandı ve giderildi (2026-10-15, `ece1903`).** Yerelde SQL logu
+    menünün istek başına 211 ayrı sorguyla (kurs 1 + kategori 7 + ders 35 + çeviri 168)
+    kurulduğunu gösterdi; menülü sayfalar 212, ders sayfası 272 sorgu çalıştırıyordu.
+    `NavigationService` artık menüyü ve önceki/sonraki sırasını tek bir DTO projection
+    sorgusuyla kuruyor; önbellek ve migration eklenmedi. Yerelde: menülü sayfalar 212 → 2,
+    kurs sayfası 213 → 3, ders sayfası 272 → 9 sorgu. Davranış `NavigationServiceTest`
+    (6 test, beklenen değerler doğrudan SQL'den) ve sorgu sayısı `NavigationQueryCountTest`
+    (menü ve sıra için tam 1 sorgu) ile sabitlendi; `mvn test` 174/174. Yeni kodun ürettiği
+    yan menü HTML'i eski kodun canlı çıktısıyla birebir aynıydı. Deploy başarılı,
+    `deploy-check` 33/33.
+    **Canlı TTFB (`curl`, iki tur, sayfa başına 10'ar istek; medyan ve aralık, sn):**
+    `/en` 0,618 (0,569–0,685) / 0,573 (0,539–0,633); `/tr` 0,604 / 0,579; ders
+    (`/en/topics/string`) 0,574 (0,506–0,609) / 0,575 (0,527–0,682); `/en/about` 0,525.
+    Değişmeyen kontrol sayfaları bu sırada başlangıçtan biraz yavaştı (`/en/login` 0,512 /
+    0,452, `/sitemap.xml` 0,480 / 0,461; başlangıçta 0,36–0,43), yani ağ koşulları farklıydı.
+    Bu yüzden asıl karşılaştırma menülü sayfa ile kontrol sayfası arasındaki fark: önce
+    ~0,48 sn (`/en`) ve ~0,57 sn (ders), sonra iki turda da ~0,1–0,14 sn. Tek makineden,
+    kısa bir zaman aralığında yapılmış ölçüm; kesin bir garanti değil. Kalan ~0,1 sn'lik
+    farkın nedeni (büyük şablonun render'ı, ders sayfasındaki diğer sorgular) ayrıca
+    ölçülmedi. PSI/Lighthouse yeniden ölçülmedi.
   - **Render-blocking CSS:** Lighthouse mobilde ~840–850 ms tahmini tasarruf gösteriyor;
     başlıca kaynak `cdn.jsdelivr.net`'ten gelen Bootstrap CSS (34 KB, ayrı origin
     bağlantısı). Olası iyileştirmeler: `preconnect`, ya da Bootstrap'i kendi origin'den
@@ -749,3 +769,6 @@ verilmesi gerekir.
   "Core Web Vitals"): PSI mobil 98 / masaüstü 100 (anasayfa ve ders), CLS 0, TBT 0; gerçek
   kullanıcı verisi yok. Yan menülü sayfalardaki yüksek TTFB'nin N+1 ile ilişkisi doğrulanmamış
   bir hipotez olarak not edildi; kodda değişiklik yapılmadı.
+- **2026-10-15** — Menüdeki N+1 sorgu sorunu doğrulandı ve giderildi (`ece1903`, bkz. Aşama 4,
+  "Core Web Vitals"): menülü sayfalarda istek başına SQL 212 → 2. Canlıda menülü sayfaların
+  kontrol sayfalarına göre fazladan TTFB'si ~0,5 sn'den ~0,1–0,14 sn'ye indi; `deploy-check` 33/33.
