@@ -1,13 +1,7 @@
 package com.cdurgun.learning.service;
 
-import com.cdurgun.learning.domain.Category;
-import com.cdurgun.learning.domain.Course;
 import com.cdurgun.learning.domain.Language;
-import com.cdurgun.learning.domain.Topic;
-import com.cdurgun.learning.domain.TopicTranslation;
-import com.cdurgun.learning.repository.CategoryRepository;
-import com.cdurgun.learning.repository.CourseRepository;
-import com.cdurgun.learning.repository.TopicRepository;
+import com.cdurgun.learning.repository.NavigationRow;
 import com.cdurgun.learning.repository.TopicTranslationRepository;
 import com.cdurgun.learning.web.nav.CourseNav;
 import com.cdurgun.learning.web.nav.CourseNav.CategoryNav;
@@ -16,69 +10,54 @@ import com.cdurgun.learning.web.nav.SequencedTopic;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Sidebar, anasayfa ve Prev/Next navigasyonu için, seçilen dilde YALNIZCA yayınlanmış
- * konuları içeren görünümler üretir. Boş kalan kategori/kurslar ağaçtan elenir.
+ * konuları içeren görünümler üretir. Boş kalan kategori/kurslar ağaçta hiç yer almaz.
  *
- * <p><b>Not (ölçeklenme):</b> Bu implementasyon, her kategori/konu için ayrı sorgu
- * çalıştırır (N+1). İçerik onlarca/yüzlerce konuya çıktığında, tek bir fetch-join
- * sorgusu ya da projection ile optimize edilmesi gerekir — Faz 1/2/3 hacminde
- * (tek kurs, tek kategori, tek konu) bir sorun teşkil etmez.</p>
+ * <p>Her görünüm tek bir projection sorgusuyla kurulur ({@link NavigationRow}): sorgu
+ * yalnızca bu dilde yayında olan çevirileri, kurs + kategori + konu sırasında döner;
+ * gruplama bellekte yapılır. Bu yüzden yayında konusu olmayan bir kategori ya da kurs
+ * sonuca hiç girmez. (Eskiden kurs/kategori/konu/çeviri başına ayrı sorgu atılıyordu --
+ * menü başına ~210 sorgu.)</p>
  */
 @Service
 public class NavigationService {
 
-    private final CourseRepository courseRepository;
-    private final CategoryRepository categoryRepository;
-    private final TopicRepository topicRepository;
     private final TopicTranslationRepository topicTranslationRepository;
     private final CatalogNames catalogNames;
 
-    public NavigationService(CourseRepository courseRepository,
-                              CategoryRepository categoryRepository,
-                              TopicRepository topicRepository,
-                              TopicTranslationRepository topicTranslationRepository,
-                              CatalogNames catalogNames) {
-        this.catalogNames = catalogNames;
-        this.courseRepository = courseRepository;
-        this.categoryRepository = categoryRepository;
-        this.topicRepository = topicRepository;
+    public NavigationService(TopicTranslationRepository topicTranslationRepository, CatalogNames catalogNames) {
         this.topicTranslationRepository = topicTranslationRepository;
+        this.catalogNames = catalogNames;
     }
 
     public List<CourseNav> buildNavigation(Language language) {
-        List<CourseNav> nav = new ArrayList<>();
+        Map<String, CourseGroup> courses = new LinkedHashMap<>();
 
-        for (Course course : courseRepository.findAllByOrderBySortOrderAsc()) {
-            List<CategoryNav> categoryNavs = new ArrayList<>();
-
-            for (Category category : categoryRepository.findByCourseIdOrderBySortOrderAsc(course.getId())) {
-                List<TopicNavItem> topicItems = new ArrayList<>();
-
-                for (Topic topic : topicRepository.findByCategoryIdOrderBySortOrderAsc(category.getId())) {
-                    topicTranslationRepository.findByTopicIdAndLanguage(topic.getId(), language)
-                            .filter(TopicTranslation::isPublished)
-                            .ifPresent(translation ->
-                                    topicItems.add(new TopicNavItem(
-                                            topic.getSlug(),
-                                            translation.getTitle(),
-                                            translation.getSummary(),
-                                            topic.getDifficulty().name(),
-                                            topic.getEstimatedMinutes())));
-                }
-
-                if (!topicItems.isEmpty()) {
-                    categoryNavs.add(new CategoryNav(catalogNames.category(category, language), category.getSlug(), topicItems));
-                }
-            }
-
-            if (!categoryNavs.isEmpty()) {
-                nav.add(new CourseNav(catalogNames.course(course, language), course.getSlug(), categoryNavs));
-            }
+        for (NavigationRow row : topicTranslationRepository.findPublishedNavigationRows(language)) {
+            CourseGroup course = courses.computeIfAbsent(row.courseSlug(),
+                    slug -> new CourseGroup(catalogNames.course(slug, row.courseName(), language)));
+            List<TopicNavItem> topics = course.categories.computeIfAbsent(row.categorySlug(),
+                    slug -> new CategoryGroup(catalogNames.category(slug, row.categoryName(), language))).topics;
+            topics.add(new TopicNavItem(
+                    row.topicSlug(),
+                    row.title(),
+                    row.summary(),
+                    row.difficulty().name(),
+                    row.estimatedMinutes()));
         }
 
+        List<CourseNav> nav = new ArrayList<>();
+        courses.forEach((courseSlug, course) -> {
+            List<CategoryNav> categoryNavs = new ArrayList<>();
+            course.categories.forEach((categorySlug, category) ->
+                    categoryNavs.add(new CategoryNav(category.name, categorySlug, category.topics)));
+            nav.add(new CourseNav(course.name, courseSlug, categoryNavs));
+        });
         return nav;
     }
 
@@ -90,16 +69,26 @@ public class NavigationService {
      * olur, ekstra bir özel durum kodu gerekmez.
      */
     public List<SequencedTopic> buildCourseSequence(Long courseId, Language language) {
-        List<SequencedTopic> sequence = new ArrayList<>();
+        return topicTranslationRepository.findPublishedNavigationRowsByCourse(courseId, language).stream()
+                .map(row -> new SequencedTopic(row.topicSlug(), row.title()))
+                .toList();
+    }
 
-        for (Category category : categoryRepository.findByCourseIdOrderBySortOrderAsc(courseId)) {
-            for (Topic topic : topicRepository.findByCategoryIdOrderBySortOrderAsc(category.getId())) {
-                topicTranslationRepository.findByTopicIdAndLanguage(topic.getId(), language)
-                        .filter(TopicTranslation::isPublished)
-                        .ifPresent(translation -> sequence.add(new SequencedTopic(topic.getSlug(), translation.getTitle())));
-            }
+    private static final class CourseGroup {
+        private final String name;
+        private final Map<String, CategoryGroup> categories = new LinkedHashMap<>();
+
+        private CourseGroup(String name) {
+            this.name = name;
         }
+    }
 
-        return sequence;
+    private static final class CategoryGroup {
+        private final String name;
+        private final List<TopicNavItem> topics = new ArrayList<>();
+
+        private CategoryGroup(String name) {
+            this.name = name;
+        }
     }
 }

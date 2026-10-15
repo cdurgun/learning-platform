@@ -29,11 +29,21 @@ public class CatalogNames {
     }
 
     public String course(Course course, Language language) {
-        return messageSource.getMessage("course." + course.getSlug() + ".name", null, course.getName(), locale(language));
+        return course(course.getSlug(), course.getName(), language);
     }
 
     public String category(Category category, Language language) {
-        return messageSource.getMessage("category." + category.getSlug() + ".name", null, category.getName(), locale(language));
+        return category(category.getSlug(), category.getName(), language);
+    }
+
+    /** Entity'si yüklenmemiş (ör. projection'dan gelen) bir kurs için: slug + veritabanındaki ad. */
+    public String course(String slug, String name, Language language) {
+        return messageSource.getMessage("course." + slug + ".name", null, name, locale(language));
+    }
+
+    /** Entity'si yüklenmemiş (ör. projection'dan gelen) bir kategori için: slug + veritabanındaki ad. */
+    public String category(String slug, String name, Language language) {
+        return messageSource.getMessage("category." + slug + ".name", null, name, locale(language));
     }
 
     private static Locale locale(Language language) {

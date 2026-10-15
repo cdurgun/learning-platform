@@ -27,4 +27,25 @@ public interface TopicTranslationRepository extends JpaRepository<TopicTranslati
     @Query("select tt from TopicTranslation tt join fetch tt.topic t join fetch t.category c join fetch c.course " +
             "where tt.published = true")
     List<TopicTranslation> findAllPublishedWithTopic();
+
+    /**
+     * Menü için: verilen dilde yayında olan tüm ders çevirileri, kurs/kategori bilgisiyle,
+     * kurs + kategori + konu sort_order sırasında, tek sorguda. Sıra eşitliğinde id'ler
+     * sırayı belirler, böylece aynı kursun/kategorinin satırları her zaman bitişik gelir.
+     */
+    @Query("select new com.cdurgun.learning.repository.NavigationRow(" +
+            "co.slug, co.name, c.slug, c.name, t.slug, tt.title, tt.summary, t.difficulty, t.estimatedMinutes) " +
+            "from TopicTranslation tt join tt.topic t join t.category c join c.course co " +
+            "where tt.language = :language and tt.published = true " +
+            "order by co.sortOrder, co.id, c.sortOrder, c.id, t.sortOrder, t.id")
+    List<NavigationRow> findPublishedNavigationRows(@Param("language") Language language);
+
+    /** Önceki/sonraki navigasyonu için: yukarıdakinin tek bir kursla sınırlı hâli. */
+    @Query("select new com.cdurgun.learning.repository.NavigationRow(" +
+            "co.slug, co.name, c.slug, c.name, t.slug, tt.title, tt.summary, t.difficulty, t.estimatedMinutes) " +
+            "from TopicTranslation tt join tt.topic t join t.category c join c.course co " +
+            "where co.id = :courseId and tt.language = :language and tt.published = true " +
+            "order by c.sortOrder, c.id, t.sortOrder, t.id")
+    List<NavigationRow> findPublishedNavigationRowsByCourse(@Param("courseId") Long courseId,
+                                                            @Param("language") Language language);
 }
