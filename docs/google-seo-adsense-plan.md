@@ -511,9 +511,56 @@ yalnızca o dosyayı düzenlemek yeterli.
 - [ ] **Dış sinyal:** GitHub profili/README, LinkedIn, ilgili Türkçe geliştirici
   toplulukları, uygun yerlerde kendi dersine link veren yanıtlar. Spam değil,
   gerçekten soruyu çözen paylaşımlar.
-- [ ] **Core Web Vitals:** Aşama 0'daki sıkıştırma ve önbellek düzeltmelerinden
+- [x] **Core Web Vitals:** Aşama 0'daki sıkıştırma ve önbellek düzeltmelerinden
   sonra PageSpeed Insights ile anasayfa ve bir topic sayfası ölçülmeli. Anasayfanın
   286 KB HTML'i büyük ölçüde sidebar'daki tüm topic listesinden geliyor.
+  **Reklam öncesi başlangıç ölçümü (2026-10-15, salt-okunur, kodda değişiklik yok).**
+  Ölçülen URL'ler: `https://www.learnforgex.com/` (302 ile `/en`'e gider) ve temsilî ders
+  `https://www.learnforgex.com/en/topics/string`.
+  - **Gerçek kullanıcı verisi (CrUX) yok:** PSI dört ölçümde de "Veri Yok" gösterdi.
+    Aşağıdakilerin hepsi laboratuvar (Lighthouse) verisidir. INP laboratuvarda ölçülemez;
+    yerine TBT raporlandı. Değerler tek ya da az sayıda koşumdan geliyor, ağ ve sunucu
+    durumuna göre oynar; kesin bir performans garantisi değildir.
+  - **PSI (pagespeed.web.dev, Google altyapısı, her biri tek koşum).** PSI API'sinin
+    anahtarsız günlük kotası doluydu (429), sonuçlar web arayüzünden okundu.
+    - Anasayfa mobil: Performans 98; FCP 1,8 sn, LCP 2,0 sn, TBT 0 ms, CLS 0, Speed Index 2,0 sn.
+    - Anasayfa masaüstü: Performans 100; FCP 0,5 sn, LCP 0,5 sn, TBT 0 ms, CLS 0, SI 1,0 sn.
+    - Ders mobil: Performans 98; FCP 1,8 sn, LCP 2,0 sn, TBT 0 ms, CLS 0, SI 2,4 sn.
+    - Ders masaüstü: Performans 100; FCP 0,5 sn, LCP 0,6 sn, TBT 0 ms, CLS 0, SI 0,9 sn.
+  - **Yerel Lighthouse 13.5.0** (geliştirici makinesi, headless Chrome, 3 koşumun medyanı;
+    PSI'dan daha kötümser, aynı makinede tekrar karşılaştırma için):
+    - Anasayfa mobil: Performans 94/94/95; FCP 2,27 sn, LCP 2,42 sn, TBT 0, CLS 0, SI 3,09 sn.
+    - Anasayfa masaüstü: 98/96/97; FCP 0,89 sn, LCP 0,89 sn, TBT 0, CLS 0, SI 1,27 sn.
+    - Ders mobil: 94/94/94; FCP 2,11 sn, LCP 2,72 sn, TBT 0, CLS 0, SI 2,72 sn.
+    - Ders masaüstü: 98/99/98; FCP 0,75 sn, LCP 0,89 sn, TBT 0, CLS 0, SI 1,16 sn.
+  - **HTML boyutu ve yan menü:** `/en` ham 285 KB, Brotli ile 29,5 KB; ders sayfası ham
+    150 KB, Brotli ile 21,4 KB. Yan menü ham HTML'in anasayfada %26'sı, ders sayfasında
+    %50'si (~75 KB), ama sıkıştırılmış hâli sayfa başına ~6 KB. Ölçülen aktarım etkisi
+    küçük; şu an öncelik değil.
+  - **Sunucu yanıt süresi (TTFB, `curl`, sayfa başına 5 istek):** yan menüyü oluşturan
+    sayfalar (`/en`, `/en/about`, ders) 0,84–1,08 sn; menüsüz dinamik sayfalar (`/en/login`,
+    `/sitemap.xml`) 0,36–0,43 sn; statik CSS ~0,2 sn. HTML Cloudflare'de önbelleklenmiyor
+    (`cf-cache-status: DYNAMIC`). Lighthouse da mobilde sunucu yanıtını 730–940 ms ölçtü.
+    **Hipotez (doğrulanmadı):** ~0,5 sn'lik fark yalnızca `NavigationService.buildNavigation`
+    kullanan sayfalarda görülüyor; servisin kendi yorumu topic başına ayrı sorgu (N+1)
+    yaptığını belirtiyor. Bu bir korelasyon; nedeni kesinleştirmek için yerelde sorgu
+    sayısı/süre profili gerekir. Doğrulanırsa olası çözüm: tek sorgu (fetch-join/projection)
+    ve/veya menünün dil başına uygulama içinde önbelleklenmesi.
+  - **Render-blocking CSS:** Lighthouse mobilde ~840–850 ms tahmini tasarruf gösteriyor;
+    başlıca kaynak `cdn.jsdelivr.net`'ten gelen Bootstrap CSS (34 KB, ayrı origin
+    bağlantısı). Olası iyileştirmeler: `preconnect`, ya da Bootstrap'i kendi origin'den
+    sunmak; düşük öncelikli olarak kullanılmayan Bootstrap CSS (~30 KB) ve küçültülmemiş
+    `custom.css` (~3 KB). Hiçbiri uygulanmadı.
+  - **`/` → `/en` yönlendirmesi:** Lighthouse mobilde ~930 ms ekliyor, ama bu bilinçli
+    mevcut davranış (Faz 69, negotiator her zaman İngilizce'ye yönlendirir) ve
+    değiştirilmeyecek. Karşılaştırmada `/en` doğrudan ölçülmeli; `/` sonuçları
+    yönlendirmeyi de içerdiği için ayrı tutulmalı.
+  - **Reklam sonrası karşılaştırma (aynı URL'ler, aynı cihaz tipleri, aynı araç):**
+    PSI mobil/masaüstü Performans, LCP, CLS, TBT, FCP ve Speed Index; yerel Lighthouse
+    medyanları; TTFB. Reklamla en çok izlenecekler: CLS (şu an 0; reklam alanına
+    yükseklik ayrılmazsa bozulur), TBT (reklam script'leri ana iş parçacığını meşgul eder;
+    gerçek INP yalnızca CrUX verisi oluşunca görülebilir) ve LCP. Bkz. Aşama 6, "Reklam
+    eklendikten sonra hızı yeniden ölç".
 
 ## 8. Aşama 5 — AdSense Başvurusu ve Reklam Yerleşimi
 
@@ -698,3 +745,7 @@ verilmesi gerekir.
   değerini gösteriyor ("Son güncelleme" / "Last updated"); üretim tarihi satırı kaldırıldı,
   yazar adı eklenmedi (`6bbdd15`). Canlıda doğrulandı: `deploy-check` 33/33, canlıdan
   indirilen TR ve EN PDF'lerde tarih o çevirinin `updated_at` değeriyle aynı.
+- **2026-10-15** — Reklam öncesi Core Web Vitals başlangıç ölçümü kaydedildi (bkz. Aşama 4,
+  "Core Web Vitals"): PSI mobil 98 / masaüstü 100 (anasayfa ve ders), CLS 0, TBT 0; gerçek
+  kullanıcı verisi yok. Yan menülü sayfalardaki yüksek TTFB'nin N+1 ile ilişkisi doğrulanmamış
+  bir hipotez olarak not edildi; kodda değişiklik yapılmadı.
