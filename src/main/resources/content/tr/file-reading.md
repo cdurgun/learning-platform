@@ -40,7 +40,7 @@ Bir dosyadaki satır sayısını bulmanın iki yolu vardır: `Files.readAllLines
 
 ## Dosyada Kelime Arama
 
-`Files.readAllLines()`'ı Stream API ile birleştirmek (bkz. "Stream Fundamentals" dersi), bir dosyada anahtar kelime aramayı tek satıra indirger: satırları FİLTRELE, yalnızca kelimeyi içerenleri tut.
+`Files.readAllLines()`'ı Stream API ile birleştirmek (bkz. ["Stream API Temelleri"](/tr/topics/stream-fundamentals) dersi), bir dosyada anahtar kelime aramayı tek satıra indirger: satırları FİLTRELE, yalnızca kelimeyi içerenleri tut.
 
 {{SearchWordInFileExample.java}}
 

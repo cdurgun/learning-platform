@@ -12,7 +12,7 @@ Bir index'e göre eleman okumak/yazmak, bitişik bellek yerleşimi sayesinde don
 
 ## Tarihçe
 
-Diziler Java'nın 1.0 sürümünden (1996) beri dilin çekirdek bir parçasıdır -- `String` gibi en eski yapılardan biri. `Arrays` yardımcı sınıfı (statik `sort()`/`binarySearch()`/`equals()` metotlarıyla) Java 1.2 (1998) ile Collections Framework'le birlikte geldi. Varargs (`Type... args`, bir dizi parametresinin çağrı tarafında rahat kullanılmasını sağlayan sözdizimi) Java 5 (2004) ile eklendi. Java 8 (2014), `Arrays.stream()` ile dizileri doğrudan Stream API'ye bağladı (bkz. "Stream Fundamentals" dersi).
+Diziler Java'nın 1.0 sürümünden (1996) beri dilin çekirdek bir parçasıdır -- `String` gibi en eski yapılardan biri. `Arrays` yardımcı sınıfı (statik `sort()`/`binarySearch()`/`equals()` metotlarıyla) Java 1.2 (1998) ile Collections Framework'le birlikte geldi. Varargs (`Type... args`, bir dizi parametresinin çağrı tarafında rahat kullanılmasını sağlayan sözdizimi) Java 5 (2004) ile eklendi. Java 8 (2014), `Arrays.stream()` ile dizileri doğrudan Stream API'ye bağladı (bkz. ["Stream API Temelleri"](/tr/topics/stream-fundamentals) dersi).
 
 ## Temel Kullanım: Oluşturma, Erişim, Varsayılan Değerler
 

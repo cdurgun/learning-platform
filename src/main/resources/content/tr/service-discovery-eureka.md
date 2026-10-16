@@ -26,7 +26,7 @@ Eureka Server, `order-service`/`inventory-service`'ten TAMAMEN ayrı, kendi baş
 
 ## Eureka Client: Servisleri Kaydetmek
 
-`order-service` ve `inventory-service`, `spring-cloud-starter-netflix-eureka-client` bağımlılığını ekleyip `application.yml`'lerine Eureka Server'ın adresini (`eureka.client.service-url.defaultZone`) yazarak Eureka CLIENT'ına dönüşür. Kritik bir nokta: `spring.application.name` (bkz. "Spring Boot Microservice Basics" dersinin "Kendi `application.yml`'i: Port, Uygulama Adı ve Veritabanı" bölümü) ARTIK yalnızca loglarda görünen bir isim DEĞİL -- bu, diğer servislerin ONU bulmak için kullanacağı GERÇEK anahtardır.
+`order-service` ve `inventory-service`, `spring-cloud-starter-netflix-eureka-client` bağımlılığını ekleyip `application.yml`'lerine Eureka Server'ın adresini (`eureka.client.service-url.defaultZone`) yazarak Eureka CLIENT'ına dönüşür. Kritik bir nokta: `spring.application.name` (bkz. ["Mikroservis Yapılandırma"](/tr/topics/spring-boot-microservice-basics) dersinin "Kendi `application.yml`'i: Port, Uygulama Adı ve Veritabanı" bölümü) ARTIK yalnızca loglarda görünen bir isim DEĞİL -- bu, diğer servislerin ONU bulmak için kullanacağı GERÇEK anahtardır.
 
 {{OrderServiceEurekaConfig.yml}}
 
@@ -45,7 +45,7 @@ Eureka Server, `order-service`/`inventory-service`'ten TAMAMEN ayrı, kendi baş
 
 {{LoadBalancedRestClientConfig.java}}
 
-Bu, "Inter-Service Communication" dersindeki `StockClient`'ın sabit kodlanmış `@Value` URL'sinin YERİNİ alıyor -- geri kalan TÜM mantık (404 ile bağlantı hatasının ayrıştırılması, `InventoryServiceUnavailableException`'a çevrilmesi) DEĞİŞMİYOR:
+Bu, "Servisler Arası İletişim" dersindeki `StockClient`'ın sabit kodlanmış `@Value` URL'sinin YERİNİ alıyor -- geri kalan TÜM mantık (404 ile bağlantı hatasının ayrıştırılması, `InventoryServiceUnavailableException`'a çevrilmesi) DEĞİŞMİYOR:
 
 {{StockClientWithDiscovery.java}}
 {{StockCheckResponse.java}}
@@ -62,7 +62,7 @@ Bir Eureka client, kayıtlı KALMAK için Eureka Server'a düzenli aralıklarla 
 
 ## Eureka'nın CAP Teoremindeki Yeri: AP Sistemi
 
-"Microservices Fundamentals" dersindeki CAP Teoremine Kısa Bir Bakış bölümünü hatırlayın: dağıtık bir sistem, bir ağ bölünmesi (network partition) sırasında Tutarlılık (Consistency) ile Erişilebilirlik (Availability) arasında SEÇİM yapmak zorundadır. Eureka bilinçli olarak AP tarafını seçer: her Eureka Server düğümü, EN GÜNCEL bilgiye sahip olmayı garanti etmek yerine, HER ZAMAN bir cevap vermeyi (kısmen eski bir kayıt defteriyle bile olsa) tercih eder. Self-preservation modu da bu felsefenin bir SONUCUdur -- Eureka, "belki birkaç kayıt eski" riskini, "sağlıklı servisleri yanlışlıkla sil" riskine TERCİH eder.
+["Microservices Temelleri"](/tr/topics/microservices-fundamentals) dersindeki CAP Teoremine Kısa Bir Bakış bölümünü hatırlayın: dağıtık bir sistem, bir ağ bölünmesi (network partition) sırasında Tutarlılık (Consistency) ile Erişilebilirlik (Availability) arasında SEÇİM yapmak zorundadır. Eureka bilinçli olarak AP tarafını seçer: her Eureka Server düğümü, EN GÜNCEL bilgiye sahip olmayı garanti etmek yerine, HER ZAMAN bir cevap vermeyi (kısmen eski bir kayıt defteriyle bile olsa) tercih eder. Self-preservation modu da bu felsefenin bir SONUCUdur -- Eureka, "belki birkaç kayıt eski" riskini, "sağlıklı servisleri yanlışlıkla sil" riskine TERCİH eder.
 
 ## Best Practices
 

@@ -26,7 +26,7 @@ The Eureka Server is a COMPLETELY separate, INDEPENDENT Spring Boot application 
 
 ## Eureka Client: Registering Services
 
-`order-service` and `inventory-service` become Eureka CLIENTS by adding the `spring-cloud-starter-netflix-eureka-client` dependency and writing the Eureka Server's address (`eureka.client.service-url.defaultZone`) into their `application.yml`. A critical point: `spring.application.name` (see the "Spring Boot Microservice Basics" lesson's "Its Own `application.yml`: Port, Application Name, and Database" section) is NO LONGER just a name that shows up in logs -- it's now the ACTUAL key other services will use to find it.
+`order-service` and `inventory-service` become Eureka CLIENTS by adding the `spring-cloud-starter-netflix-eureka-client` dependency and writing the Eureka Server's address (`eureka.client.service-url.defaultZone`) into their `application.yml`. A critical point: `spring.application.name` (see the ["Microservice Configuration"](/en/topics/spring-boot-microservice-basics) lesson's "Its Own `application.yml`: Port, Application Name, and Database" section) is NO LONGER just a name that shows up in logs -- it's now the ACTUAL key other services will use to find it.
 
 {{OrderServiceEurekaConfig.yml}}
 

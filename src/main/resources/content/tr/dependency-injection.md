@@ -4,7 +4,7 @@ Bu ders, sitedeki ilk Spring Boot konusu olsa da, henüz Spring'e hiç dokunmuyo
 Dependency Injection (DI) ve Inversion of Control (IoC), Spring'den çok önce var olan,
 çerçeveden tamamen bağımsız iki tasarım fikri. Amaç, Spring'in `@Autowired` ile "sihirli"
 biçimde yaptığı şeyi önce tamamen elle, saf Java ile yapabilmek; bir sonraki konuda
-(Spring IoC Container & Bean Lifecycle) bu elle yaptığımız işi otomatikleştiren container'ın
+(["Spring IoC Container ve Bean Yaşam Döngüsü"](/tr/topics/spring-ioc-container)) bu elle yaptığımız işi otomatikleştiren container'ın
 kendisini işleyeceğiz. Sıkı bağlılık probleminden başlayıp constructor/setter/field
 injection'ın üçünü de karşılaştıracak, sonunda Spring'in bu üçünü nasıl otomatikleştirdiğine
 kısa bir bakış atacağız.
@@ -227,8 +227,8 @@ sırayla nesneleri kendisi kurar:
 {{SpringPreviewExample.java}}
 
 Bu dosya, üzerinde çalışan bir `ApplicationContext` olmadığı için tek başına bir şey yapmıyor
--- tarama yapan, `@Autowired` constructor'ı bulup çağıran, "Spring IoC Container & Bean
-Lifecycle" konusunda ele alacağımız container'ın kendisi. Şimdilik önemli olan şu: burada
+-- tarama yapan, `@Autowired` constructor'ı bulup çağıran, "Spring IoC Container ve Bean
+Yaşam Döngüsü" konusunda ele alacağımız container'ın kendisi. Şimdilik önemli olan şu: burada
 gördüğün `OrderService` ile "Spring Olmadan Elle Bağımlılık Enjeksiyonu (Composition Root)"
 bölümündeki
 `OrderService` **tasarım olarak birebir aynı** -- Spring, `buildOrderService()`'in elle
@@ -414,5 +414,5 @@ bölümündeki gibi bir lambda ile anında yazılmış sahte bir `PaymentGateway
 > 💡 Tip
 > `FraudChecker fraudChecker`'ın `null` olabilmesine izin vermek yerine, Spring dünyasında
 > bu genelde `Optional<FraudChecker>` ya da `@Autowired(required = false)` ile daha açık
-> hâle getirilir -- "Spring IoC Container & Bean Lifecycle" konusunda, isteğe bağlı
+> hâle getirilir -- "Spring IoC Container ve Bean Yaşam Döngüsü" konusunda, isteğe bağlı
 > bağımlılıkları Spring'in nasıl ifade ettiğine bakacağız.

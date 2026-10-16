@@ -13,7 +13,7 @@ Seq Scan on topic  (cost=0.00..1.14 rows=10 width=44)
   Filter: (category_id = 1)
 ```
 
-`Seq Scan` (sequential scan), PostgreSQL'in `topic`in her satırını, baştan sona, her birini `category_id = 1`e karşı kontrol ederek okuduğu anlamına gelir -- kısayol yok. `cost=0.00..1.14`, PostgreSQL'in kendi içsel maliyet tahminidir (saniye değil -- çoğunlukla disk I/O'sunu ve CPU işini yansıtan soyut bir birim), `rows=10`, kaç satırın eşleşeceğine dair tahminidir, ve `width=44`, ortalama satır boyutunu byte cinsinden tahmin eder. Bu, tam olarak "PostgreSQL and the Relational Model"in sorgu-veritabanına-hikayesinin gerçekten bakacak bir aracı hiç olmayan şeyi -- `EXPLAIN` o araç.
+`Seq Scan` (sequential scan), PostgreSQL'in `topic`in her satırını, baştan sona, her birini `category_id = 1`e karşı kontrol ederek okuduğu anlamına gelir -- kısayol yok. `cost=0.00..1.14`, PostgreSQL'in kendi içsel maliyet tahminidir (saniye değil -- çoğunlukla disk I/O'sunu ve CPU işini yansıtan soyut bir birim), `rows=10`, kaç satırın eşleşeceğine dair tahminidir, ve `width=44`, ortalama satır boyutunu byte cinsinden tahmin eder. Bu, tam olarak ["PostgreSQL ve İlişkisel Model"](/tr/topics/postgresql-and-the-relational-model)in sorgu-veritabanına-hikayesinin gerçekten bakacak bir aracı hiç olmayan şeyi -- `EXPLAIN` o araç.
 
 ## Seq Scan vs. Index Scan
 

@@ -83,7 +83,7 @@ birini sunmakta serbesttir:
   kullanmak isteyen her host uygulaması içinde tekrar tekrar yazılması
   gerekmez.
 
-Bu kursun "Building an MCP Server" dersindeki uygulamalı örneği özellikle
+Bu kursun ["TypeScript ile MCP Sunucusu Oluşturma"](/tr/topics/building-an-mcp-server) dersindeki uygulamalı örneği özellikle
 tool'lara odaklanıyor, çünkü bunlar "Tools and Function Calling"e en
 doğrudan şekilde bağlanıyor -- ama gerçek bir server, üç primitive türünü
 birleştirmekte serbesttir.

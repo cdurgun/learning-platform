@@ -1,4 +1,4 @@
-"Introduction to Exceptions" konusunda bir exception'ın ne olduğunu, nasıl fırlatıldığını ve nasıl yayıldığını gördün; "Try-Catch ve Finally" konusunda onu nasıl yakalayıp temizlik yapacağını öğrendin. Ama şu ana kadar `ArithmeticException`, `NumberFormatException`, `ArrayIndexOutOfBoundsException` gibi sınıfları birbirinden bağımsız isimler gibi kullandın. Aslında hiçbiri bağımsız değil — hepsi tek bir ortak ağacın dalları, ve bu ağacın şeklini bilmek hangi `catch` bloğunun neyi yakalayacağını, ne zaman `catch (Exception e)` yazmanın tehlikeli olduğunu ve neden bazı hatalar (`StackOverflowError` gibi) hiçbir zaman normal bir `catch` bloğuyla yakalanmaması gerektiğini anlamanı sağlar.
+["Exception'lara Giriş"](/tr/topics/introduction-to-exceptions) konusunda bir exception'ın ne olduğunu, nasıl fırlatıldığını ve nasıl yayıldığını gördün; "Try-Catch ve Finally" konusunda onu nasıl yakalayıp temizlik yapacağını öğrendin. Ama şu ana kadar `ArithmeticException`, `NumberFormatException`, `ArrayIndexOutOfBoundsException` gibi sınıfları birbirinden bağımsız isimler gibi kullandın. Aslında hiçbiri bağımsız değil — hepsi tek bir ortak ağacın dalları, ve bu ağacın şeklini bilmek hangi `catch` bloğunun neyi yakalayacağını, ne zaman `catch (Exception e)` yazmanın tehlikeli olduğunu ve neden bazı hatalar (`StackOverflowError` gibi) hiçbir zaman normal bir `catch` bloğuyla yakalanmaması gerektiğini anlamanı sağlar.
 
 ## Exception Hiyerarşisi Nedir?
 
@@ -10,7 +10,7 @@ Bir hiyerarşi olmasaydı, her exception türü birbirinden tamamen bağımsız,
 
 ## Tarihçe
 
-Java'nın ilk sürümünden (1.0, 1996) beri `Throwable`/`Error`/`Exception`/`RuntimeException` dörtlüsü aynı temel yapıda. Tasarımcılar bilinçli olarak `Error`'ı ayrı bir dal yaptı: `Exception` uygulama kodunun tepki verebileceği durumları temsil ederken, `Error` JVM'in kendisiyle ilgili, genellikle kurtarılamaz durumları temsil eder. Bu ayrım, Java'nın "checked exception" felsefesinin de temelidir (bu, "Checked vs Unchecked Exceptions" konusunda ayrıntılı işlenecek) — ama hiyerarşinin kendisi, checked/unchecked ayrımından bağımsız, daha temel bir sınıflandırmadır.
+Java'nın ilk sürümünden (1.0, 1996) beri `Throwable`/`Error`/`Exception`/`RuntimeException` dörtlüsü aynı temel yapıda. Tasarımcılar bilinçli olarak `Error`'ı ayrı bir dal yaptı: `Exception` uygulama kodunun tepki verebileceği durumları temsil ederken, `Error` JVM'in kendisiyle ilgili, genellikle kurtarılamaz durumları temsil eder. Bu ayrım, Java'nın "checked exception" felsefesinin de temelidir (bu, ["Checked ve Unchecked Exception'lar"](/tr/topics/checked-vs-unchecked-exceptions) konusunda ayrıntılı işlenecek) — ama hiyerarşinin kendisi, checked/unchecked ayrımından bağımsız, daha temel bir sınıflandırmadır.
 
 ## Throwable: Hiyerarşinin Kökü
 
@@ -33,7 +33,7 @@ Bu örnek `catch (StackOverflowError e)` yazıyor ve teknik olarak çalışıyor
 
 ## Exception: Uygulama Seviyesi Sorunlar
 
-`Exception`, `Error`'ın aksine, uygulama kodunun makul biçimde tepki verebileceği durumları temsil eder — kullanıcının girdiği geçersiz bir sayı, bulunamayan bir dosya, sıfıra bölme gibi. `Exception`'ın kendisi iki geniş dala ayrılır: `RuntimeException` (ve onun tüm alt sınıfları) ile `RuntimeException` OLMAYAN diğer her şey. Bu ikinci grup, derleyicinin `throws` ile bildirilmesini veya yakalanmasını zorunlu tuttuğu **checked exception**'lardır; `RuntimeException` dalı ise **unchecked**'tir. Bu ayrımın kendisi, ne zaman hangisinin kullanılacağı ve neden ikisinin de var olduğu — "Checked vs Unchecked Exceptions" konusunun tamamı bu soruyu ele alıyor, burada yalnızca hiyerarşideki yerini not ediyoruz.
+`Exception`, `Error`'ın aksine, uygulama kodunun makul biçimde tepki verebileceği durumları temsil eder — kullanıcının girdiği geçersiz bir sayı, bulunamayan bir dosya, sıfıra bölme gibi. `Exception`'ın kendisi iki geniş dala ayrılır: `RuntimeException` (ve onun tüm alt sınıfları) ile `RuntimeException` OLMAYAN diğer her şey. Bu ikinci grup, derleyicinin `throws` ile bildirilmesini veya yakalanmasını zorunlu tuttuğu **checked exception**'lardır; `RuntimeException` dalı ise **unchecked**'tir. Bu ayrımın kendisi, ne zaman hangisinin kullanılacağı ve neden ikisinin de var olduğu — "Checked ve Unchecked Exception'lar" konusunun tamamı bu soruyu ele alıyor, burada yalnızca hiyerarşideki yerini not ediyoruz.
 
 ## RuntimeException'ın Alt Ağacını Yakalamak: catch ve Polimorfizm
 

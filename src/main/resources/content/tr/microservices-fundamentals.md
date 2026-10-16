@@ -203,7 +203,7 @@ göre" olduğunu bilmen yeterli.
 Mikroservis mimarisinin belki de en sık ihlal edilen kuralı budur: **her servis kendi
 verisinin tek sahibidir, başka bir servisin veritabanına doğrudan erişmez.** `order-service`,
 `inventory-service`'in veritabanındaki tabloları doğrudan sorgulayamaz -- envanter bilgisine
-ihtiyacı varsa, `inventory-service`'in API'sini çağırır (bunu "Inter-Service Communication"
+ihtiyacı varsa, `inventory-service`'in API'sini çağırır (bunu ["Servisler Arası İletişim"](/tr/topics/inter-service-communication)
 konusunda göreceğiz).
 
 Bunun nedeni "Servis Sınırlarını (Service Boundaries) Belirlemek" bölümündeki fikirle
