@@ -41,7 +41,7 @@ Son `catch`'ten sonra (ya da hiç `catch` olmadan, doğrudan `try`'dan sonra) ye
 {{FinallyAlwaysRunsExample.java}}
 
 > 💡 Tip
-> `finally`, bir dosyayı ya da bir veritabanı bağlantısını kapatmak gibi bir resource-cleanup deseninin üzerine inşa edildiği şey -- `try`-with-resources (gerçekten kullanıldığı yerde, "File Reading" dersinde kapsanıyor) aslında derleyicinin senin için otomatik olarak yazdığı `finally`-tabanlı bir cleanup'tır, temelde farklı bir mekanizma değil.
+> `finally`, bir dosyayı ya da bir veritabanı bağlantısını kapatmak gibi bir resource-cleanup deseninin üzerine inşa edildiği şey -- `try`-with-resources (gerçekten kullanıldığı yerde, ["File Reading"](/tr/topics/file-reading) dersinde kapsanıyor) aslında derleyicinin senin için otomatik olarak yazdığı `finally`-tabanlı bir cleanup'tır, temelde farklı bir mekanizma değil.
 
 ## finally ve return'ün Etkileşimi: İnce Bir Ayrıntı
 

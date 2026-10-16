@@ -1,6 +1,6 @@
 # Sets
 
-"Lists" dersinde gördüğün `List` arayüzü tekrar eden elemanlara izin veriyordu ve eklenme sırasını koruyordu. Bazen tam tersini istersin: bir elemanın koleksiyonda **yalnızca bir kez** bulunmasını garanti etmek, ve genellikle sıra da hiç önemli değildir -- örneğin bir sistemdeki benzersiz kullanıcı ID'leri, bir metindeki farklı kelimeler, ya da bir kümenin matematiksel anlamda temsili. Bunun için Java `Set` arayüzünü sunar.
+["Lists"](/tr/topics/lists) dersinde gördüğün `List` arayüzü tekrar eden elemanlara izin veriyordu ve eklenme sırasını koruyordu. Bazen tam tersini istersin: bir elemanın koleksiyonda **yalnızca bir kez** bulunmasını garanti etmek, ve genellikle sıra da hiç önemli değildir -- örneğin bir sistemdeki benzersiz kullanıcı ID'leri, bir metindeki farklı kelimeler, ya da bir kümenin matematiksel anlamda temsili. Bunun için Java `Set` arayüzünü sunar.
 
 ## Set Nedir?
 

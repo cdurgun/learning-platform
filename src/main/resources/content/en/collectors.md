@@ -1,6 +1,6 @@
 # Collectors
 
-In the "Terminal Operations" lesson, you saw `toList()` as a shorthand for `collect(Collectors.toList())` -- but `collect()`'s real power was never explored. This lesson picks up exactly there: the ready-made recipes the `Collectors` class offers for grouping, joining, and transforming.
+In the ["Terminal Operations"](/en/topics/terminal-operations) lesson, you saw `toList()` as a shorthand for `collect(Collectors.toList())` -- but `collect()`'s real power was never explored. This lesson picks up exactly there: the ready-made recipes the `Collectors` class offers for grouping, joining, and transforming.
 
 ## What Is Collectors?
 

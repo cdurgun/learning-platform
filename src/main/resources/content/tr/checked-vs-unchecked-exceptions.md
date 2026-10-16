@@ -1,4 +1,4 @@
-"Exception Hiyerarşisi" konusunda `Exception`'ın iki geniş dala ayrıldığını gördün: `RuntimeException` ve onun DIŞINDA kalan her şey. Bu ayrım, isimlerinin ima ettiğinden çok daha somut bir sonuç doğuruyor — derleyicinin seni gerçekten zorladığı bir kural. Bu derste bu kuralın tam olarak ne olduğunu, neden var olduğunu, ve profesyonel Java kodunda ikisi arasında nasıl seçim yapılacağını göreceksin.
+["Exception Hiyerarşisi"](/tr/topics/exception-hierarchy) konusunda `Exception`'ın iki geniş dala ayrıldığını gördün: `RuntimeException` ve onun DIŞINDA kalan her şey. Bu ayrım, isimlerinin ima ettiğinden çok daha somut bir sonuç doğuruyor — derleyicinin seni gerçekten zorladığı bir kural. Bu derste bu kuralın tam olarak ne olduğunu, neden var olduğunu, ve profesyonel Java kodunda ikisi arasında nasıl seçim yapılacağını göreceksin.
 
 ## Checked ve Unchecked Exception'lar Nedir?
 

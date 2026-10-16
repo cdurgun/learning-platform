@@ -1,6 +1,6 @@
 # Enhanced for Loop
 
-The fourth topic in the Control Flow category: the enhanced for (for-each) loop -- a syntax built on top of the classic "for Loop" lesson that walks every element of an array or collection WITHOUT writing a counter variable. Classic `for` is required whenever you need the POSITION (index); enhanced for does the same job with far less code whenever you only care about the VALUES themselves -- position doesn't matter at all. This lesson covers the basic syntax, three real LIMITATIONS (no index, the loop variable being a copy, no parallel iteration), and the choice between it and classic `for`.
+The fourth topic in the Control Flow category: the enhanced for (for-each) loop -- a syntax built on top of the classic ["for Loop"](/en/topics/for-loop) lesson that walks every element of an array or collection WITHOUT writing a counter variable. Classic `for` is required whenever you need the POSITION (index); enhanced for does the same job with far less code whenever you only care about the VALUES themselves -- position doesn't matter at all. This lesson covers the basic syntax, three real LIMITATIONS (no index, the loop variable being a copy, no parallel iteration), and the choice between it and classic `for`.
 
 ## What Is an Enhanced for Loop?
 

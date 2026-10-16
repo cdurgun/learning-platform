@@ -56,7 +56,7 @@ Every numeric wrapper class offers a `parseXxx()` (text → primitive), `compare
 {{WrapperUtilityMethodsExample.java}}
 
 > 💡 Tip
-> `Integer.parseInt()` throws `NumberFormatException` when called with invalid text -- it does NOT silently return `0`. When parsing user input, this exception needs to be handled (see the parallel with `InputMismatchException` in the "Scanner" lesson).
+> `Integer.parseInt()` throws `NumberFormatException` when called with invalid text -- it does NOT silently return `0`. When parsing user input, this exception needs to be handled (see the parallel with `InputMismatchException` in the ["Scanner"](/en/topics/scanner) lesson).
 
 ## Wrapper Classes and Collections
 

@@ -87,6 +87,7 @@ public class PdfExportService {
         String html = templateEngine.process("topic-pdf", buildContext(topic, translation, language, contentHtml));
 
         org.jsoup.nodes.Document jsoupDocument = Jsoup.parse(html, baseUrl);
+        absolutizeRootRelativeLinks(jsoupDocument);
         org.w3c.dom.Document w3cDocument = new W3CDom().fromJsoup(jsoupDocument);
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -102,6 +103,26 @@ public class PdfExportService {
                     "PDF üretilemedi (konu: " + topic.getSlug() + ", dil: " + language.getCode() + ")", e);
         }
         return output.toByteArray();
+    }
+
+    /**
+     * Ders metnindeki site içi bağlantılar kök-göreli yazılır ({@code /en/topics/...}); web
+     * sayfasında doğru çalışır ama openhtmltopdf {@code href}'i olduğu gibi PDF'e yazar ve PDF
+     * görüntüleyicilerin çözebileceği bir taban adres yoktur. Bu yüzden yalnızca PDF için,
+     * {@code /} ile başlayan (protokol-göreli {@code //} hariç) bağlantılar belgenin taban
+     * adresine ({@code app.base-url}) göre mutlak adrese çevrilir. Mutlak, {@code #} ve diğer
+     * bağlantılara ve bağlantı metnine dokunulmaz. Adres çözümlenemezse ({@code absUrl} boş
+     * döner, ör. geçersiz bir taban adreste) mevcut {@code href} korunur.
+     */
+    static void absolutizeRootRelativeLinks(org.jsoup.nodes.Document document) {
+        for (org.jsoup.nodes.Element link : document.select("a[href^=/]")) {
+            if (!link.attr("href").startsWith("//")) {
+                String absolute = link.absUrl("href");
+                if (!absolute.isEmpty()) {
+                    link.attr("href", absolute);
+                }
+            }
+        }
     }
 
     private Context buildContext(Topic topic, TopicTranslation translation, Language language, String contentHtml) {

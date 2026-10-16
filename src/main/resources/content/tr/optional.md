@@ -40,7 +40,7 @@ Java'da geleneksel olarak "değer yok" durumu `null` ile ifade edilir -- ama bir
 
 `map(Function)`, Optional'ın **içindeki** değeri dönüştürür, önce `isPresent()` kontrolü yapmanıza gerek kalmadan -- Optional boşsa, fonksiyon hiç çağrılmadan boş bir Optional döner.
 
-`flatMap()`, "Stream API Temelleri" dersinde `Stream.flatMap()`'in çözdüğü aynı iç içelik problemini çözer: dönüştürme fonksiyonunun kendisi bir `Optional` döndürüyorsa, `map()` bir `Optional<Optional<T>>` üretir -- kullanışsız, iç içe bir yapı. `flatMap()`, iç Optional'ı doğrudan dış Optional'a birleştirir.
+`flatMap()`, ["Stream API Temelleri"](/tr/topics/stream-fundamentals) dersinde `Stream.flatMap()`'in çözdüğü aynı iç içelik problemini çözer: dönüştürme fonksiyonunun kendisi bir `Optional` döndürüyorsa, `map()` bir `Optional<Optional<T>>` üretir -- kullanışsız, iç içe bir yapı. `flatMap()`, iç Optional'ı doğrudan dış Optional'a birleştirir.
 
 {{OptionalMapFlatMapExample.java}}
 

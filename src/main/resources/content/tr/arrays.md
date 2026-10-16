@@ -39,7 +39,7 @@ Java'da bir "2 boyutlu dizi" aslında bir DİZİLER DİZİSİDİR (array of arra
 {{ArraysUtilityExample.java}}
 
 > ⚠️ Warning
-> İki diziyi `==` ile karşılaştırmak REFERANS'ı karşılaştırır (aynı bellek adresi mi), İÇERİĞİ değil -- tıpkı `String`'deki `==` vs `equals()` tuzağı gibi (bkz. "String" dersi). İki dizinin AYNI elemanlara sahip olup olmadığını kontrol etmek için `Arrays.equals()` kullanılmalı.
+> İki diziyi `==` ile karşılaştırmak REFERANS'ı karşılaştırır (aynı bellek adresi mi), İÇERİĞİ değil -- tıpkı `String`'deki `==` vs `equals()` tuzağı gibi (bkz. ["String"](/tr/topics/string) dersi). İki dizinin AYNI elemanlara sahip olup olmadığını kontrol etmek için `Arrays.equals()` kullanılmalı.
 
 ## Array Covariance: Derleyicinin Gözden Kaçırdığı Bir Tuzak
 

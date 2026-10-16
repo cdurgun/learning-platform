@@ -8,7 +8,7 @@ In the last stop of the Collections category, we bring together two different bu
 
 ## Why Does It Exist?
 
-A task queue, a message queue, an "undo" history, breadth-first search (BFS) in a graph -- all of these rely on the idea of "process elements in a specific order". `List` could theoretically do something similar (`add(0, x)` or `remove(0)`), but those operations are O(n) on an `ArrayList` (see the "Lists" lesson) -- `Queue`/`Deque` implementations are designed to do these operations in O(1).
+A task queue, a message queue, an "undo" history, breadth-first search (BFS) in a graph -- all of these rely on the idea of "process elements in a specific order". `List` could theoretically do something similar (`add(0, x)` or `remove(0)`), but those operations are O(n) on an `ArrayList` (see the ["Lists"](/en/topics/lists) lesson) -- `Queue`/`Deque` implementations are designed to do these operations in O(1).
 
 ## History
 
