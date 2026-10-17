@@ -178,7 +178,7 @@
                 <div class="topic-header mb-3">
                     <div class="topic-header-info">
                         <h1 class="mb-1" th:text="${translation.title}">Başlık</h1>
-                        <p class="text-muted mb-2" th:text="${translation.summary}">Özet</p>
+                        <p class="text-muted mb-2" th:utext="${summaryHtml}">Özet</p>
                         <span class="badge text-bg-secondary" th:text="#{${'difficulty.' + topic.difficulty}}">Zorluk</span>
                         <span class="text-muted small ms-2"
                               th:if="${topic.estimatedMinutes != null}"

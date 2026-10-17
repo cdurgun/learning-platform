@@ -3,6 +3,7 @@ package com.cdurgun.learning.service;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Topic;
 import com.cdurgun.learning.domain.TopicTranslation;
+import com.cdurgun.learning.web.SummaryFormatter;
 import com.openhtmltopdf.extend.FSSupplier;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
@@ -130,6 +131,7 @@ public class PdfExportService {
         Context context = new Context(locale);
 
         context.setVariable("translation", translation);
+        context.setVariable("summaryHtml", SummaryFormatter.toHtml(translation.getSummary()));
         context.setVariable("difficultyLabel",
                 messageSource.getMessage("difficulty." + topic.getDifficulty(), null, locale));
         context.setVariable("estimatedMinutes", topic.getEstimatedMinutes());

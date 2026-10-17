@@ -31,6 +31,28 @@ body {
     border-radius: 0.5rem;
 }
 
+/* Soru metni ve şıklarda boşluksuz uzun kod parçaları (Files.walk(dizin).sorted(...),
+   @Retention(RetentionPolicy.RUNTIME)) dar ekranda satıra sığmayıp sayfayı yatay
+   taşırıyordu; Quiz Area rastgele soru çektiği için yalnızca bazı yüklemelerde. Yalnızca
+   bu metinler kırılır -- kod bloğu (pre) kardeş öğe olduğu için etkilenmez, yatay
+   kaydırması korunur. */
+.quiz-question > p,
+.quiz-question .form-check-label,
+.quiz-result-feedback {
+    overflow-wrap: anywhere;
+}
+
+/* md altı: koyu kod alanı Tip/Warning kutularıyla aynı hizada başlayıp bitsin. Koyu zemini
+   highlight.js teması (github-dark) <pre>'ye değil içteki code.hljs'e verir ve code.hljs'in
+   kendi 1em padding'i var; yukarıdaki pre padding'i şeffaf kaldığı için koyu alan her iki
+   yandan 16px içeride görünüyordu. Yatay kaydırma code.hljs'te (overflow-x: auto) kalır. */
+@media (max-width: 767.98px) {
+    .markdown-content pre,
+    .quiz-question pre {
+        padding: 0;
+    }
+}
+
 .markdown-content blockquote {
     border-left: 4px solid #dee2e6;
     padding-left: 1rem;
@@ -189,6 +211,65 @@ footer .social-instagram:focus-visible {
     background-color: rgba(255, 255, 255, 0.25);
 }
 
+/* Navbar: md altı kompakt (bkz. fragments/layout.html :: navbar). 390px'te bile tam
+   etiketli hâli (hamburger + marka + Sign in/Logout + TR + EN) ~400px tutuyordu ve
+   Bootstrap'in .navbar'ı flex-wrap: wrap olduğu için sağ grup ikinci satıra düşüyordu;
+   girişli TR'de 320px'te üç satıra çıkıyordu. md altında Sign in/Logout yalnızca ikon
+   (etiket görsel olarak gizli, erişilebilir ad olarak kalır), kullanıcı adı ve aktif dil
+   butonu gizli. flex-nowrap: lg+'da navbar-expand-lg zaten nowrap, masaüstü etkilenmez. */
+.navbar {
+    flex-wrap: nowrap;
+}
+
+.navbar-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 767.98px) {
+    .navbar-action-label {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+}
+
+/* En dar ekranlarda (320px, iPhone SE 1. nesil) 44px'lik hamburger + marka + 44px'lik iki
+   buton (bkz. "Mobil dokunma hedefleri") tek satıra sığsın, "LearnForgeX" kesilmesin diye
+   yatay boşluklar daraltılır: navbar kenar boşluğu, hamburger'in yatay padding'i ve sağ
+   boşluğu, marka boşlukları, sağ grubun gap'i. Son çare olarak marka asla ikinci satıra
+   düşmez, kırpılır (min-width: 0). */
+@media (max-width: 399.98px) {
+    .navbar {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    .navbar-toggler {
+        padding-left: 0.375rem;
+        padding-right: 0.375rem;
+        margin-right: 0.25rem !important;
+    }
+
+    .navbar-brand {
+        gap: 0.375rem !important;
+        margin-right: 0;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .navbar .ms-auto {
+        gap: 0.25rem !important;
+    }
+}
+
 /* Navbar'daki kullanıcı adı: uzun adlar navbar'ı ikinci satıra taşırmasın diye sınırlı
    genişlikte, taşan kısım "…" ile kısaltılır (tam ad title'da). */
 .navbar-user-name {
@@ -254,5 +335,88 @@ footer .social-instagram:focus-visible {
         right: 0.5rem;
         bottom: 0.5rem;
         left: 0.5rem;
+    }
+}
+
+/* Mobil dokunma hedefleri: tek başına duran kontroller md (menü için lg) altında en az
+   44x44px. Satır içi metin linkleri (ders metni, yazar satırı) bilinçli olarak dışarıda;
+   breadcrumb linkleri görsel olarak aynı kalır, yalnızca tıklama alanı büyür (negatif
+   margin ile dengelenen padding). Masaüstü (lg+) hiçbir kuraldan etkilenmez. */
+@media (max-width: 767.98px) {
+    /* Navbar: butonlar 44px olunca dikey padding daraltılır, navbar yüksekliği 56px kalır. */
+    .navbar {
+        --bs-navbar-padding-y: 0.375rem;
+    }
+
+    .navbar-toggler,
+    .navbar .btn {
+        min-height: 2.75rem;
+    }
+
+    .navbar .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.75rem;
+    }
+
+    .breadcrumb a {
+        display: inline-block;
+        padding: 0.8125rem 0.375rem;
+        margin: -0.8125rem -0.375rem;
+    }
+
+    /* Ders/quiz/anasayfa butonları; önceki/sonraki ders butonları (iki satırlı, zaten
+       ~80px yüksek) inline-flex'e çevrilmez, içlerindeki iki satır yan yana dizilirdi. */
+    main .btn:not(nav > .btn) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    footer nav a,
+    footer .cookie-consent-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    footer .social-link {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+}
+
+/* Mobil menü (offcanvas, lg altı): kategori başlıkları, ders linkleri, kurs başlığı linki
+   ve kapat butonu 44px. */
+@media (max-width: 991.98px) {
+    .sidebar-nav .sidebar-toggle,
+    .sidebar-nav .nav-link {
+        display: flex;
+        align-items: center;
+        min-height: 2.75rem;
+    }
+
+    .sidebar-nav h6 {
+        margin-bottom: 0;
+    }
+
+    .sidebar-nav h6 > a {
+        display: inline-flex;
+        align-items: center;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* İkon boyutu değişmez (background-size: 1em), yalnızca buton kutusu büyür. */
+    .offcanvas-header .btn-close {
+        box-sizing: border-box;
+        width: 2.75rem;
+        height: 2.75rem;
+        padding: 0;
     }
 }

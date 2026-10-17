@@ -156,7 +156,8 @@
 
         /* Inline kod (metin içi `kod`) -- code block'un DIŞINDAKİ <code> */
         .pdf-content p code,
-        .pdf-content li code {
+        .pdf-content li code,
+        .pdf-summary code {
             font-family: 'PDF Mono', monospace;
             font-size: 9pt;
             background-color: #f1f3f5;
@@ -227,7 +228,7 @@
     <div class="pdf-breadcrumb" th:text="${courseName + ' / ' + categoryName}">Kurs / Kategori</div>
 
     <h1 class="pdf-title" th:text="${translation.title}">Başlık</h1>
-    <p class="pdf-summary" th:text="${translation.summary}">Özet</p>
+    <p class="pdf-summary" th:utext="${summaryHtml}">Özet</p>
 
     <div class="pdf-meta">
         <span class="pdf-badge" th:text="${difficultyLabel}">Zorluk</span>

@@ -12,6 +12,7 @@ import com.cdurgun.learning.service.MarkdownService;
 import com.cdurgun.learning.service.NavigationService;
 import com.cdurgun.learning.service.PdfExportService;
 import com.cdurgun.learning.service.QuizService;
+import com.cdurgun.learning.web.SummaryFormatter;
 import com.cdurgun.learning.web.nav.SequencedTopic;
 import com.cdurgun.learning.web.quiz.QuizSubmitRequest;
 import com.cdurgun.learning.web.quiz.QuizSubmitResponse;
@@ -148,6 +149,7 @@ public class TopicController {
 
         model.addAttribute("contentAvailable", true);
         model.addAttribute("translation", translation.get());
+        model.addAttribute("summaryHtml", SummaryFormatter.toHtml(translation.get().getSummary()));
 
         MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown.get(), slug);
         model.addAttribute("contentHtml", MarkdownService.demoteH1(rendered.html()));

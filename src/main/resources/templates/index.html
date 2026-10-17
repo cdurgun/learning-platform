@@ -78,15 +78,33 @@
                        th:href="@{/{lang}/courses/{slug}(lang=${language.code}, slug=${course.slug()})}"
                        th:text="${course.name()}">Kurs</a></h2>
 
+                <!-- md altı: 167 derslik grid yerine kursa genel bakış kartı (grid mobilde
+                     ~49.000px'lik bir sayfa üretiyordu). Ders linkleri HTML'de kalır (aşağıdaki
+                     grid yalnızca görsel olarak gizli) ve mobilde menüden + kurs sayfasından
+                     erişilebilir; kurs/ders URL'leri değişmez. Açıklama, kurs sayfasıyla aynı
+                     course.{slug}.description metni (yoksa genel metin, bkz. CourseController). -->
+                <div class="card shadow-sm d-md-none">
+                    <div class="card-body">
+                        <p class="card-text text-muted"
+                           th:text="${#messages.msgOrNull('course.' + course.slug() + '.description')} ?: #{course.description.default(${course.name()})}">Açıklama</p>
+                        <p class="small text-muted mb-3"
+                           th:text="#{course.summary(${course.topicCount()}, ${#lists.size(course.categories())})}">45 ders, 8 kategori</p>
+                        <a class="btn btn-outline-primary"
+                           th:href="@{/{lang}/courses/{slug}(lang=${language.code}, slug=${course.slug()})}"
+                           th:text="#{home.viewCourse(${course.name()})}">Kursu incele &rarr;</a>
+                    </div>
+                </div>
+
+                <div class="d-none d-md-block">
                 <div th:each="category : ${course.categories()}" class="mb-3">
-                    <h5 th:text="${category.name()}">Kategori</h5>
+                    <h3 class="h5" th:text="${category.name()}">Kategori</h3>
 
                     <div class="row row-cols-1 row-cols-md-3 g-3">
                         <div class="col" th:each="topicItem : ${category.topics()}">
                             <div class="card h-100 shadow-sm position-relative">
                                 <div class="card-body">
-                                    <h6 class="card-title" th:text="${topicItem.title()}">Konu</h6>
-                                    <p class="card-text small text-muted" th:text="${topicItem.summary()}">Özet</p>
+                                    <h4 class="card-title h6" th:text="${topicItem.title()}">Konu</h4>
+                                    <p class="card-text small text-muted" th:utext="${topicItem.summaryHtml()}">Özet</p>
                                     <div class="mb-2">
                                         <span class="badge text-bg-secondary"
                                               th:text="#{${'difficulty.' + topicItem.difficulty()}}">Zorluk</span>
@@ -103,6 +121,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </main>
