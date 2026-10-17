@@ -17,3 +17,6 @@ target/
 
 __pycache__/
 *.pyc
+
+# Local Playwright MCP output (screenshots, audit scripts)
+.playwright-mcp/
