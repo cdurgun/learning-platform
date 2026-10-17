@@ -1,6 +1,8 @@
 package com.cdurgun.learning.config;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
@@ -43,10 +45,18 @@ public class WebConfig implements WebMvcConfigurer {
         }
     }
 
-    /** {@code @{/css/custom.css}} gibi linkleri hash'li adrese çeviren filtre. */
+    /**
+     * {@code @{/css/custom.css}} gibi linkleri hash'li adrese çeviren filtre. ERROR dispatch'i
+     * de kapsanmalı: hata sayfaları (error/404.html) /error'a ERROR dispatch'iyle render edilir ve
+     * Boot düz bir filtre bean'ini yalnızca REQUEST'te çalıştırır -- aksi hâlde o sayfa hash'siz
+     * (yine de 1 yıl önbelleğe alınan) /css/custom.css'e link verir.
+     */
     @Bean
-    public ResourceUrlEncodingFilter resourceUrlEncodingFilter() {
-        return new ResourceUrlEncodingFilter();
+    public FilterRegistrationBean<ResourceUrlEncodingFilter> resourceUrlEncodingFilter() {
+        FilterRegistrationBean<ResourceUrlEncodingFilter> registration =
+                new FilterRegistrationBean<>(new ResourceUrlEncodingFilter());
+        registration.setDispatcherTypes(DispatcherType.REQUEST, DispatcherType.ERROR);
+        return registration;
     }
 
     @Bean

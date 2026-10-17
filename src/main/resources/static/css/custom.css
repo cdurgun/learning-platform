@@ -2,6 +2,20 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Bootstrap'in varsayılan link (#0d6efd) ve satır içi code (#d63384) renkleri saf beyazda
+   tam 4.5:1 tutturuyor; #fbfbfd zeminde 4.35'e, Tip/Warning kutularında 3.9'a iniyor
+   (Lighthouse color-contrast). Aynı tonlar bir kademe koyulaştırıldı -- hepsi bu zeminlerde
+   >= 5.0. Bootstrap 5.3 linki --bs-link-color-rgb'den, hover'ı --bs-link-hover-color-rgb'den
+   boyadığı için RGB eşleri de ezilmeli; hover, yeni link renginden ayırt edilsin diye
+   blue-700'e çekildi. */
+:root {
+    --bs-link-color: #0b5ed7;
+    --bs-link-color-rgb: 11, 94, 215;
+    --bs-link-hover-color: #084298;
+    --bs-link-hover-color-rgb: 8, 66, 152;
+    --bs-code-color: #c2185b;
+}
+
 body {
     background-color: #fbfbfd;
 }
@@ -69,6 +83,11 @@ body {
     color: #fbbf24;
 }
 
+/* Footer açık zeminde: #fbbf24 orada 1.6:1 kalıyordu, aynı amber'in koyu tonu 4.86:1. */
+footer .brand-accent {
+    color: #b45309;
+}
+
 /* Navbar'da logo/marka adının altındaki slogan (Faz 50, kullanıcı onayı: "Forge
    your skills" -- marka adındaki "Forge" ile kelime oyunu kurduğu ve kısa olduğu
    için "Build your software skills" yerine tercih edildi). Bilinçli olarak
@@ -80,6 +99,12 @@ body {
     letter-spacing: 0.04em;
     color: rgba(255, 255, 255, 0.55);
     text-transform: uppercase;
+}
+
+/* Aktif konu linki .text-primary (#0d6efd) taşıyor; bg-light (#f8f9fa) üzerinde 4.26:1.
+   Yalnızca sidebar kapsamında link rengiyle aynı koyu tona çekilir (5.54:1). */
+.sidebar-nav {
+    --bs-primary-rgb: 11, 94, 215;
 }
 
 /* Sidebar accordion: collapsible category groups (bkz. fragments/layout.html :: sidebar).
