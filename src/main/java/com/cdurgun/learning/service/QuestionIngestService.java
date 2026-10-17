@@ -82,6 +82,7 @@ public class QuestionIngestService {
         validateCorrectOptionCount(type, options);
 
         String codeSnippet = validateCodeSnippet(type, request.codeSnippet());
+        rejectFencedCodeInCodeOutputQuestion(type, questionText);
         String codeLanguage = (type == QuestionType.CODE_OUTPUT) ? request.codeLanguage() : null;
 
         LocalDateTime now = LocalDateTime.now();
@@ -152,6 +153,20 @@ public class QuestionIngestService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "codeSnippet is only allowed for CODE_OUTPUT");
         }
         return null;
+    }
+
+    /**
+     * CODE_OUTPUT'ta kodun TEK kaynağı {@code codeSnippet}'tir -- public quiz
+     * fragment'i {@code question}'ı düz metin ({@code th:text}) olarak basar, yani
+     * metne gömülmüş bir fenced blok (```) ekranda ters tırnaklarıyla birlikte
+     * görünür ve kod iki kez gösterilir (bkz. enum/V1138). Tek ters tırnaklı
+     * satır içi kod ({@code `name()`}) ve diğer soru tipleri etkilenmez.
+     */
+    private static void rejectFencedCodeInCodeOutputQuestion(QuestionType type, String questionText) {
+        if (type == QuestionType.CODE_OUTPUT && questionText.contains("```")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "question must not contain a fenced code block for CODE_OUTPUT; put the code in codeSnippet");
+        }
     }
 
     private static Language parseLanguage(String rawValue) {

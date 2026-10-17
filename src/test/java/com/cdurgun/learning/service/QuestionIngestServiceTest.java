@@ -285,6 +285,47 @@ class QuestionIngestServiceTest {
     }
 
     @Test
+    void ingestCodeOutputRejectsFencedCodeBlockInQuestionText() {
+        when(topicRepository.findBySlug("enum")).thenReturn(Optional.of(enumTopic()));
+        String snippet = "System.out.println(Day.valueOf(\"FRIDAY\"));";
+        QuestionIngestRequest request = new QuestionIngestRequest("enum", "en", "CODE_OUTPUT", "BEGINNER",
+                "OPENAI", "What will be the output of the following code?\n\n```java\n" + snippet + "\n```",
+                snippet, "java", "Because.",
+                List.of(new QuestionIngestOption("FRIDAY", true), new QuestionIngestOption("MONDAY", false)));
+
+        assertThatThrownBy(() -> newService().ingest(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("must not contain a fenced code block");
+        verify(questionRepository, never()).save(any(Question.class));
+    }
+
+    @Test
+    void ingestCodeOutputAcceptsInlineCodeInQuestionText() {
+        stubSave();
+        QuestionIngestRequest request = new QuestionIngestRequest("enum", "en", "CODE_OUTPUT", "INTERMEDIATE",
+                "MANUAL", "What does `name()` print here?", "System.out.println(Day.MONDAY.name());", "java",
+                "Because.", List.of(new QuestionIngestOption("MONDAY", true), new QuestionIngestOption("Monday", false)));
+
+        newService().ingest(request);
+
+        ArgumentCaptor<Question> captor = ArgumentCaptor.forClass(Question.class);
+        verify(questionRepository).save(captor.capture());
+        assertThat(captor.getValue().getQuestion()).isEqualTo("What does `name()` print here?");
+    }
+
+    @Test
+    void ingestFenceCheckDoesNotApplyToNonCodeOutputTypes() {
+        stubSave();
+        QuestionIngestRequest request = new QuestionIngestRequest("enum", "en", "SINGLE_CHOICE", "INTERMEDIATE",
+                "MANUAL", "Which keyword declares this?\n\n```java\nenum Day { MONDAY }\n```", null, null,
+                "Because.", List.of(new QuestionIngestOption("enum", true), new QuestionIngestOption("class", false)));
+
+        newService().ingest(request);
+
+        verify(questionRepository).save(any(Question.class));
+    }
+
+    @Test
     void ingestSavesOptionsWithSortOrderMatchingRequestOrder() {
         stubSave();
         QuestionIngestRequest request = singleChoice(List.of(
