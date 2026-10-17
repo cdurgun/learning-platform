@@ -14,7 +14,7 @@ Bir stream pipeline'ı üç parçadan oluşur: bir **source** (`list.stream()` g
 
 Java 8 öncesinde bir koleksiyonu filtreleyip dönüştürmek, elle yazılmış bir `for` döngüsü, geçici bir sonuç listesi ve döngü içinde `if` kontrolleri gerektirirdi -- **nasıl** yapılacağını adım adım anlatan (imperative) bir kod. Stream API, aynı işi **ne** istediğinizi tanımlayan (declarative) bir zincirle ifade etmenizi sağlar: `filter(...).map(...).toList()` okuyan kişiye doğrudan niyeti anlatır, döngü mekaniğini değil.
 
-Bu, kullanıcının paylaştığı örnekle tam olarak örtüşüyor:
+Bu farkı küçük bir örnekle görelim:
 
 ```java
 List<String> names = List.of("Ahmet", "Mehmet", "Ayse", "Ali");

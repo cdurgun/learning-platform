@@ -19,7 +19,7 @@ class StreamCreationExample {
         System.out.println(fromArray.count());
 
         // Stream.empty() and Stream.generate()/Stream.iterate() are less common sources --
-        // generate() needs a limit() or it never stops, since it has no natural end.
+        // iterate() (like generate()) has no natural end, so it needs a limit() or it never stops.
         Stream<Integer> generated = Stream.iterate(1, n -> n * 2).limit(5);
         System.out.println(generated.toList());
     }

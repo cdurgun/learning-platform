@@ -14,7 +14,7 @@ A stream pipeline has three parts: a **source** (like `list.stream()`), zero or 
 
 Before Java 8, filtering and transforming a collection meant a hand-written `for` loop, a temporary result list, and `if` checks inside the loop -- imperative code that spells out **how** to do it, step by step. The Stream API lets you express the same work as a declarative chain that describes **what** you want: `filter(...).map(...).toList()` tells the reader your intent directly, not the loop mechanics.
 
-This lines up exactly with the example you shared:
+Here is that difference in a small example:
 
 ```java
 List<String> names = List.of("Ahmet", "Mehmet", "Ayse", "Ali");
