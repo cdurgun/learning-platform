@@ -68,7 +68,7 @@ dizinin "jagged" (satırları farklı uzunlukta) olduğu durumlarda da doğru ç
 
 ## İç İçe Döngülerde break ve continue
 
-`break` ("for Loop" dersindeki "break ile Döngüden Çıkmak" bölümüne bakabilirsiniz)
+`break` (["for Loop"](/tr/topics/for-loop) dersindeki "break ile Döngüden Çıkmak" bölümüne bakabilirsiniz)
 ve `continue` ("for Loop" dersindeki "continue ile Bir Adımı Atlamak" bölümüne
 bakabilirsiniz), etiketsiz kullanıldıklarında **yalnızca yazıldıkları en içteki
 döngüyü** etkiler -- dış döngüyü etkilemezler:

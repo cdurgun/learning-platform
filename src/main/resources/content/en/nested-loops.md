@@ -69,7 +69,7 @@ correct even for a "jagged" array, where rows can have different lengths.
 
 ## break and continue in Nested Loops
 
-An unlabeled `break` (see the "Exiting a Loop with break" section of the "for Loop"
+An unlabeled `break` (see the "Exiting a Loop with break" section of the ["for Loop"](/en/topics/for-loop)
 lesson) and `continue` (see the "Skipping an Iteration with continue" section of the
 "for Loop" lesson) only affect **the innermost loop they're written in** -- neither
 has any effect on the outer loop:

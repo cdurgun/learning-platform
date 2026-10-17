@@ -1,6 +1,6 @@
 # for Loop
 
-The third topic in the Control Flow category: the for loop -- a control structure that REPEATS a block of code a known or countable number of times. `if`/`else` (see the "if / else" lesson) and `switch` (see the "switch" lesson) decide whether to run a code path ONCE; `for` runs the same block MULTIPLE times, driven by a counter variable that advances on each pass. This lesson covers the classic `for` syntax, controlling loop flow with `break`/`continue`, and index-based iteration over an array.
+The third topic in the Control Flow category: the for loop -- a control structure that REPEATS a block of code a known or countable number of times. `if`/`else` (see the ["if / else"](/en/topics/if-else) lesson) and `switch` (see the ["switch"](/en/topics/switch) lesson) decide whether to run a code path ONCE; `for` runs the same block MULTIPLE times, driven by a counter variable that advances on each pass. This lesson covers the classic `for` syntax, controlling loop flow with `break`/`continue`, and index-based iteration over an array.
 
 ## What Is a for Loop?
 
@@ -12,7 +12,7 @@ Repeating the same operation a fixed number of times (or until a condition holds
 
 ## History
 
-Like `if`/`switch`, the `for` loop carried over from C (1972) to Java (1995) almost verbatim -- the three-part (`init; condition; update`) syntax is a direct inheritance from C and hasn't changed since. Java 5 (2004) ADDED the "enhanced for" (`for-each`) syntax alongside classic `for`, for iterating array/collection elements without an index (see the "Enhanced for Loop" lesson) -- it did NOT replace classic `for`; both still exist side by side, for different purposes.
+Like `if`/`switch`, the `for` loop carried over from C (1972) to Java (1995) almost verbatim -- the three-part (`init; condition; update`) syntax is a direct inheritance from C and hasn't changed since. Java 5 (2004) ADDED the "enhanced for" (`for-each`) syntax alongside classic `for`, for iterating array/collection elements without an index (see the ["Enhanced for Loop"](/en/topics/enhanced-for-loop) lesson) -- it did NOT replace classic `for`; both still exist side by side, for different purposes.
 
 ## Basic for Loop Syntax
 
@@ -52,7 +52,7 @@ The initialization and update parts of a `for` can each hold MULTIPLE statements
 
 ## Iterating Arrays with a Classic for Loop
 
-Classic `for` also gives you the INDEX at every step of an array, not just the value (see "Basic Usage: Creation, Access, Default Values" in the "Arrays" lesson) -- this is needed whenever you also need the POSITION of a value, such as modifying an array IN PLACE. Why that matters -- and that a shorter alternative exists when you don't need the index -- will be covered in the upcoming "Enhanced for Loop" lesson.
+Classic `for` also gives you the INDEX at every step of an array, not just the value (see "Basic Usage: Creation, Access, Default Values" in the ["Arrays"](/en/topics/arrays) lesson) -- this is needed whenever you also need the POSITION of a value, such as modifying an array IN PLACE. Why that matters -- and that a shorter alternative exists when you don't need the index -- will be covered in the upcoming "Enhanced for Loop" lesson.
 
 {{ArrayIterationForExample.java}}
 

@@ -1,4 +1,4 @@
-["Exception'lara Giriş"](/tr/topics/introduction-to-exceptions) konusunda bir exception'ın ne olduğunu, nasıl fırlatıldığını ve nasıl yayıldığını gördün; "Try-Catch ve Finally" konusunda onu nasıl yakalayıp temizlik yapacağını öğrendin. Ama şu ana kadar `ArithmeticException`, `NumberFormatException`, `ArrayIndexOutOfBoundsException` gibi sınıfları birbirinden bağımsız isimler gibi kullandın. Aslında hiçbiri bağımsız değil — hepsi tek bir ortak ağacın dalları, ve bu ağacın şeklini bilmek hangi `catch` bloğunun neyi yakalayacağını, ne zaman `catch (Exception e)` yazmanın tehlikeli olduğunu ve neden bazı hatalar (`StackOverflowError` gibi) hiçbir zaman normal bir `catch` bloğuyla yakalanmaması gerektiğini anlamanı sağlar.
+["Exception'lara Giriş"](/tr/topics/introduction-to-exceptions) konusunda bir exception'ın ne olduğunu, nasıl fırlatıldığını ve nasıl yayıldığını gördün; ["Try-Catch ve Finally"](/tr/topics/try-catch-finally) konusunda onu nasıl yakalayıp temizlik yapacağını öğrendin. Ama şu ana kadar `ArithmeticException`, `NumberFormatException`, `ArrayIndexOutOfBoundsException` gibi sınıfları birbirinden bağımsız isimler gibi kullandın. Aslında hiçbiri bağımsız değil — hepsi tek bir ortak ağacın dalları, ve bu ağacın şeklini bilmek hangi `catch` bloğunun neyi yakalayacağını, ne zaman `catch (Exception e)` yazmanın tehlikeli olduğunu ve neden bazı hatalar (`StackOverflowError` gibi) hiçbir zaman normal bir `catch` bloğuyla yakalanmaması gerektiğini anlamanı sağlar.
 
 ## Exception Hiyerarşisi Nedir?
 
@@ -18,7 +18,7 @@ Java'nın ilk sürümünden (1.0, 1996) beri `Throwable`/`Error`/`Exception`/`Ru
 
 {{ThrowableHierarchyWalkExample.java}}
 
-Bu örnek, `getSuperclass()` ile (bkz. "Reflection" konusu) bir exception'ın sınıf zincirini gerçekten yukarı doğru yürüyerek yazdırıyor — `NumberFormatException`'ın zinciri `RuntimeException` ve `Exception` üzerinden `Throwable`'a çıkarken, `StackOverflowError`'ın zinciri hiç `Exception`'a uğramadan doğrudan `Error` üzerinden `Throwable`'a çıkıyor. İki dal, yalnızca en tepede birleşiyor.
+Bu örnek, `getSuperclass()` ile (bkz. ["Reflection"](/tr/topics/reflection) konusu) bir exception'ın sınıf zincirini gerçekten yukarı doğru yürüyerek yazdırıyor — `NumberFormatException`'ın zinciri `RuntimeException` ve `Exception` üzerinden `Throwable`'a çıkarken, `StackOverflowError`'ın zinciri hiç `Exception`'a uğramadan doğrudan `Error` üzerinden `Throwable`'a çıkıyor. İki dal, yalnızca en tepede birleşiyor.
 
 ## Error: JVM'in Kendi Sorunları
 

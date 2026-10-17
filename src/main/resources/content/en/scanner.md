@@ -57,7 +57,7 @@ Real measurement (warmed up -- both paths were run 50 times before timing): read
 
 ## Exception Handling
 
-Calling `nextInt()` (or similar) for a token that isn't the expected type throws a REAL `InputMismatchException` -- it does NOT silently return `0` or `null`. A critical point: when this exception is thrown, that "mismatched" token is NOT consumed -- it stays in the input stream, so you can recover by reading it as a plain string with `next()`. When there are no tokens left at all, `NoSuchElementException` is thrown instead -- the safe pattern is always checking with `hasNext()`/`hasNextInt()` first (exactly like the difference between `offer()`/`poll()` and `add()`/`remove()` in the "Queues & Collections Utility" lesson).
+Calling `nextInt()` (or similar) for a token that isn't the expected type throws a REAL `InputMismatchException` -- it does NOT silently return `0` or `null`. A critical point: when this exception is thrown, that "mismatched" token is NOT consumed -- it stays in the input stream, so you can recover by reading it as a plain string with `next()`. When there are no tokens left at all, `NoSuchElementException` is thrown instead -- the safe pattern is always checking with `hasNext()`/`hasNextInt()` first (exactly like the difference between `offer()`/`poll()` and `add()`/`remove()` in the ["Queues & Collections Utility"](/en/topics/queues-collections-utility) lesson).
 
 {{ScannerExceptionHandlingExample.java}}
 

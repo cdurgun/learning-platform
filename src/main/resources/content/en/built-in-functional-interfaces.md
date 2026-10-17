@@ -4,7 +4,7 @@ The `java.util.function` package exists so you don't have to define a custom fun
 
 ## What Are Built-in Functional Interfaces?
 
-In the "Interface" lesson's "Functional Interfaces and Lambdas" section and in the "Lambda Expressions" lesson, you saw how to define your own functional interface: an interface with exactly one abstract method, optionally marked with `@FunctionalInterface`. In practice, though, needs like "check a condition on a value," "transform a value," and "do something with a value" repeat so often that the JDK ships ready-made, general-purpose interfaces for them. These interfaces in the `java.util.function` package are called **built-in functional interfaces**.
+In the ["Interface"](/en/topics/interface) lesson's "Functional Interfaces and Lambdas" section and in the ["Lambda Expressions"](/en/topics/lambda-expressions) lesson, you saw how to define your own functional interface: an interface with exactly one abstract method, optionally marked with `@FunctionalInterface`. In practice, though, needs like "check a condition on a value," "transform a value," and "do something with a value" repeat so often that the JDK ships ready-made, general-purpose interfaces for them. These interfaces in the `java.util.function` package are called **built-in functional interfaces**.
 
 This lesson isn't about writing your own interface -- it's about using the ones the JDK already gives you, in the right place.
 

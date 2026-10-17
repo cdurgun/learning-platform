@@ -1,6 +1,6 @@
 # Optional
 
-"Terminal Operations" dersinde `reduce(accumulator)`, `min()`, `max()`, `findFirst()`, `findAny()`'in `Optional<T>` döndürdüğünü görmüş, ama detayına girmemiştik. Bu ders tam olarak `Optional`'ın kendisine odaklanıyor: bir değerin bulunmama ihtimalini tip sisteminde nasıl ifade ettiği, ve bunu nasıl güvenle kullanacağınız.
+["Terminal Operations"](/tr/topics/terminal-operations) dersinde `reduce(accumulator)`, `min()`, `max()`, `findFirst()`, `findAny()`'in `Optional<T>` döndürdüğünü görmüş, ama detayına girmemiştik. Bu ders tam olarak `Optional`'ın kendisine odaklanıyor: bir değerin bulunmama ihtimalini tip sisteminde nasıl ifade ettiği, ve bunu nasıl güvenle kullanacağınız.
 
 ## Optional Nedir?
 

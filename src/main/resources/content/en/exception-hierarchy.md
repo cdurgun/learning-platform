@@ -1,4 +1,4 @@
-In "Introduction to Exceptions" you saw what an exception is, how it gets thrown, and how it propagates; in "Try-Catch and Finally" you learned how to catch one and clean up after it. But so far you've treated classes like `ArithmeticException`, `NumberFormatException`, and `ArrayIndexOutOfBoundsException` as if they were independent, unrelated names. They aren't — they're all branches of a single shared tree, and knowing the shape of that tree explains which `catch` block will actually catch what, why `catch (Exception e)` can be dangerous, and why some problems (like `StackOverflowError`) should almost never be caught by an ordinary `catch` block at all.
+In ["Introduction to Exceptions"](/en/topics/introduction-to-exceptions) you saw what an exception is, how it gets thrown, and how it propagates; in ["Try-Catch and Finally"](/en/topics/try-catch-finally) you learned how to catch one and clean up after it. But so far you've treated classes like `ArithmeticException`, `NumberFormatException`, and `ArrayIndexOutOfBoundsException` as if they were independent, unrelated names. They aren't — they're all branches of a single shared tree, and knowing the shape of that tree explains which `catch` block will actually catch what, why `catch (Exception e)` can be dangerous, and why some problems (like `StackOverflowError`) should almost never be caught by an ordinary `catch` block at all.
 
 ## What Is the Exception Hierarchy?
 
@@ -18,7 +18,7 @@ The `Throwable`/`Error`/`Exception`/`RuntimeException` structure has been the sa
 
 {{ThrowableHierarchyWalkExample.java}}
 
-This example uses `getSuperclass()` (see the "Reflection" lesson) to actually walk an exception's class chain upward and print it — `NumberFormatException`'s chain climbs through `RuntimeException` and `Exception` to `Throwable`, while `StackOverflowError`'s chain never touches `Exception` at all, climbing straight through `Error` to `Throwable`. The two branches only meet at the very top.
+This example uses `getSuperclass()` (see the ["Reflection"](/en/topics/reflection) lesson) to actually walk an exception's class chain upward and print it — `NumberFormatException`'s chain climbs through `RuntimeException` and `Exception` to `Throwable`, while `StackOverflowError`'s chain never touches `Exception` at all, climbing straight through `Error` to `Throwable`. The two branches only meet at the very top.
 
 ## Error: The JVM's Own Problems
 

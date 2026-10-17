@@ -54,7 +54,7 @@ Real measurement: across 5 million `offer()`+`poll()` pairs, `ArrayDeque` came o
 
 ## The Collections Utility Class
 
-`Collections`, similar to `Collectors` (see the "Collectors" lesson), is a utility class that offers ready-made static methods working on any `Collection`/`List`: `sort()`, `reverse()`, `shuffle()`, `max()`/`min()`, `frequency()` (counts how many times a value occurs), `binarySearch()` (O(log n) search on a SORTED list), and small, special-purpose immutable-collection factory methods like `emptyList()`/`singletonList()`/`nCopies()`.
+`Collections`, similar to `Collectors` (see the ["Collectors"](/en/topics/collectors) lesson), is a utility class that offers ready-made static methods working on any `Collection`/`List`: `sort()`, `reverse()`, `shuffle()`, `max()`/`min()`, `frequency()` (counts how many times a value occurs), `binarySearch()` (O(log n) search on a SORTED list), and small, special-purpose immutable-collection factory methods like `emptyList()`/`singletonList()`/`nCopies()`.
 
 {{CollectionsUtilityExample.java}}
 

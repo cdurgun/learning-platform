@@ -34,12 +34,12 @@ A "2D array" in Java is really an ARRAY OF ARRAYS -- each "row" is its own indep
 
 ## The Arrays Utility Class
 
-`Arrays`, similar to `Collections` (see the "Queues & Collections Utility" lesson), is a utility class offering ready-made static methods that work on arrays: `sort()` (sorts in place), `binarySearch()` (O(log n) search on a SORTED array), `equals()` (CONTENT comparison -- unlike `==`), `fill()` (sets every element to the same value), and `copyOf()`/`copyOfRange()` (copy into a new array).
+`Arrays`, similar to `Collections` (see the ["Queues & Collections Utility"](/en/topics/queues-collections-utility) lesson), is a utility class offering ready-made static methods that work on arrays: `sort()` (sorts in place), `binarySearch()` (O(log n) search on a SORTED array), `equals()` (CONTENT comparison -- unlike `==`), `fill()` (sets every element to the same value), and `copyOf()`/`copyOfRange()` (copy into a new array).
 
 {{ArraysUtilityExample.java}}
 
 > ⚠️ Warning
-> Comparing two arrays with `==` compares REFERENCE (is it the same memory address), not CONTENT -- exactly the same trap as `==` vs `equals()` on `String` (see the "String" lesson). Use `Arrays.equals()` to check whether two arrays hold the same elements.
+> Comparing two arrays with `==` compares REFERENCE (is it the same memory address), not CONTENT -- exactly the same trap as `==` vs `equals()` on `String` (see the ["String"](/en/topics/string) lesson). Use `Arrays.equals()` to check whether two arrays hold the same elements.
 
 ## Array Covariance: A Trap the Compiler Misses
 

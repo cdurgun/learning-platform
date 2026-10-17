@@ -1,6 +1,6 @@
 # Lambda Expressions
 
-"Interface" dersinin "Functional Interface ve Lambda" bölümünde lambda'yı kısaca
+["Interface"](/tr/topics/interface) dersinin "Functional Interface ve Lambda" bölümünde lambda'yı kısaca
 tanımıştık: tam olarak tek soyut metotlu bir interface'in (*functional interface*)
 ayrı bir sınıf yazmadan, doğrudan bir ifadeyle örneklenmesi. Bu ders, Java kursunun yeni
 kategorisi **Functional Interface'ler ve Stream'ler**'in ilk konusu -- orada bilerek kısa
@@ -101,7 +101,7 @@ String, Integer>` olarak atandığında `BiFunction` oluyor; ikisinin de tek soy
 aynı şekle (iki `String` içeri, bir sonuç dışarı) sahip olduğu için **aynı** lambda
 ifadesi ikisine de uyuyor. `List.sort(...)`'a doğrudan bir lambda geçirdiğimizde de aynı
 mekanizma işliyor -- hedef tip, `sort` metodunun parametre tipinden (`Comparator<? super
-E>`) geliyor. Bu, "Built-in Functional Interfaces & Method References" dersinde
+E>`) geliyor. Bu, ["Built-in Functional Interfaces"](/tr/topics/built-in-functional-interfaces) dersinde
 göreceğimiz `Predicate`/`Function`/`Consumer` gibi hazır tiplerin neden bu kadar sık işe
 yaradığının da temeli -- aynı şekle sahip birçok farklı senaryoyu tek bir hazır interface
 karşılayabiliyor.

@@ -1,6 +1,6 @@
 # Maps
 
-"Sets" dersinde her elemanın bir koleksiyonda yalnızca bir kez bulunmasını garanti eden `Set`'i gördün. `Map` bu fikri bir adım öteye taşır: her **anahtarın** (key) yalnızca bir kez bulunmasını garanti eder, ama her anahtarı bir **değere** (value) eşler. Bir sözlükteki kelime-tanım ilişkisini, bir kullanıcı ID'si ile kullanıcı profili ilişkisini, ya da bir kelimenin bir metinde kaç kez geçtiğini tutmak -- bunların hepsi `Map`'in doğal kullanım alanıdır.
+["Sets"](/tr/topics/sets) dersinde her elemanın bir koleksiyonda yalnızca bir kez bulunmasını garanti eden `Set`'i gördün. `Map` bu fikri bir adım öteye taşır: her **anahtarın** (key) yalnızca bir kez bulunmasını garanti eder, ama her anahtarı bir **değere** (value) eşler. Bir sözlükteki kelime-tanım ilişkisini, bir kullanıcı ID'si ile kullanıcı profili ilişkisini, ya da bir kelimenin bir metinde kaç kez geçtiğini tutmak -- bunların hepsi `Map`'in doğal kullanım alanıdır.
 
 ## Map Nedir?
 

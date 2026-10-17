@@ -1,6 +1,6 @@
 # for Loop
 
-Kontrol Akışı kategorisinin üçüncü konusu for döngüsü -- bir kod bloğunu, önceden bilinen ya da sayılabilen bir sayıda TEKRARLAMAYI sağlayan kontrol yapısı. `if`/`else` (bkz. "if / else" dersi) ve `switch` (bkz. "switch" dersi) bir kod yolunu YALNIZCA BİR KEZ çalıştırıp çalıştırmayacağına karar verirken, `for` aynı bloğu BİRDEN FAZLA KEZ, bir sayaç değişkeninin ilerlemesine bağlı olarak çalıştırır. Bu ders, klasik `for` sözdizimini, `break`/`continue` ile döngü akışını kontrol etmeyi, ve bir dizi (array) üzerinde indeks tabanlı gezinmeyi ele alıyor.
+Kontrol Akışı kategorisinin üçüncü konusu for döngüsü -- bir kod bloğunu, önceden bilinen ya da sayılabilen bir sayıda TEKRARLAMAYI sağlayan kontrol yapısı. `if`/`else` (bkz. ["if / else"](/tr/topics/if-else) dersi) ve `switch` (bkz. ["switch"](/tr/topics/switch) dersi) bir kod yolunu YALNIZCA BİR KEZ çalıştırıp çalıştırmayacağına karar verirken, `for` aynı bloğu BİRDEN FAZLA KEZ, bir sayaç değişkeninin ilerlemesine bağlı olarak çalıştırır. Bu ders, klasik `for` sözdizimini, `break`/`continue` ile döngü akışını kontrol etmeyi, ve bir dizi (array) üzerinde indeks tabanlı gezinmeyi ele alıyor.
 
 ## for Döngüsü Nedir?
 
@@ -12,7 +12,7 @@ Aynı işlemi belirli bir sayıda (ya da bir koşul sağlanana kadar) tekrarlama
 
 ## Tarihçe
 
-`for` döngüsü de `if`/`switch` gibi C'den (1972) Java'ya (1995) neredeyse birebir geçti -- üç bölümlü (`init; condition; update`) sözdizimi C'nin doğrudan mirasıdır ve o günden beri değişmedi. Java 5 (2004), bu klasik `for`'un yanına dizi/koleksiyon elemanlarını indekssiz gezmek için "enhanced for" (`for-each`) sözdizimini EKLEDİ (bkz. "Enhanced for Loop" dersi) -- klasik `for`'u DEĞİŞTİRMEDİ, ikisi hâlâ yan yana, farklı amaçlar için var.
+`for` döngüsü de `if`/`switch` gibi C'den (1972) Java'ya (1995) neredeyse birebir geçti -- üç bölümlü (`init; condition; update`) sözdizimi C'nin doğrudan mirasıdır ve o günden beri değişmedi. Java 5 (2004), bu klasik `for`'un yanına dizi/koleksiyon elemanlarını indekssiz gezmek için "enhanced for" (`for-each`) sözdizimini EKLEDİ (bkz. ["Enhanced for Loop"](/tr/topics/enhanced-for-loop) dersi) -- klasik `for`'u DEĞİŞTİRMEDİ, ikisi hâlâ yan yana, farklı amaçlar için var.
 
 ## Temel for Döngüsü Sözdizimi
 
@@ -52,7 +52,7 @@ En yaygın kullanım, `0`'dan başlayıp bir sınıra kadar (`<` ya da `<=` ile)
 
 ## for Döngüsüyle Dizi Üzerinde Gezinme
 
-Klasik `for`, bir dizinin her adımda İNDEKSİNİ de sağlar -- bu, yalnızca değerlere değil (bkz. "Arrays" dersindeki "Temel Kullanım: Oluşturma, Erişim, Varsayılan Değerler" bölümü) o değerlerin KONUMUNA da ihtiyaç duyulduğunda (örn. bir diziyi YERİNDE değiştirmek) gereklidir. Bunun neden önemli olduğu -- ve indekse ihtiyaç duyulmadığında daha kısa bir alternatifin var olduğu -- gelecek "Enhanced for Loop" dersinde ele alınacak.
+Klasik `for`, bir dizinin her adımda İNDEKSİNİ de sağlar -- bu, yalnızca değerlere değil (bkz. ["Arrays"](/tr/topics/arrays) dersindeki "Temel Kullanım: Oluşturma, Erişim, Varsayılan Değerler" bölümü) o değerlerin KONUMUNA da ihtiyaç duyulduğunda (örn. bir diziyi YERİNDE değiştirmek) gereklidir. Bunun neden önemli olduğu -- ve indekse ihtiyaç duyulmadığında daha kısa bir alternatifin var olduğu -- gelecek "Enhanced for Loop" dersinde ele alınacak.
 
 {{ArrayIterationForExample.java}}
 

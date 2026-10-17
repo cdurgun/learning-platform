@@ -1,6 +1,6 @@
 # switch
 
-The second topic in the Control Flow category: switch -- a control structure that compares a single value against several possible constants and branches accordingly. A long "else if Chains" (see the "if / else" lesson) can always be rewritten as a `switch`, but for this specific case -- comparing ONE variable against MULTIPLE constant values -- `switch` offers syntax that's both shorter and lets the compiler check more (for example, confirming that every constant of an enum has been handled). With Java 21 as the target, this lesson covers both the classic `switch` syntax and the modern arrow (`->`) syntax that arrived as a preview in 2017 and became permanent in Java 14 (2020), along with the `switch` EXPRESSION.
+The second topic in the Control Flow category: switch -- a control structure that compares a single value against several possible constants and branches accordingly. A long "else if Chains" (see the ["if / else"](/en/topics/if-else) lesson) can always be rewritten as a `switch`, but for this specific case -- comparing ONE variable against MULTIPLE constant values -- `switch` offers syntax that's both shorter and lets the compiler check more (for example, confirming that every constant of an enum has been handled). With Java 21 as the target, this lesson covers both the classic `switch` syntax and the modern arrow (`->`) syntax that arrived as a preview in 2017 and became permanent in Java 14 (2020), along with the `switch` EXPRESSION.
 
 ## What Is switch?
 
@@ -110,4 +110,4 @@ String type = switch (day) {
 
 **Exhaustiveness** — The compiler verifying that a switch expression covers every possible value it operates on (e.g. every constant of an enum) without needing `default`.
 
-As a more advanced topic, matching `switch` against object TYPES and a record's components (pattern matching) is covered separately in "Appendix: Record Patterns (Java 21)" in the "Record" lesson.
+As a more advanced topic, matching `switch` against object TYPES and a record's components (pattern matching) is covered separately in "Appendix: Record Patterns (Java 21)" in the ["Record"](/en/topics/records) lesson.

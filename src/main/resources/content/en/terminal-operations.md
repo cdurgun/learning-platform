@@ -1,6 +1,6 @@
 # Terminal Operations
 
-The "Stream API Fundamentals" lesson covered the three stages of a stream pipeline: source, intermediate operations, and exactly one terminal operation. That lesson focused on intermediate operations; this one covers the **terminal operations** that actually run the pipeline and produce a result.
+The ["Stream API Fundamentals"](/en/topics/stream-fundamentals) lesson covered the three stages of a stream pipeline: source, intermediate operations, and exactly one terminal operation. That lesson focused on intermediate operations; this one covers the **terminal operations** that actually run the pipeline and produce a result.
 
 ## What Is a Terminal Operation?
 
@@ -54,7 +54,7 @@ These three methods ask a yes/no question about the stream using a `Predicate`, 
 
 ## toList() and toArray(): Converting to a Simple Collection
 
-`toList()` (Java 16) is a shorthand for `collect(Collectors.toList())` -- with one important difference: the list `toList()` returns is **unmodifiable**, while `collect(Collectors.toList())`'s is mutable. `toArray()` converts the stream into an array instead of a `List`; to produce an array of the right element type, it usually takes a constructor reference like `String[]::new` (the `Class::new` form from the "Built-in Functional Interfaces" lesson).
+`toList()` (Java 16) is a shorthand for `collect(Collectors.toList())` -- with one important difference: the list `toList()` returns is **unmodifiable**, while `collect(Collectors.toList())`'s is mutable. `toArray()` converts the stream into an array instead of a `List`; to produce an array of the right element type, it usually takes a constructor reference like `String[]::new` (the `Class::new` form from the ["Built-in Functional Interfaces"](/en/topics/built-in-functional-interfaces) lesson).
 
 {{ToListToArrayExample.java}}
 

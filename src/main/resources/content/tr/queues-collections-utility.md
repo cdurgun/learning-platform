@@ -8,7 +8,7 @@ Koleksiyonlar kategorisinin son durağında iki farklı ama birbirini tamamlayan
 
 ## Neden Var?
 
-Bir görev kuyruğu, bir mesaj sırası, "geri al" (undo) geçmişi, bir grafikte genişlik-öncelikli arama (BFS) -- bunların hepsi "elemanları belirli bir sırayla işle" fikrine dayanır. `List` ile de teorik olarak benzer bir şey yapılabilir (`add(0, x)` ya da `remove(0)`), ama bu işlemler `ArrayList`'te O(n)'dir (bkz. "Lists" dersi) -- `Queue`/`Deque` implementasyonları bu işlemleri O(1)'de yapacak şekilde tasarlanmıştır.
+Bir görev kuyruğu, bir mesaj sırası, "geri al" (undo) geçmişi, bir grafikte genişlik-öncelikli arama (BFS) -- bunların hepsi "elemanları belirli bir sırayla işle" fikrine dayanır. `List` ile de teorik olarak benzer bir şey yapılabilir (`add(0, x)` ya da `remove(0)`), ama bu işlemler `ArrayList`'te O(n)'dir (bkz. ["Lists"](/tr/topics/lists) dersi) -- `Queue`/`Deque` implementasyonları bu işlemleri O(1)'de yapacak şekilde tasarlanmıştır.
 
 ## Tarihçe
 
@@ -54,7 +54,7 @@ Gerçek ölçüm: 5 milyon `offer()`+`poll()` çiftinde `ArrayDeque` çoğu çal
 
 ## Collections Yardımcı Sınıfı
 
-`Collections`, `Collectors`'a benzer şekilde (bkz. "Collectors" dersi), herhangi bir `Collection`/`List` üzerinde çalışan hazır statik metotlar sunan bir yardımcı sınıftır: `sort()`, `reverse()`, `shuffle()`, `max()`/`min()`, `frequency()` (bir değerin kaç kez geçtiğini sayar), `binarySearch()` (SIRALI bir listede O(log n) arama), ve `emptyList()`/`singletonList()`/`nCopies()` gibi küçük, özel amaçlı immutable koleksiyon üreten fabrika metotları.
+`Collections`, `Collectors`'a benzer şekilde (bkz. ["Collectors"](/tr/topics/collectors) dersi), herhangi bir `Collection`/`List` üzerinde çalışan hazır statik metotlar sunan bir yardımcı sınıftır: `sort()`, `reverse()`, `shuffle()`, `max()`/`min()`, `frequency()` (bir değerin kaç kez geçtiğini sayar), `binarySearch()` (SIRALI bir listede O(log n) arama), ve `emptyList()`/`singletonList()`/`nCopies()` gibi küçük, özel amaçlı immutable koleksiyon üreten fabrika metotları.
 
 {{CollectionsUtilityExample.java}}
 

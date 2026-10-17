@@ -24,7 +24,7 @@ List<String> result = names.stream()
         .toList();
 ```
 
-Here, `filter` expects a `Predicate<String>` (the `Predicate` from the "Built-in Functional Interfaces" lesson), `map` expects a `Function<String,String>` (the same lesson's `Function`), and `name -> name.startsWith("A")` and `String::toUpperCase` are a lambda and a method reference respectively (the "Lambda Expressions" and "Built-in Functional Interfaces" lessons). This chain is exactly where the last three lessons -- the functional interface foundation from "Interface", "Lambda Expressions", "Built-in Functional Interfaces" -- come together.
+Here, `filter` expects a `Predicate<String>` (the `Predicate` from the ["Built-in Functional Interfaces"](/en/topics/built-in-functional-interfaces) lesson), `map` expects a `Function<String,String>` (the same lesson's `Function`), and `name -> name.startsWith("A")` and `String::toUpperCase` are a lambda and a method reference respectively (the "Lambda Expressions" and "Built-in Functional Interfaces" lessons). This chain is exactly where the last three lessons -- the functional interface foundation from "Interface", "Lambda Expressions", "Built-in Functional Interfaces" -- come together.
 
 ## History
 

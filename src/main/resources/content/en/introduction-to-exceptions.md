@@ -14,12 +14,12 @@ Exception handling as a structured language feature predates Java by decades -- 
 
 ## The Anatomy of an Exception: Throwable, Message, and Stack Trace
 
-Every exception object -- regardless of its specific class -- has room for the same three pieces of information. A MESSAGE: a human-readable string describing what went wrong, usually set when the exception is created -- but not guaranteed: an exception created without one returns `null` from `getMessage()`. A CAUSE: an optional reference to another exception that TRIGGERED this one (see "Exception Handling Best Practices" for when and why to use it). And a STACK TRACE: an automatic snapshot of exactly which methods were active, and in what order, at the moment the exception object was created.
+Every exception object -- regardless of its specific class -- has room for the same three pieces of information. A MESSAGE: a human-readable string describing what went wrong, usually set when the exception is created -- but not guaranteed: an exception created without one returns `null` from `getMessage()`. A CAUSE: an optional reference to another exception that TRIGGERED this one (see ["Exception Handling Best Practices"](/en/topics/exception-handling-best-practices) for when and why to use it). And a STACK TRACE: an automatic snapshot of exactly which methods were active, and in what order, at the moment the exception object was created.
 
 {{ExceptionAnatomyExample.java}}
 
 > 💡 Tip
-> Every exception class in Java (see "Exception Hierarchy" for the full picture) ultimately extends `Throwable`, which is where `getMessage()`, `getCause()`, and `getStackTrace()` actually come from -- this is true whether the specific exception is an `ArithmeticException`, a `NullPointerException`, or a custom one you write yourself later in this series.
+> Every exception class in Java (see ["Exception Hierarchy"](/en/topics/exception-hierarchy) for the full picture) ultimately extends `Throwable`, which is where `getMessage()`, `getCause()`, and `getStackTrace()` actually come from -- this is true whether the specific exception is an `ArithmeticException`, a `NullPointerException`, or a custom one you write yourself later in this series.
 
 ## What Happens When an Exception Goes Uncaught?
 
@@ -44,7 +44,7 @@ The exceptions you'll encounter constantly in real Java code aren't exotic -- th
 
 ## Basic Terminology
 
-A handful of words describe this whole process precisely, and this series uses them consistently from here on. To THROW an exception is to create the object and signal the JVM to begin looking for a handler (`ExceptionAnatomyExample`'s array access does this implicitly; `PropagationThroughCallChainExample`'s `throw new IllegalArgumentException(...)` does it explicitly -- see "Throw and Throws" for the keyword itself). To CATCH an exception is to write code that intercepts it and decides what to do instead of letting the program terminate (see "Try-Catch and Finally", the next lesson). PROPAGATION is an uncaught exception moving from the method that threw it up through every calling method, as shown above. A STACK TRACE is the printed record of that propagation. And CHECKED vs. UNCHECKED describes whether the compiler forces you to acknowledge a possible exception at all -- a distinction significant enough to be its own lesson ("Checked vs Unchecked Exceptions").
+A handful of words describe this whole process precisely, and this series uses them consistently from here on. To THROW an exception is to create the object and signal the JVM to begin looking for a handler (`ExceptionAnatomyExample`'s array access does this implicitly; `PropagationThroughCallChainExample`'s `throw new IllegalArgumentException(...)` does it explicitly -- see ["Throw and Throws"](/en/topics/throw-and-throws) for the keyword itself). To CATCH an exception is to write code that intercepts it and decides what to do instead of letting the program terminate (see "Try-Catch and Finally", the next lesson). PROPAGATION is an uncaught exception moving from the method that threw it up through every calling method, as shown above. A STACK TRACE is the printed record of that propagation. And CHECKED vs. UNCHECKED describes whether the compiler forces you to acknowledge a possible exception at all -- a distinction significant enough to be its own lesson ("Checked vs Unchecked Exceptions").
 
 ## Best Practices
 

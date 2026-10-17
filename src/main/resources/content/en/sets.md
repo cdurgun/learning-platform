@@ -1,6 +1,6 @@
 # Sets
 
-The `List` interface you saw in the "Lists" lesson allowed duplicate elements and preserved insertion order. Sometimes you want the opposite: a guarantee that an element appears **only once** in the collection, and order usually doesn't matter at all -- think unique user IDs in a system, the distinct words in a piece of text, or a mathematical set. That's what Java's `Set` interface is for.
+The `List` interface you saw in the ["Lists"](/en/topics/lists) lesson allowed duplicate elements and preserved insertion order. Sometimes you want the opposite: a guarantee that an element appears **only once** in the collection, and order usually doesn't matter at all -- think unique user IDs in a system, the distinct words in a piece of text, or a mathematical set. That's what Java's `Set` interface is for.
 
 ## What Is a Set?
 

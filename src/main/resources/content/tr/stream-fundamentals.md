@@ -24,7 +24,7 @@ List<String> result = names.stream()
         .toList();
 ```
 
-Burada `filter` bir `Predicate<String>` ("Built-in Functional Interfaces" dersindeki `Predicate`), `map` bir `Function<String,String>` (aynı dersteki `Function`) bekliyor, ve `name -> name.startsWith("A")` ile `String::toUpperCase` sırasıyla bir lambda ve bir method reference ("Lambda Expressions" ve "Built-in Functional Interfaces" dersleri). Yani bu zincir, önceki üç dersin ("Interface" dersindeki functional interface temeli, "Lambda Expressions", "Built-in Functional Interfaces") tam olarak bir araya geldiği yer.
+Burada `filter` bir `Predicate<String>` (["Built-in Functional Interfaces"](/tr/topics/built-in-functional-interfaces) dersindeki `Predicate`), `map` bir `Function<String,String>` (aynı dersteki `Function`) bekliyor, ve `name -> name.startsWith("A")` ile `String::toUpperCase` sırasıyla bir lambda ve bir method reference ("Lambda Expressions" ve "Built-in Functional Interfaces" dersleri). Yani bu zincir, önceki üç dersin ("Interface" dersindeki functional interface temeli, "Lambda Expressions", "Built-in Functional Interfaces") tam olarak bir araya geldiği yer.
 
 ## Tarihçe
 

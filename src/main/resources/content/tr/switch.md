@@ -1,6 +1,6 @@
 # switch
 
-Kontrol Akışı kategorisinin ikinci konusu switch -- tek bir değeri birden fazla olası sabitle karşılaştırıp buna göre dallanan bir kontrol yapısı. Uzun bir "else if Zinciri" (bkz. "if / else" dersi) her zaman bir `switch`'e çevrilebilir, ama `switch` bu özel durumda -- TEK bir değişkenin BİRDEN FAZLA sabit değerle karşılaştırılması -- hem daha kısa hem derleyicinin daha fazla kontrol yapabildiği (örn. bir enum'daki her sabitin ele alındığını doğrulama) bir sözdizimi sunar. Java 21 hedefiyle bu ders hem klasik `switch` sözdizimini hem 2017'den beri gelen ve önce inceleme (preview), sonra Java 14'te (2020) kalıcı hale gelen modern ok (`->`) sözdizimini ve `switch` İFADESİNİ birlikte ele alıyor.
+Kontrol Akışı kategorisinin ikinci konusu switch -- tek bir değeri birden fazla olası sabitle karşılaştırıp buna göre dallanan bir kontrol yapısı. Uzun bir "else if Zinciri" (bkz. ["if / else"](/tr/topics/if-else) dersi) her zaman bir `switch`'e çevrilebilir, ama `switch` bu özel durumda -- TEK bir değişkenin BİRDEN FAZLA sabit değerle karşılaştırılması -- hem daha kısa hem derleyicinin daha fazla kontrol yapabildiği (örn. bir enum'daki her sabitin ele alındığını doğrulama) bir sözdizimi sunar. Java 21 hedefiyle bu ders hem klasik `switch` sözdizimini hem 2017'den beri gelen ve önce inceleme (preview), sonra Java 14'te (2020) kalıcı hale gelen modern ok (`->`) sözdizimini ve `switch` İFADESİNİ birlikte ele alıyor.
 
 ## switch Nedir?
 
@@ -110,4 +110,4 @@ String tur = switch (gun) {
 
 **Exhaustiveness (Kapsayıcılık)** — Bir `switch` ifadesinin, üzerinde çalıştığı tüm olası değerleri (örn. bir enum'un tüm sabitlerini) `default` olmadan kapsadığının derleyici tarafından doğrulanması.
 
-Daha ileri düzey bir konu olarak, `switch`'in nesne TİPLERİYLE ve record'ların alanlarıyla eşleştirilmesi (pattern matching) "Record" dersindeki "Ek: Record Patterns (Java 21)" bölümünde ayrıca ele alınıyor.
+Daha ileri düzey bir konu olarak, `switch`'in nesne TİPLERİYLE ve record'ların alanlarıyla eşleştirilmesi (pattern matching) ["Record"](/tr/topics/records) dersindeki "Ek: Record Patterns (Java 21)" bölümünde ayrıca ele alınıyor.

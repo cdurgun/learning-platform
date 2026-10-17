@@ -1,6 +1,6 @@
 # File Writing
 
-File Writing is the seventh topic in the Java Basics category, the WRITING half of File I/O -- a direct continuation of the "File Reading" lesson. That lesson covered the two ways to read files (`java.nio.file.Files` and the classic `java.io.BufferedReader`); here we cover WRITING to files, COPYING files, and managing directories with the same two API families.
+File Writing is the seventh topic in the Java Basics category, the WRITING half of File I/O -- a direct continuation of the ["File Reading"](/en/topics/file-reading) lesson. That lesson covered the two ways to read files (`java.nio.file.Files` and the classic `java.io.BufferedReader`); here we cover WRITING to files, COPYING files, and managing directories with the same two API families.
 
 ## What Is File Writing?
 
@@ -55,7 +55,7 @@ To add to the END of existing content instead of the default overwriting behavio
 
 ## Writing a CSV File
 
-Writing a structured text file (like CSV) combines string-joining basics (see the "String" lesson) with File I/O: `String.join(",", array)` builds each line, all lines are gathered in a `StringBuilder`, and the whole thing is written to disk with a SINGLE `Files.writeString()` call -- more EFFICIENT than making a separate write call for every line.
+Writing a structured text file (like CSV) combines string-joining basics (see the ["String"](/en/topics/string) lesson) with File I/O: `String.join(",", array)` builds each line, all lines are gathered in a `StringBuilder`, and the whole thing is written to disk with a SINGLE `Files.writeString()` call -- more EFFICIENT than making a separate write call for every line.
 
 {{WriteCsvExample.java}}
 

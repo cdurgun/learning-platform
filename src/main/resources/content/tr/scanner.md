@@ -57,7 +57,7 @@ Gerçek ölçüm (ısıtılmış -- her iki yol da ölçümden önce 50 kez çal
 
 ## İstisna Yönetimi
 
-Beklenen tipte olmayan bir token için `nextInt()` (ya da benzerleri) çağırmak GERÇEK bir `InputMismatchException` fırlatır -- sessizce `0` ya da `null` DÖNMEZ. Kritik bir nokta: bu istisna fırlatıldığında, o "uyumsuz" token TÜKETİLMEZ -- girdi akışında kalır, bu yüzden `next()` ile düz bir string olarak okunarak kurtarma yapılabilir. Hiç token kalmadığında ise `NoSuchElementException` fırlatılır -- güvenli desen, her zaman önce `hasNext()`/`hasNextInt()` ile kontrol etmektir (tıpkı "Queues & Collections Utility" dersindeki `offer()`/`poll()` ile `add()`/`remove()` arasındaki farkta olduğu gibi).
+Beklenen tipte olmayan bir token için `nextInt()` (ya da benzerleri) çağırmak GERÇEK bir `InputMismatchException` fırlatır -- sessizce `0` ya da `null` DÖNMEZ. Kritik bir nokta: bu istisna fırlatıldığında, o "uyumsuz" token TÜKETİLMEZ -- girdi akışında kalır, bu yüzden `next()` ile düz bir string olarak okunarak kurtarma yapılabilir. Hiç token kalmadığında ise `NoSuchElementException` fırlatılır -- güvenli desen, her zaman önce `hasNext()`/`hasNextInt()` ile kontrol etmektir (tıpkı ["Queues & Collections Utility"](/tr/topics/queues-collections-utility) dersindeki `offer()`/`poll()` ile `add()`/`remove()` arasındaki farkta olduğu gibi).
 
 {{ScannerExceptionHandlingExample.java}}
 

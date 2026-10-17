@@ -34,7 +34,7 @@ Enhanced for gives you each element's VALUE but never its POSITION (index) -- if
 
 ## Limitation: The Loop Variable and Structural Changes
 
-Enhanced for's loop variable is a COPY of each element -- assigning it a new value does NOT change the underlying array/collection. Also, changing a `List`'s STRUCTURE (adding/removing an element) while an enhanced for is running over it generally throws `ConcurrentModificationException` -- this is how the loop detects that the collection changed out from under it. The real way to remove elements safely (`Iterator.remove()`) is covered in "Iterator and ListIterator" in the "Lists" lesson.
+Enhanced for's loop variable is a COPY of each element -- assigning it a new value does NOT change the underlying array/collection. Also, changing a `List`'s STRUCTURE (adding/removing an element) while an enhanced for is running over it generally throws `ConcurrentModificationException` -- this is how the loop detects that the collection changed out from under it. The real way to remove elements safely (`Iterator.remove()`) is covered in "Iterator and ListIterator" in the ["Lists"](/en/topics/lists) lesson.
 
 {{ModifyingDuringIterationExample.java}}
 

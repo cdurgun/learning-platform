@@ -1,6 +1,6 @@
 # Maps
 
-In the "Sets" lesson you saw `Set`, which guarantees that each element appears only once in a collection. `Map` takes this idea a step further: it guarantees that each **key** appears only once, but maps each key to a **value**. Storing a word-to-definition relationship in a dictionary, a user ID to a user profile, or how many times a word appears in a text -- these are all natural use cases for `Map`.
+In the ["Sets"](/en/topics/sets) lesson you saw `Set`, which guarantees that each element appears only once in a collection. `Map` takes this idea a step further: it guarantees that each **key** appears only once, but maps each key to a **value**. Storing a word-to-definition relationship in a dictionary, a user ID to a user profile, or how many times a word appears in a text -- these are all natural use cases for `Map`.
 
 ## What Is a Map?
 

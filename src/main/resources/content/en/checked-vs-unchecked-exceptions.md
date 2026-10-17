@@ -1,4 +1,4 @@
-In "Exception Hierarchy" you saw that `Exception` splits into two broad branches: `RuntimeException` and everything that is NOT `RuntimeException`. That split carries a much more concrete consequence than its name suggests — a rule the compiler genuinely enforces. This lesson covers exactly what that rule is, why it exists, and how to choose between the two in professional Java code.
+In ["Exception Hierarchy"](/en/topics/exception-hierarchy) you saw that `Exception` splits into two broad branches: `RuntimeException` and everything that is NOT `RuntimeException`. That split carries a much more concrete consequence than its name suggests — a rule the compiler genuinely enforces. This lesson covers exactly what that rule is, why it exists, and how to choose between the two in professional Java code.
 
 ## What Are Checked and Unchecked Exceptions?
 

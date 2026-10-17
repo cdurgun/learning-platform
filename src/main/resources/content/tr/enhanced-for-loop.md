@@ -1,6 +1,6 @@
 # Enhanced for Loop
 
-Kontrol Akışı kategorisinin dördüncü konusu enhanced for (for-each) döngüsü -- bir dizinin ya da koleksiyonun her elemanını, bir sayaç değişkeni YAZMADAN gezmeyi sağlayan, klasik "for Loop" dersinin üzerine kurulu bir sözdizimi. Klasik `for`, KONUMA (indekse) ihtiyaç duyulan her durumda gereklidir; enhanced for ise yalnızca DEĞERLERİN kendisiyle ilgilenildiğinde -- konumun hiç önemi olmadığında -- aynı işi çok daha az kodla yapar. Bu ders, temel sözdizimini, üç gerçek SINIRINI (indekssizlik, döngü değişkeninin bir kopya olması, paralel gezinememe), ve klasik `for` ile aralarındaki seçimi ele alıyor.
+Kontrol Akışı kategorisinin dördüncü konusu enhanced for (for-each) döngüsü -- bir dizinin ya da koleksiyonun her elemanını, bir sayaç değişkeni YAZMADAN gezmeyi sağlayan, klasik ["for Loop"](/tr/topics/for-loop) dersinin üzerine kurulu bir sözdizimi. Klasik `for`, KONUMA (indekse) ihtiyaç duyulan her durumda gereklidir; enhanced for ise yalnızca DEĞERLERİN kendisiyle ilgilenildiğinde -- konumun hiç önemi olmadığında -- aynı işi çok daha az kodla yapar. Bu ders, temel sözdizimini, üç gerçek SINIRINI (indekssizlik, döngü değişkeninin bir kopya olması, paralel gezinememe), ve klasik `for` ile aralarındaki seçimi ele alıyor.
 
 ## Enhanced for Loop Nedir?
 
@@ -34,7 +34,7 @@ Enhanced for, her elemanın DEĞERİNİ verir ama KONUMUNU (indeksini) hiçbir z
 
 ## Sınır: Döngü Değişkeni ve Yapısal Değişiklik
 
-Enhanced for'un döngü değişkeni her elemanın bir KOPYASIDIR -- ona yeni bir değer atamak, alttaki diziyi/koleksiyonu DEĞİŞTİRMEZ. Ayrıca bir `List` üzerinde enhanced for çalışırken listenin YAPISINI değiştirmek (bir eleman eklemek/çıkarmak) genellikle `ConcurrentModificationException` fırlatır -- döngü, koleksiyonun kendi ayaklarının altından değiştiğini böyle tespit eder. Elemanları güvenle çıkarmanın gerçek yolu (`Iterator.remove()`) "Lists" dersindeki "Iterator ve ListIterator" bölümünde ele alınıyor.
+Enhanced for'un döngü değişkeni her elemanın bir KOPYASIDIR -- ona yeni bir değer atamak, alttaki diziyi/koleksiyonu DEĞİŞTİRMEZ. Ayrıca bir `List` üzerinde enhanced for çalışırken listenin YAPISINI değiştirmek (bir eleman eklemek/çıkarmak) genellikle `ConcurrentModificationException` fırlatır -- döngü, koleksiyonun kendi ayaklarının altından değiştiğini böyle tespit eder. Elemanları güvenle çıkarmanın gerçek yolu (`Iterator.remove()`) ["Lists"](/tr/topics/lists) dersindeki "Iterator ve ListIterator" bölümünde ele alınıyor.
 
 {{ModifyingDuringIterationExample.java}}
 

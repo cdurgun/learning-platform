@@ -42,7 +42,7 @@ Bir sınırın bir sınıfa hiç ihtiyacı yok — yalnızca bir interface ile s
 
 {{PracticalMaxFinderExample.java}}
 
-`<T extends Comparable<T>>`, kendisini aynı türden bir başkasıyla karşılaştırabilen herhangi bir türü kabul eder — `String`, `Integer` ve pek çok kendi sınıfın, `Number` ile hiçbir ilişkisi olmadan bu koşulu sağlar. Bu, "Wildcard'lar" dersi ilgili ama farklı bir amaç için `<? extends T>`'yi tanıttığında yoğun biçimde kullanıldığını göreceğin aynı şekildir — bir tür parametresini sınırlamak ile bir wildcard'ı sınırlamak aynı `extends` anahtar kelimesini kullanır, ama farklı sorulara cevap verir.
+`<T extends Comparable<T>>`, kendisini aynı türden bir başkasıyla karşılaştırabilen herhangi bir türü kabul eder — `String`, `Integer` ve pek çok kendi sınıfın, `Number` ile hiçbir ilişkisi olmadan bu koşulu sağlar. Bu, ["Wildcard'lar"](/tr/topics/wildcards) dersi ilgili ama farklı bir amaç için `<? extends T>`'yi tanıttığında yoğun biçimde kullanıldığını göreceğin aynı şekildir — bir tür parametresini sınırlamak ile bir wildcard'ı sınırlamak aynı `extends` anahtar kelimesini kullanır, ama farklı sorulara cevap verir.
 
 > 💡 Tip
 > `<T extends Comparable<T>>`, gerçek Java kodunda göreceğin en yaygın sınırlardan biridir — tek bir generic metodun, yalnızca sayılar için değil, herhangi bir karşılaştırılabilir tür için bir maksimum, bir minimum ya da bir sıralama hesaplamasına izin veren tam olarak budur.

@@ -34,7 +34,7 @@ Java'da bir "2 boyutlu dizi" aslında bir DİZİLER DİZİSİDİR (array of arra
 
 ## Arrays Yardımcı Sınıfı
 
-`Arrays`, `Collections`'a benzer şekilde (bkz. "Queues & Collections Utility" dersi), diziler üzerinde çalışan hazır statik metotlar sunan bir yardımcı sınıftır: `sort()` (yerinde sıralar), `binarySearch()` (SIRALI bir dizide O(log n) arama), `equals()` (İÇERİK karşılaştırması -- `==`'nin aksine), `fill()` (tüm elemanları aynı değere ayarlar), ve `copyOf()`/`copyOfRange()` (yeni bir dizi olarak kopyalar).
+`Arrays`, `Collections`'a benzer şekilde (bkz. ["Queues & Collections Utility"](/tr/topics/queues-collections-utility) dersi), diziler üzerinde çalışan hazır statik metotlar sunan bir yardımcı sınıftır: `sort()` (yerinde sıralar), `binarySearch()` (SIRALI bir dizide O(log n) arama), `equals()` (İÇERİK karşılaştırması -- `==`'nin aksine), `fill()` (tüm elemanları aynı değere ayarlar), ve `copyOf()`/`copyOfRange()` (yeni bir dizi olarak kopyalar).
 
 {{ArraysUtilityExample.java}}
 

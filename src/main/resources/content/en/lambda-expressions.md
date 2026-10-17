@@ -1,6 +1,6 @@
 # Lambda Expressions
 
-In the "Interface" lesson's "Functional Interfaces and Lambdas" section we met lambdas
+In the ["Interface"](/en/topics/interface) lesson's "Functional Interfaces and Lambdas" section we met lambdas
 briefly: a functional interface (an interface with exactly one abstract method) being
 instantiated directly with an expression, with no named class needed. This lesson is the
 first topic of the Java course's new category, **Functional Interfaces & Streams** -- and
@@ -104,7 +104,7 @@ interfaces' single abstract method has the exact same shape (two `String`s in, o
 out), the exact **same** lambda expression fits both. The same mechanism is at work when
 we pass a lambda directly into `List.sort(...)` -- the target type comes from the
 parameter's declared type, `Comparator<? super E>`. This is also the foundation of why
-the ready-made types we'll see in "Built-in Functional Interfaces & Method References" --
+the ready-made types we'll see in ["Built-in Functional Interfaces"](/en/topics/built-in-functional-interfaces) --
 `Predicate`, `Function`, `Consumer` -- turn out to be so useful: one ready-made interface
 with a given shape can serve many completely different scenarios.
 

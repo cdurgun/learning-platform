@@ -1,6 +1,6 @@
 # Optional
 
-In the "Terminal Operations" lesson, you saw that `reduce(accumulator)`, `min()`, `max()`, `findFirst()`, and `findAny()` return `Optional<T>`, but we didn't go into detail. This lesson focuses on `Optional` itself: how it expresses the possibility of an absent value in the type system, and how to use it safely.
+In the ["Terminal Operations"](/en/topics/terminal-operations) lesson, you saw that `reduce(accumulator)`, `min()`, `max()`, `findFirst()`, and `findAny()` return `Optional<T>`, but we didn't go into detail. This lesson focuses on `Optional` itself: how it expresses the possibility of an absent value in the type system, and how to use it safely.
 
 ## What Is Optional?
 
@@ -26,7 +26,7 @@ Three factory methods create an `Optional`. `Optional.of(value)` asserts the val
 
 ## orElse() and orElseGet(): Supplying a Default Value
 
-`orElse(value)` and `orElseGet(supplier)` both supply a default to use when the Optional is empty -- but they differ in **when** that default is computed. `orElse()`'s argument is **always** computed immediately, even if the Optional is present. `orElseGet()`'s `Supplier` is only invoked if the Optional turns out to be empty -- lazy evaluation, exactly what `Supplier<T>` (the "Built-in Functional Interfaces" lesson) exists for.
+`orElse(value)` and `orElseGet(supplier)` both supply a default to use when the Optional is empty -- but they differ in **when** that default is computed. `orElse()`'s argument is **always** computed immediately, even if the Optional is present. `orElseGet()`'s `Supplier` is only invoked if the Optional turns out to be empty -- lazy evaluation, exactly what `Supplier<T>` (the ["Built-in Functional Interfaces"](/en/topics/built-in-functional-interfaces) lesson) exists for.
 
 {{OrElseExample.java}}
 
@@ -40,7 +40,7 @@ Three factory methods create an `Optional`. `Optional.of(value)` asserts the val
 
 `map(Function)` transforms the value **inside** an Optional, without needing an `isPresent()` check first -- if the Optional is empty, the function is never called and an empty Optional comes back.
 
-`flatMap()` solves the same nesting problem `Stream.flatMap()` solved in the "Stream API Fundamentals" lesson: if the transformation function itself returns an `Optional`, `map()` produces an `Optional<Optional<T>>` -- an awkward, nested structure. `flatMap()` merges the inner Optional directly into the outer one.
+`flatMap()` solves the same nesting problem `Stream.flatMap()` solved in the ["Stream API Fundamentals"](/en/topics/stream-fundamentals) lesson: if the transformation function itself returns an `Optional`, `map()` produces an `Optional<Optional<T>>` -- an awkward, nested structure. `flatMap()` merges the inner Optional directly into the outer one.
 
 {{OptionalMapFlatMapExample.java}}
 

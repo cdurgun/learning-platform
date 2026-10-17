@@ -42,7 +42,7 @@ A bound doesn't need a class at all — bounding purely by an interface is just 
 
 {{PracticalMaxFinderExample.java}}
 
-`<T extends Comparable<T>>` accepts any type that can compare itself to another of the same type — `String`, `Integer`, and plenty of your own classes all qualify, with no relationship to `Number` required at all. This is the same shape you'll see used heavily once "Wildcards" introduces `<? extends T>` for a related but different purpose — bounding a type parameter and bounding a wildcard use the same `extends` keyword, but answer different questions.
+`<T extends Comparable<T>>` accepts any type that can compare itself to another of the same type — `String`, `Integer`, and plenty of your own classes all qualify, with no relationship to `Number` required at all. This is the same shape you'll see used heavily once ["Wildcards"](/en/topics/wildcards) introduces `<? extends T>` for a related but different purpose — bounding a type parameter and bounding a wildcard use the same `extends` keyword, but answer different questions.
 
 > 💡 Tip
 > `<T extends Comparable<T>>` is one of the most common bounds you'll see in real Java code — it's exactly what lets a single generic method compute a maximum, a minimum, or a sort order for any comparable type, not just numbers.

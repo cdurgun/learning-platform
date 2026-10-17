@@ -302,7 +302,7 @@ fikridir. Öne çıkan noktalar:
 - "Composition root": uygulamanın somut sınıfları bildiği, `new` çağrılarının toplandığı
   tek bir yer -- Spring olmadan da IoC'nin faydalarını sağlar
 - Spring, aynı fikri `@Component`/`@Service` taraması ve `@Autowired` ile otomatikleştirir
-  -- container'ın kendisi bir sonraki konunun (Spring IoC Container & Bean Lifecycle)
+  -- container'ın kendisi bir sonraki konunun (Spring IoC Container ve Bean Yaşam Döngüsü)
   konusu
 
 Hızlı referans:

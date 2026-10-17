@@ -1,6 +1,6 @@
 # File Writing
 
-Java Temelleri kategorisinin yedinci konusu File I/O'nun YAZMA yarısı -- "File Reading" dersinin doğrudan devamı. O derste dosyaları okumanın iki yolunu (`java.nio.file.Files` ve klasik `java.io.BufferedReader`) gördük; burada aynı iki API ailesiyle dosyalara YAZMAYI, dosyaları KOPYALAMAYI, ve dizinleri YÖNETMEYİ ele alıyoruz.
+Java Temelleri kategorisinin yedinci konusu File I/O'nun YAZMA yarısı -- ["File Reading"](/tr/topics/file-reading) dersinin doğrudan devamı. O derste dosyaları okumanın iki yolunu (`java.nio.file.Files` ve klasik `java.io.BufferedReader`) gördük; burada aynı iki API ailesiyle dosyalara YAZMAYI, dosyaları KOPYALAMAYI, ve dizinleri YÖNETMEYİ ele alıyoruz.
 
 ## File Writing Nedir?
 
@@ -55,7 +55,7 @@ Varsayılan davranış (üzerine yazma) yerine mevcut içeriğin SONUNA eklemek 
 
 ## CSV Dosyası Yazmak
 
-Yapılandırılmış bir metin dosyası (CSV gibi) yazmak, string birleştirme temellerini (bkz. "String" dersi) File I/O ile birleştirir: `String.join(",", dizi)` her satırı oluşturur, tüm satırlar bir `StringBuilder`'da toplanır, ve TEK bir `Files.writeString()` çağrısıyla diske yazılır -- her satır için ayrı bir yazma çağrısı yapmaktan daha VERİMLİDİR.
+Yapılandırılmış bir metin dosyası (CSV gibi) yazmak, string birleştirme temellerini (bkz. ["String"](/tr/topics/string) dersi) File I/O ile birleştirir: `String.join(",", dizi)` her satırı oluşturur, tüm satırlar bir `StringBuilder`'da toplanır, ve TEK bir `Files.writeString()` çağrısıyla diske yazılır -- her satır için ayrı bir yazma çağrısı yapmaktan daha VERİMLİDİR.
 
 {{WriteCsvExample.java}}
 

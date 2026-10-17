@@ -80,7 +80,7 @@ göstermek, bir girdi istemi vermek) `do-while` kullanın; aksi halde, yani "bel
 
 ## break ve continue ile while
 
-`break` ve `continue`, `for` döngüsündeki ("for Loop" dersinde işlenen "break ile
+`break` ve `continue`, `for` döngüsündeki (["for Loop"](/tr/topics/for-loop) dersinde işlenen "break ile
 Döngüden Çıkmak" ve "continue ile Bir Adımı Atlamak" bölümlerine bakabilirsiniz) ile
 birebir aynı şekilde çalışır -- tek fark döngünün kendi başlık sözdizimidir:
 
@@ -92,7 +92,7 @@ atlayıp koşul kontrolüne geri döner.
 ## Kullanıcı Girdisiyle Doğrulama Döngüsü (Scanner ile)
 
 `do-while`'ın en doğal kullanım alanlarından biri, kullanıcıdan geçerli bir değer
-gelene kadar tekrar tekrar sormaktır ("Scanner" dersindeki "Temel Kullanım: Token
+gelene kadar tekrar tekrar sormaktır (["Scanner"](/tr/topics/scanner) dersindeki "Temel Kullanım: Token
 Okumak" bölümüne bakabilirsiniz):
 
 {{InputValidationLoopExample.java}}

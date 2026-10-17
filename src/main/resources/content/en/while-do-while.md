@@ -86,7 +86,7 @@ never run -- use `while`.
 
 `break` and `continue` work exactly the same way here as they do in a `for` loop (see
 the "Exiting a Loop with break" and "Skipping an Iteration with continue" sections of
-the "for Loop" lesson) -- only the loop's own header syntax differs:
+the ["for Loop"](/en/topics/for-loop) lesson) -- only the loop's own header syntax differs:
 
 {{BreakContinueInWhileExample.java}}
 
@@ -97,7 +97,7 @@ iteration and jumps back to the condition check.
 
 One of the most natural uses of `do-while` is asking a user repeatedly until they
 provide a valid value (see the "Basic Usage: Reading Tokens" section of the
-"Scanner" lesson):
+["Scanner"](/en/topics/scanner) lesson):
 
 {{InputValidationLoopExample.java}}
 

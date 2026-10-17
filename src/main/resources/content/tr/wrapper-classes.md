@@ -8,7 +8,7 @@ Java'daki her ilkel tipin bir NESNE karşılığı vardır: `int` → `Integer`,
 
 ## Neden Var?
 
-İlkel tipler doğrudan generic'lerle KULLANILAMAZ -- `List<int>` derlenmez, çünkü Java generic'leri yalnızca referans tipleriyle çalışır (bkz. "Reflection" dersindeki type erasure notu). Wrapper sınıfları, sayıları/booleanları bir `List<Integer>` gibi bir koleksiyona koymayı mümkün kılan köprüdür. Ayrıca bir ilkel tip ASLA `null` olamaz (`int x = null;` derlenmez) ama bir wrapper nesnesi olabilir -- bu, "değer yok" durumunu temsil etmek gerektiğinde (örneğin bir veritabanı sütunu NULL olabiliyorsa) kritik bir farktır. Wrapper sınıfları ayrıca `MAX_VALUE`/`MIN_VALUE` gibi sabitler ve `parseInt()` gibi yardımcı metotlar da taşır.
+İlkel tipler doğrudan generic'lerle KULLANILAMAZ -- `List<int>` derlenmez, çünkü Java generic'leri yalnızca referans tipleriyle çalışır (bkz. ["Reflection"](/tr/topics/reflection) dersindeki type erasure notu). Wrapper sınıfları, sayıları/booleanları bir `List<Integer>` gibi bir koleksiyona koymayı mümkün kılan köprüdür. Ayrıca bir ilkel tip ASLA `null` olamaz (`int x = null;` derlenmez) ama bir wrapper nesnesi olabilir -- bu, "değer yok" durumunu temsil etmek gerektiğinde (örneğin bir veritabanı sütunu NULL olabiliyorsa) kritik bir farktır. Wrapper sınıfları ayrıca `MAX_VALUE`/`MIN_VALUE` gibi sabitler ve `parseInt()` gibi yardımcı metotlar da taşır.
 
 ## Tarihçe
 
@@ -30,7 +30,7 @@ JVM, -128 ile 127 arasındaki değerler için `Integer` nesnelerini ÖNBELLEKLER
 {{IntegerCachingExample.java}}
 
 > ⚠️ Warning
-> Bu, "String" dersindeki string pool `==` vs `equals()` tuzağıyla BİREBİR AYNI mantıktır -- yalnızca tetikleyici farklıdır (literal vs. `new String(...)` yerine, -128..127 değer aralığı). Kural aynı: wrapper nesnelerini KARŞILAŞTIRIRKEN asla `==` kullanmayın, her zaman `equals()` kullanın (ya da önce ilkel tipe unboxing yapın).
+> Bu, ["String"](/tr/topics/string) dersindeki string pool `==` vs `equals()` tuzağıyla BİREBİR AYNI mantıktır -- yalnızca tetikleyici farklıdır (literal vs. `new String(...)` yerine, -128..127 değer aralığı). Kural aynı: wrapper nesnelerini KARŞILAŞTIRIRKEN asla `==` kullanmayın, her zaman `equals()` kullanın (ya da önce ilkel tipe unboxing yapın).
 
 ## Autoboxing'in Gizli Tehlikesi: null Unboxing
 
@@ -56,7 +56,7 @@ Her sayısal wrapper sınıfı bir `parseXxx()` (metin → ilkel), `compare()` (
 {{WrapperUtilityMethodsExample.java}}
 
 > 💡 Tip
-> `Integer.parseInt()` geçersiz bir metinle çağrıldığında `NumberFormatException` fırlatır -- sessizce `0` DÖNMEZ. Kullanıcı girdisini ayrıştırırken bu istisnayı ele almak (bkz. "Scanner" dersindeki `InputMismatchException` paraleli) gerekir.
+> `Integer.parseInt()` geçersiz bir metinle çağrıldığında `NumberFormatException` fırlatır -- sessizce `0` DÖNMEZ. Kullanıcı girdisini ayrıştırırken bu istisnayı ele almak (bkz. ["Scanner"](/tr/topics/scanner) dersindeki `InputMismatchException` paraleli) gerekir.
 
 ## Wrapper Sınıfları ve Koleksiyonlar
 

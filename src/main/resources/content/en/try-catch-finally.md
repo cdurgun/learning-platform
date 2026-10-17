@@ -1,4 +1,4 @@
-"Introduction to Exceptions" showed what happens when nothing handles an exception -- the program terminates, loudly, with a stack trace. This lesson covers the actual mechanism for stepping in before that happens: `try`, `catch`, and `finally`.
+["Introduction to Exceptions"](/en/topics/introduction-to-exceptions) showed what happens when nothing handles an exception -- the program terminates, loudly, with a stack trace. This lesson covers the actual mechanism for stepping in before that happens: `try`, `catch`, and `finally`.
 
 ## What Are try and catch?
 
@@ -26,7 +26,7 @@ A single `try` can be followed by several `catch` blocks, each handling a DIFFER
 {{MultipleCatchBlocksExample.java}}
 
 > ⚠️ Warning
-> Order matters. If a `catch` block for a SUPERCLASS (like `RuntimeException`) came before a `catch` block for one of its subclasses (like `NumberFormatException`), the subclass's `catch` block would be unreachable -- the superclass one would always match first. The compiler catches this specific mistake and refuses to build (see "Exception Hierarchy" for what "superclass" means precisely here).
+> Order matters. If a `catch` block for a SUPERCLASS (like `RuntimeException`) came before a `catch` block for one of its subclasses (like `NumberFormatException`), the subclass's `catch` block would be unreachable -- the superclass one would always match first. The compiler catches this specific mistake and refuses to build (see ["Exception Hierarchy"](/en/topics/exception-hierarchy) for what "superclass" means precisely here).
 
 ## Multi-Catch: Catching Several Exception Types in One Block with |
 
@@ -41,7 +41,7 @@ A `finally` block, placed after the last `catch` (or directly after `try`, with 
 {{FinallyAlwaysRunsExample.java}}
 
 > 💡 Tip
-> `finally` is what a resource-cleanup pattern like closing a file or a database connection is built on -- `try`-with-resources (covered where it's actually used, in the "File Reading" lesson) is really `finally`-based cleanup that the compiler writes for you automatically, not a fundamentally different mechanism.
+> `finally` is what a resource-cleanup pattern like closing a file or a database connection is built on -- `try`-with-resources (covered where it's actually used, in the ["File Reading"](/en/topics/file-reading) lesson) is really `finally`-based cleanup that the compiler writes for you automatically, not a fundamentally different mechanism.
 
 ## finally and return: A Subtle Interaction
 

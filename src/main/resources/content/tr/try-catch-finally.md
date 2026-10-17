@@ -1,4 +1,4 @@
-"Exception'lara Giriş", hiçbir şey bir exception'ı handle etmediğinde ne olduğunu gösterdi -- program gürültülü bir şekilde, bir stack trace'le sonlanıyor. Bu ders, bu olmadan ÖNCE araya girmenin gerçek mekanizmasını kapsıyor: `try`, `catch`, ve `finally`.
+["Exception'lara Giriş"](/tr/topics/introduction-to-exceptions), hiçbir şey bir exception'ı handle etmediğinde ne olduğunu gösterdi -- program gürültülü bir şekilde, bir stack trace'le sonlanıyor. Bu ders, bu olmadan ÖNCE araya girmenin gerçek mekanizmasını kapsıyor: `try`, `catch`, ve `finally`.
 
 ## Try ve Catch Nedir?
 
@@ -26,7 +26,7 @@ Tek bir `try`'ı, her biri FARKLI bir exception tipini ele alan birkaç `catch` 
 {{MultipleCatchBlocksExample.java}}
 
 > ⚠️ Warning
-> Sıra önemli. Bir SÜPER SINIF için `catch` bloğu (`RuntimeException` gibi), alt sınıflarından biri için `catch` bloğundan (`NumberFormatException` gibi) ÖNCE gelseydi, alt sınıfın `catch` bloğu erişilemez olurdu -- süper sınıfınki her zaman önce eşleşirdi. Derleyici bu spesifik hatayı yakalar ve build'i reddeder ("süper sınıf"ın burada tam olarak ne anlama geldiği için "Exception Hiyerarşisi" dersine bakınız).
+> Sıra önemli. Bir SÜPER SINIF için `catch` bloğu (`RuntimeException` gibi), alt sınıflarından biri için `catch` bloğundan (`NumberFormatException` gibi) ÖNCE gelseydi, alt sınıfın `catch` bloğu erişilemez olurdu -- süper sınıfınki her zaman önce eşleşirdi. Derleyici bu spesifik hatayı yakalar ve build'i reddeder ("süper sınıf"ın burada tam olarak ne anlama geldiği için ["Exception Hiyerarşisi"](/tr/topics/exception-hierarchy) dersine bakınız).
 
 ## Multi-Catch: | ile Birden Fazla Exception Tipini Aynı Blokta Yakalamak
 

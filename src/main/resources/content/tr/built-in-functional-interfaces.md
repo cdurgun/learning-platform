@@ -4,7 +4,7 @@
 
 ## Built-in Functional Interfaces Nedir?
 
-"Interface" dersinin "Functional Interface ve Lambda" bölümünde ve "Lambda Expressions" dersinde kendi functional interface'inizi nasıl tanımlayacağınızı görmüştünüz: tek bir soyut metodu olan, `@FunctionalInterface` ile işaretlenebilen bir interface. Ancak pratikte "bir değeri kontrol et", "bir değeri dönüştür", "bir değerle bir şey yap" gibi ihtiyaçlar o kadar sık tekrarlanır ki, JDK bunlar için hazır, genel amaçlı interface'ler sağlar. `java.util.function` paketindeki bu interface'lere **built-in functional interface** denir.
+["Interface"](/tr/topics/interface) dersinin "Functional Interface ve Lambda" bölümünde ve ["Lambda Expressions"](/tr/topics/lambda-expressions) dersinde kendi functional interface'inizi nasıl tanımlayacağınızı görmüştünüz: tek bir soyut metodu olan, `@FunctionalInterface` ile işaretlenebilen bir interface. Ancak pratikte "bir değeri kontrol et", "bir değeri dönüştür", "bir değerle bir şey yap" gibi ihtiyaçlar o kadar sık tekrarlanır ki, JDK bunlar için hazır, genel amaçlı interface'ler sağlar. `java.util.function` paketindeki bu interface'lere **built-in functional interface** denir.
 
 Bu konu, kendi interface'inizi yazmayı değil, JDK'nın size zaten verdiği interface'leri doğru yerde kullanmayı öğretir.
 

@@ -1,6 +1,6 @@
 # Terminal Operations
 
-"Stream API Temelleri" dersinde bir stream pipeline'ının üç aşamasını görmüştünüz: source, intermediate operation'lar, ve tam olarak bir terminal operation. O ders intermediate operation'lara odaklanmıştı; bu ders, pipeline'ı gerçekten çalıştırıp bir sonuç üreten **terminal operation**'ları ele alıyor.
+["Stream API Temelleri"](/tr/topics/stream-fundamentals) dersinde bir stream pipeline'ının üç aşamasını görmüştünüz: source, intermediate operation'lar, ve tam olarak bir terminal operation. O ders intermediate operation'lara odaklanmıştı; bu ders, pipeline'ı gerçekten çalıştırıp bir sonuç üreten **terminal operation**'ları ele alıyor.
 
 ## Terminal Operation Nedir?
 

@@ -8,7 +8,7 @@ Every primitive type in Java has an OBJECT counterpart: `int` → `Integer`, `do
 
 ## Why Does It Exist?
 
-Primitive types CANNOT be used directly with generics -- `List<int>` doesn't compile, because Java generics only work with reference types (see the type erasure note in the "Reflection" lesson). Wrapper classes are the bridge that makes it possible to put numbers/booleans into a collection like `List<Integer>`. Also, a primitive type can NEVER be `null` (`int x = null;` doesn't compile), but a wrapper object can -- a critical difference when you need to represent an "absent value" (for example, when a database column can be NULL). Wrapper classes also carry constants like `MAX_VALUE`/`MIN_VALUE` and helper methods like `parseInt()`.
+Primitive types CANNOT be used directly with generics -- `List<int>` doesn't compile, because Java generics only work with reference types (see the type erasure note in the ["Reflection"](/en/topics/reflection) lesson). Wrapper classes are the bridge that makes it possible to put numbers/booleans into a collection like `List<Integer>`. Also, a primitive type can NEVER be `null` (`int x = null;` doesn't compile), but a wrapper object can -- a critical difference when you need to represent an "absent value" (for example, when a database column can be NULL). Wrapper classes also carry constants like `MAX_VALUE`/`MIN_VALUE` and helper methods like `parseInt()`.
 
 ## History
 
@@ -30,7 +30,7 @@ The JVM CACHES `Integer` objects for values from -128 to 127 (the "Integer Cache
 {{IntegerCachingExample.java}}
 
 > ⚠️ Warning
-> This is EXACTLY the same logic as the string pool `==` vs `equals()` trap in the "String" lesson -- only the trigger is different (a value range of -128..127 instead of literal vs. `new String(...)`). Same rule: NEVER use `==` when COMPARING wrapper objects, always use `equals()` (or unbox to a primitive first).
+> This is EXACTLY the same logic as the string pool `==` vs `equals()` trap in the ["String"](/en/topics/string) lesson -- only the trigger is different (a value range of -128..127 instead of literal vs. `new String(...)`). Same rule: NEVER use `==` when COMPARING wrapper objects, always use `equals()` (or unbox to a primitive first).
 
 ## Autoboxing's Hidden Danger: null Unboxing
 

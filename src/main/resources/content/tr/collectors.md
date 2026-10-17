@@ -1,6 +1,6 @@
 # Collectors
 
-"Terminal Operations" dersinde `toList()`'i, `collect(Collectors.toList())`'in bir kısayolu olarak görmüştünüz -- ama `collect()`'in asıl gücüne hiç değinilmemişti. Bu ders tam olarak orada kalıyor: `Collectors` sınıfının sunduğu, gruplama, birleştirme ve dönüştürme için hazır tarifler.
+["Terminal Operations"](/tr/topics/terminal-operations) dersinde `toList()`'i, `collect(Collectors.toList())`'in bir kısayolu olarak görmüştünüz -- ama `collect()`'in asıl gücüne hiç değinilmemişti. Bu ders tam olarak orada kalıyor: `Collectors` sınıfının sunduğu, gruplama, birleştirme ve dönüştürme için hazır tarifler.
 
 ## Collectors Nedir?
 

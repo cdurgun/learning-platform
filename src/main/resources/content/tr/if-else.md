@@ -40,7 +40,7 @@ Bir `if`'in gövdesi içine başka bir `if` yazmak -- nested condition -- iki ko
 
 ## Karşılaştırma Operatörleri
 
-Java altı karşılaştırma operatörü sunar: `==` (eşit mi), `!=` (eşit değil mi), `<`, `>`, `<=`, `>=`. Bunların hepsi bir `boolean` sonuç üretir ve doğrudan bir `if` koşulu olarak kullanılabilir. `==` ilkel (primitive) tipler için DEĞERİ karşılaştırırken, nesneler (örn. `String`) için REFERANSI karşılaştırır -- bkz. "String" dersindeki "String Pool ve == vs equals()" bölümü.
+Java altı karşılaştırma operatörü sunar: `==` (eşit mi), `!=` (eşit değil mi), `<`, `>`, `<=`, `>=`. Bunların hepsi bir `boolean` sonuç üretir ve doğrudan bir `if` koşulu olarak kullanılabilir. `==` ilkel (primitive) tipler için DEĞERİ karşılaştırırken, nesneler (örn. `String`) için REFERANSI karşılaştırır -- bkz. ["String"](/tr/topics/string) dersindeki "String Pool ve == vs equals()" bölümü.
 
 {{ComparisonOperatorsExample.java}}
 
