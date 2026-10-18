@@ -55,6 +55,16 @@ yalnızca ders adreslerinde bulunması, ve bu üç yerin aynı tarihi göstermes
 doğru olup olmadığını ölçmez (o, veritabanındaki `updated_at`'tir); yalnızca tutarlılığa bakar.
 `datePublished` bilinçli olarak yayınlanmaz ve aranmaz. Yazar adı script'te sabittir (`AUTHOR`).
 
+"Beklenen Çıktı" bölümü (Faz 178): repodaki her `examples/{slug}/*.out` için o dersin EN ve TR
+sayfasında panel sayısı, sırası ve `<samp>` metninin `.out` ile birebir aynılığı (yalnızca tek son
+satır sonu düşer), etiketin dili ("Expected Output" / "Beklenen Çıktı"), panelin bir kod bloğunun
+hemen ardında ve `<code>` dışında durması; ayrıca `.out`'u olmayan bir derste panel bulunmaması.
+Liste repodan okunduğu için yeni bir dalga promote edildiğinde script değişmez. Canlıya bakarken
+dosyalar yerel HEAD'den okunur ve **son Railway deployment'ı tam olarak HEAD olmalı ve `success`
+olmalı**; değilse (push edilmemiş commit, süren ya da başarısız deployment, okunamayan kayıt) bölüm
+çalıştırılmaz ve HATA sayılır -- önce push/deploy'u bitir, ya da `--wait` kullan. `--no-github`
+ile yerel bir sunucuda çalışma ağacındaki dosyalar kullanılır.
+
 `learnforgex.com` (www'siz) Cloudflare'daki "Apex to WWW" kuralıyla `www`'ye 301 yönleniyor
 (2026-10-08'de doğrulandı; yol ve sorgu parametreleri korunuyor). Yönlendirme uygulamada değil
 Cloudflare'da olduğu için bozulursa bakılacak yer Cloudflare'daki Redirect Rules. Script,

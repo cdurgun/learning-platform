@@ -10,9 +10,16 @@
 --base      kontrol edilecek site (varsayılan: canlı site)
 --no-github GitHub deployment kaydına bakma (yerel bir sunucuyu kontrol ederken)
 
+"Beklenen Çıktı" bölümü, sayfalardaki çıktı panellerini repodaki examples/**/*.out dosyalarıyla
+karşılaştırır. Canlıya bakarken bu dosyalar yerel HEAD'den (`git show`) okunur ve son Railway
+deployment'ı tam olarak bu commit olmalı ve "success" durumunda olmalı; değilse bölüm çalıştırılmaz
+ve bir HATA olarak sayılır (yanlış commit'e karşı ölçüp yanıltıcı sonuç vermemek için).
+--no-github ile yerel bir sunucuya bakarken çalışma ağacındaki dosyalar kullanılır.
+
 Çıkış kodu: bir kontrol başarısızsa 1, deployment beklenirken zaman aşımı olursa 2.
 """
 import argparse
+import html as html_module
 import json
 import random
 import re
@@ -29,6 +36,12 @@ REPO = "cdurgun/learning-platform"
 SITEMAP_SAMPLE = 12
 AUTHOR = "Cemalettin Durgun"
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+OUTPUT_LABELS = {"en": "Expected Output", "tr": "Beklenen Çıktı"}
+OUTPUT_PANEL = re.compile(r'<figure class="code-output"><figcaption class="code-output-label">(.*?)</figcaption>'
+                          r'<pre class="code-output-body"><samp>(.*?)</samp></pre></figure>', re.S)
+JAVA_EMBED = re.compile(r"\{\{(\w+)\.java\}\}")
+EXAMPLES_DIR = "src/main/resources/examples"
+CONTENT_DIR = "src/main/resources/content"
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -65,6 +78,16 @@ def deployment_state():
     if not found or found == "null":
         return head, None
     return head, gh(f"repos/{REPO}/deployments/{found}/statuses?per_page=1", ".[0].state")
+
+
+def latest_deployment():
+    """Railway'in en son deployment kaydı: (sha, durum) -- origin/main'den bağımsız olarak canlıya
+    en son ne gönderildiğini söyler. Okunamazsa (None, None)."""
+    found = gh(f"repos/{REPO}/deployments?per_page=1", ".[0] | [.id, .sha] | @tsv")
+    if not found or "\t" not in found:
+        return None, None
+    deployment_id, sha = found.split("\t")
+    return sha, gh(f"repos/{REPO}/deployments/{deployment_id}/statuses?per_page=1", ".[0].state")
 
 
 def wait_for_deployment(timeout):
@@ -151,7 +174,86 @@ def check_author_and_dates(base, report, lesson_html, sitemap_xml):
                  f"sitemap={lesson_lastmod} sayfa={page_date}")
 
 
-def run_checks(base, report):
+def repo_text(path, commit):
+    """Bir repo dosyasının içeriği: commit verilirse o commit'teki hâli, yoksa çalışma ağacı."""
+    if commit:
+        result = subprocess.run(["git", "-C", str(ROOT), "show", f"{commit}:{path}"], capture_output=True)
+        return result.stdout.decode("utf-8") if result.returncode == 0 else None
+    file = ROOT / path
+    return file.read_text(encoding="utf-8") if file.is_file() else None
+
+
+def expected_panels(commit):
+    """{slug: {dil: [<samp> metni, ...]}} -- her ders sayfasında, sırasıyla, hangi çıktı panelinin
+    olması gerektiği. Bir .out, gömüldüğü her yerde bir panel üretir; boş .out panel üretmez."""
+    if commit:
+        listed = git("ls-tree", "-r", "--name-only", commit, "--", EXAMPLES_DIR).splitlines()
+    else:
+        listed = [str(p.relative_to(ROOT)) for p in (ROOT / EXAMPLES_DIR).rglob("*.out")]
+    outputs = {}
+    for path in listed:
+        if path.endswith(".out"):
+            slug, name = Path(path).parent.name, Path(path).stem
+            text = repo_text(path, commit)
+            body = text[:-1] if text.endswith("\n") else text
+            if body:
+                # Panel metni: .out'tan tek son satır sonu düşer, CommonMark kod bloğunu yine \n ile kapatır.
+                outputs.setdefault(slug, {})[name] = body + "\n"
+    expected = {}
+    for slug, names in sorted(outputs.items()):
+        for lang in OUTPUT_LABELS:
+            markdown = repo_text(f"{CONTENT_DIR}/{lang}/{slug}.md", commit) or ""
+            expected.setdefault(slug, {})[lang] = [names[n] for n in JAVA_EMBED.findall(markdown) if n in names]
+    return expected
+
+
+def page_without_outputs(commit, with_outputs):
+    """Java örneği gömen ama hiç .out'u olmayan ilk ders -- panel ÇIKMAMASI gereken sayfa."""
+    for path in sorted(git("ls-tree", "-r", "--name-only", commit or "HEAD", "--", f"{CONTENT_DIR}/en").splitlines()):
+        slug = Path(path).stem
+        if slug not in with_outputs and JAVA_EMBED.search(repo_text(path, commit) or ""):
+            return slug
+    return None
+
+
+def check_expected_outputs(base, report, commit, unusable_reason=None):
+    print("Beklenen Çıktı")
+    if unusable_reason:
+        report.check(False, "Beklenen Çıktı kontrolleri çalıştırılmadı", unusable_reason)
+        return
+    expected = expected_panels(commit)
+    report.check(bool(expected), f"repoda yayında olması gereken çıktı paneli var ({len(expected)} ders)")
+    for slug, by_lang in expected.items():
+        for lang, samps in by_lang.items():
+            path = f"/{lang}/topics/{slug}"
+            status, _, body = fetch(base + path)
+            page = body.decode("utf-8", "replace")
+            panels = OUTPUT_PANEL.findall(page)
+            problems = []
+            if status != 200:
+                problems.append(f"HTTP {status}")
+            shown = [html_module.unescape(text) for _, text in panels]
+            if len(shown) != len(samps):
+                problems.append(f"{len(shown)} panel bulundu, {len(samps)} bekleniyordu")
+            else:
+                differing = [i + 1 for i, (a, b) in enumerate(zip(shown, samps)) if a != b]
+                if differing:
+                    problems.append("metni .out ile aynı olmayan panel(ler): " + ", ".join(map(str, differing)))
+            if any(label != OUTPUT_LABELS[lang] for label, _ in panels):
+                problems.append("etiket bu dilde değil: " + ", ".join(sorted({label for label, _ in panels})))
+            if page.count('</code></pre>\n<figure class="code-output">') != len(panels):
+                problems.append("panel bir kod bloğunun hemen ardında değil")
+            if re.search(r"<code[^>]*>(?:(?!</code>).)*<figure class=\"code-output\"", page, re.S):
+                problems.append("panel bir <code> içinde (highlight.js'e girer)")
+            report.check(not problems, f"{path}: {len(samps)} çıktı paneli, metin .out ile birebir", "; ".join(problems))
+    plain = page_without_outputs(commit, expected)
+    if plain:
+        status, _, body = fetch(f"{base}/en/topics/{plain}")
+        report.check(status == 200 and 'class="code-output"' not in body.decode("utf-8", "replace"),
+                     f"/en/topics/{plain}: .out'u olmayan derste panel yok", str(status))
+
+
+def run_checks(base, report, output_commit=None, output_problem=None):
     host = base.split("://", 1)[1]
 
     print("Temel sayfalar")
@@ -224,6 +326,8 @@ def run_checks(base, report):
     elapsed = time.time() - started
     report.check(elapsed < 3, f"ders sayfası {elapsed:.1f} saniyede yanıt veriyor")
 
+    check_expected_outputs(base, report, output_commit, output_problem)
+
     print("Kayıt formu")
     _, _, body = fetch(base + "/en/register")
     report.check('id="termsAccepted"' in body.decode("utf-8", "replace"), "onay kutusu görünüyor")
@@ -264,8 +368,25 @@ def main():
             print(f"  [BİLGİ] {head[:7]} için deployment durumu: {state or 'kayıt yok'} -- aşağıdaki kontroller "
                   f"önceki sürümü ölçüyor olabilir (--wait ile bekletilebilir)")
 
+    # Çıktı panelleri yerel repodaki dosyalarla karşılaştırılır: canlıya bakarken yalnızca canlıdaki
+    # commit yerel HEAD ile aynıysa anlamlıdır.
+    output_commit, output_problem = None, None
+    if args.no_github:
+        print("  [BİLGİ] Beklenen Çıktı: çalışma ağacındaki .out ve ders dosyalarıyla karşılaştırılıyor")
+    else:
+        live_sha, live_state = latest_deployment()
+        local = git("rev-parse", "HEAD")
+        if not live_sha:
+            output_problem = "son Railway deployment kaydı okunamadı (gh)"
+        elif live_sha != local:
+            output_problem = f"canlıdaki son deployment {live_sha[:7]}, yerel HEAD {local[:7]} -- aynı commit değil"
+        elif live_state != "success":
+            output_problem = f"{live_sha[:7]} deployment durumu '{live_state}', success değil"
+        else:
+            output_commit = local
+
     report = Report()
-    run_checks(base, report)
+    run_checks(base, report, output_commit, output_problem)
     print(f"\n{report.failed} hata, {report.notes} bilgi notu -- {base}")
     return 1 if report.failed else 0
 

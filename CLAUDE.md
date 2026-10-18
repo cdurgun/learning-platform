@@ -48,7 +48,10 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `ExampleOutputManifestTest`, `.out`'u olan bir `.java` değişince build'i kırar:
   çıktıyı yeniden üret + incele ya da `.out`'u ve manifest satırını sil. Panel eklemek
   sayfada görünen örneği değiştirdiği için iki dilin `updated_at`'ini de ilerletir
-  (aşağıdaki tarih kuralı, örn. `functional-interfaces-streams/V1139`).
+  (aşağıdaki tarih kuralı, örn. `functional-interfaces-streams/V1139`). Dalga akışı
+  (Faz 178): `generate --topic SLUG [--dry-run]` → kullanıcı `review.tsv`'de her
+  örneğe ayrı `approve`/`reject` verir → `promote --review` (tek hata varsa hiçbir
+  dosya yazılmaz); çalıştırmadan önce `--dry-run` listesi gösterilir.
 - **DB ↔ dosya bağlantısı yalnızca slug convention ile kurulur**, path hiçbir zaman
   DB'de saklanmaz: `content/{language}/{topic.slug}.md` ve
   `examples/{topic.slug}/{example_name}.{ext}`.
