@@ -6,9 +6,11 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +24,12 @@ import java.util.regex.Pattern;
  *       dosya yolunu hem üretilen code block'un dil etiketini belirler.</li>
  *   <li><b>Parse + render:</b> CommonMark ile, {@code HeadingAnchorExtension} sayesinde her
  *       başlığa otomatik {@code id} vererek, standart HTML üretir.</li>
+ *   <li><b>Beklenen Çıktı:</b> bir {@code .java} örneğinin yanında aynı adlı bir {@code .out}
+ *       dosyası varsa (bkz. {@link CodeExampleResolver#resolveOutput}), kod bloğunun hemen
+ *       ardına ikinci bir fenced block eklenir; render sonrası bu blok, kod bloğunun kardeşi
+ *       olan bir {@code <figure class="code-output">} paneline çevrilir. Kod bloğunun kendi
+ *       HTML'i değişmez; {@code .out} dosyası olmayan örnekler için çıktı birebir öncekiyle
+ *       aynıdır.</li>
  *   <li><b>Callout post-process:</b> {@code > 💡 Tip ...} ve {@code > ⚠️ Warning ...}
  *       kalıbıyla yazılmış blockquote'ları Bootstrap alert kutularına çevirir.</li>
  *   <li><b>TOC çıkarımı:</b> Üretilen HTML'deki {@code <h2 id="...">} etiketlerini tarayıp
@@ -59,6 +67,17 @@ public class MarkdownService {
             "<h2[^>]*\\bid=\"([^\"]+)\"[^>]*>(.*?)</h2>",
             Pattern.DOTALL);
 
+    // Çıktı bloğunu markdown'da işaretleyen info string. CommonMark bunu
+    // <code class="language-lfx-expected-output"> olarak render eder; aşağıdaki post-process
+    // yalnızca bu sınıfı arar. İçerik CommonMark tarafından HTML-escape edilir (<, &, ").
+    private static final String EXPECTED_OUTPUT_INFO = "lfx-expected-output";
+
+    private static final Pattern EXPECTED_OUTPUT_BLOCK = Pattern.compile(
+            "<pre><code class=\"language-" + EXPECTED_OUTPUT_INFO + "\">(.*?)</code></pre>",
+            Pattern.DOTALL);
+
+    private static final Pattern BACKTICK_RUN = Pattern.compile("`+");
+
     private static final Pattern STRIP_TAGS = Pattern.compile("<[^>]+>");
 
     private static final Pattern H1_HEADING = Pattern.compile("<h1(\\s[^>]*)?>(.*?)</h1>", Pattern.DOTALL);
@@ -78,24 +97,73 @@ public class MarkdownService {
      *                  bakılacağını belirler
      */
     public MarkdownRenderResult render(String markdown, String topicSlug) {
-        String withExamples = injectCodeExamples(markdown, topicSlug);
+        return render(markdown, topicSlug, null);
+    }
+
+    /**
+     * @param expectedOutputLabel çıktı panelinin dile göre başlığı ("Beklenen Çıktı" /
+     *                            "Expected Output"); {@code null} ise {@code .out} dosyalarına
+     *                            hiç bakılmaz (ör. sabit sayfalar)
+     */
+    public MarkdownRenderResult render(String markdown, String topicSlug, String expectedOutputLabel) {
+        boolean withOutputs = expectedOutputLabel != null;
+        String withExamples = injectCodeExamples(markdown, topicSlug, withOutputs);
         Node document = parser.parse(withExamples);
         String html = applyCallouts(renderer.render(document));
+        if (withOutputs) {
+            html = applyExpectedOutputs(html, expectedOutputLabel);
+        }
         return new MarkdownRenderResult(html, extractToc(html));
     }
 
-    private String injectCodeExamples(String markdown, String topicSlug) {
+    private String injectCodeExamples(String markdown, String topicSlug, boolean withOutputs) {
         Matcher matcher = EXAMPLE_PLACEHOLDER.matcher(markdown);
         StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String exampleName = matcher.group(1);
             String extension = matcher.group(2);
-            String code = codeExampleResolver.resolve(topicSlug, exampleName, extension)
-                    .orElse("// Örnek bulunamadı: " + exampleName + "." + extension);
+            Optional<String> resolved = codeExampleResolver.resolve(topicSlug, exampleName, extension);
+            String code = resolved.orElse("// Örnek bulunamadı: " + exampleName + "." + extension);
             // Fenced code block'un dil etiketi, dosyanın gerçek uzantısından geliyor --
             // "java" için önceki davranışla birebir aynı, "jsx"/"js"/"tsx" için de
             // highlight.js'in ilgili grammar'ını (tam bundle CDN'den yükleniyor) tetikler.
             String replacement = "```" + extension + "\n" + code + "\n```";
+            if (withOutputs && resolved.isPresent() && "java".equals(extension)) {
+                Optional<String> output = codeExampleResolver.resolveOutput(topicSlug, exampleName);
+                if (output.isPresent()) {
+                    replacement += "\n" + expectedOutputFence(output.get());
+                }
+            }
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    // Çıktının içinde ``` geçse bile bloğu erken kapatmasın diye çit, içerikteki en uzun
+    // backtick dizisinden bir uzun yazılır (CommonMark: kapanış çiti en az açılış kadar uzun
+    // olmalı). Fenced block içeriği literal kalır: baştaki/sondaki boşluklar, boş satırlar ve
+    // tab'lar korunur.
+    private static String expectedOutputFence(String output) {
+        int longestRun = 0;
+        Matcher run = BACKTICK_RUN.matcher(output);
+        while (run.find()) {
+            longestRun = Math.max(longestRun, run.group().length());
+        }
+        String fence = "`".repeat(Math.max(3, longestRun + 1));
+        return fence + EXPECTED_OUTPUT_INFO + "\n" + output + "\n" + fence;
+    }
+
+    // <samp>: program çıktısının anlamsal etiketi. <code> olmadığı için highlight.js
+    // (hljs.highlightAll() yalnızca "pre code" seçer) bu bloğa hiç dokunmaz.
+    private String applyExpectedOutputs(String html, String label) {
+        Matcher matcher = EXPECTED_OUTPUT_BLOCK.matcher(html);
+        StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
+            String replacement = "<figure class=\"code-output\">"
+                    + "<figcaption class=\"code-output-label\">" + HtmlUtils.htmlEscape(label, "UTF-8") + "</figcaption>"
+                    + "<pre class=\"code-output-body\"><samp>" + matcher.group(1) + "</samp></pre>"
+                    + "</figure>";
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);

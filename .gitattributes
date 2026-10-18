@@ -12,3 +12,12 @@
 *.jar  binary
 *.png  binary
 *.jpg  binary
+
+# Örnek çıktıları (.out) programın gerçek stdout'unun bayt-bayt kopyasıdır ve hash'i
+# scripts/example-outputs/manifest.tsv'de tutulur: Git satır sonlarına dokunmasın (-text),
+# satır sonu boşlukları ve sondaki boş satır whitespace hatası sayılmasın. Diğer
+# whitespace kontrolleri açık kalır.
+src/main/resources/examples/**/*.out -text whitespace=-blank-at-eol,-blank-at-eof
+src/test/resources/examples/expected-output-fixture/*.out -text whitespace=-blank-at-eol,-blank-at-eof
+# Manifest düz metindir (LF normalizasyonu kalır); boş son sütun (note) satırı bir sekmeyle bitirir.
+scripts/example-outputs/manifest.tsv whitespace=-blank-at-eol

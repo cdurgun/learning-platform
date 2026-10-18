@@ -37,6 +37,18 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   — yeni bir "React embed sistemi" yazmaya gerek yok. `highlight.js@11.9.0`'ın "jsx"i
   "javascript" grammar'ının bir alias'ı olarak tanıdığı, bağımsız olarak doğrulandı
   (bkz. "Bilinen Kısıtlar").
+- **"Beklenen Çıktı" paneli (Faz 177):** bir `.java` gömmesinin yanında
+  `examples/{slug}/{Ad}.out` varsa kod bloğunun altında programın gerçek stdout'u
+  gösterilir. `.out` ELLE YAZILMAZ ve elle düzeltilmez: yalnızca
+  `scripts/example_outputs.py generate` (izole Docker, sabit imaj digest'i) üretir,
+  insan incelemesinden sonra `promote` yayına taşır ve
+  `scripts/example-outputs/manifest.tsv`'ye hash'leriyle yazar. Çıktısı Java API
+  sözleşmesiyle sabit olmayan örnekler (HashMap/HashSet sırası, paralel stream,
+  thread, zaman, rastgelelik, I/O) çalıştırmada aynı çıksa bile panele ALINMAZ.
+  `ExampleOutputManifestTest`, `.out`'u olan bir `.java` değişince build'i kırar:
+  çıktıyı yeniden üret + incele ya da `.out`'u ve manifest satırını sil. Panel eklemek
+  sayfada görünen örneği değiştirdiği için iki dilin `updated_at`'ini de ilerletir
+  (aşağıdaki tarih kuralı, örn. `functional-interfaces-streams/V1139`).
 - **DB ↔ dosya bağlantısı yalnızca slug convention ile kurulur**, path hiçbir zaman
   DB'de saklanmaz: `content/{language}/{topic.slug}.md` ve
   `examples/{topic.slug}/{example_name}.{ext}`.

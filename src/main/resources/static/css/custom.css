@@ -67,6 +67,46 @@ body {
     }
 }
 
+/* Beklenen Çıktı paneli (MarkdownService, bir örneğin .out dosyası varsa): kod bloğunun
+   hemen altında, kodla aynı yatay hizada (koyu alan md+ ekranda pre padding'i kadar içeride
+   başlar) ama açık zeminli -- çıktının kod olmadığı bir bakışta anlaşılsın. İçerik <samp>'tır,
+   highlight.js'e girmez. Yalnızca ardından panel gelen pre'nin alt boşluğu daraltılır;
+   panelsiz kod bloklarının görünümü değişmez. */
+.markdown-content pre:has(+ .code-output) {
+    padding-bottom: 0;
+    margin-bottom: 0.5rem;
+}
+
+.markdown-content .code-output {
+    margin: 0 1rem 1rem;
+    border: 1px solid #d0d7de;
+    border-left: 4px solid #57606a;
+    border-radius: 0.5rem;
+    background-color: #f6f8fa;
+}
+
+.markdown-content .code-output-label {
+    padding: 0.5rem 1rem 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #57606a;
+}
+
+.markdown-content .code-output-body {
+    margin: 0;
+    padding: 0.25rem 1rem 0.75rem;
+    border-radius: 0;
+    color: #1f2328;
+    overflow-x: auto;
+}
+
+@media (max-width: 767.98px) {
+    .markdown-content .code-output {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
 .markdown-content blockquote {
     border-left: 4px solid #dee2e6;
     padding-left: 1rem;

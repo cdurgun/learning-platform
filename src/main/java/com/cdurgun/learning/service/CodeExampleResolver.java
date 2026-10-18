@@ -41,4 +41,31 @@ public class CodeExampleResolver {
             throw new UncheckedIOException("Örnek dosyası okunamadı: " + path, e);
         }
     }
+
+    /**
+     * Bir örneğin "Beklenen Çıktı"sı: aynı klasörde, aynı taban adlı {@code {exampleName}.out}
+     * dosyası. Dosya, programın gerçek stdout'unun bayt-bayt kopyasıdır.
+     *
+     * <p>{@link #resolve}'un aksine burada {@code stripTrailing()} YAPILMAZ: satır sonu
+     * boşlukları ve sondaki boş satırlar çıktının parçası olabilir ({@code System.out.print(n + " ")},
+     * en sonda bir {@code println()}). Yalnızca TEK bir son {@code \n} düşürülür -- o, son satırın
+     * sonlandırıcısıdır, boş bir satır değildir. İçerik bundan sonra boş kalıyorsa (program hiçbir
+     * şey basmadıysa) gösterilecek bir çıktı yoktur.</p>
+     */
+    public Optional<String> resolveOutput(String topicSlug, String exampleName) {
+        String path = PATH_TEMPLATE.formatted(topicSlug, exampleName, "out");
+        Resource resource = resourceLoader.getResource(path);
+        if (!resource.exists()) {
+            return Optional.empty();
+        }
+        try (var inputStream = resource.getInputStream()) {
+            String output = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            if (output.endsWith("\n")) {
+                output = output.substring(0, output.length() - 1);
+            }
+            return output.isEmpty() ? Optional.empty() : Optional.of(output);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Çıktı dosyası okunamadı: " + path, e);
+        }
+    }
 }

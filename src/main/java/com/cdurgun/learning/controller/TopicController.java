@@ -151,7 +151,8 @@ public class TopicController {
         model.addAttribute("translation", translation.get());
         model.addAttribute("summaryHtml", SummaryFormatter.toHtml(translation.get().getSummary()));
 
-        MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown.get(), slug);
+        MarkdownService.MarkdownRenderResult rendered =
+                markdownService.render(rawMarkdown.get(), slug, expectedOutputLabel(language));
         model.addAttribute("contentHtml", MarkdownService.demoteH1(rendered.html()));
         model.addAttribute("toc", rendered.toc());
 
@@ -215,7 +216,8 @@ public class TopicController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "İçerik dosyası bulunamadı: " + slug));
 
-        MarkdownService.MarkdownRenderResult rendered = markdownService.render(rawMarkdown, slug);
+        MarkdownService.MarkdownRenderResult rendered =
+                markdownService.render(rawMarkdown, slug, expectedOutputLabel(language));
         byte[] pdfBytes = pdfExportService.renderTopicPdf(topic, translation, language, rendered.html());
 
         String filename = slug + "-" + lang + ".pdf";
@@ -281,6 +283,11 @@ public class TopicController {
         return topicTranslationRepository.findByTopicIdAndLanguage(topicId, language)
                 .map(TopicTranslation::isPublished)
                 .orElse(false);
+    }
+
+    /** Kod örneklerinin altındaki çıktı panelinin başlığı, sayfanın kendi dilinde. */
+    private String expectedOutputLabel(Language language) {
+        return messageSource.getMessage("example.expectedOutput", null, Locale.forLanguageTag(language.getCode()));
     }
 
     /**

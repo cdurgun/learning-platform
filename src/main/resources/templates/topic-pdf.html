@@ -186,6 +186,32 @@
             padding: 0;
         }
 
+        /* Beklenen Çıktı paneli -- web'dekiyle aynı <figure class="code-output"> HTML'i;
+           kod bloğundan ayırt edilsin diye sol kenarlıklı ve başlıklı. */
+        .pdf-content .code-output {
+            display: block;
+            margin: -0.2cm 0 0.4cm 0;
+            border-left: 3pt solid #57606a;
+            page-break-inside: avoid;
+        }
+
+        .pdf-content .code-output-label {
+            display: block;
+            font-size: 8pt;
+            font-weight: 700;
+            color: #57606a;
+            padding: 0 0 0.1cm 0.3cm;
+        }
+
+        .pdf-content .code-output pre {
+            margin: 0;
+            border-left: none;
+        }
+
+        .pdf-content pre samp {
+            font-family: 'PDF Mono', monospace;
+        }
+
         /* > 💡 Tip / > ⚠️ Warning callout'ları -- MarkdownService bunları web sayfasında
            Bootstrap ".alert-info"/".alert-warning" olarak üretiyor; burada Bootstrap
            olmadığı için AYNI class isimlerine kendi (sade) PDF karşılığımızı veriyoruz. */
