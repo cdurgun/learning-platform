@@ -51,7 +51,9 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   (aşağıdaki tarih kuralı, örn. `functional-interfaces-streams/V1139`). Dalga akışı
   (Faz 178): `generate --topic SLUG [--dry-run]` → kullanıcı `review.tsv`'de her
   örneğe ayrı `approve`/`reject` verir → `promote --review` (tek hata varsa hiçbir
-  dosya yazılmaz); çalıştırmadan önce `--dry-run` listesi gösterilir.
+  dosya yazılmaz); çalıştırmadan önce `--dry-run` listesi gösterilir. Staging (Faz 180'den
+  beri) kökteki git-ignored `.example-outputs/` dizinidir, `target/` DEĞİL -- herhangi bir
+  oturumun `mvn clean`'i incelenmemiş çıktıları silmesin diye; `StagingLocationTest` bunu korur.
 - **DB ↔ dosya bağlantısı yalnızca slug convention ile kurulur**, path hiçbir zaman
   DB'de saklanmaz: `content/{language}/{topic.slug}.md` ve
   `examples/{topic.slug}/{example_name}.{ext}`.
@@ -1094,7 +1096,18 @@ bash ile yeniden doğrula** (ör. `mvn -version`, `curl -I https://repo.maven.ap
   çalıştırılabiliyor, `curl` ile uçtan uca doğrulama dahil. Ayrıntılı komut
   tarifi için `docs/known-constraints.md`'de "Faz 140"ı grep'le -- bu, önceki
   "mvn kullanılamaz" sonucunu geçersiz KILMIYOR, yalnızca bir workaround'un var
-  olduğunu belgeliyor; kullanıcının kendi `mvn clean test`'i hâlâ nihai kaynak.
+  olduğunu belgeliyor. (Güncel test kaynağı için bir sonraki maddeye bakın.)
+- **Test doğrulaması (Faz 180'den itibaren): GitHub Actions CI.** `.github/workflows/test.yml`
+  `main`'e her push'ta, her pull request'te ve elle (`workflow_dispatch`) çalışır: Temurin 21,
+  `postgres:16-alpine` servis container'ı (5433, `application-test.yml` ile aynı DB/kullanıcı;
+  Flyway şemayı sıfırdan kurar), `TZ=Europe/Istanbul`, `mvn -B test` ve ardından
+  `scripts/example-outputs` Python testleri; Maven başarısız olursa Surefire raporları artifact
+  olarak yüklenir. İlk çalıştırma (run 39273156540, commit `4e44638`): Maven 243/243, Python
+  40/40. **Railway'in build'i `mvn ... -DskipTests` çalıştırır, yani deploy testleri HİÇ
+  çalıştırmaz; CI de deploy'u kendiliğinden durdurmaz** (Railway'de CI'ı bekleme ayarı
+  bu fazda açılmadı, panelde durumu doğrulanmadı) -- push'tan sonra CI sonucunu ve
+  deploy-check'i ayrı ayrı kontrol et. Bir değişikliğin test kanıtı: o commit'in CI
+  çalıştırması + yerelde JDK 21 ile `mvn test`.
 - **`javac`/`java` ile gerçek derleme, Faz 12'den beri varsayılan olarak
   YAPILMIYOR** (oturum maliyeti/limit nedeniyle) — yeni `.java` dosyaları elle
   dikkatli yazılıp gözden geçirilir. İstisna: kullanıcı özellikle isterse, ya da

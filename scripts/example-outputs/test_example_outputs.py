@@ -46,9 +46,9 @@ class Sandbox(unittest.TestCase):
             "ROOT": self.root,
             "EXAMPLES": self.root / "src/main/resources/examples",
             "CONTENT": self.root / "src/main/resources/content",
-            "OUT_ROOT": self.root / "target/example-outputs",
-            "WORK": self.root / "target/example-outputs/work",
-            "STAGING": self.root / "target/example-outputs/staging",
+            "OUT_ROOT": self.root / ".example-outputs",
+            "WORK": self.root / ".example-outputs/work",
+            "STAGING": self.root / ".example-outputs/staging",
             "MANIFEST": self.root / "scripts/example-outputs/manifest.tsv",
         }
         for name, value in paths.items():
@@ -471,6 +471,31 @@ class LegacyPromoteTest(Sandbox):
         with redirect_stdout(io.StringIO()):
             eo.cmd_promote(["loops/A"], "cdurgun")
         self.assertTrue((eo.EXAMPLES / "loops/A.out").exists())
+
+
+class StagingLocationTest(unittest.TestCase):
+    """Staged, not yet promoted outputs must survive `mvn clean` and never be committed."""
+
+    def test_staging_is_outside_the_maven_build_directory(self):
+        target = (eo.ROOT / "target").resolve()
+        for path in (eo.OUT_ROOT, eo.WORK, eo.STAGING):
+            self.assertNotIn(target, path.resolve().parents, path)
+            self.assertNotEqual(target, path.resolve(), path)
+        self.assertEqual(eo.OUT_ROOT, eo.WORK.parent)
+        self.assertEqual(eo.OUT_ROOT, eo.STAGING.parent)
+
+    def test_maven_clean_is_not_configured_to_delete_staging(self):
+        # maven-clean-plugin deletes target/ plus any configured <filesets>.
+        pom = (eo.ROOT / "pom.xml").read_text(encoding="utf-8")
+        self.assertNotIn(eo.OUT_ROOT.name, pom)
+
+    def test_staging_is_git_ignored(self):
+        probe = eo.STAGING / "some-topic" / "Example.out"
+        result = subprocess.run(["git", "-C", str(eo.ROOT), "check-ignore", "-q", "--no-index", str(probe)],
+                                capture_output=True)
+        if result.returncode == 128:
+            self.skipTest("not a git checkout")
+        self.assertEqual(0, result.returncode, "staging must be listed in .gitignore")
 
 
 if __name__ == "__main__":

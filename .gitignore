@@ -20,3 +20,6 @@ __pycache__/
 
 # Local Playwright MCP output (screenshots, audit scripts)
 .playwright-mcp/
+
+# Expected output staging (scripts/example_outputs.py); kept outside target/ so mvn clean does not wipe it
+/.example-outputs/

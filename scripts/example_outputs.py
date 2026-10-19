@@ -4,8 +4,11 @@
 
 Compiles and runs an EXPLICIT list of examples (never "all of them") inside
 throwaway, isolated Docker containers and writes each example's raw stdout to
-target/example-outputs/staging/{slug}/{Name}.out, together with a JSON
-metadata file and a human review report (target/example-outputs/report.md).
+.example-outputs/staging/{slug}/{Name}.out, together with a JSON
+metadata file and a human review report (.example-outputs/report.md).
+The staging root sits outside target/ on purpose: `mvn clean` (from any session)
+must not wipe outputs that are generated but not yet reviewed or promoted. It is
+git-ignored, so nothing in it is ever committed.
 
 `generate` never writes to src/: an output only reaches a lesson page after a
 human has reviewed it against the Java source and the TR/EN lesson text and it
@@ -16,7 +19,7 @@ Usage:
     scripts/example_outputs.py generate primitive-parallel-streams/IntStreamCreationExample ...
     scripts/example_outputs.py generate --topic if-else --topic switch [--dry-run]
     scripts/example_outputs.py promote --reviewer NAME primitive-parallel-streams/IntStreamCreationExample ...
-    scripts/example_outputs.py promote --reviewer NAME --review target/example-outputs/review.tsv
+    scripts/example_outputs.py promote --reviewer NAME --review .example-outputs/review.tsv
     scripts/example_outputs.py selftest      # proves the sandbox restrictions hold
 
 `--topic SLUG` expands to the .java examples that lesson embeds (TR order, then any
@@ -37,7 +40,7 @@ Isolation (every example, two containers: compile, then run):
     before anything runs, otherwise the script aborts
   * --network none, --read-only root filesystem, small --tmpfs /tmp
   * the ONLY host mounts are one per-example scratch directory under
-    target/example-outputs/work/: the source dir (read-only) and, for the
+    .example-outputs/work/: the source dir (read-only) and, for the
     compile step only, an empty classes dir (read-write); the run step mounts
     the classes dir read-only
   * --user 65534:65534 (nobody), --cap-drop ALL, no-new-privileges,
@@ -70,7 +73,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLES = ROOT / "src/main/resources/examples"
 CONTENT = ROOT / "src/main/resources/content"
-OUT_ROOT = ROOT / "target/example-outputs"
+OUT_ROOT = ROOT / ".example-outputs"
 WORK = OUT_ROOT / "work"
 STAGING = OUT_ROOT / "staging"
 SELFTEST_SOURCES = Path(__file__).resolve().parent / "example-outputs/selftest"
