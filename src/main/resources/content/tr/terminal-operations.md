@@ -14,7 +14,7 @@ Intermediate operation'lar tembeldir (Lazy Evaluation, "Stream API Temelleri" de
 
 ## Tarihçe
 
-Terminal operation'ların çoğu, Stream API ile birlikte Java 8'de (2014) geldi. `toList()` bir istisna -- Java 16'ya (2021) kadar bir stream'i listeye çevirmenin tek yolu `collect(Collectors.toList())` idi; `toList()`, bu çok sık kullanılan deseni kısaltmak için sonradan eklenen bir kolaylık metodudur.
+Terminal operation'ların çoğu, Stream API ile birlikte Java 8'de (2014) geldi. `toList()` bir istisna -- Java 16'ya (2021) kadar bir stream'i listeye çevirmenin tek yolu `collect(Collectors.toList())` idi; `toList()`, bu çok sık karşılaşılan ihtiyaç için sonradan eklenen bir kolaylık metodudur -- ama "toList() ve toArray(): Basit Koleksiyona Dönüştürme" bölümünde görüleceği gibi, sonucu farklı bir sözleşmeye sahiptir.
 
 ## forEach(): Yan Etki Uygulamak
 
@@ -54,7 +54,7 @@ Bu üç metot, bir `Predicate` ile stream hakkında evet/hayır sorusu sorar ve 
 
 ## toList() ve toArray(): Basit Koleksiyona Dönüştürme
 
-`toList()` (Java 16), `collect(Collectors.toList())`'in kısa yoludur -- ama tek bir önemli farkla: `toList()`'in döndürdüğü liste **değiştirilemezdir** (unmodifiable), `collect(Collectors.toList())`'inki ise değiştirilebilir bir listedir. `toArray()`, stream'i bir `List` yerine bir diziye çevirir; eleman tipini bilen bir dizi üretmek için genellikle `String[]::new` gibi bir constructor reference alır (Built-in Functional Interfaces dersindeki `Class::new` biçimi).
+`toList()` (Java 16), `collect(Collectors.toList())` ile aynı amaca hizmet eder, ama ikisi sonuç hakkında aynı sözü vermez: `toList()`'in döndürdüğü liste **değiştirilemezdir** (unmodifiable), `collect(Collectors.toList())` ise döndürdüğü listenin türü veya değiştirilebilirliği hakkında hiçbir garanti vermez. Değiştirilebilir bir `ArrayList` gerekiyorsa `collect(Collectors.toCollection(ArrayList::new))` kullanın. `toArray()`, stream'i bir `List` yerine bir diziye çevirir; eleman tipini bilen bir dizi üretmek için genellikle `String[]::new` gibi bir constructor reference alır (Built-in Functional Interfaces dersindeki `Class::new` biçimi).
 
 {{ToListToArrayExample.java}}
 

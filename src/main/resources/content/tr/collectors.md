@@ -1,6 +1,6 @@
 # Collectors
 
-["Terminal Operations"](/tr/topics/terminal-operations) dersinde `toList()`'i, `collect(Collectors.toList())`'in bir kısayolu olarak görmüştünüz -- ama `collect()`'in asıl gücüne hiç değinilmemişti. Bu ders tam olarak orada kalıyor: `Collectors` sınıfının sunduğu, gruplama, birleştirme ve dönüştürme için hazır tarifler.
+["Terminal Operations"](/tr/topics/terminal-operations) dersinde bir stream'i listeye toplamak için `Stream.toList()`'i kullanmıştınız. `collect(Collectors.toList())` aynı amaca hizmet eder, ama birebir eşdeğeri değildir: `Stream.toList()` değiştirilemez (unmodifiable) bir liste döndürür, `Collectors.toList()` ise döndürdüğü listenin türü veya değiştirilebilirliği hakkında hiçbir garanti vermez -- değiştirilebilir bir `ArrayList` gerekiyorsa `Collectors.toCollection(ArrayList::new)` kullanın. O derste `collect()`'in asıl gücüne de hiç değinilmemişti. Bu ders tam olarak orada kalıyor: `Collectors` sınıfının sunduğu, gruplama, birleştirme ve dönüştürme için hazır tarifler.
 
 ## Collectors Nedir?
 
@@ -20,7 +20,7 @@ Bir `Collector`, üç fonksiyondan oluşur: bir **supplier** (sonucu tutacak bo�
 
 ## Collectors.toList() ve Collectors.toSet(): Basit Koleksiyonlar
 
-`Collectors.toList()`, `Terminal Operations` dersindeki `Stream.toList()`'e çok benzer, ama önemli bir farkla: `collect(Collectors.toList())`'in döndürdüğü liste **değiştirilebilirdir** (mutable), `Stream.toList()`'inki ise değiştirilemezdir. `Collectors.toSet()`, elemanları bir `Set`'e toplar -- yinelenenler otomatik elenir, ama sıralama garantisi yoktur.
+`Collectors.toList()`, `Terminal Operations` dersindeki `Stream.toList()`'e çok benzer, ama ikisi sonuç hakkında farklı sözler verir: `Stream.toList()` (Java 16+) **değiştirilemez** (unmodifiable) bir liste döndürmeyi garanti eder; `collect(Collectors.toList())` ise döndürdüğü listenin türü veya değiştirilebilirliği hakkında **hiçbir garanti vermez** (bugünkü JDK'da bir `ArrayList` döner, ama bu sözleşmenin değil uygulamanın bir ayrıntısıdır). Değiştirebileceğiniz bir listeye ihtiyacınız varsa bunu `collect(Collectors.toCollection(ArrayList::new))` ile açıkça isteyin. `Collectors.toSet()`, elemanları bir `Set`'e toplar -- yinelenenler otomatik elenir, ama sıralama garantisi yoktur.
 
 {{ToListToSetExample.java}}
 
@@ -56,7 +56,7 @@ Bir `Collector`, üç fonksiyondan oluşur: bir **supplier** (sonucu tutacak bo�
 
 ## Best Practices
 
-- **`collect(Collectors.toList())` ile `Stream.toList()` arasında bilinçli seçim yapın.** Sonuca eleman eklemeniz/çıkarmanız gerekiyorsa `Collectors.toList()` (mutable); yalnızca okuyacaksanız `Stream.toList()` (immutable, niyeti daha net ifade eder).
+- **`collect(Collectors.toList())` ile `Stream.toList()` arasında bilinçli seçim yapın.** Sonuca eleman eklemeniz/çıkarmanız gerekiyorsa ikisini de değil, değiştirilebilir bir liste garanti eden `collect(Collectors.toCollection(ArrayList::new))`'i kullanın; yalnızca okuyacaksanız `Stream.toList()` (immutable, niyeti daha net ifade eder).
 - **`toMap()`'in üç argümanlı halini, anahtar çakışması olasılığı varsa baştan kullanın** -- iki argümanlı hali production'da beklenmedik bir `IllegalStateException`'a yol açabilir.
 - **`groupingBy()` + downstream collector zincirini, iç içe elle yazılmış bir döngüden tercih edin** -- `groupingBy(classifier, counting())` gibi bir satır, aynı işi yapan bir `Map<K, List<T>>` + ayrı bir sayma döngüsünden daha az hataya açıktır.
 - **`partitioningBy()`'ı yalnızca gerçekten iki grup varken kullanın** -- ikiden fazla kategori için `groupingBy()` doğru araçtır.
@@ -64,18 +64,18 @@ Bir `Collector`, üç fonksiyondan oluşur: bir **supplier** (sonucu tutacak bo�
 ## Yaygın Hatalar
 
 - **`Collectors.toMap()`'i çakışan anahtarlarla, merge fonksiyonu olmadan kullanmak.** Veri her zaman benzersiz anahtarlar üretecekmiş gibi varsaymak, üretimde beklenmedik girdilerle `IllegalStateException`'a yol açar.
-- **`collect(Collectors.toList())`'in döndürdüğü listenin immutable olduğunu sanmak.** Tam tersi doğru -- `Stream.toList()` immutable, `collect(Collectors.toList())` mutable'dır; bu iki API'yi karıştırmak beklenmeyen davranışlara yol açabilir.
+- **`collect(Collectors.toList())`'in döndürdüğü listenin değiştirilebilir olduğuna güvenmek.** Yalnızca `Stream.toList()`'in davranışı garantilidir (immutable); `Collectors.toList()` değiştirilebilirlik konusunda hiçbir söz vermez, yani sonucuna `add()` çağıran kod bir uygulama ayrıntısına bağımlıdır -- listeyi değiştirmeniz gerekiyorsa `Collectors.toCollection(ArrayList::new)` kullanın.
 - **`groupingBy()`'ın sonucundaki her anahtarın var olacağını varsaymak.** Yalnızca `partitioningBy()` bunu garanti eder; `groupingBy()`'da hiç elemanı olmayan bir anahtar haritada hiç yer almaz.
 - **`joining()`'i `String` olmayan bir stream'de kullanmaya çalışmak.** `Collectors.joining()` yalnızca `Stream<String>` üzerinde çalışır; başka bir tipte önce `map(Object::toString)` gerekir.
 
 ## Özet, Cheat Sheet ve Terimler Sözlüğü
 
-`Collectors`, `collect()` terminal operation'ına verilecek hazır tarifler sunar: `toList()`/`toSet()` basit koleksiyonlara toplar (`toList()` mutable, `Stream.toList()`'in aksine), `joining()` string'leri birleştirir, `groupingBy()` bir anahtara göre gruplar (isteğe bağlı bir downstream collector'la, örneğin `counting()`/`mapping()`), `partitioningBy()` tam olarak iki gruba ayırır, ve `toMap()` bir `Map` oluşturur (çakışan anahtarlar için açık bir merge fonksiyonu gerektirebilir).
+`Collectors`, `collect()` terminal operation'ına verilecek hazır tarifler sunar: `toList()`/`toSet()` basit koleksiyonlara toplar (`toList()` değiştirilebilirlik garantisi vermez, `Stream.toList()` ise her zaman immutable'dır -- garantili mutable bir liste için `toCollection(ArrayList::new)`), `joining()` string'leri birleştirir, `groupingBy()` bir anahtara göre gruplar (isteğe bağlı bir downstream collector'la, örneğin `counting()`/`mapping()`), `partitioningBy()` tam olarak iki gruba ayırır, ve `toMap()` bir `Map` oluşturur (çakışan anahtarlar için açık bir merge fonksiyonu gerektirebilir).
 
 Hızlı referans:
 
 ```java
-stream.collect(Collectors.toList())              // mutable List
+stream.collect(Collectors.toList())              // List, mutability garantisi yok
 stream.collect(Collectors.toSet())                 // Set, yinelenensiz
 stream.collect(Collectors.joining(", "))             // tek String
 stream.collect(Collectors.groupingBy(fn))              // Map<K, List<T>>

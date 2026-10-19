@@ -1,6 +1,6 @@
 # Collectors
 
-In the ["Terminal Operations"](/en/topics/terminal-operations) lesson, you saw `toList()` as a shorthand for `collect(Collectors.toList())` -- but `collect()`'s real power was never explored. This lesson picks up exactly there: the ready-made recipes the `Collectors` class offers for grouping, joining, and transforming.
+In the ["Terminal Operations"](/en/topics/terminal-operations) lesson, you used `Stream.toList()` to gather a stream into a list. `collect(Collectors.toList())` serves the same purpose, but it isn't an exact equivalent: `Stream.toList()` returns an unmodifiable list, while `Collectors.toList()` makes no guarantee about the returned list's type or mutability -- if you need a modifiable `ArrayList`, use `Collectors.toCollection(ArrayList::new)`. That lesson also never explored `collect()`'s real power. This lesson picks up exactly there: the ready-made recipes the `Collectors` class offers for grouping, joining, and transforming.
 
 ## What Is Collectors?
 
@@ -20,7 +20,7 @@ A `Collector` is made up of three functions: a **supplier** (creates an empty co
 
 ## Collectors.toList() and Collectors.toSet(): Simple Collections
 
-`Collectors.toList()` is very similar to `Stream.toList()` from the "Terminal Operations" lesson, with one important difference: the list `collect(Collectors.toList())` returns is **mutable**, while `Stream.toList()`'s is unmodifiable. `Collectors.toSet()` gathers elements into a `Set` -- duplicates are removed automatically, but there's no ordering guarantee.
+`Collectors.toList()` is very similar to `Stream.toList()` from the "Terminal Operations" lesson, but the two make different promises about the result: `Stream.toList()` (Java 16+) is guaranteed to return an **unmodifiable** list, while `collect(Collectors.toList())` makes **no guarantee** about the type or mutability of the list it returns (the current JDK happens to return an `ArrayList`, but that's an implementation detail, not part of the contract). If you need a list you can modify, ask for one explicitly with `collect(Collectors.toCollection(ArrayList::new))`. `Collectors.toSet()` gathers elements into a `Set` -- duplicates are removed automatically, but there's no ordering guarantee.
 
 {{ToListToSetExample.java}}
 
@@ -56,7 +56,7 @@ A `Collector` is made up of three functions: a **supplier** (creates an empty co
 
 ## Best Practices
 
-- **Choose deliberately between `collect(Collectors.toList())` and `Stream.toList()`.** If you need to add or remove elements from the result, use `Collectors.toList()` (mutable); if you're only going to read it, use `Stream.toList()` (unmodifiable, and communicates intent more clearly).
+- **Choose deliberately between `collect(Collectors.toList())` and `Stream.toList()`.** If you need to add or remove elements from the result, use neither -- use `collect(Collectors.toCollection(ArrayList::new))`, which guarantees a mutable list; if you're only going to read it, use `Stream.toList()` (unmodifiable, and communicates intent more clearly).
 - **Reach for the three-argument form of `toMap()` up front whenever key collisions are possible** -- the two-argument form can produce an unexpected `IllegalStateException` in production.
 - **Prefer a `groupingBy()` + downstream collector chain over a hand-written nested loop** -- a single line like `groupingBy(classifier, counting())` is less error-prone than a `Map<K, List<T>>` plus a separate counting loop doing the same job.
 - **Use `partitioningBy()` only when there are genuinely two groups** -- for more than two categories, `groupingBy()` is the right tool.
@@ -64,18 +64,18 @@ A `Collector` is made up of three functions: a **supplier** (creates an empty co
 ## Common Mistakes
 
 - **Using `Collectors.toMap()` with colliding keys and no merge function.** Assuming the data will always produce unique keys leads to an unexpected `IllegalStateException` when production data doesn't cooperate.
-- **Assuming the list `collect(Collectors.toList())` returns is immutable.** It's the opposite -- `Stream.toList()` is unmodifiable, `collect(Collectors.toList())` is mutable; mixing up these two APIs can lead to unexpected behavior.
+- **Relying on the list `collect(Collectors.toList())` returns being mutable.** Only `Stream.toList()`'s behavior is guaranteed (unmodifiable); `Collectors.toList()` promises nothing about mutability, so code that calls `add()` on its result depends on an implementation detail -- use `Collectors.toCollection(ArrayList::new)` when you need to modify the list.
 - **Assuming every key will exist in a `groupingBy()` result.** Only `partitioningBy()` guarantees that; in `groupingBy()`, a key with no matching elements simply doesn't appear in the map at all.
 - **Trying to use `joining()` on a stream that isn't a stream of Strings.** `Collectors.joining()` only works on a `Stream<String>`; for any other type, you need `map(Object::toString)` first.
 
 ## Summary, Cheat Sheet, and Glossary
 
-`Collectors` provides ready-made recipes for the `collect()` terminal operation: `toList()`/`toSet()` gather into simple collections (`toList()` is mutable, unlike `Stream.toList()`), `joining()` concatenates strings, `groupingBy()` groups by a key (optionally with a downstream collector like `counting()`/`mapping()`), `partitioningBy()` splits into exactly two groups, and `toMap()` builds a `Map` (which may need an explicit merge function for colliding keys).
+`Collectors` provides ready-made recipes for the `collect()` terminal operation: `toList()`/`toSet()` gather into simple collections (`toList()` doesn't guarantee mutability, while `Stream.toList()` is always unmodifiable -- use `toCollection(ArrayList::new)` for a guaranteed mutable list), `joining()` concatenates strings, `groupingBy()` groups by a key (optionally with a downstream collector like `counting()`/`mapping()`), `partitioningBy()` splits into exactly two groups, and `toMap()` builds a `Map` (which may need an explicit merge function for colliding keys).
 
 Quick reference:
 
 ```java
-stream.collect(Collectors.toList())               // mutable List
+stream.collect(Collectors.toList())               // List, mutability not guaranteed
 stream.collect(Collectors.toSet())                  // Set, no duplicates
 stream.collect(Collectors.joining(", "))              // single String
 stream.collect(Collectors.groupingBy(fn))               // Map<K, List<T>>

@@ -1,8 +1,9 @@
 import java.util.List;
 
-// toList() (added in Java 16) is a convenience shorthand for the far more general
+// toList() (added in Java 16) serves the same purpose as the far more general
 // collect(Collectors.toList()) -- covered fully in the next lesson, Collectors. It
-// returns an UNMODIFIABLE List, unlike collect(Collectors.toList())'s mutable one.
+// returns an UNMODIFIABLE List, while Collectors.toList() makes no guarantee about
+// mutability (use Collectors.toCollection(ArrayList::new) when you need a mutable list).
 // toArray() converts a stream into an array instead of a List.
 class ToListToArrayExample {
     public static void main(String[] args) {

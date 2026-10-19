@@ -14,7 +14,7 @@ Intermediate operations are lazy (Lazy Evaluation, "Stream API Fundamentals" les
 
 ## History
 
-Most terminal operations arrived with the Stream API in Java 8 (2014). `toList()` is an exception -- until Java 16 (2021), the only way to turn a stream into a list was `collect(Collectors.toList())`; `toList()` was added later as a convenience method to shorten this extremely common pattern.
+Most terminal operations arrived with the Stream API in Java 8 (2014). `toList()` is an exception -- until Java 16 (2021), the only way to turn a stream into a list was `collect(Collectors.toList())`; `toList()` was added later as a convenience method for this extremely common need -- though, as the "toList() and toArray(): Converting to a Simple Collection" section shows, its result has a different contract.
 
 ## forEach(): Applying a Side Effect
 
@@ -54,7 +54,7 @@ These three methods ask a yes/no question about the stream using a `Predicate`, 
 
 ## toList() and toArray(): Converting to a Simple Collection
 
-`toList()` (Java 16) is a shorthand for `collect(Collectors.toList())` -- with one important difference: the list `toList()` returns is **unmodifiable**, while `collect(Collectors.toList())`'s is mutable. `toArray()` converts the stream into an array instead of a `List`; to produce an array of the right element type, it usually takes a constructor reference like `String[]::new` (the `Class::new` form from the ["Built-in Functional Interfaces"](/en/topics/built-in-functional-interfaces) lesson).
+`toList()` (Java 16) serves the same purpose as `collect(Collectors.toList())`, but the two don't make the same promises about the result: the list `toList()` returns is **unmodifiable**, while `collect(Collectors.toList())` makes no guarantee about the returned list's type or mutability. If you need a modifiable `ArrayList`, use `collect(Collectors.toCollection(ArrayList::new))`. `toArray()` converts the stream into an array instead of a `List`; to produce an array of the right element type, it usually takes a constructor reference like `String[]::new` (the `Class::new` form from the ["Built-in Functional Interfaces"](/en/topics/built-in-functional-interfaces) lesson).
 
 {{ToListToArrayExample.java}}
 
