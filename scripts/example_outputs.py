@@ -139,6 +139,9 @@ CONTRACT_FLAGS = [
     # getRecordComponents(), getEnumConstants() and the single-member lookups
     # (getDeclaredField("x")) have a defined result and are not flagged.
     ("reflection-order", r"\.get(Declared)?(Fields|Methods|Constructors|Classes|Annotations)\(\s*\)"),
+    # Informational: the lesson may print what happens when a fail-fast iterator notices a
+    # modification. The API only promises that on a best-effort basis.
+    ("fail-fast", r"ConcurrentModificationException"),
     ("locale-format", r"String\.format|\.printf\(|\.formatted\(|toUpperCase\(\)|toLowerCase\(\)"),
     ("floating-point-text", r"\bdouble\b|\bfloat\b|Double|average\(\)"),
     ("identity-text", r"hashCode\(\)|Object\.toString"),
@@ -151,6 +154,12 @@ BLOCKING_FLAGS = {"hash-order", "parallel", "concurrency", "time", "random", "st
 # Informational, set by main_reads_args(): the run always passes no arguments (a fixed,
 # repeatable input), so the reviewer checks the output is the branch the lesson shows.
 MAIN_ARGS_FLAG = "main-args"
+# Shown in report.md and pre-filled as the review.tsv note. A note is never a decision: the
+# row's decision stays empty until the reviewer writes approve or reject.
+RISK_NOTES = {
+    "fail-fast": "RISK fail-fast: Java throws ConcurrentModificationException only on a best-effort basis "
+                 "(not guaranteed by the API); approve only if the lesson presents it that way.",
+}
 
 
 def contract_flags(source: str) -> list:
@@ -509,6 +518,9 @@ def write_report(records: list, jdk_version: str):
                       f"Source: `{r['java']}` (sha256 `{r['java_sha256']}`)"]
             if r.get("flags"):
                 lines.append("Review flags: " + flag_text(r["flags"]))
+            for flag in r.get("flags", []):
+                if flag in RISK_NOTES:
+                    lines.append(f"**{RISK_NOTES[flag]}**")
             lines += [f"Runs: {len(r['runs'])}/{len(VARIANTS)} variants printed identical bytes; staged "
                       f"`{r['out']}` (sha256 `{r['out_sha256']}`, bytes equal raw stdout: "
                       f"{r['out_matches_raw_stdout']})", "", opening, source.rstrip("\n"), closing, "",
@@ -660,7 +672,8 @@ def write_review_sheet(records: list):
     lines = [REVIEW_HEADER]
     for r in records:
         if r.get("status") == "GENERATED":
-            decision, note = previous.get((record_key(r), r["out_sha256"]), ("", ""))
+            risk = " ".join(RISK_NOTES[f] for f in r.get("flags", []) if f in RISK_NOTES)
+            decision, note = previous.get((record_key(r), r["out_sha256"]), ("", risk))
             lines.append("\t".join([r["slug"], r["name"], r["out_sha256"], decision, note]))
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

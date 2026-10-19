@@ -155,6 +155,12 @@ class ContractFlagTest(unittest.TestCase):
         in_comment = 'class A { public static void main(String[] args) { // args[0] would fail\n System.out.println("args"); } }'
         self.assertNotIn(eo.MAIN_ARGS_FLAG, flags_of(in_comment))
 
+    def test_fail_fast_is_informational(self):
+        self.assertIn("fail-fast", flags_of("} catch (ConcurrentModificationException e) {"))
+        self.assertNotIn("fail-fast", eo.BLOCKING_FLAGS)
+        self.assertNotIn("fail-fast", flags_of("for (String s : list) { System.out.println(s); }"))
+        self.assertIn("best-effort", eo.RISK_NOTES["fail-fast"])
+
     def test_the_four_published_examples_hit_no_new_flag(self):
         examples = Path(__file__).resolve().parents[2] / "src/main/resources/examples"
         for spec in ["primitive-parallel-streams/IntStreamCreationExample",
@@ -283,6 +289,36 @@ class SaveResultsTest(Sandbox):
         sheet.write_text(sheet.read_text().replace("\t\t\n", "\tapprove\t\n"))
         eo.write_review_sheet(eo.save_results([self.generated("loops", "A", b"changed\n")]))
         self.assertEqual(eo.read_review_sheet_unchecked(sheet)[0]["decision"], "")
+
+
+class RiskNoteTest(Sandbox):
+
+    def test_risk_note_is_shown_but_never_a_decision(self):
+        record = self.generated("loops", "M", b"Caught: ConcurrentModificationException\n")
+        record["flags"] = ["fail-fast"]
+        self.results(record)
+        results = eo.save_results([record])
+        eo.write_review_sheet(results)
+        eo.write_report(results, "test")
+
+        row = eo.read_review_sheet_unchecked(eo.OUT_ROOT / "review.tsv")[0]
+        self.assertEqual(row["decision"], "")
+        self.assertIn("best-effort", row["note"])
+        self.assertIn("best-effort", (eo.OUT_ROOT / "report.md").read_text(encoding="utf-8"))
+        self.assertIn("no decision", self.abort(eo.cmd_promote_review, eo.OUT_ROOT / "review.tsv", "cdurgun"))
+        self.assertFalse((eo.EXAMPLES / "loops/M.out").exists())
+
+    def test_a_reviewers_own_note_is_kept_on_regeneration(self):
+        record = self.generated("loops", "M", b"x\n")
+        record["flags"] = ["fail-fast"]
+        eo.write_review_sheet(eo.save_results([record]))
+        sheet = eo.OUT_ROOT / "review.tsv"
+        cols = sheet.read_text(encoding="utf-8").splitlines()[1].split("\t")
+        cols[3], cols[4] = "reject", "lesson text says it always throws"
+        sheet.write_text(eo.REVIEW_HEADER + "\n" + "\t".join(cols) + "\n", encoding="utf-8")
+        eo.write_review_sheet(eo.save_results([record]))
+        row = eo.read_review_sheet_unchecked(sheet)[0]
+        self.assertEqual((row["decision"], row["note"]), ("reject", "lesson text says it always throws"))
 
 
 # --- promote --review -----------------------------------------------------------------
