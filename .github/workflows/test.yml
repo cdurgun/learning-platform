@@ -1,0 +1,65 @@
+# Railway's build runs `mvn ... -DskipTests`, so deploys never run the test suite. This
+# workflow is the independent test evidence for every push to main and every pull request.
+# It does not gate the Railway deploy by itself.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Migrations write dates as Europe/Istanbul calendar days; SitemapXmlTest compares
+      # them with LocalDate.now(), which would run a day behind in UTC after local midnight.
+      TZ: Europe/Istanbul
+
+    services:
+      # Same database, user and port as src/main/resources/application-test.yml
+      # (jdbc:postgresql://localhost:5433/learning_test); Flyway builds the schema on startup.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: learning_test
+          POSTGRES_USER: learning
+          POSTGRES_PASSWORD: learning
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U learning -d learning_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 10s
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Maven tests
+        id: maven
+        run: mvn -B test
+
+      - name: Expected output tool tests
+        if: ${{ !cancelled() }}
+        run: python3 -B -m unittest discover -s scripts/example-outputs -p 'test_*.py'
+
+      - name: Upload Surefire reports
+        if: ${{ failure() && steps.maven.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+          if-no-files-found: ignore
