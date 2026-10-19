@@ -33,13 +33,36 @@ en fazla 15 dakika). Push'tan sonra arka planda çalıştır; normalde 2–4 dak
 - **Kayıt hiç oluşmadıysa** Railway push'u görmemiştir. 2026-10-05'te sebep, Railway'in eski
   branch adını izlemesiydi. İlk bakılacak yer: Railway panelinde servis → Settings → Source →
   bağlı branch `main` mi, otomatik deploy açık mı. Gerekirse panelden elle deploy başlatılır.
-- **Durum `failure` ise** Railway panelindeki build/deploy loguna bak: derleme hatası ya da
-  açılışta Flyway hatası. Bunları buradan göremezsin; kullanıcıdan logu iste.
+- **Durum `failure` ise** build/deploy loguna bak: derleme hatası ya da açılışta Flyway hatası.
+  Loglar Railway CLI ile okunabilir (`railway logs --build` / `--deployment`, aşağıya bak); CLI
+  çalışmıyorsa kullanıcıdan logu iste.
 - **Geri alma:** Railway panelinden önceki deployment'a dönülür. Uygulanmış migration'lar geri
   alınmaz; şemayı değiştiren bir push'u geri almadan önce bunu hesaba kat.
 
-Railway paneline erişimin yok. Deployment'ı elle başlatmak, logları okumak ve geri almak
-kullanıcının yapacağı işlerdir; ne yapılması gerektiğini söyle.
+Railway'e yalnızca okuma için erişimin var: makinede kurulu, kullanıcının hesabıyla oturum açmış
+ve bu projeye bağlı bir `railway` CLI (2026-10-19'da doğrulandı). Yalnızca şu komutları kullan:
+`railway status`, `railway deployment list --json`, `railway logs` (`--deployment`, `--build`,
+`--lines N`). Değiştiren hiçbir komutu (`up`, `redeploy`, `down`, `link`, `variables --set` ...)
+çalıştırma. Deployment'ı elle başlatmak ve geri almak kullanıcının işidir; ne yapılması
+gerektiğini söyle.
+
+## Migration'ın production'da uygulandığını doğrulamak
+
+Sayfadaki tarihler gibi dolaylı izler migration'ın çalıştığını göstermez; doğrudan kanıt deploy
+logundaki Flyway satırlarıdır. Production veritabanına bağlanma ve migration çalıştırma.
+
+1. `railway deployment list --json`: en üstteki deployment'ın `meta.commitHash`'i push edilen
+   commit olmalı ve `status` `SUCCESS` olmalı. Değilse dur.
+2. `railway logs --deployment --lines 400 <DEPLOYMENT_ID>` çıktısında `DbMigrate` satırlarını ara.
+   Beklenen: `Current version of schema "public": <önceki>`, ardından `Migrating schema "public" to
+   version "<N> - <açıklama>"` ve `Successfully applied <k> migration(s) ... now at version v<N>`;
+   sonra `Started LearningPlatformApplication`. `<N>` push edilen en yüksek migration olmalı.
+3. Raporla: deployment id, commit, durum ve bu satırlar (zaman damgasıyla).
+
+Bu satırlar bulunamazsa, log okunamazsa ya da deployment başka bir commit'e aitse migration'ın
+uygulandığını varsayma: "doğrulanamadı" olarak raporla ve kullanıcıdan Railway panelindeki logu
+ya da `flyway_schema_history`'yi kontrol etmesini iste. Log, etkilenen satır sayısını göstermez;
+satır sayısı için migration testine ve canlı sayfalara dayan.
 
 ## Kontroller
 
