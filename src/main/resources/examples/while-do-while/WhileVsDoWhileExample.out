@@ -1,0 +1,4 @@
+while (condition is false from the start):
+Body ran 0 times.
+do-while (same condition, false from the start):
+Body ran 1 times.

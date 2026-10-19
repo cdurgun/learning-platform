@@ -1,0 +1,5 @@
+1 -> weekday
+3 -> weekday
+6 -> weekend
+  (unexpected value logged: 9)
+9 -> invalid

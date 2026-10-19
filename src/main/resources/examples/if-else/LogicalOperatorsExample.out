@@ -1,0 +1,9 @@
+Can drive: true
+Day off: true
+Not a day off: false
+Short-circuit && demo:
+  checkFirst() called
+false
+Short-circuit || demo:
+  checkThird() called
+true

@@ -1,0 +1,21 @@
+break in a nested loop:
+Starting row 1
+  col = 1
+  col = 2
+  breaking inner loop at col = 3
+Finished row 1
+Starting row 2
+  col = 1
+  col = 2
+  breaking inner loop at col = 3
+Finished row 2
+Starting row 3
+  col = 1
+  col = 2
+  breaking inner loop at col = 3
+Finished row 3
+continue in a nested loop:
+row=1, col=1
+row=1, col=3
+row=2, col=1
+row=2, col=3

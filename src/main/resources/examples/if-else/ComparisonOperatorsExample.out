@@ -1,0 +1,11 @@
+a == b: false
+a != b: true
+a < b: true
+a > b: false
+a <= b: true
+a >= b: false
+0.1 + 0.2 == 0.3: false
+Actual value: 0.30000000000000004
+literalOne == literalTwo: true
+literalOne == constructed: false
+literalOne.equals(constructed): true

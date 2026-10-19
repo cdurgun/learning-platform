@@ -1,0 +1,10 @@
+break in a while loop:
+i = 1
+i = 2
+i = 3
+continue in a while loop:
+odd j = 1
+odd j = 3
+odd j = 5
+odd j = 7
+odd j = 9
