@@ -1,0 +1,14 @@
+split(","): [apple, banana, , cherry]
+parts.length: 4
+String.join(" | ", parts): apple | banana |  | cherry
+String.join("-", List): x-y-z
+replace("at", "og"): the cog sog on the mog
+replaceAll("\\s+", "_"): the_cat_sat_on_the_mat
+trim(): [spaced out]
+strip(): [spaced out]
+"Hello".equalsIgnoreCase("HELLO"): true
+toLowerCase(): mixedcase
+"ab".repeat(3): ababab
+"apple".compareTo("banana"): -1
+"banana".compareTo("apple"): 1
+"apple".compareTo("apple"): 0

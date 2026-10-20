@@ -1,0 +1,10 @@
+a == b (both literals): true
+a == c (c is `new String(...)`): false
+a.equals(c): true
+a == d (d is c.intern()): true
+a == e ("hel" + "lo" is constant-folded): true
+a == f (prefix + "lo", built at runtime): false
+a.equals(f): true
+
+Rule of thumb: NEVER use == to compare String content.
+Always use equals() (or equalsIgnoreCase()).

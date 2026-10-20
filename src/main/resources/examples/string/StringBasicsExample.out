@@ -1,0 +1,13 @@
+Value: Hello, World!
+length(): 13
+charAt(7): W
+isEmpty(): false
+isBlank(): true
+Original after toUpperCase(): Hello, World!
+New uppercase String: HELLO, WORLD!
+Same object? false
+substring(7): World!
+substring(0, 5): Hello
+indexOf("World"): 7
+contains("World"): true
+Concatenated: Hello, World! Nice to meet you.

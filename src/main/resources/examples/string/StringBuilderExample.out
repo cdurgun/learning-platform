@@ -1,0 +1,12 @@
+Initial: Hello
+After append(): Hello, World
+After append(char): Hello, World!
+After insert(5, " there"): Hello there, World!
+After replace(0, 5, "Hi"): Hi there, World!
+After delete(2, 8): Hi, World!
+After reverse(): !dlroW ,iH
+After reverse() again: Hi, World!
+charAt(0): H
+length(): 10
+Final String (via toString()): Hi, World!
+StringBuffer (synchronized, legacy): legacy, thread-safe version
