@@ -170,6 +170,79 @@ class ContractFlagTest(unittest.TestCase):
             self.assertFalse(eo.BLOCKING_FLAGS.intersection(flags), spec)
 
 
+class TextOnlyFlagTest(unittest.TestCase):
+    """Blocking flags come from the code; a match only in a comment or string is informational."""
+
+    def assertBlocked(self, flag, source):
+        flags = flags_of(source)
+        self.assertIn(flag, flags, source)
+        self.assertIn(flag, eo.BLOCKING_FLAGS)
+
+    def assertTextOnly(self, flag, source):
+        flags = flags_of(source)
+        self.assertNotIn(flag, flags, source)
+        self.assertIn(flag + eo.TEXT_ONLY_SUFFIX, flags, source)
+        self.assertNotIn(flag + eo.TEXT_ONLY_SUFFIX, eo.BLOCKING_FLAGS)
+        self.assertIn("comment or string", eo.RISK_NOTES[flag + eo.TEXT_ONLY_SUFFIX])
+
+    def test_system_in_only_in_a_comment_with_an_in_memory_scanner(self):
+        self.assertTextOnly("stdin", '// works the same with new Scanner(System.in)\n'
+                                     'Scanner sc = new Scanner("25\\nAda\\n");')
+        self.assertTextOnly("stdin", '/* System.console() */ Scanner sc = new Scanner(text);')
+
+    def test_real_system_in_is_blocked(self):
+        self.assertBlocked("stdin", "Scanner sc = new Scanner(System.in);")
+        self.assertBlocked("stdin", '// reads a line\nString s = System.console().readLine();')
+
+    def test_random_in_a_comment_does_not_hide_real_stdin(self):
+        flags = flags_of("// the secret could come from new Random()\nint secret = 42;\n"
+                         "Scanner sc = new Scanner(System.in);")
+        self.assertIn("stdin", flags)
+        self.assertIn("random" + eo.TEXT_ONLY_SUFFIX, flags)
+        self.assertNotIn("random", flags)
+
+    def test_hashmap_only_in_a_string_or_comment_does_not_block(self):
+        self.assertTextOnly("hash-order", 'System.out.println("unlike a HashMap, a TreeMap is sorted");')
+        self.assertTextOnly("hash-order", 'Map<String, Integer> m = new TreeMap<>(); // not a HashMap')
+
+    def test_real_hashmap_is_blocked(self):
+        self.assertBlocked("hash-order", "Map<String, Integer> m = new HashMap<>();")
+        self.assertBlocked("hash-order", 'var s = Set.of("a", "b");')
+
+    def test_literals_that_look_like_comments_or_quotes_do_not_hide_real_calls(self):
+        # Each literal is followed by a real call on the same line: blanking must stop at the
+        # literal's end, not swallow the code after it.
+        for prefix in ['String s = "// not a comment"; ', 'String s = "/* not a comment"; ',
+                       "char q = '\"'; ", "char q = '\\''; ", 'String e = "a\\"b"; ', 'String e = "\\\\"; ',
+                       '/* block */ ', 'String t = """\n  "quoted" // and /* this\n  """; ']:
+            self.assertBlocked("stdin", prefix + "Scanner sc = new Scanner(System.in);")
+            self.assertBlocked("hash-order", prefix + "Map<String, Integer> m = new HashMap<>();")
+
+    def test_informational_flags_still_see_the_raw_source(self):
+        self.assertIn("fail-fast", flags_of("// may throw ConcurrentModificationException\nlist.remove(0);"))
+        self.assertIn("locale-format", flags_of('String s = "x"; // or String.format'))
+
+    def test_the_lessons_affected_examples(self):
+        def pre(spec):
+            return eo.precheck(*spec.split("/"))
+
+        for spec in ["scanner/ScannerBasicsExample", "scanner/ScannerNextIntNextLinePitfallExample"]:
+            result = pre(spec)
+            self.assertIsNone(result["status"], spec)
+            self.assertFalse(eo.BLOCKING_FLAGS.intersection(result["flags"]), spec)
+            self.assertIn("stdin" + eo.TEXT_ONLY_SUFFIX, result["flags"], spec)
+            self.assertRegex(eo.describe(spec), r"^WILL_RUN\s.*stdin:text-only")
+        for spec in ["maps/TreeMapExample", "sets/TreeSetExample"]:
+            result = pre(spec)
+            self.assertFalse(eo.BLOCKING_FLAGS.intersection(result["flags"]), spec)
+            self.assertIn("hash-order" + eo.TEXT_ONLY_SUFFIX, result["flags"], spec)
+        guessing = pre("while-do-while/NumberGuessingGameExample")
+        self.assertIn("stdin", guessing["flags"])
+        self.assertIn("random" + eo.TEXT_ONLY_SUFFIX, guessing["flags"])
+        self.assertRegex(eo.describe("while-do-while/NumberGuessingGameExample"), r"^WILL_BE_BLOCKED \(stdin\)")
+        self.assertEqual(pre("dynamic-queries-with-specifications/SingleSpecificationExample")["status"], "NON_JDK")
+
+
 # --- pre-checks: main, imports, multi-file -------------------------------------------
 
 class PrecheckTest(Sandbox):

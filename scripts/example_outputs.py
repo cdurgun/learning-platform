@@ -120,8 +120,10 @@ VARIANTS = [
 # NOT proof of a guarantee -- the pilot showed parallel examples printing the same
 # bytes in all 9 runs -- so a BLOCKING flag means no .out is staged at all.
 # Informational flags only point the human reviewer at something to double-check.
-# The patterns run on the raw source, comments included: a false positive only blocks
-# an example, it never lets one through.
+# Blocking patterns run on the code with comments and string/char literals blanked out
+# (strip_comments_and_strings): "System.in" in a comment or in printed text does not make
+# the program read stdin. A blocking pattern that matches ONLY there is still reported, as
+# the informational "<flag>:text-only". Informational patterns run on the raw source.
 CONTRACT_FLAGS = [
     ("hash-order", r"\bHash(Map|Set)\b|Collectors\.(toSet|groupingBy|toMap|partitioningBy)\b|\b(Set|Map)\.of\("),
     ("parallel", r"parallel\(|parallelStream\("),
@@ -163,10 +165,25 @@ RISK_NOTES = {
     "fail-fast": "RISK fail-fast: Java throws ConcurrentModificationException only on a best-effort basis "
                  "(not guaranteed by the API); approve only if the lesson presents it that way.",
 }
+TEXT_ONLY_SUFFIX = ":text-only"
+RISK_NOTES.update({
+    flag + TEXT_ONLY_SUFFIX: f"NOTE {flag}: matched only in a comment or string literal, not in the code; "
+                             f"check the output and the lesson text do not depend on it."
+    for flag in sorted(BLOCKING_FLAGS)
+})
 
 
 def contract_flags(source: str) -> list:
-    flags = [flag for flag, pattern in CONTRACT_FLAGS if re.search(pattern, source)]
+    code = strip_comments_and_strings(source)
+    flags = []
+    for flag, pattern in CONTRACT_FLAGS:
+        if flag not in BLOCKING_FLAGS:
+            if re.search(pattern, source):
+                flags.append(flag)
+        elif re.search(pattern, code):
+            flags.append(flag)
+        elif re.search(pattern, source):
+            flags.append(flag + TEXT_ONLY_SUFFIX)
     if main_reads_args(source):
         flags.append(MAIN_ARGS_FLAG)
     return flags
