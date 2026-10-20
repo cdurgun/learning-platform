@@ -15,15 +15,29 @@ python3 .claude/skills/deploy-check/check_deploy.py            # deployment zate
 python3 .claude/skills/deploy-check/check_deploy.py --base http://localhost:8099 --no-github
 ```
 
-`--wait`, `origin/main`'in son commit'i için deployment "success" olana kadar bekler (varsayılan
-en fazla 15 dakika). Push'tan sonra arka planda çalıştır; normalde 2–4 dakika sürer.
+`--wait`, `origin/main`'in son commit'i için Railway deployment'ı SUCCESS olana kadar bekler
+(varsayılan en fazla 15 dakika). Push'tan sonra arka planda çalıştır; normalde 2–4 dakika sürer,
+Wait for CI açık olduğu için CI süresi (~1,5 dk) kadar uzar.
 
-Çıkış kodu: tüm kontroller geçerse 0, bir kontrol başarısızsa 1, deployment tamamlanmazsa 2.
+Çıkış kodu: tüm kontroller geçerse 0, bir kontrol başarısızsa 1, deployment tamamlanmazsa 2
+(Railway deploy'u atladıysa -- `SKIPPED` -- da 2; script sebebi yazar).
 
 ## Deployment nasıl işliyor
 
-- Site Railway'de; `main`'e her push otomatik deployment başlatır. Railway durumu GitHub'ın
-  deployment kayıtlarına yazar (`in_progress` → `success`); script bunu `gh` ile okur.
+- Site Railway'de; `main`'e her push otomatik deployment başlatır. **Wait for CI açık
+  (2026-10-20):** deployment, GitHub Actions `tests` workflow'u bitene kadar bekler, CI başarısızsa
+  Railway onu atlar (`SKIPPED`) ve eski sürüm yayında kalır.
+- **Durumun kaynağı Railway'in kendisi:** script repo kökünden `railway deployment list --json
+  --service learning-platform --environment production` okur. Bir kayıt ancak `meta.commitHash`
+  push edilen commit ve `meta.repo` bu repo ise sayılır (Postgres servisinin commit'siz SUCCESS
+  kayıtları asla eşleşmez); aynı commit'in birden fazla kaydı varsa en yenisi geçerlidir. Canlı
+  sürüm yalnızca servisin EN YENİ deployment'ı SUCCESS ve tek SUCCESS kaydıysa kesin sayılır --
+  daha yeni bir başarısız/atlanmış/süren deployment ya da geçişte iki SUCCESS varsa "doğrulanamadı".
+  Listede olmayan durumlar (`COMPLETED`, `SLEEPING`, yeni bir ad) başarı sayılmaz. Railway CLI
+  çalışmazsa, oturum düşmüşse ya da çıktı okunamazsa script başarı varsaymaz.
+- GitHub'ın deployment kaydı yalnızca tanılama bilgisi: Railway onu her zaman güncellemiyor
+  (2026-10-20, `e8b3d1b`: Railway SUCCESS iken kayıt `in_progress`'te kaldı). Uyuşmazlık
+  `[BİLGİ]` olarak yazılır, karar Railway'e göre verilir.
 - Uygulama açılırken bekleyen Flyway migration'larını production veritabanına uygular. Yeni
   migration içeren bir push'ta açılış birkaç saniye uzar; migration hata verirse deployment
   başarısız olur ve eski sürüm yayında kalır.

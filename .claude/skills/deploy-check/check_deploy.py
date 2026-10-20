@@ -5,14 +5,16 @@
     python3 .claude/skills/deploy-check/check_deploy.py --wait     # önce deployment'ın bitmesini bekle
     python3 .claude/skills/deploy-check/check_deploy.py --base http://localhost:8080 --no-github
 
---wait      origin/main'in son commit'i için Railway deployment'ı "success" olana kadar bekler
-            (en fazla --timeout saniye). Railway durumu GitHub deployment kayıtlarına yazar.
+--wait      origin/main'in son commit'i için Railway deployment'ı SUCCESS olana kadar bekler
+            (en fazla --timeout saniye). Durum `railway deployment list`'ten okunur (salt okunur,
+            oturum açmış ve bu projeye bağlı bir Railway CLI gerekir); GitHub'ın deployment
+            kaydı yalnızca tanılama bilgisidir, Railway onu her zaman güncellemiyor.
 --base      kontrol edilecek site (varsayılan: canlı site)
---no-github GitHub deployment kaydına bakma (yerel bir sunucuyu kontrol ederken)
+--no-github deployment kayıtlarına (Railway, GitHub) bakma (yerel bir sunucuyu kontrol ederken)
 
 "Beklenen Çıktı" bölümü, sayfalardaki çıktı panellerini repodaki examples/**/*.out dosyalarıyla
-karşılaştırır. Canlıya bakarken bu dosyalar yerel HEAD'den (`git show`) okunur ve son Railway
-deployment'ı tam olarak bu commit olmalı ve "success" durumunda olmalı; değilse bölüm çalıştırılmaz
+karşılaştırır. Canlıya bakarken bu dosyalar yerel HEAD'den (`git show`) okunur ve Railway'in canlıda
+sunduğu commit kesin olarak bu commit olmalı; değilse ya da Railway okunamıyorsa bölüm çalıştırılmaz
 ve bir HATA olarak sayılır (yanlış commit'e karşı ölçüp yanıltıcı sonuç vermemek için).
 --no-github ile yerel bir sunucuya bakarken çalışma ağacındaki dosyalar kullanılır.
 
@@ -28,6 +30,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -71,36 +74,120 @@ def git(*args):
     return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True).stdout.strip()
 
 
+# Deployment durumunun birincil kaynağı Railway'in kendisi (`railway deployment list`). GitHub'ın
+# deployment kaydını Railway yazar ama her zaman güncellemez (2026-10-20: Railway SUCCESS iken
+# kayıt `in_progress`'te kaldı); o kayıt yalnızca tanılama bilgisidir.
+RAILWAY_SERVICE = "learning-platform"
+RAILWAY_ENVIRONMENT = "production"
+# Railway durumu -> bu script'in durumları. Listede olmayan her durum (COMPLETED, SLEEPING, ileride
+# eklenecek bir ad ...) "unknown" olur ve hiçbir zaman başarı sayılmaz.
+RAILWAY_STATES = {
+    "SUCCESS": "success",
+    "FAILED": "failure", "CRASHED": "failure",
+    "SKIPPED": "skipped",
+    "REMOVED": "removed", "REMOVING": "removed",
+    "INITIALIZING": "in_progress", "WAITING": "in_progress", "QUEUED": "in_progress",
+    "BUILDING": "in_progress", "DEPLOYING": "in_progress", "NEEDS_APPROVAL": "in_progress",
+}
+TERMINAL_STATES = ("success", "failure", "skipped", "removed")
+
+
+def railway_deployments():
+    """Bu servisin Railway deployment'ları, en yeni önce: (liste, None) ya da (None, sebep). CLI,
+    bağlı projeyi dizinden bulduğu için repo kökünden çalıştırılır; servis ve ortam açıkça verilir.
+    Çıktı beklenen biçimde değilse başarı varsayılmaz."""
+    command = ["railway", "deployment", "list", "--json", "--limit", "20",
+               "--service", RAILWAY_SERVICE, "--environment", RAILWAY_ENVIRONMENT]
+    try:
+        result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return None, f"railway CLI çalıştırılamadı ({type(error).__name__})"
+    if result.returncode != 0:
+        first = (result.stderr or result.stdout).strip().splitlines()
+        return None, f"railway CLI hata verdi ({first[0] if first else result.returncode})"
+    try:
+        rows = json.loads(result.stdout)
+        if not isinstance(rows, list):
+            raise TypeError("liste değil")
+        for row in rows:
+            if not (isinstance(row["id"], str) and isinstance(row["status"], str)
+                    and isinstance(row["meta"], dict)):
+                raise TypeError("eksik alan")
+        rows.sort(key=lambda row: datetime.fromisoformat(row["createdAt"].replace("Z", "+00:00")), reverse=True)
+    except (ValueError, KeyError, TypeError, AttributeError) as error:
+        return None, f"railway CLI çıktısı okunamadı ({type(error).__name__})"
+    return rows, None
+
+
+def belongs_to(row, sha):
+    """Kayıt bu repodaki bu commit'in deployment'ı mı? Commit'i olmayan (Postgres gibi) ya da başka
+    repodan gelen kayıtlar asla eşleşmez."""
+    return bool(sha) and row["meta"].get("commitHash") == sha and row["meta"].get("repo") == REPO
+
+
 def deployment_state():
-    """origin/main'in son commit'i için (sha, durum). Kayıt yoksa durum None."""
+    """origin/main'in son commit'i için (sha, durum, ayrıntı). Durum: RAILWAY_STATES'in değerlerinden
+    biri, "unknown", kayıt yoksa None, Railway okunamazsa "unreadable" (ayrıntı = sebep).
+    Aynı commit'in birden fazla deployment'ı varsa en yenisi geçerlidir."""
     head = git("rev-parse", "origin/main")
-    found = gh(f"repos/{REPO}/deployments?sha={head}&per_page=1", ".[0].id")
+    rows, problem = railway_deployments()
+    if rows is None:
+        return head, "unreadable", problem
+    mine = [row for row in rows if belongs_to(row, head)]
+    if not mine:
+        return head, None, None
+    return head, RAILWAY_STATES.get(mine[0]["status"], "unknown"), f"{mine[0]['status']}, {mine[0]['id'][:8]}"
+
+
+def live_deployment():
+    """Railway'in şu an sunduğu commit: (sha, None) ya da (None, sebep). Kesin değilse bilinmiyor
+    sayılır: servisin EN YENİ deployment'ı SUCCESS olmalı, tek SUCCESS kaydı olmalı ve bu repodan bir
+    commit'e ait olmalı. Daha yeni bir başarısız/atlanmış/süren deployment ya da aynı anda iki SUCCESS
+    (geçişteki kısa çakışma) varsa eski bir başarı canlı sürüm diye kabul edilmez."""
+    rows, problem = railway_deployments()
+    if rows is None:
+        return None, problem
+    if not rows:
+        return None, "Railway'de bu servisin deployment kaydı yok"
+    newest = rows[0]
+    if newest["status"] != "SUCCESS":
+        return None, f"en yeni deployment {newest['id'][:8]} durumu {newest['status']}, SUCCESS değil"
+    successes = [row for row in rows if row["status"] == "SUCCESS"]
+    if len(successes) != 1:
+        return None, f"{len(successes)} SUCCESS kaydı var, canlı sürüm belirsiz"
+    if not belongs_to(newest, newest["meta"].get("commitHash")):
+        return None, f"en yeni deployment {newest['id'][:8]} bu repodaki bir commit'e ait değil"
+    return newest["meta"]["commitHash"], None
+
+
+def github_state(sha):
+    """Yalnızca tanılama: Railway'in GitHub deployment kaydına en son yazdığı durum (yoksa None)."""
+    found = gh(f"repos/{REPO}/deployments?sha={sha}&per_page=1", ".[0].id")
     if not found or found == "null":
-        return head, None
-    return head, gh(f"repos/{REPO}/deployments/{found}/statuses?per_page=1", ".[0].state")
+        return None
+    return gh(f"repos/{REPO}/deployments/{found}/statuses?per_page=1", ".[0].state")
 
 
-def latest_deployment():
-    """Railway'in en son deployment kaydı: (sha, durum) -- origin/main'den bağımsız olarak canlıya
-    en son ne gönderildiğini söyler. Okunamazsa (None, None)."""
-    found = gh(f"repos/{REPO}/deployments?per_page=1", ".[0] | [.id, .sha] | @tsv")
-    if not found or "\t" not in found:
-        return None, None
-    deployment_id, sha = found.split("\t")
-    return sha, gh(f"repos/{REPO}/deployments/{deployment_id}/statuses?per_page=1", ".[0].state")
+def describe_state(state, detail):
+    if state is None:
+        return "henüz başlamadı"
+    if state == "unreadable":
+        return f"Railway okunamadı: {detail}"
+    return f"{state} ({detail})"
 
 
 def wait_for_deployment(timeout):
     started = time.time()
     last = "?"
     while time.time() - started < timeout:
-        head, state = deployment_state()
-        if state != last:
-            print(f"  deployment {head[:7]}: {state or 'henüz başlamadı'}")
-            last = state
+        head, state, detail = deployment_state()
+        label = describe_state(state, detail)
+        if label != last:
+            print(f"  deployment {head[:7]}: {label}")
+            last = label
         if state == "success":
             return True
-        if state in ("failure", "error"):
+        if state in TERMINAL_STATES:
             return False
         time.sleep(15)
     return False
@@ -349,43 +436,49 @@ def main():
     args = parser.parse_args()
     base = args.base.rstrip("/")
 
+    report = Report()
     if not args.no_github:
         print("Deployment")
         if args.wait and not wait_for_deployment(args.timeout):
-            head, state = deployment_state()
-            print(f"  [HATA ] {head[:7]} için deployment tamamlanmadı (durum: {state or 'hiç başlamadı'}).")
+            head, state, detail = deployment_state()
+            print(f"  [HATA ] {head[:7]} için deployment tamamlanmadı ({describe_state(state, detail)}).")
             if state is None:
                 print("          Railway bu commit'i görmedi: servis ayarlarında bağlı branch `main` mi,\n"
                       "          otomatik deploy açık mı? Gerekirse panelden elle deploy başlat.")
+            elif state == "skipped":
+                print("          Railway deploy'u atladı: Wait for CI açıkken CI başarısız ya da iptal olmuş,\n"
+                      "          veya 2 saat içinde bitmemiş olabilir. GitHub Actions sonucuna bak.")
             return 2
-        head, state = deployment_state()
+        head, state, detail = deployment_state()
         local = git("rev-parse", "HEAD")
         if local != head:
-            print(f"  [BİLGİ] yerel HEAD ({local[:7]}) henüz push edilmemiş; canlıda beklenen {head[:7]}")
+            report.note(f"yerel HEAD ({local[:7]}) henüz push edilmemiş; canlıda beklenen {head[:7]}")
         if state == "success":
-            print(f"  [TAMAM] {head[:7]} yayında")
+            print(f"  [TAMAM] {head[:7]} yayında (Railway {detail})")
+            github = github_state(head)
+            if github != "success":
+                report.note(f"GitHub deployment kaydı '{github or 'yok ya da okunamadı'}' gösteriyor, Railway "
+                            f"SUCCESS -- karar Railway'e göre verildi")
         else:
-            print(f"  [BİLGİ] {head[:7]} için deployment durumu: {state or 'kayıt yok'} -- aşağıdaki kontroller "
-                  f"önceki sürümü ölçüyor olabilir (--wait ile bekletilebilir)")
+            report.note(f"{head[:7]} için Railway durumu: {describe_state(state, detail)} -- aşağıdaki kontroller "
+                        f"önceki sürümü ölçüyor olabilir (--wait ile bekletilebilir)")
 
     # Çıktı panelleri yerel repodaki dosyalarla karşılaştırılır: canlıya bakarken yalnızca canlıdaki
-    # commit yerel HEAD ile aynıysa anlamlıdır.
+    # commit yerel HEAD ile aynıysa anlamlıdır. Canlı commit Railway'den okunur; kesin değilse bölüm
+    # çalıştırılmaz (GitHub'daki bir "success" kaydı tek başına yetmez).
     output_commit, output_problem = None, None
     if args.no_github:
         print("  [BİLGİ] Beklenen Çıktı: çalışma ağacındaki .out ve ders dosyalarıyla karşılaştırılıyor")
     else:
-        live_sha, live_state = latest_deployment()
+        live_sha, problem = live_deployment()
         local = git("rev-parse", "HEAD")
         if not live_sha:
-            output_problem = "son Railway deployment kaydı okunamadı (gh)"
+            output_problem = f"canlı sürüm Railway'den doğrulanamadı: {problem}"
         elif live_sha != local:
-            output_problem = f"canlıdaki son deployment {live_sha[:7]}, yerel HEAD {local[:7]} -- aynı commit değil"
-        elif live_state != "success":
-            output_problem = f"{live_sha[:7]} deployment durumu '{live_state}', success değil"
+            output_problem = f"canlıdaki commit {live_sha[:7]}, yerel HEAD {local[:7]} -- aynı commit değil"
         else:
             output_commit = local
 
-    report = Report()
     run_checks(base, report, output_commit, output_problem)
     print(f"\n{report.failed} hata, {report.notes} bilgi notu -- {base}")
     return 1 if report.failed else 0
