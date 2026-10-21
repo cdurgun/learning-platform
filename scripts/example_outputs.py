@@ -183,36 +183,47 @@ def blocking_flags(flags: list) -> list:
 
 # Arrays never override toString(): converting one to text always prints "[I@1b6d3586"-style
 # type + identity-hash text. The variables come from declarations in the same file
-# (int[] a, String... args, int a[]); a type the file does not declare is not seen. An array
+# (int[] a, String... args, int[]... rows, int a[]); a type the file does not declare is not seen. An array
 # is a + operand only in string concatenation (+ on an array does not compile otherwise).
+# Arrays.toString(Object[]) prints each element with String.valueOf, so on an array of arrays
+# (int[][], String[][][]) every element is identity text too; deepToString is the safe one.
 ARRAY_DECLARATION = re.compile(
-    r"\b([A-Za-z_][\w.]*)\s*(?:<[^;(){}=]*>)?\s*((?:\[\s*\]\s*)+|\.\.\.\s*)([A-Za-z_]\w*)\b(?!\s*\()")
+    r"\b([A-Za-z_][\w.]*)\s*(?:<[^;(){}=]*>)?\s*((?:\[\s*\]\s*)+(?:\.\.\.\s*)?|\.\.\.\s*)([A-Za-z_]\w*)\b(?!\s*\()")
 C_STYLE_ARRAY_DECLARATION = re.compile(r"\b([A-Za-z_][\w.]*)\s+([A-Za-z_]\w*)\s*((?:\[\s*\]\s*)+)(?=[=;,)])")
 
 
+NESTED_ARRAY_LITERAL_TO_STRING = re.compile(r"\bArrays\s*\.\s*toString\s*\(\s*new\s+[\w.]+\s*(?:\[[^\]]*\]\s*){2,}")
+
+
 def array_variables(code: str) -> dict:
-    """Array variable name -> True when it is a one-dimensional char[] (print/println/append/
-    valueOf have char[] overloads that print the characters, not identity text)."""
+    """Array variable name -> (one_dim_char, dimensions). one_dim_char is True for a
+    one-dimensional char[] (print/println/append/valueOf have char[] overloads that print the
+    characters, not identity text); dimensions is the highest declared for that name."""
     found = {}
     declarations = [(t, d, n) for t, d, n in ARRAY_DECLARATION.findall(code)]
     declarations += [(t, d, n) for t, n, d in C_STYLE_ARRAY_DECLARATION.findall(code)]
     for type_name, dims, name in declarations:
         if type_name in ("new", "return"):
             continue
-        one_dim_char = type_name == "char" and dims.count("[") + dims.count("...") == 1
-        found[name] = found.get(name, False) or one_dim_char
+        count = dims.count("[") + dims.count("...")
+        was_char, was_count = found.get(name, (False, 0))
+        found[name] = (was_char or (type_name == "char" and count == 1), max(was_count, count))
     return found
 
 
 def array_identity_text(code: str) -> bool:
-    for name, one_dim_char in array_variables(code).items():
+    if NESTED_ARRAY_LITERAL_TO_STRING.search(code):
+        return True
+    for name, (one_dim_char, dimensions) in array_variables(code).items():
         n = re.escape(name)
         bare = rf"(?<![\w.]){n}(?!\s*[\w\[.(])"  # the array itself, not a[i], a.length, a(...)
         if (re.search(rf"\+=?\s*{bare}|{bare}\s*\+(?![+=])", code)
                 or re.search(rf"(?<![\w.]){n}\s*\.\s*toString\s*\(\s*\)", code)
                 or re.search(rf"\bObjects\s*\.\s*toString\s*\(\s*{n}\s*[,)]", code)
                 or (not one_dim_char
-                    and re.search(rf"\b(?:println|print|append|valueOf)\s*\(\s*{n}\s*\)", code))):
+                    and re.search(rf"\b(?:println|print|append|valueOf)\s*\(\s*{n}\s*\)", code))
+                or (dimensions >= 2
+                    and re.search(rf"\bArrays\s*\.\s*toString\s*\(\s*{n}\s*\)", code))):
             return True
     return False
 

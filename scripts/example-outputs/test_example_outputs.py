@@ -297,11 +297,56 @@ class IdentityTextFlagTest(unittest.TestCase):
                               "int total = 1;\nSystem.out.println(\"total \" + total);")
         self.assertNoIdentity('List<String> names = List.of("a");\nSystem.out.println("names " + names);')
 
+    def test_declared_dimensions(self):
+        code = eo.strip_comments_and_strings(
+            "int[][] grid = new int[2][2];\nint cells[][] = new int[1][1];\nint[] values = {1};\n"
+            "static void rows(int[]... rows) {}\nstatic void items(String... items) {}\n"
+            "char[] letters = {'a'};\nchar[]... lines;\nstatic int[] build() { return new int[0]; }")
+        self.assertEqual(eo.array_variables(code), {
+            "grid": (False, 2), "cells": (False, 2), "values": (False, 1), "rows": (False, 2),
+            "items": (False, 1), "letters": (True, 1), "lines": (False, 2)})
+
+    def test_varargs_of_arrays_is_an_array_of_arrays(self):
+        self.assertIdentity("static void show(int[]... rows) { System.out.println(\"rows \" + rows); }")
+        self.assertIdentity("static void show(int[]... rows) { System.out.println(rows); }")
+        self.assertNoIdentity("static void show(int[]... rows) {\n"
+                              "    System.out.println(Arrays.deepToString(rows) + Arrays.toString(rows[0]));\n}")
+
+    def test_arrays_to_string_on_an_array_of_arrays(self):
+        self.assertIdentity('int[][] grid = {{1, 2}, {3, 4}};\n'
+                            'System.out.println("rows: " + Arrays.toString(grid));')
+        self.assertIdentity("int grid[][] = new int[2][2];\nString s = Arrays.toString(grid);")
+        self.assertIdentity('String[][] names = {{"a"}};\nSystem.out.println(Arrays.toString(names));')
+        self.assertIdentity("int[][][] cube = new int[2][2][2];\nString s = Arrays.toString(cube);")
+        self.assertIdentity("int[][] grid = new int[2][2];\nString s = java.util.Arrays.toString(grid);")
+        self.assertIdentity("static void show(int[]... rows) { System.out.println(Arrays.toString(rows)); }")
+
+    def test_arrays_to_string_on_an_inline_nested_array(self):
+        self.assertIdentity("String s = Arrays.toString(new int[][]{{1}, {2}});")
+        self.assertIdentity("String s = Arrays.toString(new int[2][3]);")
+        self.assertNoIdentity("String s = Arrays.toString(new int[]{1, 2});")
+
+    def test_deep_to_string_rows_and_one_dimensional_arrays_are_not_identity_text(self):
+        self.assertNoIdentity('int[][] grid = {{1, 2}, {3, 4}};\n'
+                              'System.out.println("deep: " + Arrays.deepToString(grid));\n'
+                              'System.out.println("row: " + Arrays.toString(grid[1]));\n'
+                              "System.out.println(grid[1][0] + grid.length);")
+        self.assertNoIdentity('int[] numbers = {3, 1};\nSystem.out.println("sorted " + Arrays.toString(numbers));')
+        self.assertNoIdentity('System.out.println("origins: " + Arrays.toString(annotation.origins()));')
+
+    def test_nested_arrays_to_string_only_in_a_comment_or_string_does_not_block(self):
+        source = ('int[][] grid = {{1}};\n// Arrays.toString(grid) would print [[I@...]\n'
+                  'System.out.println("not Arrays.toString(grid) but " + Arrays.deepToString(grid));')
+        flags = flags_of(source)
+        self.assertNotIn("identity-text", flags)
+        self.assertIn("identity-text" + eo.TEXT_ONLY_SUFFIX, flags)
+
     def test_the_lessons_affected_examples(self):
-        self.assertIn("identity-text", eo.precheck("arrays", "ArrayBasicsExample")["flags"])
-        self.assertRegex(eo.describe("arrays/ArrayBasicsExample"), r"^WILL_BE_BLOCKED \(identity-text\)")
-        for name in ["MultiDimensionalArrayExample", "ArraysUtilityExample", "ArrayCovarianceExample",
-                     "ArraysVsCollectionsExample", "VarargsExample"]:
+        for name in ["ArrayBasicsExample", "MultiDimensionalArrayExample"]:
+            self.assertIn("identity-text", eo.precheck("arrays", name)["flags"], name)
+            self.assertRegex(eo.describe(f"arrays/{name}"), r"^WILL_BE_BLOCKED \(identity-text\)", name)
+        for name in ["ArraysUtilityExample", "ArrayCovarianceExample", "ArraysVsCollectionsExample",
+                     "VarargsExample"]:
             self.assertRegex(eo.describe(f"arrays/{name}"), r"^WILL_RUN\s", name)
 
     def test_no_published_example_is_identity_text(self):
@@ -448,6 +493,19 @@ class GenerateBlockingTest(Sandbox):
         self.assertEqual(record["status"], "CONTRACT_BLOCKED")
         self.assertIn("identity-text", record["flags"])
         self.assertFalse((eo.STAGING / "loops/Arr.out").exists())
+
+    def test_a_nested_array_printed_with_arrays_to_string_is_neither_compiled_nor_run(self):
+        self.java("loops", "Grid", "import java.util.Arrays;\nclass Grid {\n"
+                                   "    public static void main(String[] args) {\n"
+                                   "        int[][] grid = {{1, 2}, {3, 4}};\n"
+                                   "        System.out.println(Arrays.toString(grid));\n    }\n}\n")
+        self.generate("loops/Grid", "loops/Hello")
+        self.assertEqual(self.compiled, ["Hello"])
+        self.assertEqual(self.ran, ["Hello"] * len(eo.VARIANTS))
+        record = self.record("loops/Grid")
+        self.assertEqual(record["status"], "CONTRACT_BLOCKED")
+        self.assertIn("identity-text", record["flags"])
+        self.assertFalse((eo.STAGING / "loops/Grid.out").exists())
 
     def test_a_blocking_pattern_only_in_a_comment_still_runs(self):
         self.java("loops", "Hello", HELLO.format(name="Hello", text="hi").replace(
