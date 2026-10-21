@@ -1,0 +1,9 @@
+Original: [5, 3, 8, 1, 9, 2]
+After Arrays.sort(): [1, 2, 3, 5, 8, 9]
+Arrays.binarySearch(numbers, 8): index 4
+numbers == copy (reference): false
+Arrays.equals(numbers, copy) (content): true
+Arrays.fill(new int[4], 7): [7, 7, 7, 7]
+copyOf(numbers, 8) (padded with 0): [1, 2, 3, 5, 8, 9, 0, 0]
+copyOf(numbers, 3) (truncated): [1, 2, 3]
+copyOfRange(numbers, 1, 4): [2, 3, 5]

@@ -1,0 +1,7 @@
+sum(): 0
+sum(1): 1
+sum(1, 2, 3, 4): 10
+sum(values) (passing an int[] directly): 60
+Scores: 90 85 77 
+Empty case: (no values)
+printf is varargs too: Alice scored 95

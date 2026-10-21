@@ -1,0 +1,8 @@
+View before: [apple, banana, cherry]
+View after modifying the array directly: [avocado, banana, cherry]
+Caught: UnsupportedOperationException -- Arrays.asList() does not support add()/remove()
+Independent ArrayList (add() works): [avocado, banana, cherry, date]
+List.toArray(new String[0]): [avocado, banana, cherry, date]
+
+Array: fixed size, can hold primitives, index access is the fastest option.
+List (e.g. ArrayList): resizable, only reference types, richer API.
