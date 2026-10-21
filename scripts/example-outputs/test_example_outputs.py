@@ -243,6 +243,76 @@ class TextOnlyFlagTest(unittest.TestCase):
         self.assertEqual(pre("dynamic-queries-with-specifications/SingleSpecificationExample")["status"], "NON_JDK")
 
 
+class IdentityTextFlagTest(unittest.TestCase):
+    """An array converted to text prints type + identity hash ("[I@1b6d3586"), never its contents."""
+
+    def assertIdentity(self, source):
+        self.assertIn("identity-text", flags_of(source), source)
+
+    def assertNoIdentity(self, source):
+        flags = flags_of(source)
+        self.assertNotIn("identity-text", flags, source)
+        self.assertNotIn("identity-text" + eo.TEXT_ONLY_SUFFIX, flags, source)
+
+    def test_an_array_in_string_concatenation(self):
+        self.assertIdentity('int[] numbers = {1, 2};\nSystem.out.println("numbers: " + numbers);')
+        self.assertIdentity('String[] names = {"a"};\nString s = names + " are names";')
+        self.assertIdentity('int[][] grid = new int[2][2];\nString s = "";\ns += grid;')
+        self.assertIdentity('int values[] = {1};\nSystem.out.println("v=" + values);')
+        self.assertIdentity('static void show(String... items) { System.out.println("items " + items); }')
+
+    def test_an_array_printed_directly_or_converted_explicitly(self):
+        self.assertIdentity("int[] numbers = {1, 2};\nSystem.out.println(numbers);")
+        self.assertIdentity("Integer[] boxed = {1};\nSystem.out.print(boxed);")
+        self.assertIdentity("double[] d = {1.0};\nnew StringBuilder().append(d);")
+        self.assertIdentity("int[] a = {1};\nString s = String.valueOf(a);")
+        self.assertIdentity("int[] a = {1};\nString s = a.toString();")
+        self.assertIdentity("int[] a = {1};\nString s = Objects.toString(a);")
+        self.assertIdentity("char[][] rows = {{'a'}};\nSystem.out.println(rows);")
+        self.assertIdentity("char[] letters = {'a'};\nSystem.out.println(\"letters: \" + letters);")
+
+    def test_direct_hash_code_or_object_to_string(self):
+        self.assertIdentity("System.out.println(new Object().hashCode());")
+        self.assertIdentity("String s = Object.toString(x);")
+
+    def test_the_pattern_only_in_a_comment_or_string_does_not_block(self):
+        source = ('int[] numbers = {1, 2};\n// System.out.println("numbers: " + numbers);\n'
+                  'System.out.println("print numbers or numbers.toString() directly");')
+        flags = flags_of(source)
+        self.assertNotIn("identity-text", flags)
+        self.assertIn("identity-text" + eo.TEXT_ONLY_SUFFIX, flags)
+        only_in_string = flags_of('System.out.println("int[] numbers + numbers");')
+        self.assertNotIn("identity-text", only_in_string)
+        self.assertEqual(only_in_string, ["identity-text" + eo.TEXT_ONLY_SUFFIX])
+
+    def test_array_contents_lengths_and_elements_are_not_identity_text(self):
+        self.assertNoIdentity('int[] numbers = {1, 2};\nSystem.out.println("all: " + Arrays.toString(numbers));')
+        self.assertNoIdentity('int[] numbers = {1, 2};\nSystem.out.println("len " + numbers.length + numbers[0]);')
+        self.assertNoIdentity('int[][] g = new int[2][2];\nSystem.out.println(Arrays.deepToString(g) + g[0][1]);')
+        self.assertNoIdentity("char[] letters = {'a', 'b'};\nSystem.out.println(letters);\n"
+                              "String s = String.valueOf(letters);")
+        self.assertNoIdentity("int[] a = {1};\nint count = 0;\nSystem.out.println(\"count \" + count);\n"
+                              "System.out.println(count + a.length);\na[0]++;")
+        self.assertNoIdentity("static int[] build() { return new int[0]; }\n"
+                              "int total = 1;\nSystem.out.println(\"total \" + total);")
+        self.assertNoIdentity('List<String> names = List.of("a");\nSystem.out.println("names " + names);')
+
+    def test_the_lessons_affected_examples(self):
+        self.assertIn("identity-text", eo.precheck("arrays", "ArrayBasicsExample")["flags"])
+        self.assertRegex(eo.describe("arrays/ArrayBasicsExample"), r"^WILL_BE_BLOCKED \(identity-text\)")
+        for name in ["MultiDimensionalArrayExample", "ArraysUtilityExample", "ArrayCovarianceExample",
+                     "ArraysVsCollectionsExample", "VarargsExample"]:
+            self.assertRegex(eo.describe(f"arrays/{name}"), r"^WILL_RUN\s", name)
+
+    def test_no_published_example_is_identity_text(self):
+        manifest = Path(__file__).resolve().parent / "manifest.tsv"
+        specs = ["/".join(line.split("\t")[:2])
+                 for line in manifest.read_text(encoding="utf-8").splitlines()[1:] if line.strip()]
+        self.assertTrue(specs)
+        for spec in specs:
+            self.assertNotIn("identity-text", eo.precheck(*spec.split("/"))["flags"], spec)
+
+
 # --- pre-checks: main, imports, multi-file -------------------------------------------
 
 class PrecheckTest(Sandbox):
@@ -366,6 +436,18 @@ class GenerateBlockingTest(Sandbox):
         self.assertEqual([r["key"] for r in eo.read_review_sheet_unchecked(eo.OUT_ROOT / "review.tsv")],
                          ["loops/Hello"])
         self.assertEqual(self.record("loops/Timed")["status"], "CONTRACT_BLOCKED")
+
+    def test_an_array_printed_as_text_is_neither_compiled_nor_run(self):
+        self.java("loops", "Arr", "class Arr {\n    public static void main(String[] args) {\n"
+                                  "        int[] numbers = {1, 2};\n"
+                                  "        System.out.println(\"numbers: \" + numbers);\n    }\n}\n")
+        self.generate("loops/Arr", "loops/Hello")
+        self.assertEqual(self.compiled, ["Hello"])
+        self.assertEqual(self.ran, ["Hello"] * len(eo.VARIANTS))
+        record = self.record("loops/Arr")
+        self.assertEqual(record["status"], "CONTRACT_BLOCKED")
+        self.assertIn("identity-text", record["flags"])
+        self.assertFalse((eo.STAGING / "loops/Arr.out").exists())
 
     def test_a_blocking_pattern_only_in_a_comment_still_runs(self):
         self.java("loops", "Hello", HELLO.format(name="Hello", text="hi").replace(

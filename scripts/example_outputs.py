@@ -151,6 +151,7 @@ CONTRACT_FLAGS = [
     ("fail-fast", r"ConcurrentModificationException"),
     ("locale-format", r"String\.format|\.printf\(|\.formatted\(|toUpperCase\(\)|toLowerCase\(\)"),
     ("floating-point-text", r"\bdouble\b|\bfloat\b|Double|average\(\)"),
+    # Also set by array_identity_text(): an array printed as text.
     ("identity-text", r"hashCode\(\)|Object\.toString"),
     ("io-or-env", r"\bFiles\.|\bPaths\.get\(|\bPath\.of\(|\bjava\.nio\.file\b|\bFileSystems\b"
                   r"|\bnew\s+(File|FileReader|FileWriter|FileInputStream|FileOutputStream|RandomAccessFile)\s*\("
@@ -180,6 +181,48 @@ def blocking_flags(flags: list) -> list:
     return [f for f in flags if f in BLOCKING_FLAGS]
 
 
+# Arrays never override toString(): converting one to text always prints "[I@1b6d3586"-style
+# type + identity-hash text. The variables come from declarations in the same file
+# (int[] a, String... args, int a[]); a type the file does not declare is not seen. An array
+# is a + operand only in string concatenation (+ on an array does not compile otherwise).
+ARRAY_DECLARATION = re.compile(
+    r"\b([A-Za-z_][\w.]*)\s*(?:<[^;(){}=]*>)?\s*((?:\[\s*\]\s*)+|\.\.\.\s*)([A-Za-z_]\w*)\b(?!\s*\()")
+C_STYLE_ARRAY_DECLARATION = re.compile(r"\b([A-Za-z_][\w.]*)\s+([A-Za-z_]\w*)\s*((?:\[\s*\]\s*)+)(?=[=;,)])")
+
+
+def array_variables(code: str) -> dict:
+    """Array variable name -> True when it is a one-dimensional char[] (print/println/append/
+    valueOf have char[] overloads that print the characters, not identity text)."""
+    found = {}
+    declarations = [(t, d, n) for t, d, n in ARRAY_DECLARATION.findall(code)]
+    declarations += [(t, d, n) for t, n, d in C_STYLE_ARRAY_DECLARATION.findall(code)]
+    for type_name, dims, name in declarations:
+        if type_name in ("new", "return"):
+            continue
+        one_dim_char = type_name == "char" and dims.count("[") + dims.count("...") == 1
+        found[name] = found.get(name, False) or one_dim_char
+    return found
+
+
+def array_identity_text(code: str) -> bool:
+    for name, one_dim_char in array_variables(code).items():
+        n = re.escape(name)
+        bare = rf"(?<![\w.]){n}(?!\s*[\w\[.(])"  # the array itself, not a[i], a.length, a(...)
+        if (re.search(rf"\+=?\s*{bare}|{bare}\s*\+(?![+=])", code)
+                or re.search(rf"(?<![\w.]){n}\s*\.\s*toString\s*\(\s*\)", code)
+                or re.search(rf"\bObjects\s*\.\s*toString\s*\(\s*{n}\s*[,)]", code)
+                or (not one_dim_char
+                    and re.search(rf"\b(?:println|print|append|valueOf)\s*\(\s*{n}\s*\)", code))):
+            return True
+    return False
+
+
+def flag_matches(flag: str, pattern: str, text: str) -> bool:
+    if re.search(pattern, text):
+        return True
+    return flag == "identity-text" and array_identity_text(text)
+
+
 def contract_flags(source: str) -> list:
     code = strip_comments_and_strings(source)
     flags = []
@@ -187,9 +230,9 @@ def contract_flags(source: str) -> list:
         if flag not in BLOCKING_FLAGS:
             if re.search(pattern, source):
                 flags.append(flag)
-        elif re.search(pattern, code):
+        elif flag_matches(flag, pattern, code):
             flags.append(flag)
-        elif re.search(pattern, source):
+        elif flag_matches(flag, pattern, source):
             flags.append(flag + TEXT_ONLY_SUFFIX)
     if main_reads_args(source):
         flags.append(MAIN_ARGS_FLAG)
