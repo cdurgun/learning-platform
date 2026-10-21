@@ -229,9 +229,12 @@ class TextOnlyFlagTest(unittest.TestCase):
         for spec in ["scanner/ScannerBasicsExample", "scanner/ScannerNextIntNextLinePitfallExample"]:
             result = pre(spec)
             self.assertIsNone(result["status"], spec)
-            self.assertFalse(eo.BLOCKING_FLAGS.intersection(result["flags"]), spec)
+            self.assertNotIn("stdin", result["flags"], spec)
             self.assertIn("stdin" + eo.TEXT_ONLY_SUFFIX, result["flags"], spec)
-            self.assertRegex(eo.describe(spec), r"^WILL_RUN\s.*stdin:text-only")
+        # ScannerBasicsExample is blocked, but by its nextDouble() (scanner-locale), not by stdin.
+        self.assertEqual(eo.blocking_flags(pre("scanner/ScannerBasicsExample")["flags"]), ["scanner-locale"])
+        self.assertFalse(eo.BLOCKING_FLAGS.intersection(pre("scanner/ScannerNextIntNextLinePitfallExample")["flags"]))
+        self.assertRegex(eo.describe("scanner/ScannerNextIntNextLinePitfallExample"), r"^WILL_RUN\s.*stdin:text-only")
         for spec in ["maps/TreeMapExample", "sets/TreeSetExample"]:
             result = pre(spec)
             self.assertFalse(eo.BLOCKING_FLAGS.intersection(result["flags"]), spec)
@@ -241,6 +244,69 @@ class TextOnlyFlagTest(unittest.TestCase):
         self.assertIn("random" + eo.TEXT_ONLY_SUFFIX, guessing["flags"])
         self.assertRegex(eo.describe("while-do-while/NumberGuessingGameExample"), r"^WILL_BE_BLOCKED \(stdin\)")
         self.assertEqual(pre("dynamic-queries-with-specifications/SingleSpecificationExample")["status"], "NON_JDK")
+
+
+class ScannerLocaleFlagTest(unittest.TestCase):
+    """Scanner reads numbers with Locale.getDefault(FORMAT); "5.6" fails where "," is the decimal separator."""
+
+    def assertBlocked(self, source):
+        self.assertIn("scanner-locale", flags_of(source), source)
+
+    def assertNotBlocked(self, source):
+        self.assertNotIn("scanner-locale", flags_of(source), source)
+
+    def test_decimal_reads_on_a_default_locale_scanner(self):
+        for call in ["nextDouble()", "nextFloat()", "nextBigDecimal()", "hasNextDouble()", "hasNextFloat()",
+                     "hasNextBigDecimal()"]:
+            self.assertBlocked(f'Scanner sc = new Scanner("5.6");\nvar x = sc.{call};')
+        self.assertBlocked('var in = new Scanner("1.5 2.5");\ndouble d = in.nextDouble();')
+        self.assertBlocked('java.util.Scanner in = new java.util.Scanner("1.5");\ndouble d = in.nextDouble();')
+        self.assertBlocked('try (Scanner sc = new Scanner(text)) { double d = sc.nextDouble(); }')
+        self.assertBlocked("static double read(Scanner in) { return in.nextDouble(); }")
+        self.assertBlocked('double d = new Scanner("1.5").nextDouble();')
+        self.assertBlocked('double d = new Scanner(String.valueOf(x)).nextDouble();')
+
+    def test_a_fixed_locale_exempts_that_scanner_and_leaves_a_note(self):
+        for source in ['Scanner sc = new Scanner("5.6");\nsc.useLocale(Locale.ROOT);\ndouble d = sc.nextDouble();',
+                       'Scanner sc = new Scanner("5.6").useLocale(Locale.US);\ndouble d = sc.nextDouble();',
+                       'var sc = new Scanner("5,6").useLocale(Locale.of("tr", "TR"));\ndouble d = sc.nextDouble();']:
+            flags = flags_of(source)
+            self.assertNotIn("scanner-locale", flags, source)
+            self.assertIn("scanner-locale-set", flags, source)
+            self.assertNotIn("scanner-locale-set", eo.BLOCKING_FLAGS)
+            self.assertIn("useLocale", eo.RISK_NOTES["scanner-locale-set"])
+
+    def test_the_default_locale_or_another_scanners_locale_does_not_exempt(self):
+        self.assertBlocked('Scanner sc = new Scanner("5.6");\nsc.useLocale(Locale.getDefault());\n'
+                           "double d = sc.nextDouble();")
+        self.assertBlocked('Scanner a = new Scanner("1").useLocale(Locale.ROOT);\nScanner b = new Scanner("5.6");\n'
+                           "int i = a.nextInt();\ndouble d = b.nextDouble();")
+
+    def test_integer_and_text_reads_and_other_next_double_receivers_are_not_flagged(self):
+        self.assertNotBlocked('Scanner sc = new Scanner("42 7");\nint a = sc.nextInt();\nlong b = sc.nextLong();\n'
+                              "boolean ok = sc.hasNextInt();\nString w = sc.next();\nString l = sc.nextLine();")
+        self.assertNotBlocked("Random r = new Random(1);\ndouble d = r.nextDouble();")
+        self.assertNotBlocked("PrimitiveIterator.OfDouble it = DoubleStream.of(1.5).iterator();\n"
+                              "double d = it.nextDouble();")
+
+    def test_a_decimal_read_only_in_a_comment_or_string_does_not_block(self):
+        source = ('Scanner sc = new Scanner("42");\n// sc.nextDouble() would read "5.6" with the default locale\n'
+                  'System.out.println("call sc.nextDouble() for decimals");\nint n = sc.nextInt();')
+        flags = flags_of(source)
+        self.assertNotIn("scanner-locale", flags)
+        self.assertIn("scanner-locale" + eo.TEXT_ONLY_SUFFIX, flags)
+
+    def test_the_lessons_affected_examples(self):
+        self.assertRegex(eo.describe("scanner/ScannerBasicsExample"), r"^WILL_BE_BLOCKED \(scanner-locale\)")
+        for name in ["ScannerNextIntNextLinePitfallExample", "ScannerDelimiterExample", "ScannerExceptionHandlingExample"]:
+            self.assertRegex(eo.describe(f"scanner/{name}"), r"^WILL_RUN\s", name)
+
+    def test_no_published_example_reads_decimals_with_the_default_locale(self):
+        manifest = Path(__file__).resolve().parent / "manifest.tsv"
+        for line in manifest.read_text(encoding="utf-8").splitlines()[1:]:
+            if line.strip():
+                spec = "/".join(line.split("\t")[:2])
+                self.assertNotIn("scanner-locale", eo.precheck(*spec.split("/"))["flags"], spec)
 
 
 class IdentityTextFlagTest(unittest.TestCase):
@@ -506,6 +572,19 @@ class GenerateBlockingTest(Sandbox):
         self.assertEqual(record["status"], "CONTRACT_BLOCKED")
         self.assertIn("identity-text", record["flags"])
         self.assertFalse((eo.STAGING / "loops/Grid.out").exists())
+
+    def test_a_default_locale_decimal_scanner_read_is_neither_compiled_nor_run(self):
+        self.java("loops", "Height", "import java.util.Scanner;\nclass Height {\n"
+                                     "    public static void main(String[] args) {\n"
+                                     "        Scanner sc = new Scanner(\"5.6\");\n"
+                                     "        System.out.println(sc.nextDouble());\n    }\n}\n")
+        self.generate("loops/Height", "loops/Hello")
+        self.assertEqual(self.compiled, ["Hello"])
+        self.assertEqual(self.ran, ["Hello"] * len(eo.VARIANTS))
+        record = self.record("loops/Height")
+        self.assertEqual(record["status"], "CONTRACT_BLOCKED")
+        self.assertIn("scanner-locale", record["flags"])
+        self.assertFalse((eo.STAGING / "loops/Height.out").exists())
 
     def test_a_blocking_pattern_only_in_a_comment_still_runs(self):
         self.java("loops", "Hello", HELLO.format(name="Hello", text="hi").replace(

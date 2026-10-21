@@ -141,6 +141,13 @@ CONTRACT_FLAGS = [
     ("default-env", r"ZoneId\.systemDefault\(|TimeZone\.getDefault\(|Locale\.getDefault\(|Clock\.systemDefaultZone\("
                     r"|Charset\.defaultCharset\(|System\.getProperty\(|Runtime\.version\(|availableProcessors\("
                     r"|\.ofLocalized(Date|Time|DateTime)\("),
+    # Set by localized_scanner_decimal_read(): a Scanner reads numbers with its locale, which
+    # starts as Locale.getDefault(Locale.Category.FORMAT); a decimal token like "5.6" fails
+    # (InputMismatchException) or reads differently where the decimal separator is ",".
+    ("scanner-locale", None),
+    # Informational: useLocale(...) exempts that Scanner from scanner-locale; the reviewer
+    # checks the locale is fixed (not the default) before the first decimal read.
+    ("scanner-locale-set", r"\.\s*useLocale\s*\("),
     # Class.getDeclaredFields()/getMethods()/... : "The elements in the returned array are not
     # sorted and are not in any particular order." HotSpot happens to keep declaration order.
     # getRecordComponents(), getEnumConstants() and the single-member lookups
@@ -158,7 +165,7 @@ CONTRACT_FLAGS = [
                   r"|Socket|HttpClient|openConnection\(|openStream\(|System\.getenv|ProcessBuilder|Runtime\.getRuntime"),
 ]
 BLOCKING_FLAGS = {"hash-order", "parallel", "concurrency", "time", "random", "stdin", "default-env",
-                  "reflection-order", "identity-text", "io-or-env"}
+                  "scanner-locale", "reflection-order", "identity-text", "io-or-env"}
 # Informational, set by main_reads_args(): the run always passes no arguments (a fixed,
 # repeatable input), so the reviewer checks the output is the branch the lesson shows.
 MAIN_ARGS_FLAG = "main-args"
@@ -167,6 +174,8 @@ MAIN_ARGS_FLAG = "main-args"
 RISK_NOTES = {
     "fail-fast": "RISK fail-fast: Java throws ConcurrentModificationException only on a best-effort basis "
                  "(not guaranteed by the API); approve only if the lesson presents it that way.",
+    "scanner-locale-set": "NOTE scanner-locale-set: useLocale(...) exempts a Scanner from scanner-locale; check "
+                          "every Scanner that reads decimals gets a fixed locale before its first read.",
 }
 TEXT_ONLY_SUFFIX = ":text-only"
 RISK_NOTES.update({
@@ -228,10 +237,43 @@ def array_identity_text(code: str) -> bool:
     return False
 
 
-def flag_matches(flag: str, pattern: str, text: str) -> bool:
-    if re.search(pattern, text):
+# Scanner's decimal reads (next/hasNext + Double/Float/BigDecimal): the Javadoc grammar builds a
+# decimal from LocalDecimalSeparator, so a fractional token depends on the locale. Integer reads
+# are not flagged: a plain run of digits is a Numeral in every locale; only grouping separators
+# or locale prefixes in the input would differ. Only Scanner receivers count -- Random and
+# PrimitiveIterator.OfDouble have nextDouble() too.
+SCANNER_DECIMAL_READ = r"\.\s*(?:next|hasNext)(?:Double|Float|BigDecimal)\s*\("
+SCANNER_VARIABLE = re.compile(
+    r"\b(?:java\.util\.)?Scanner\s+([A-Za-z_]\w*)\s*[=;,)]|\bvar\s+([A-Za-z_]\w*)\s*=\s*new\s+(?:java\.util\.)?Scanner\b")
+INLINE_SCANNER_DECIMAL_READ = re.compile(
+    r"\bnew\s+(?:java\.util\.)?Scanner\s*\((?:[^()]|\([^()]*\))*\)\s*" + SCANNER_DECIMAL_READ)
+FIXED_LOCALE = r"\.\s*useLocale\s*\(\s*(?!Locale\s*\.\s*getDefault\b)"
+
+
+def localized_scanner_decimal_read(code: str) -> bool:
+    """A decimal read on a Scanner whose locale is still the default one."""
+    if INLINE_SCANNER_DECIMAL_READ.search(code):
         return True
-    return flag == "identity-text" and array_identity_text(text)
+    names = {a or b for a, b in SCANNER_VARIABLE.findall(code)}
+    for name in names:
+        n = re.escape(name)
+        if not re.search(rf"(?<![\w.]){n}\s*" + SCANNER_DECIMAL_READ, code):
+            continue
+        fixed = (re.search(rf"(?<![\w.]){n}\s*" + FIXED_LOCALE, code)
+                 or re.search(rf"\b(?:Scanner|var)\s+{n}\s*=[^;]*" + FIXED_LOCALE, code))
+        if not fixed:
+            return True
+    return False
+
+
+DETECTORS = {"identity-text": array_identity_text, "scanner-locale": localized_scanner_decimal_read}
+
+
+def flag_matches(flag: str, pattern, text: str) -> bool:
+    if pattern and re.search(pattern, text):
+        return True
+    detector = DETECTORS.get(flag)
+    return bool(detector and detector(text))
 
 
 def contract_flags(source: str) -> list:
