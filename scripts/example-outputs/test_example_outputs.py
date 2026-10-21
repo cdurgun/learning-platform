@@ -275,6 +275,106 @@ class PrecheckTest(Sandbox):
         self.assertEqual(eo.precheck("demo", "Nope")["status"], "MISSING_SOURCE")
 
 
+# --- generate: blocked examples never reach Docker ------------------------------------
+
+TIMED = ('class Timed {\n    public static void main(String[] args) {\n'
+         '        long start = System.nanoTime();\n        System.out.println(System.nanoTime() - start);\n    }\n}\n')
+
+
+class GenerateBlockingTest(Sandbox):
+    """generate with the container layer replaced by fakes: every compile and run is recorded,
+    and any real docker call (subprocess) fails the test."""
+
+    def setUp(self):
+        super().setUp()
+        self.compiled, self.ran = [], []
+
+        def fake_compile(java_file, work_dir):
+            self.compiled.append(java_file.stem)
+            return {"exit": 0, "timed_out": False, "stdout": b"", "stderr": b"", "classes": work_dir / "classes"}
+
+        def fake_run(main_class, classes, cpus, extra_props):
+            self.ran.append(main_class)
+            return {"exit": 0, "timed_out": False, "stdout": b"hi\n", "stderr": b"", "truncated": False}
+
+        for name, value in {"compile_example": fake_compile, "run_variant": fake_run,
+                            "verify_image": lambda: "test-jdk",
+                            "cleanup_leftover_containers": lambda: None}.items():
+            patcher = mock.patch.object(eo, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        for name in ("run", "Popen"):
+            patcher = mock.patch.object(subprocess, name, side_effect=AssertionError("docker called"))
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.lesson("loops", tr="{{Hello.java}}\n\n{{Timed.java}}", en="{{Hello.java}}\n\n{{Timed.java}}")
+        self.java("loops", "Hello")
+        self.java("loops", "Timed", TIMED)
+
+    def generate(self, *specs):
+        with redirect_stdout(io.StringIO()) as out:
+            eo.cmd_generate(list(specs))
+        return out.getvalue()
+
+    def record(self, key):
+        return next(r for r in eo.load_results() if eo.record_key(r) == key)
+
+    def test_a_blocked_example_is_neither_compiled_nor_run(self):
+        self.assertRegex(eo.describe("loops/Timed"), r"^WILL_BE_BLOCKED \(time\)")
+        out = self.generate("loops/Timed")
+        self.assertEqual(self.compiled, [])
+        self.assertEqual(self.ran, [])
+        self.assertRegex(out, r"CONTRACT_BLOCKED\s+loops/Timed")
+        record = self.record("loops/Timed")
+        self.assertEqual(record["status"], "CONTRACT_BLOCKED")
+        self.assertNotIn("compile", record)
+        self.assertNotIn("runs", record)
+
+    def test_the_reason_and_status_are_kept_in_results_and_report_and_off_the_sheet(self):
+        self.generate("loops/Timed")
+        self.assertIn("time", self.record("loops/Timed")["flags"])
+        report = (eo.OUT_ROOT / "report.md").read_text(encoding="utf-8")
+        self.assertRegex(report, r"- \*\*Timed\*\* -- CONTRACT_BLOCKED; flags: `time` \(blocking\)")
+        self.assertIn("0 generated, 1 blocked or not run", report)
+        rows = eo.read_review_sheet_unchecked(eo.OUT_ROOT / "review.tsv")
+        self.assertEqual(rows, [])
+
+    def test_no_out_is_staged_or_published_and_an_existing_one_is_untouched(self):
+        published = eo.EXAMPLES / "loops/Timed.out"
+        published.write_bytes(b"published bytes\n")
+        stale = eo.STAGING / "loops/Timed.out"
+        stale.parent.mkdir(parents=True)
+        stale.write_bytes(b"staged by an older run\n")
+        manifest = eo.MANIFEST.read_bytes()
+
+        self.generate("loops/Timed")
+
+        self.assertEqual(published.read_bytes(), b"published bytes\n")
+        self.assertFalse(stale.exists())
+        self.assertEqual(eo.MANIFEST.read_bytes(), manifest)
+        with self.assertRaisesRegex(eo.ReviewError, "not GENERATED"):
+            eo.plan_promotion("loops/Timed", self.record("loops/Timed"), set())
+
+    def test_a_runnable_example_still_compiles_once_and_runs_every_variant(self):
+        self.generate("loops/Hello", "loops/Timed")
+        self.assertEqual(self.compiled, ["Hello"])
+        self.assertEqual(self.ran, ["Hello"] * len(eo.VARIANTS))
+        record = self.record("loops/Hello")
+        self.assertEqual(record["status"], "GENERATED")
+        self.assertEqual([r["variant"] for r in record["runs"]], [v[0] for v in eo.VARIANTS])
+        self.assertEqual((eo.STAGING / "loops/Hello.out").read_bytes(), b"hi\n")
+        self.assertEqual([r["key"] for r in eo.read_review_sheet_unchecked(eo.OUT_ROOT / "review.tsv")],
+                         ["loops/Hello"])
+        self.assertEqual(self.record("loops/Timed")["status"], "CONTRACT_BLOCKED")
+
+    def test_a_blocking_pattern_only_in_a_comment_still_runs(self):
+        self.java("loops", "Hello", HELLO.format(name="Hello", text="hi").replace(
+            "class Hello", "// System.nanoTime() would differ per run\nclass Hello"))
+        self.generate("loops/Hello")
+        self.assertEqual(self.compiled, ["Hello"])
+        self.assertEqual(self.record("loops/Hello")["status"], "GENERATED")
+
+
 # --- --topic and --dry-run ------------------------------------------------------------
 
 class TopicAndDryRunTest(Sandbox):

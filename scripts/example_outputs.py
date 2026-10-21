@@ -26,7 +26,9 @@ Usage:
 EN-only ones) -- still an explicit list, there is no "all lessons" option. `--dry-run`
 prints that list with each example's pre-check result and writes nothing. Examples
 without a main method (NO_MAIN), with non-JDK imports (NON_JDK) or that need another
-example file of the same lesson to compile (MULTI_FILE) are listed but never run.
+example file of the same lesson to compile (MULTI_FILE) are listed but never run, and so
+are examples with a blocking contract flag (CONTRACT_BLOCKED, shown as WILL_BE_BLOCKED in
+--dry-run): they are neither compiled nor run, so no container ever starts for them.
 
 Each `generate` merges its results into results.json by slug/Name, so generating one
 lesson never drops another lesson's staged, not yet promoted results. It also rewrites
@@ -171,6 +173,11 @@ RISK_NOTES.update({
                              f"check the output and the lesson text do not depend on it."
     for flag in sorted(BLOCKING_FLAGS)
 })
+
+
+def blocking_flags(flags: list) -> list:
+    """The flags that keep an example off the page whatever it prints (same order as flags)."""
+    return [f for f in flags if f in BLOCKING_FLAGS]
 
 
 def contract_flags(source: str) -> list:
@@ -434,6 +441,9 @@ def generate_one(spec: str, jdk_version: str) -> dict:
         if "depends_on" in pre:
             record["depends_on"] = pre["depends_on"]
         return record
+    if blocking_flags(record["flags"]):  # CONTRACT_BLOCKED: listed, never compiled or run
+        record["status"] = "CONTRACT_BLOCKED"
+        return record
 
     compiled = compile_example(java_file, WORK / f"{slug}__{name}")
     record["compile"] = {"exit": compiled["exit"], "timed_out": compiled["timed_out"],
@@ -464,8 +474,6 @@ def generate_one(spec: str, jdk_version: str) -> dict:
         record["status"] = "OUTPUT_TOO_LARGE"
     elif len({r["stdout_sha256"] for r in runs}) > 1:
         record["status"] = "NONDETERMINISTIC"
-    elif BLOCKING_FLAGS.intersection(record["flags"]):
-        record["status"] = "CONTRACT_BLOCKED"
     elif stdout_problems(first["stdout"].encode("utf-8")):
         record["status"] = "INVALID_STDOUT"
         record["problems"] = stdout_problems(first["stdout"].encode("utf-8"))
@@ -762,7 +770,7 @@ def describe(spec: str) -> str:
     slug, name = NAME_PATTERN.match(spec).groups()
     pre = precheck(slug, name)
     flags = pre.get("flags", [])
-    blocking = [f for f in flags if f in BLOCKING_FLAGS]
+    blocking = blocking_flags(flags)
     if pre["status"]:
         verdict = pre["status"] + (f" (needs {', '.join(pre['depends_on'])})" if pre.get("depends_on") else "")
     elif blocking:
