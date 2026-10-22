@@ -1,0 +1,15 @@
+Integer.parseInt("123"): 123
+Double.parseDouble("3.14"): 3.14
+Caught NumberFormatException parsing "not-a-number"
+Integer.compare(5, 10): -1
+Integer.compare(10, 5): 1
+Integer.compare(7, 7): 0
+Integer.toBinaryString(42): 101010
+Integer.toHexString(255): ff
+Integer.toOctalString(8): 10
+Character.isDigit('7'): true
+Character.isLetter('A'): true
+Character.isWhitespace(' '): true
+Character.toUpperCase('a'): A
+Integer.sum(3, 4): 7
+Integer.max(3, 4): 4

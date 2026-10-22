@@ -1,0 +1,8 @@
+Autoboxed Integer: 30
+Autounboxed back to int, +1: 31
+Integer.parseInt("42") (primitive): 42
+Integer.valueOf("42") (wrapper object): 42
+Integer.MAX_VALUE: 2147483647
+Integer.MIN_VALUE: -2147483648
+Double.MAX_VALUE: 1.7976931348623157E308
+A wrapper can be null: null
