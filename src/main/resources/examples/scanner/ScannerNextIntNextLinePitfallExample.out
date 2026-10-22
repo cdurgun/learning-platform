@@ -1,0 +1,7 @@
+--- THE BUG ---
+age: 25
+name (BUG -- empty, not "Alice"): []
+
+--- THE FIX ---
+age: 25
+name (fixed): [Alice]

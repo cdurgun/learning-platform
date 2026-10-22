@@ -1,0 +1,6 @@
+First nextInt(): 42
+Caught: InputMismatchException on the second token
+Recovering with next(): not-a-number
+Then nextInt() again: 100
+Caught: NoSuchElementException on an exhausted Scanner
+Safe check first -- hasNext(): false
