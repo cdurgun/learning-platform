@@ -17,16 +17,20 @@ python3 .claude/skills/deploy-check/check_deploy.py --base http://localhost:8099
 
 `--wait`, `origin/main`'in son commit'i için Railway deployment'ı SUCCESS olana kadar bekler
 (varsayılan en fazla 15 dakika). Push'tan sonra arka planda çalıştır; normalde 2–4 dakika sürer,
-Wait for CI açık olduğu için CI süresi (~1,5 dk) kadar uzar.
+Wait for CI açıksa CI süresi (~1,5 dk) kadar uzar.
 
 Çıkış kodu: tüm kontroller geçerse 0, bir kontrol başarısızsa 1, deployment tamamlanmazsa 2
 (Railway deploy'u atladıysa -- `SKIPPED` -- da 2; script sebebi yazar).
 
 ## Deployment nasıl işliyor
 
-- Site Railway'de; `main`'e her push otomatik deployment başlatır. **Wait for CI açık
-  (2026-10-20):** deployment, GitHub Actions `tests` workflow'u bitene kadar bekler, CI başarısızsa
-  Railway onu atlar (`SKIPPED`) ve eski sürüm yayında kalır.
+- Site Railway'de; `main`'e her push otomatik deployment başlatır. **Wait for CI:** 2026-10-20
+  kaydında açık, 2026-10-24'te kullanıcı etkin olduğunu yeniden doğruladı. Ayarın
+  tanımına göre deployment GitHub Actions `tests` workflow'u bitene kadar bekler, CI başarısızsa
+  Railway onu atlar (`SKIPPED`) ve eski sürüm yayında kalır. Bu davranış bağımsız olarak
+  kanıtlanmadı: `4f623e3`'te (deployment `179997d2`) sıralama tutarlıydı -- kayıt 20:20:59Z,
+  CI'ın Maven adımı 20:22:32Z bitti, uygulama 20:24Z açıldı -- ama `SKIPPED` hiç gözlenmedi.
+  CI sonucunu yine ayrıca kontrol et.
 - **Durumun kaynağı Railway'in kendisi:** script repo kökünden `railway deployment list --json
   --service learning-platform --environment production` okur. Bir kayıt ancak `meta.commitHash`
   push edilen commit ve `meta.repo` bu repo ise sayılır (Postgres servisinin commit'siz SUCCESS

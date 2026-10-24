@@ -337,8 +337,14 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   yoksa buton gizli. Prod session çerezi `SameSite=Lax` KALMALI (Strict Google dönüşünü
   kırar). E-posta kayıtta, Google eşleştirmesinde ve şifreyle girişte AYNI kuralla
   (`UserRegistrationService.normalizeEmail`: `trim()` + `toLowerCase(Locale.ROOT)`)
-  normalize edilir -- yeni bir e-posta araması da bunu kullanmalı. Ayrıntı:
-  `docs/phase-log.md` "185".
+  normalize edilir -- yeni bir e-posta araması da bunu kullanmalı. **Durum (2026-10-24):**
+  kod `4f623e3` ile canlıda (V1148 uygulandı) ama Google girişi KAPALI -- Railway'de
+  `GOOGLE_*` yok, düğme görünmüyor, şifreyle giriş aynen çalışıyor; prod istemcisiyle gerçek
+  uçtan uca test YAPILMADI; F2/F5/F6 açık. Açmak için: Google Console'da prod OAuth istemcisi
+  (redirect birebir `https://www.learnforgex.com/login/oauth2/code/google`, izin ekranının
+  yayın durumu kontrol edilir), Railway'e İKİ değişkeni BİRLİKTE ekle (yalnızca client-id
+  verilirse uygulama açılmaz), yeniden deploy, sonra canlıda yeni hesap + bağlama + ADMIN
+  reddi denenir. Ayrıntı: `docs/phase-log.md` "185".
 - **Course seviyesi erişim kuralı (Faz 160, Faz 161'de DARALTILDI): ders içeriği
   (topic sayfası + PDF) TÜM kurslarda anonim okumaya açıktır; giriş yalnızca Java
   DIŞINDAKİ kursların etkileşimli özellikleri (sabit quiz, Quiz Area, Practice)
@@ -1121,10 +1127,13 @@ bash ile yeniden doğrula** (ör. `mvn -version`, `curl -I https://repo.maven.ap
   `scripts/example-outputs` Python testleri; Maven başarısız olursa Surefire raporları artifact
   olarak yüklenir. İlk çalıştırma (run 39273156540, commit `4e44638`): Maven 243/243, Python
   40/40. **Railway'in build'i `mvn ... -DskipTests` çalıştırır, yani deploy testleri HİÇ
-  çalıştırmaz; CI de deploy'u kendiliğinden durdurmaz** (Railway'de CI'ı bekleme ayarı
-  bu fazda açılmadı, panelde durumu doğrulanmadı) -- push'tan sonra CI sonucunu ve
-  deploy-check'i ayrı ayrı kontrol et. Bir değişikliğin test kanıtı: o commit'in CI
-  çalıştırması + yerelde JDK 21 ile `mvn test`.
+  çalıştırmaz.** Workflow'un kendisi deploy'u durdurmaz; Railway panelindeki "Wait for CI"
+  ayarı 2026-10-24'te kullanıcı tarafından ETKİN olarak doğrulandı (Faz 180'de henüz
+  açılmamıştı). Bu ayarın deploy'u CI'a gerçekten beklettiği bağımsız olarak KANITLANMADI:
+  `4f623e3`'te sıralama tutarlıydı (deployment kaydı 20:20:59Z, CI'ın Maven adımı 20:22:32Z
+  bitti, uygulama 20:24Z açıldı) ama bu bir kanıt değil, CI kırılınca `SKIPPED` da hiç
+  gözlenmedi -- push'tan sonra CI sonucunu ve deploy-check'i yine ayrı ayrı kontrol et.
+  Bir değişikliğin test kanıtı: o commit'in CI çalıştırması + yerelde JDK 21 ile `mvn test`.
 - **`javac`/`java` ile gerçek derleme, Faz 12'den beri varsayılan olarak
   YAPILMIYOR** (oturum maliyeti/limit nedeniyle) — yeni `.java` dosyaları elle
   dikkatli yazılıp gözden geçirilir. İstisna: kullanıcı özellikle isterse, ya da
