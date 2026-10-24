@@ -295,8 +295,10 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   anasayfa ve tüm kursların ders içeriği anonim erişime tamamen açık kalır.
   GÜNCELLEME (Faz 160/161): Java DIŞINDAKİ kursların quiz'leri ve Practice'i
   giriş gerektiriyor** (aşağıdaki Faz 160 maddesine bakın). Spring Security, session-based form
-  login — JWT/OAuth2 bilinçli olarak kullanılmıyor (sunucu tarafında render
-  edilen bir Thymeleaf uygulaması için gereksiz karmaşıklık olurdu). Kullanıcı
+  login — JWT/token tabanlı oturum bilinçli olarak kullanılmıyor (sunucu tarafında
+  render edilen bir Thymeleaf uygulaması için gereksiz karmaşıklık olurdu); Faz
+  185'teki Google girişi kimliği OAuth2/OIDC ile doğrular, oturum yine
+  session-based kalır (aşağıdaki "Google ile devam et" maddesine bakın). Kullanıcı
   hesabı `User` entity'si (`app_user` tablosu — `user` Postgres'te ayrılmış
   anahtar kelime olduğu için kaçınıldı), şifreler her zaman BCrypt ile encode
   edilir, düz metin asla DB'ye yazılmaz. Login/register/logout rotaları,
@@ -322,6 +324,21 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `csrf().ignoringRequestMatchers(...)` ile bilinçli olarak muaf tutuldu — yeni
   bir anonim/oturumsuz POST API eklenirse aynı muafiyet listesine eklenmeli.
 
+- **"Google ile devam et" (Faz 185) aynı session modeline eklenen ikinci giriş yolu,
+  token tabanlı oturum DEĞİL.** Google hesabı `user_identity.provider_subject` (`sub`)
+  ile tanınır, e-postayla DEĞİL; principal'ın `getName()`'i her giriş yolunda YEREL
+  e-postadır ve yetki YALNIZCA `app_user.role`'den gelir (`LocalOidcUser`,
+  `GoogleAccountService`). E-postası eşleşen mevcut hesap ASLA otomatik bağlanmaz
+  (kayıtta e-posta doğrulanmıyor) -- o hesabın şifresi istenir; yeni Google hesabı
+  Kullanım Koşulları kutusu işaretlenmeden açılmaz. ADMIN hesabı Google'la bağlanamaz
+  ve giriş yapamaz (kural tek yerde: `GoogleAccountService.allowsGoogleSignIn`). Bağlı
+  olmayan doğrulanmış kimlik giriş SAYILMAZ, session'da bekler (`PendingGoogleSignIn`,
+  10 dk). İstemci yalnızca `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` verilince kurulur,
+  yoksa buton gizli. Prod session çerezi `SameSite=Lax` KALMALI (Strict Google dönüşünü
+  kırar). E-posta kayıtta, Google eşleştirmesinde ve şifreyle girişte AYNI kuralla
+  (`UserRegistrationService.normalizeEmail`: `trim()` + `toLowerCase(Locale.ROOT)`)
+  normalize edilir -- yeni bir e-posta araması da bunu kullanmalı. Ayrıntı:
+  `docs/phase-log.md` "185".
 - **Course seviyesi erişim kuralı (Faz 160, Faz 161'de DARALTILDI): ders içeriği
   (topic sayfası + PDF) TÜM kurslarda anonim okumaya açıktır; giriş yalnızca Java
   DIŞINDAKİ kursların etkileşimli özellikleri (sabit quiz, Quiz Area, Practice)

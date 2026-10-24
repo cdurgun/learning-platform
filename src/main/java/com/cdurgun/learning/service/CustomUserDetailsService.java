@@ -25,8 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        // Kayıtla aynı biçim: kayıtta küçük harfe çevrilen adres girişte de aynı kuralla aranır.
+        User user = userRepository.findByEmail(UserRegistrationService.normalizeEmail(email))
                 .orElseThrow(() -> new UsernameNotFoundException("Kullanıcı bulunamadı: " + email));
+
+        // Yalnızca Google ile açılmış (şifresiz) hesap: şifre formu üzerinden giriş yok.
+        // "Kullanıcı yok" ile aynı yoldan geçer, yani dışarıya aynı "geçersiz e-posta veya
+        // şifre" hatası olarak görünür -- hesabın var olup olmadığını sızdırmaz.
+        if (user.getPasswordHash() == null) {
+            throw new UsernameNotFoundException("Şifresiz hesap: " + email);
+        }
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())

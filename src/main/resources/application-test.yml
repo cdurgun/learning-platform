@@ -11,3 +11,11 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+
+# Google girişinin testlerde kurulu olması için SAHTE bir istemci (gerçek bir Google
+# projesine ait DEĞİL, gizli bir değer de değil). Testler Google'a hiç bağlanmaz.
+app:
+  auth:
+    google:
+      client-id: test-client-id.apps.googleusercontent.com
+      client-secret: test-client-secret

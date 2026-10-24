@@ -40,6 +40,13 @@ app:
   # Statik dosyaların hash'li adres çözümlemesi bellekte tutulsun mu (bkz. WebConfig).
   # Dev'de kapalı: bir CSS/JS dosyası değişince yeniden başlatmadan yeni hash üretilsin.
   cache-static-resource-chain: false
+  # "Google ile devam et" (bkz. GoogleSignInConfig). İkisi de yalnızca ortam
+  # değişkeninden okunur, repoya ASLA yazılmaz. GOOGLE_CLIENT_ID verilmezse Google
+  # girişi tamamen kapalıdır (buton görünmez), şifreyle giriş aynen çalışır.
+  auth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
 
 # Faz D: AI/n8n'in soru havuzuna yazdığı /api/internal/questions/ingest rotasını
 # korur (bkz. QuizIngestApiKeyInterceptor). Ortam değişkeni verilmezse BOŞ kalır

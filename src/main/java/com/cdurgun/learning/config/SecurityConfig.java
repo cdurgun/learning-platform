@@ -1,7 +1,13 @@
 package com.cdurgun.learning.config;
 
+import com.cdurgun.learning.service.GoogleOidcUserService;
+import com.cdurgun.learning.service.PendingGoogleSignInException;
+import com.cdurgun.learning.web.auth.GoogleSignInSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -11,13 +17,22 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
@@ -38,6 +53,11 @@ import java.io.IOException;
  * kalıpla verilebiliyor — ayrı bir wildcard/regex çözümüne gerek yok. Başarı/hata/
  * logout handler'ları, hangi dilin path'te geldiğini isteğin URI'sinden okuyup
  * yönlendirmeyi o dile göre kurar (bkz. {@link LangPath}).</p>
+ *
+ * <p>"Google ile devam et" ({@code oauth2Login}, OpenID Connect) AYNI session modeline
+ * eklenen ikinci bir giriş yolu -- token tabanlı bir oturum DEĞİL: Google'ın ID token'ı
+ * yalnızca girişte kimliği doğrulamak için kullanılır, sonrası aynı session. Yalnızca
+ * Google istemcisi yapılandırılmışsa kurulur (bkz. {@link GoogleSignInConfig}).</p>
  */
 @Configuration
 @EnableWebSecurity
@@ -45,13 +65,24 @@ public class SecurityConfig {
 
     private static final String LOGIN_PAGE = "/en/login";
 
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    /**
+     * Spring'in varsayılanıyla aynı (session'da tutulan) CSRF token deposu, açıkça
+     * veriliyor: Google'ın bekleyen-kimlik adımı token'ı AYNI depodan düşürüyor.
+     */
+    private final CsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CourseAccessPolicy courseAccessPolicy) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   CourseAccessPolicy courseAccessPolicy,
+                                                   ObjectProvider<ClientRegistrationRepository> clientRegistrations,
+                                                   GoogleOidcUserService googleOidcUserService) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         // Question Review (Faz A, henüz UI/controller'ı yok -- yalnızca kural
@@ -79,6 +110,7 @@ public class SecurityConfig {
                         // zaten korunuyor) anonim erişime açık.
                         .anyRequest().permitAll())
                 .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository)
                         // Bu dört uç nokta, anonim JSON POST'lar: ingestion n8n'den (tarayıcı
                         // session'ı yok) geliyor; sabit quiz submit'i ve Quiz Area submit'i
                         // (Faz 139) `quiz.js` düz `fetch()` ile çağırıyor ve hiçbir CSRF
@@ -126,6 +158,22 @@ public class SecurityConfig {
                         .logoutSuccessHandler(logoutSuccessHandler())
                         .permitAll());
 
+        ClientRegistrationRepository googleClient = clientRegistrations.getIfAvailable();
+        if (googleClient != null) {
+            http.oauth2Login(oauth2 -> oauth2
+                    // Form login'le aynı giriş sayfası -- aksi halde Spring kendi varsayılan
+                    // login sayfasını üretip korunan sayfaları doğrudan Google'a yollardı.
+                    .loginPage(LOGIN_PAGE)
+                    .clientRegistrationRepository(googleClient)
+                    // Google'ın access token'ı uygulama genelinde bellekte değil, yalnızca
+                    // kullanıcının session'ında durur ve logout'la birlikte silinir.
+                    .authorizedClientRepository(new HttpSessionOAuth2AuthorizedClientRepository())
+                    .userInfoEndpoint(userInfo -> userInfo.oidcUserService(googleOidcUserService))
+                    .successHandler(googleSuccessHandler())
+                    .failureHandler(googleFailureHandler())
+                    .permitAll());
+        }
+
         return http.build();
     }
 
@@ -149,6 +197,55 @@ public class SecurityConfig {
                 String lang = LangPath.extractLangOrDefault(request.getRequestURI());
                 getRedirectStrategy().sendRedirect(request, response, "/" + lang + "/login?error");
             }
+        };
+    }
+
+    /** Bağlı bir Google hesabıyla giriş: akışın başladığı dilin anasayfasına. */
+    private AuthenticationSuccessHandler googleSuccessHandler() {
+        RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+        return (request, response, authentication) -> {
+            String lang = GoogleSignInSession.lang(request);
+            GoogleSignInSession.clear(request);
+            redirectStrategy.sendRedirect(request, response, "/" + lang);
+        };
+    }
+
+    /**
+     * Google girişi tamamlanmadı. Bağlı hesabı olmayan doğrulanmış bir kimlik hata DEĞİL
+     * ({@link PendingGoogleSignInException}): session'a konup koşul onayı/hesap bağlama
+     * adımına gidilir. Gerisi (kullanıcının izin vermemesi, doğrulanmamış e-posta, geçersiz
+     * state/token, süresi dolmuş istek) login sayfasında dile göre bir hata olur. Yalnızca
+     * OAuth2 hata KODU loglanır -- token ya da açıklama metni asla.
+     */
+    private AuthenticationFailureHandler googleFailureHandler() {
+        RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+        return (request, response, exception) -> {
+            String lang = GoogleSignInSession.lang(request);
+            if (exception instanceof PendingGoogleSignInException pending) {
+                // Spring session ID'yi ve CSRF token'ını yalnızca BAŞARILI girişte yeniler, bu
+                // yol ise bir failure: doğrulanmış kimlik akıştan önce bilinen (sabitlenmiş) bir
+                // ID'de ya da token'la kalmasın. Yeni token bir sonraki sayfada üretilir.
+                request.getSession();
+                request.changeSessionId();
+                csrfTokenRepository.saveToken(null, request, response);
+                GoogleSignInSession.storePending(request, pending.getPending());
+                redirectStrategy.sendRedirect(request, response, "/" + lang + "/login/google/complete");
+                return;
+            }
+
+            String errorCode = exception instanceof OAuth2AuthenticationException oauth2
+                    ? oauth2.getError().getErrorCode()
+                    : exception.getClass().getSimpleName();
+            log.info("Google sign-in did not complete: {}", errorCode);
+
+            String error = switch (errorCode) {
+                case "access_denied" -> "google_cancelled";
+                case GoogleOidcUserService.EMAIL_NOT_VERIFIED -> "google_email_not_verified";
+                case GoogleOidcUserService.ADMIN_NOT_ALLOWED -> "google_link_unavailable";
+                default -> "google_failed";
+            };
+            GoogleSignInSession.clear(request);
+            redirectStrategy.sendRedirect(request, response, "/" + lang + "/login?error=" + error);
         };
     }
 

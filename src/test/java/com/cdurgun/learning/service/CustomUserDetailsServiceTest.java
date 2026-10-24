@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,10 +51,45 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
+    void looksUpTheNormalizedEmail() {
+        when(userRepository.findByEmail("someone@example.com")).thenReturn(Optional.of(user("someone@example.com")));
+
+        UserDetails userDetails = newService().loadUserByUsername("  SomeOne@Example.COM ");
+
+        assertThat(userDetails.getUsername()).isEqualTo("someone@example.com");
+    }
+
+    @Test
+    void uppercaseIIsLoweredWithTheRootLocaleUnderTurkishDefault() {
+        when(userRepository.findByEmail("ilker@example.com")).thenReturn(Optional.of(user("ilker@example.com")));
+        Locale original = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            // tr-TR'de düz toLowerCase() "I"yı noktasız "ı" yapardı: "ılker@example.com".
+            assertThat(newService().loadUserByUsername("ILKER@EXAMPLE.COM").getUsername())
+                    .isEqualTo("ilker@example.com");
+        } finally {
+            Locale.setDefault(original);
+        }
+    }
+
+    @Test
     void throwsWhenEmailNotFound() {
         when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> newService().loadUserByUsername("missing@example.com"))
                 .isInstanceOf(UsernameNotFoundException.class);
+    }
+
+    private static User user(String email) {
+        return User.builder()
+                .id(2L)
+                .email(email)
+                .passwordHash("bcrypt-hash")
+                .displayName("User")
+                .role(Role.USER)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 }

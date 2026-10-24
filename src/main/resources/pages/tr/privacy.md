@@ -1,4 +1,4 @@
-*Son güncelleme: 14 Ekim 2026*
+*Son güncelleme: 22 Ekim 2026*
 
 Bu politika, www.learnforgex.com adresini ("site") kullandığınızda hangi bilgilerin toplandığını, bunların hangi amaçlarla kullanıldığını ve hangi seçeneklere sahip olduğunuzu açıklar.
 
@@ -10,7 +10,9 @@ LearnForgeX, Cemalettin Durgun tarafından işletilen bağımsız bir öğrenme 
 
 **Hesap bilgileri.** Dersleri okumak için hesap gerekmez. Kayıt olmayı seçerseniz, verdiğiniz e-posta adresi ve görünen ad saklanır; şifreniz yalnızca özetlenmiş (hash) biçimde tutulur, şifrenin kendisi hiçbir zaman saklanmaz. Hesabın türü (standart kullanıcı), ne zaman oluşturulduğu ve en son ne zaman güncellendiği de kaydedilir. Bu bilgiler hesabınızı oluşturmak, giriş yapmanızı sağlamak ve giriş gerektiren bölümleri (quiz ve pratik) size açmak için kullanılır.
 
-Kayıt sırasında Kullanım Koşulları'nı kabul ettiğinizi ve bu politikayı okuduğunuzu onaylarsınız; hesabın oluşturulma zamanı aynı zamanda bu onayın zamanıdır.
+**Google ile giriş.** Hesap oluşturmak ya da giriş yapmak için Google hesabınızı da kullanabilirsiniz. Bu durumda site Google'dan yalnızca temel kimlik bilgilerinizi ister: Google hesabınızın e-posta adresi, bu adresin Google tarafından doğrulanıp doğrulanmadığı, adınız ve Google hesabınızın kalıcı tanımlayıcısı. Bu tanımlayıcı ve Google hesabınızın bağlandığı zaman hesabınızla birlikte saklanır. Bu yolla yeni bir hesap açılırsa, e-posta adresi ve adınız (görünen adınız olarak) hesap bilgileri olarak saklanır ve bu hesap için şifre belirlenmez ve saklanmaz. Profil fotoğrafınız saklanmaz; site Gmail'inize, kişilerinize, dosyalarınıza ya da başka hiçbir Google verinize erişim istemez. Aynı e-posta adresiyle açılmış bir hesap zaten varsa, iki hesap yalnızca o hesabın şifresini girdikten sonra bağlanır. Google'ın giriş sırasında verdiği erişim bilgisi yalnızca girişi tamamlamak için kullanılır ve çıkış yaptıktan sonra tutulmaz.
+
+Kayıt formuyla ya da Google ile kayıt olurken Kullanım Koşulları'nı kabul ettiğinizi ve bu politikayı okuduğunuzu onaylarsınız; hesabın oluşturulma zamanı aynı zamanda bu onayın zamanıdır.
 
 **Quiz cevapları.** Bir quiz gönderdiğinizde cevaplarınız puanlanmak üzere sunucuya iletilir. Sonuç tarayıcınıza geri gönderilir; cevaplarınız ve sonucunuz hesabınıza kaydedilmez ve kalıcı olarak saklanmaz.
 
@@ -31,6 +33,7 @@ Bu güncelleme itibarıyla site analitik ya da reklam çerezi kullanmamaktadır.
 - **Cloudflare (ağ ve güvenlik).** Siteye gelen tüm istekler önce Cloudflare'ın ağından geçer. Cloudflare bu sırada IP adresinizi ve tarayıcı bilgilerinizi işler; siteyi saldırılara karşı korur, alan adı (DNS) hizmetini sağlar ve tarayıcınızdan bağlantı hatası raporları alabilir.
 - **Railway (barındırma).** Sitenin uygulaması ve veritabanı Railway'in altyapısında çalışır. Hesap bilgileri burada saklanır.
 - **jsDelivr (içerik dağıtım ağı).** Stil ve kod renklendirme kütüphaneleri jsDelivr CDN'inden yüklenir. Tarayıcınız bu servise doğrudan bağlandığı için IP adresiniz ve tarayıcı bilgileriniz ona iletilir.
+- **Google (giriş).** "Google ile devam et"i seçerseniz Google'ın kendi sayfasında giriş yaparsınız ve Google, yukarıdaki "Google ile giriş" paragrafında açıklanan bilgileri siteyle paylaşır. Google hesabınız için Google'ın kendi [gizlilik politikası](https://policies.google.com/privacy?hl=tr) geçerlidir.
 - **Google (e-posta).** Sitenin iletişim adresi bir Gmail hesabıdır; bu adrese gönderdiğiniz mesajlar Google'ın e-posta hizmetinde saklanır.
 - **Google (reklam).** Sitede reklam gösterilirse bu reklamları Google AdSense sunar. Bu güncelleme itibarıyla Google'ın reklam kodu siteye eklenmemiştir. Bkz. aşağıdaki "Reklamlar" bölümü.
 

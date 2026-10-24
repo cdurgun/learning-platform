@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Locale;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -156,5 +157,80 @@ class AuthenticationFlowTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/en/login?error"));
+    }
+
+    @Test
+    void loginIgnoresEmailCaseAndSurroundingWhitespace() throws Exception {
+        String email = "mixed-" + UUID.randomUUID() + "@example.com";
+        register(email);
+
+        MvcResult loginResult = mockMvc.perform(post("/en/login")
+                        .param("username", "  " + email.toUpperCase(Locale.ROOT) + " ")
+                        .param("password", "correct-password")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/en"))
+                .andReturn();
+
+        // Principal her zaman kayıtlı (küçük harfli) adres, girilen biçim değil.
+        assertThat(authenticatedName(loginResult)).isEqualTo(email);
+    }
+
+    @Test
+    void loginUnderTurkishDefaultLocaleMatchesUppercaseI() throws Exception {
+        String email = "ilker-" + UUID.randomUUID() + "@example.com";
+        register(email);
+
+        Locale original = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            MvcResult loginResult = mockMvc.perform(post("/en/login")
+                            .param("username", email.toUpperCase(Locale.ROOT))
+                            .param("password", "correct-password")
+                            .with(csrf()))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/en"))
+                    .andReturn();
+            assertThat(authenticatedName(loginResult)).isEqualTo(email);
+        } finally {
+            Locale.setDefault(original);
+        }
+    }
+
+    @Test
+    void wrongPasswordIsRejectedWhateverTheEmailCase() throws Exception {
+        String email = "casewrong-" + UUID.randomUUID() + "@example.com";
+        register(email);
+
+        MvcResult result = mockMvc.perform(post("/en/login")
+                        .param("username", email.toUpperCase(Locale.ROOT))
+                        .param("password", "totally-wrong")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/en/login?error"))
+                .andReturn();
+
+        assertThat(authenticatedName(result)).isNull();
+    }
+
+    private void register(String email) throws Exception {
+        mockMvc.perform(post("/en/register")
+                        .param("email", email)
+                        .param("password", "correct-password")
+                        .param("displayName", "Test User")
+                        .param("termsAccepted", "true")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/en/login?registered"));
+    }
+
+    private static String authenticatedName(MvcResult result) {
+        HttpSession session = result.getRequest().getSession(false);
+        if (session == null) {
+            return null;
+        }
+        SecurityContext context = (SecurityContext) session
+                .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        return context == null || context.getAuthentication() == null ? null : context.getAuthentication().getName();
     }
 }

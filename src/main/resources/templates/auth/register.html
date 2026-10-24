@@ -19,6 +19,8 @@
         <div class="col-12 col-sm-8 col-md-5 col-lg-4 py-5">
             <h1 class="h3 mb-4 text-center" th:text="#{auth.register.title}">Create Account</h1>
 
+            <div th:replace="~{fragments/google-sign-in :: button}"></div>
+
             <form method="post" th:action="@{/{lang}/register(lang=${language.code})}"
                   th:object="${registerForm}">
                 <input th:if="${_csrf}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>

@@ -1,4 +1,4 @@
-*Last updated: 14 October 2026*
+*Last updated: 22 October 2026*
 
 This policy explains what information is collected when you use www.learnforgex.com ("the site"), what it is used for, and what choices you have.
 
@@ -10,7 +10,9 @@ LearnForgeX is an independent learning platform operated by Cemalettin Durgun. F
 
 **Account information.** Reading lessons does not require an account. If you choose to register, the email address and display name you provide are stored; your password is kept only in hashed form, and the password itself is never stored. The account type (standard user) and the times the account was created and last updated are also recorded. This information is used to create your account, let you sign in, and give you access to the sections that require signing in (quizzes and practice).
 
-When you register, you confirm that you accept the Terms of Use and have read this policy; the time the account was created is also the time of that confirmation.
+**Signing in with Google.** You can also create an account or sign in with your Google account. In that case the site asks Google only for your basic identity: the email address of your Google account, whether Google has verified that address, your name, and the permanent identifier of your Google account. That identifier and the time your Google account was connected are stored with your account. If a new account is created this way, the email address and your name (as your display name) are stored as its account information, and no password is set or stored for it. Your profile picture is not stored, and the site requests no access to your Gmail, contacts, files or any other Google data. If an account with the same email address already exists, the two are connected only after you enter that account's password. The access information Google issues at sign-in is used only to complete the sign-in and is not kept after you sign out.
+
+When you register, either with the registration form or with Google, you confirm that you accept the Terms of Use and have read this policy; the time the account was created is also the time of that confirmation.
 
 **Quiz answers.** When you submit a quiz, your answers are sent to the server so they can be scored. The result is returned to your browser; your answers and your result are not saved to your account and are not stored permanently.
 
@@ -31,6 +33,7 @@ As of this update, the site does not use analytics or advertising cookies. If Go
 - **Cloudflare (network and security).** All requests to the site first pass through Cloudflare's network. In doing so Cloudflare processes your IP address and browser information; it protects the site against attacks, provides its domain name (DNS) service, and may receive connection error reports from your browser.
 - **Railway (hosting).** The site's application and database run on Railway's infrastructure. Account information is stored there.
 - **jsDelivr (content delivery network).** Styling and code-highlighting libraries are loaded from the jsDelivr CDN. Your browser connects to it directly, so it receives your IP address and browser information.
+- **Google (sign-in).** If you choose "Continue with Google", you sign in on Google's own page and Google shares the information described under "Signing in with Google" above with the site. Google's own [privacy policy](https://policies.google.com/privacy) applies to your Google account.
 - **Google (email).** The site's contact address is a Gmail account; messages you send to it are stored in Google's email service.
 - **Google (advertising).** If ads are shown on the site, they are served by Google AdSense. As of this update, Google's advertising code has not been added to the site. See "Advertising" below.
 

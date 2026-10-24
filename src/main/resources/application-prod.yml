@@ -15,6 +15,16 @@ spring:
 # Spring, isteği düz http sanıp yönlendirmeleri (ör. login'e 302) "http://" ile üretiyordu.
 server:
   forward-headers-strategy: framework
+  # Tomcat çerezin Secure bayrağını proxy'nin ARKASINDAKİ düz http bağlantısına bakarak
+  # belirliyordu, yani canlıda JSESSIONID Secure'suz gidiyordu -- açıkça veriliyor.
+  # SameSite Lax (Strict DEĞİL): Google girişinin dönüşü accounts.google.com'dan gelen
+  # siteler arası bir üst-seviye GET'tir; Strict'te session çerezi gönderilmez ve
+  # giriş "authorization_request_not_found" ile başarısız olur.
+  servlet:
+    session:
+      cookie:
+        secure: true
+        same-site: lax
 
 app:
   base-url: https://www.learnforgex.com

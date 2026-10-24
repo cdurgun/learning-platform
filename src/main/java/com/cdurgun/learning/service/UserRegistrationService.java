@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 /**
  * Yeni kullanıcı kaydı — email/password/display name doğrulaması
@@ -28,7 +29,7 @@ public class UserRegistrationService {
 
     @Transactional
     public User register(String email, String rawPassword, String displayName) {
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = normalizeEmail(email);
 
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new DuplicateEmailException(normalizedEmail);
@@ -45,5 +46,14 @@ public class UserRegistrationService {
                 .build();
 
         return userRepository.save(user);
+    }
+
+    /**
+     * Kayıtta ve Google eşleştirmesinde AYNI e-posta biçimi. {@code Locale.ROOT}:
+     * JVM Türkçe çalışırsa düz {@code toLowerCase()} "I"yı noktasız "ı" yapar ve Google'ın
+     * gönderdiği adresle eşleşmez (bkz. GoogleOidcUserService).
+     */
+    public static String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

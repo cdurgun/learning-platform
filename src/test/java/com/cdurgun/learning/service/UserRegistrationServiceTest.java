@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Locale;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,6 +51,25 @@ class UserRegistrationServiceTest {
         assertThat(persisted.getCreatedAt()).isNotNull();
         assertThat(persisted.getUpdatedAt()).isNotNull();
         assertThat(saved).isSameAs(persisted);
+    }
+
+    @Test
+    void normalizesEmailTheSameWayUnderATurkishDefaultLocale() {
+        // Türkçe locale'de "I".toLowerCase() noktasız "ı" olur; Google'dan gelen "ilker@..."
+        // ile eşleşmezdi (bkz. GoogleAccountService -- iki akış aynı normalizasyonu kullanır).
+        Locale original = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            User saved = newService().register(" ILKER@EXAMPLE.COM ", "plain-password", "Ilker");
+
+            assertThat(saved.getEmail()).isEqualTo("ilker@example.com");
+            verify(userRepository).existsByEmail("ilker@example.com");
+            assertThat(UserRegistrationService.normalizeEmail("ILKER@EXAMPLE.COM")).isEqualTo("ilker@example.com");
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 
     @Test

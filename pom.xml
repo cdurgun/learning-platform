@@ -41,12 +41,19 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
         <!-- Opsiyonel kullanıcı kimlik doğrulaması: session-based form login (bkz.
-             SecurityConfig). JWT/OAuth2 bilinçli olarak eklenmedi, proje sunucu
-             tarafında render edilen bir Thymeleaf uygulaması: session-based auth
-             ilk sürüm için yeterli ve daha basit. -->
+             SecurityConfig). JWT/token tabanlı oturum bilinçli olarak kullanılmıyor,
+             proje sunucu tarafında render edilen bir Thymeleaf uygulaması: oturum her
+             zaman session-based (Google girişi de aynı session'a bağlanır). -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- "Google ile devam et" (OpenID Connect, sunucu tarafı authorization-code akışı).
+             Token'lar yalnızca girişte kimliği doğrulamak için kullanılır; oturum yine
+             yukarıdaki session-based modelde kalır (bkz. GoogleSignInConfig). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
         </dependency>
 
         <!-- Persistence -->

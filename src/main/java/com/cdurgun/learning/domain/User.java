@@ -20,7 +20,9 @@ import java.time.LocalDateTime;
  * Kayıtlı bir kullanıcı hesabı. Kimlik doğrulama opsiyonel bir katman —
  * anonim kullanıcılar bu tabloya hiç dokunmadan platformu tam olarak
  * kullanabilir (bkz. SecurityConfig). {@code passwordHash} BCrypt ile
- * encode edilmiş halde tutulur, düz metin şifre asla DB'ye yazılmaz.
+ * encode edilmiş halde tutulur, düz metin şifre asla DB'ye yazılmaz. Yalnızca
+ * Google ile açılan hesaplarda {@code null}'dır -- böyle bir hesap şifreyle giriş
+ * yapamaz (bkz. CustomUserDetailsService, UserIdentity).
  */
 @Entity
 @Table(name = "app_user")
@@ -38,7 +40,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "display_name", nullable = false)

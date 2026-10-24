@@ -19,12 +19,14 @@
         <div class="col-12 col-sm-8 col-md-5 col-lg-4 py-5">
             <h1 class="h3 mb-4 text-center" th:text="#{auth.login.title}">Sign In</h1>
 
-            <div class="alert alert-danger" th:if="${param.error != null}" th:text="#{auth.login.error}">
+            <div class="alert alert-danger" role="alert" th:if="${loginErrorKey != null}" th:text="#{${loginErrorKey}}">
                 Invalid email or password.
             </div>
             <div class="alert alert-success" th:if="${param.registered != null}" th:text="#{auth.login.registered}">
                 Account created. Please sign in.
             </div>
+
+            <div th:replace="~{fragments/google-sign-in :: button}"></div>
 
             <form method="post" th:action="@{/{lang}/login(lang=${language.code})}">
                 <input th:if="${_csrf}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
