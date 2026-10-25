@@ -77,7 +77,7 @@ public class GoogleSignInController {
         if (pending.isEmpty()) {
             return expired(lang);
         }
-        return render(lang, pending.get(), model);
+        return render(lang, pending.get(), request, model);
     }
 
     @PostMapping("/{lang:en|tr}/login/google/terms")
@@ -96,7 +96,7 @@ public class GoogleSignInController {
         }
         if (!termsAccepted) {
             model.addAttribute("termsError", true);
-            return render(lang, pending.get(), model);
+            return render(lang, pending.get(), request, model);
         }
 
         User user;
@@ -147,7 +147,7 @@ public class GoogleSignInController {
                 }
                 GoogleSignInSession.storePending(request, updated);
                 model.addAttribute("passwordError", true);
-                return render(lang, updated, model);
+                return render(lang, updated, request, model);
             }
             default -> {
                 GoogleSignInSession.clear(request);
@@ -162,7 +162,13 @@ public class GoogleSignInController {
         return "redirect:/" + lang + "/login?error=google_cancelled";
     }
 
-    private String render(String lang, PendingGoogleSignIn pending, Model model) {
+    private String render(String lang, PendingGoogleSignIn pending, HttpServletRequest request, Model model) {
+        if (googleAccountService.isGoogleSignInBlockedForEmail(pending.email())) {
+            // ADMIN hesabı Google'la bağlanamaz (kimlik beklerken ADMIN yapılmış olabilir):
+            // sonuç vermeyecek parola sayfası gösterilmez, rol de söylenmez.
+            GoogleSignInSession.clear(request);
+            return "redirect:/" + lang + "/login?error=google_link_unavailable";
+        }
         model.addAttribute("language", Language.fromCode(lang));
         model.addAttribute("googleEmail", pending.email());
         if (googleAccountService.hasAccountWithEmail(pending.email())) {

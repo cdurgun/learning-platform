@@ -344,7 +344,16 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   (redirect birebir `https://www.learnforgex.com/login/oauth2/code/google`, izin ekranının
   yayın durumu kontrol edilir), Railway'e İKİ değişkeni BİRLİKTE ekle (yalnızca client-id
   verilirse uygulama açılmaz), yeniden deploy, sonra canlıda yeni hesap + bağlama + ADMIN
-  reddi denenir. Ayrıntı: `docs/phase-log.md` "185".
+  reddi denenir. **Güncelleme (2026-10-25, production):** yukarıdaki "KAPALI" durumu artık güncel
+  değil -- kullanıcı gerçek Google hesabıyla prod'da test etti: Google ile yeni hesap açma, Google
+  ile giriş ve mevcut hesabı bağlama çalıştı, sayfa yenilenince oturum korundu, çıkış/giriş de
+  denendi. OAuth istemcisi ve Railway ayarları bu oturumda okunmadı. **Güncelleme (2026-10-25,
+  ADMIN erken reddi):** e-postası bir ADMIN hesabına ait, henüz bağlı olmayan Google kimliği artık
+  parola isteyen bağlama sayfasından ÖNCE reddediliyor (`GoogleOidcUserService.loadUser` +
+  `GoogleSignInController.render`, ikisi de `GoogleAccountService.isGoogleSignInBlockedForEmail`
+  üzerinden `allowsGoogleSignIn`'e soruyor) -- F6'nın ADMIN kısmı kapandı, şifresiz hesap kısmı
+  açık; tam suite 306/306. Bu düzeltme henüz production'a deploy edilmedi ve gerçek Google OAuth
+  ile doğrulanmadı. Ayrıntı: `docs/phase-log.md` "185".
 - **Course seviyesi erişim kuralı (Faz 160, Faz 161'de DARALTILDI): ders içeriği
   (topic sayfası + PDF) TÜM kurslarda anonim okumaya açıktır; giriş yalnızca Java
   DIŞINDAKİ kursların etkileşimli özellikleri (sabit quiz, Quiz Area, Practice)

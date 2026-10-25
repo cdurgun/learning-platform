@@ -68,6 +68,17 @@ public class GoogleAccountService {
     }
 
     /**
+     * E-postası eşleşen mevcut hesap Google'la kullanılamıyorsa ({@link #allowsGoogleSignIn})
+     * true; böyle bir hesap yoksa false. Parola isteyen bağlama adımı ADMIN'e hiç açılmasın diye.
+     */
+    @Transactional(readOnly = true)
+    public boolean isGoogleSignInBlockedForEmail(String email) {
+        return userRepository.findByEmail(email)
+                .filter(user -> !allowsGoogleSignIn(user))
+                .isPresent();
+    }
+
+    /**
      * Koşulları kabul etmiş yeni bir Google kullanıcısı için şifresiz bir USER hesabı açar.
      * Bu Google hesabı bu arada (ör. başka bir sekmede) zaten bağlandıysa o hesabı döner.
      *

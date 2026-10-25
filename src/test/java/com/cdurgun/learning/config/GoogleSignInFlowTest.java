@@ -422,6 +422,35 @@ class GoogleSignInFlowTest {
     }
 
     @Test
+    void adminAccountNeverSeesThePasswordPageEvenIfPromotedWhileGoogleSignInIsPending() throws Exception {
+        String email = randomEmail();
+        userRegistrationService.register(email, "correct-password", "Soon Admin");
+        PendingGoogleSignIn pending = pending(email);
+        MockHttpSession session = sessionWithPending(pending);
+        // Kimlik session'da beklerken hesap ADMIN yapılıyor.
+        User promoted = userRepository.findByEmail(email).orElseThrow();
+        promoted.setRole(Role.ADMIN);
+        userRepository.save(promoted);
+        String passwordHash = promoted.getPasswordHash();
+
+        mockMvc.perform(get("/en/login/google/complete").session(session))
+                .andExpect(redirectedUrl("/en/login?error=google_link_unavailable"))
+                .andExpect(content().string(not(containsString("name=\"password\""))));
+
+        // Bekleyen kimlik silindi: aynı session'la ne sayfa ne bağlama yeniden denenebilir.
+        mockMvc.perform(get("/en/login/google/complete").session(session))
+                .andExpect(redirectedUrl("/en/login?error=google_expired"));
+        mockMvc.perform(post("/en/login/google/link").param("password", "correct-password").with(csrf()).session(session))
+                .andExpect(redirectedUrl("/en/login?error=google_expired"));
+
+        assertThat(isLinked(pending.subject())).isFalse();
+        assertThat(authenticationIn(session)).isNull();
+        User stored = userRepository.findByEmail(email).orElseThrow();
+        assertThat(stored.getRole()).isEqualTo(Role.ADMIN);
+        assertThat(stored.getPasswordHash()).isEqualTo(passwordHash);
+    }
+
+    @Test
     void googleAccountLinkedToAnAdminDoesNotSignInThroughTheTermsStep() throws Exception {
         String email = randomEmail();
         userRegistrationService.register(email, "correct-password", "Promoted");

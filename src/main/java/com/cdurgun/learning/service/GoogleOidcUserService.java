@@ -21,6 +21,8 @@ import java.util.Optional;
  *       yerel rolüyle tamamlanır ({@link LocalOidcUser}) -- o hesap ADMIN değilse. ADMIN
  *       hesabına bağlı bir Google kimliğiyle giriş reddedilir.</li>
  *   <li>Bağlı değilse ve Google e-postayı doğrulamamışsa: giriş reddedilir.</li>
+ *   <li>Bağlı değilse ve e-postası eşleşen yerel hesap ADMIN ise: parola isteyen bağlama
+ *       adımına geçilmeden, bağlı ADMIN ile aynı hatayla reddedilir.</li>
  *   <li>Aksi halde: {@link PendingGoogleSignInException} -- giriş tamamlanmaz, kullanıcı
  *       koşul onayına (yeni hesap) ya da şifreyle bağlamaya (e-postası eşleşen hesap)
  *       yönlendirilir.</li>
@@ -65,9 +67,14 @@ public class GoogleOidcUserService implements OAuth2UserService<OidcUserRequest,
             throw new OAuth2AuthenticationException(new OAuth2Error(EMAIL_NOT_VERIFIED));
         }
 
+        String normalizedEmail = UserRegistrationService.normalizeEmail(email);
+        if (googleAccountService.isGoogleSignInBlockedForEmail(normalizedEmail)) {
+            throw new OAuth2AuthenticationException(new OAuth2Error(ADMIN_NOT_ALLOWED));
+        }
+
         throw new PendingGoogleSignInException(PendingGoogleSignIn.of(
                 subject,
-                UserRegistrationService.normalizeEmail(email),
+                normalizedEmail,
                 googleUser.getFullName(),
                 Instant.now()));
     }

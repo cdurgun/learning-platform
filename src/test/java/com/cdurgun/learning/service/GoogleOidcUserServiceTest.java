@@ -23,6 +23,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -92,6 +95,22 @@ class GoogleOidcUserServiceTest {
                 .isNotInstanceOf(PendingGoogleSignInException.class)
                 .satisfies(e -> assertThat(((OAuth2AuthenticationException) e).getError().getErrorCode())
                         .isEqualTo(GoogleOidcUserService.ADMIN_NOT_ALLOWED));
+    }
+
+    @Test
+    void unlinkedGoogleAccountWhoseEmailBelongsToAnAdminIsRejectedBeforeLinking() {
+        when(delegate.loadUser(request)).thenReturn(googleUser("sub-7", "  Admin@Example.com ", true, Map.of()));
+        when(googleAccountService.findLinkedUser("sub-7")).thenReturn(Optional.empty());
+        when(googleAccountService.isGoogleSignInBlockedForEmail("admin@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> newService().loadUser(request))
+                .isInstanceOf(OAuth2AuthenticationException.class)
+                .isNotInstanceOf(PendingGoogleSignInException.class)
+                .satisfies(e -> assertThat(((OAuth2AuthenticationException) e).getError().getErrorCode())
+                        .isEqualTo(GoogleOidcUserService.ADMIN_NOT_ALLOWED));
+        // Ne hesap açılır ne bağlanır: bağlama adımına hiç geçilmez.
+        verify(googleAccountService, never()).createAccount(any());
+        verify(googleAccountService, never()).link(any(), any());
     }
 
     @Test
