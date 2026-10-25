@@ -238,14 +238,21 @@ public class SecurityConfig {
                     : exception.getClass().getSimpleName();
             log.info("Google sign-in did not complete: {}", errorCode);
 
-            String error = switch (errorCode) {
-                case "access_denied" -> "google_cancelled";
-                case GoogleOidcUserService.EMAIL_NOT_VERIFIED -> "google_email_not_verified";
-                case GoogleOidcUserService.ADMIN_NOT_ALLOWED -> "google_link_unavailable";
-                default -> "google_failed";
-            };
             GoogleSignInSession.clear(request);
-            redirectStrategy.sendRedirect(request, response, "/" + lang + "/login?error=" + error);
+            redirectStrategy.sendRedirect(request, response, "/" + lang + "/login?error=" + googleLoginError(errorCode));
+        };
+    }
+
+    /**
+     * Google'ın/uygulamanın hata kodunu login sayfasındaki {@code ?error=} değerine çevirir.
+     * ADMIN reddi bilerek genel "bağlanamıyor" koduna düşer -- rol kullanıcıya söylenmez.
+     */
+    static String googleLoginError(String errorCode) {
+        return switch (errorCode) {
+            case "access_denied" -> "google_cancelled";
+            case GoogleOidcUserService.EMAIL_NOT_VERIFIED -> "google_email_not_verified";
+            case GoogleOidcUserService.ADMIN_NOT_ALLOWED -> "google_link_unavailable";
+            default -> "google_failed";
         };
     }
 

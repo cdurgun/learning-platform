@@ -353,7 +353,11 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `GoogleSignInController.render`, ikisi de `GoogleAccountService.isGoogleSignInBlockedForEmail`
   üzerinden `allowsGoogleSignIn`'e soruyor) -- F6'nın ADMIN kısmı kapandı, şifresiz hesap kısmı
   açık; tam suite 306/306. Bu düzeltme henüz production'a deploy edilmedi ve gerçek Google OAuth
-  ile doğrulanmadı. Ayrıntı: `docs/phase-log.md` "185".
+  ile doğrulanmadı. **Güncelleme (2026-10-25, sonra):** `7c5e12d` canlıda (deployment `6012f866`);
+  ADMIN hesabıyla gerçek Google girişi parola sayfasına girmeden reddedildi (deploy logunda
+  `google_admin_not_allowed`). `linkUnavailable` mesajı rolü/nedeni söylemeyen genel bir cümleye
+  çevrildi, eşleme ve EN/TR metni testli (309/309); bu mesaj değişikliği henüz canlıda değil.
+  Ayrıntı: `docs/phase-log.md` "185".
 - **Course seviyesi erişim kuralı (Faz 160, Faz 161'de DARALTILDI): ders içeriği
   (topic sayfası + PDF) TÜM kurslarda anonim okumaya açıktır; giriş yalnızca Java
   DIŞINDAKİ kursların etkileşimli özellikleri (sabit quiz, Quiz Area, Practice)

@@ -180,6 +180,13 @@ class GoogleSignInFlowTest {
                 .andExpect(content().string(containsString("Google sign-in was cancelled")));
         mockMvc.perform(get("/tr/login").param("error", "google_email_not_verified"))
                 .andExpect(content().string(containsString("doğrulanmamış")));
+        // ADMIN reddi dahil "bağlanamıyor" hatası: neden ya da rol söylenmez.
+        mockMvc.perform(get("/en/login").param("error", "google_link_unavailable"))
+                .andExpect(content().string(containsString("be used to sign in to that LearnForgeX account")))
+                .andExpect(content().string(not(containsString("different Google account"))));
+        mockMvc.perform(get("/tr/login").param("error", "google_link_unavailable"))
+                .andExpect(content().string(containsString("oturum açmak için kullanılamıyor")))
+                .andExpect(content().string(not(containsString("başka bir Google hesabına bağlı"))));
         // Form login'in kendi hatası ve listede olmayan değerler genel mesaja düşer.
         mockMvc.perform(get("/en/login").param("error", ""))
                 .andExpect(content().string(containsString("Invalid email or password.")));
