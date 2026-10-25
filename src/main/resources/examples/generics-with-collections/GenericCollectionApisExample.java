@@ -9,7 +9,7 @@ public class GenericCollectionApisExample {
         List<String> names = List.of("Alice", "Bob", "Charlie");
 
         // Set<T>: an unordered collection of one element type, with no duplicates.
-        Set<String> uniqueNames = Set.of("Alice", "Bob", "Alice"); // the duplicate collapses
+        Set<String> uniqueNames = Set.copyOf(List.of("Alice", "Bob", "Alice")); // the duplicate collapses
 
         // Map<K, V>: an association from one key type to one value type.
         Map<String, Integer> ages = Map.of("Alice", 30, "Bob", 25);
