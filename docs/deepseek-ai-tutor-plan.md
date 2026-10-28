@@ -1,8 +1,10 @@
 # DeepSeek AI Tutor — Architecture and Implementation Plan
 
-Status: **direction approved, revised 2026-10-27; implementation not started.** Each implementation
-step in §17 still waits for the user's go-ahead. DeepSeek facts were read from api-docs.deepseek.com
-on 2026-10-27; step 0 of §17 rechecks them before any code that depends on them.
+Status: **in production with the tutor turned off (2026-10-28).** Direction approved and revised
+2026-10-27; §17 steps 0–11 implemented, committed as `358c629` and deployed with
+`AI_TUTOR_ENABLED=false` (§13, "Rollout"). No real DeepSeek call has been made yet: §12b comes
+before the first one, and each remaining step still waits for the user's go-ahead. DeepSeek facts
+were read from api-docs.deepseek.com on 2026-10-27 and rechecked on 2026-10-28 (§10).
 
 ## 0. Approved decisions (user review, 2026-10-27)
 
@@ -82,9 +84,9 @@ Phase 1 adds an AI Tutor for admins only, built on what already exists:
 | Kill-switch pattern | `quiz.auto-publish.enabled: ${QUIZ_AUTO_PUBLISH_ENABLED:false}` returns 503 when off (`QuestionReviewService`). |
 | Secrets pattern | `${ENV:}` placeholders with empty defaults and fail-closed behaviour (`QUIZ_INGEST_API_KEY`, `GOOGLE_CLIENT_*`). Prod values come from Railway env vars. |
 | Error handling | No global `@ControllerAdvice` for errors; controllers throw `ResponseStatusException`. |
-| Outbound HTTP | **None today.** No `RestClient`, `WebClient` or `HttpClient` in `src/main/java`. |
+| Outbound HTTP | **None at planning time:** no `RestClient`, `WebClient` or `HttpClient` in `src/main/java`. Now `DeepSeekChatClient` is the only outbound client and uses the JDK `HttpClient` (`java.net.http`). |
 | Audit table precedent | `QuestionPublishLog` (`question_publish_log`): model name, status, error message. |
-| Migrations | V1–V1149, in subfolders per topic (`core/`, `auth/`, …). The next free number is **V1150** (confirm at coding time). `NUMERIC` columns must map to `BigDecimal` (`ddl-auto: validate`). |
+| Migrations | V1–V1149, in subfolders per topic (`core/`, `auth/`, …). The next free number at planning time was **V1150**; the tutor used V1150 and V1151, and since 2026-10-28 production is at **V1151**. `NUMERIC` columns must map to `BigDecimal` (`ddl-auto: validate`). |
 | Tests | `@SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test")` against a real Postgres on port 5433. Users are created through `UserRepository` (see `AdminAuthorizationTest`). CI is `.github/workflows/test.yml` (`mvn -B test`). There is no JS test infrastructure. |
 | Deploy | Railway via Railpack: `mvn ... -DskipTests ... install`. Tests never run on deploy; CI does. HTML pages are not publicly cached (only static assets have a 365-day public `Cache-Control`). |
 | Quiz/practice | `Question` pool (`QuestionStatus`, `QuestionSource` = MANUAL/CLAUDE/N8N/OPENAI), `QuestionIngestService` (always `PENDING_REVIEW`), `PracticeService`, `QuizDefinitionService`. **Not touched in Phase 1.** |
@@ -744,8 +746,10 @@ manual check):
 
 ## 12b. Checklist before the first real API call
 
-Added 2026-10-28 after the step 12 audit. No real call has been made yet. Every item is done by
-the user or with the user's explicit approval; the API key is never displayed or logged.
+Added 2026-10-28 after the step 12 audit. No real call has been made yet, including after the
+production deploy of 2026-10-28 (tutor off). The real `usage` object, reasoning tokens and the
+provider's charges are therefore still unverified. Every item is done by the user or with the
+user's explicit approval; the API key is never displayed or logged.
 
 1. **Provider account settings.** In the DeepSeek console, check the balance (topped-up and
    granted), whether automatic top-up or card-on-file charging exists, and whether any spending
@@ -785,12 +789,31 @@ the user or with the user's explicit approval; the API key is never displayed or
 - **Requirements:** no Railway Pro, no extra service, no worker and no Redis.
 - **Rollout:** deploy first with `AI_TUTOR_ENABLED=false` so V1150 applies and the endpoints return
   `disabled`. Then set the key and flip the flag.
-- **After pushing:** use the `deploy-check` skill.
+  - **Done 2026-10-28 (first step only):** `358c629` pushed to `main`; CI run `40716096275`
+    success (Maven 678, Expected Outputs 79, deploy-check Python tests 23). Railway deployment
+    `87620498-6496-4355-a17f-02ee33da4567` SUCCESS: V1149, V1150 and V1151 applied on
+    PostgreSQL 18.6, schema at V1151, Tomcat on 8080, healthcheck `/en` passed. The admin page
+    showed "The AI Tutor is currently turned off. It can be used once it is enabled in the
+    configuration." The JSON endpoint's `disabled` response was not called in production.
+  - **Not done:** setting the key and the flag (needs §12b and approval first).
+  - **Not proven:** that Railway's "Wait for CI" setting made this deploy wait for CI. The
+    deployment record was created before the CI run, and the start of the build log could not
+    be read, so the order is consistent with waiting but does not prove it.
+- **After pushing:** use the `deploy-check` skill. *(The live-site check was not run for the
+  2026-10-28 deploy. CI's deploy-check Python tests only test the skill's own code and do not
+  contact the live site.)*
 - **Off switches (two, independent):**
   - `AI_TUTOR_ENABLED=false`: Railway stages the change; it applies only after a deploy. The docs
     do not say whether this rebuilds or only restarts, so **measure it** during the first
     flag-off deploy (time from "deploy" to the new deployment serving traffic, via
     `railway logs --deployment`, read-only).
+    - **Measured 2026-10-28, push-triggered deploy only:** deployment record 15:27:12Z, CI
+      finished 15:29:53Z, application started 15:33:50Z, healthcheck passed 15:33:53Z, so about
+      **6 min 41 s** from the deployment record (created right after the push) to a passing
+      healthcheck. This includes CI and a full build.
+    - **Not measured:** a deploy triggered only by changing `AI_TUTOR_ENABLED` (the emergency
+      off switch). Its duration is still unknown, so the key revocation below stays the faster
+      stop.
   - Revoking the key in the DeepSeek console: no deploy needed. New requests fail with 401, which
     the tutor shows as `ai_unavailable`. This is the faster emergency stop.
 
@@ -925,7 +948,8 @@ paid call unless it says so and is approved for that.
    trickle-timeout, key never in logs. *(After 1.)*
 3. **Cost calculator.** `AiCostCalculator` (config prices, peak/off-peak, worst-case reservation
    estimate). Tests: BigDecimal math, boundaries, config-driven prices. *(After 1.)*
-4. **Usage log.** Next free migration number in `db/migration/ai-tutor/` (V1150 today), the
+4. **Usage log.** Next free migration number in `db/migration/ai-tutor/` (V1150 at planning time;
+   used as V1150, with the reservation table as V1151), the
    `AiUsageLog` entity (BigDecimal cost) and repository, `AiUsageRecorder`. Tests: rows on
    success, error and unreported usage; fresh-DB migration via the test suite. *(After 3.)*
 5. **Lesson context.** `LessonContextBuilder`, extracting the `{{Name.ext}}` regex from
@@ -960,13 +984,21 @@ paid call unless it says so and is approved for that.
 12. **Evaluation set (paid, approval required).** `questions.yml`, `AiTutorEvaluationRun`, a
     `.gitignore` entry for `.ai-tutor-eval/`. Writing the files is free; **running it** uses your
     key and needs approval. Review the report together; tune context size or prompt if needed.
+    *(Not started; no real call has been made.)*
 13. **Project docs.** `docs/phase-log.md` row (next Faz number) and a short CLAUDE.md note (tutor
-    security rule, kill switch, no prompts stored).
+    security rule, kill switch, no prompts stored). *(Partly done: phase-log Faz 186 written and
+    updated after the deploy; the CLAUDE.md note is not written.)*
 14. **Production (approval required).** Commit and push; check CI. Deploy with
     `AI_TUTOR_ENABLED=false`, run `deploy-check`, confirm the migration applied and endpoints
     return `disabled`, and **measure** the Railway variable-change deploy delay. Only after the
     DeepSeek console check (§15) and your approval: set `DEEPSEEK_API_KEY` and
     `AI_TUTOR_ENABLED=true`, deploy, and test as admin in prod.
+    *(Status 2026-10-28, details in §13, "Rollout":*
+    - *Done: commit and push, CI success, flag-off deploy, migrations applied (schema V1151),
+      "turned off" seen on the admin page.*
+    - *Not done: the `deploy-check` skill (live-site check); a production call to the JSON endpoint to see `disabled`; the
+      variable-change deploy delay (only a push-triggered deploy was measured); everything after
+      "Only after the DeepSeek console check".)*
 
 **Required vs. recommended vs. deferred:**
 
