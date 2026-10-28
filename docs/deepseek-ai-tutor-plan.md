@@ -38,7 +38,7 @@ from api-docs.deepseek.com on 2026-10-27 and rechecked on
   then the lesson panel (step 11).
 - A ~20-question evaluation set measures quality and cost with real calls, kept outside the normal
   test suite (§12a).
-- Defaults (all configurable, none hardcoded in business logic): `max_tokens` 1 500, message 4 000
+- Defaults (all configurable, none hardcoded in business logic): `max_tokens` 3 000, message 4 000
   characters, lesson context 60 000 characters, 30 requests per user per hour, $1 per day, $10 per
   month.
 - `AI_TUTOR_ENABLED` defaults to `false`. The feature works only when the backend flag is on **and**
@@ -455,7 +455,7 @@ CREATE INDEX idx_ai_usage_log_created ON ai_usage_log(created_at);
 
 | Control | Phase 1 default | Kind |
 |---|---|---|
-| `max_tokens` | 1 500 | Hard, per request (enforced by the provider) |
+| `max_tokens` | 3 000 (1 500 until 2026-10-28) | Hard, per request (enforced by the provider) |
 | `thinking: disabled` | Always | Sent on every request (a test asserts the request body); its effect on the provider's real responses is **not yet verified**, see "Thinking setting" below |
 | Max input | 4 000 characters | Hard (`@Size`) |
 | Max lesson context | 60 000 characters | Hard |
@@ -501,15 +501,17 @@ So concurrent requests cannot jointly overrun the budget **by our own pre-call e
   - total ≈ 88 750 + title, rounded here to **≈ 89 000 characters**
 - Tokens: 89 000 × `worst-case-tokens-per-char` 0.5 = **44 500 input tokens** (an assumption, see
   below; nothing was measured), all treated as cache misses, plus the full `max-output-tokens` =
-  1 500 output tokens.
+  3 000 output tokens. (Raised from 1 500 on 2026-10-28: the §12d Turkish lesson call used all
+  1 500 output tokens and its answer was cut off, `truncated=true`.)
 - Prices: `worstCase` takes, for each item, the higher of the two configured periods, which is the
   **peak** rate: $0.30 per 1M cache-miss input tokens and $1.20 per 1M output tokens
   (`pricing.version` `deepseek-flash-2026-10-27`). These values matched the official
   [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing/?tool=deepseek) page when it
   was read on 2026-10-28. DeepSeek may change them; the configuration then has to be updated.
-- Amount: 44 500 × $0.30 / 1M = $0.01335, plus 1 500 × $1.20 / 1M = $0.0018, so **≈ $0.0152 per
-  request**. A $1.00 daily budget therefore admits **about 66** such requests ($1.00 / $0.01515 ≈
-  66.0), and fewer if anything else was already spent or reserved that day.
+- Amount: 44 500 × $0.30 / 1M = $0.01335, plus 3 000 × $1.20 / 1M = $0.0036, so **≈ $0.0170 per
+  request** (with 1 500 output tokens it was $0.01515). A $1.00 daily budget therefore admits
+  **about 58** such requests ($1.00 / $0.01695 ≈ 58.997, so 59 would not fit; it was 66 with 1 500),
+  and fewer if anything else was already spent or reserved that day.
 - This is the **reservation**, our own pre-call figure. It is not a measurement, not a
   price quote and not DeepSeek's bill. A real request is normally cheaper (shorter prompts,
   off-peak hours, cache hits, shorter answers) but can also cost more (see the next paragraph).
@@ -604,7 +606,8 @@ only come from the provider account (below).
 **Thinking setting (YÜKSEK-1 of the step 12 audit; strong evidence for one request, not closed in
 general):**
 
-- Every request sends `thinking: {"type": "disabled"}` together with `max_tokens` (1 500), and no
+- Every request sends `thinking: {"type": "disabled"}` together with `max_tokens` (3 000 since
+  2026-10-28, before that 1 500), and no
   `reasoning_effort`.
 - `DeepSeekChatClientTest.sendsTheDocumentedRequest` proves only that this field is in the
   request body we build. It does **not** prove that DeepSeek actually answers without thinking:

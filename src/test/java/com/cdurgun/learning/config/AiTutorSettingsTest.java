@@ -66,7 +66,7 @@ class AiTutorSettingsTest {
         assertThat(properties.timeouts().total()).isEqualTo(Duration.ofSeconds(60));
 
         AiTutorProperties.Limits limits = properties.limits();
-        assertThat(limits.maxOutputTokens()).isEqualTo(1500);
+        assertThat(limits.maxOutputTokens()).isEqualTo(3000);
         assertThat(limits.maxMessageChars()).isEqualTo(4000);
         assertThat(limits.maxContextChars()).isEqualTo(60000);
         assertThat(limits.maxAnswerCharsStored()).isEqualTo(8000);

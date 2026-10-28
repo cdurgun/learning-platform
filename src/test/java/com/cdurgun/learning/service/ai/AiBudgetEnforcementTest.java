@@ -71,8 +71,8 @@ class AiBudgetEnforcementTest {
     private static final Instant MONDAY_NOON = Instant.parse("2031-03-10T12:00:00Z");
     private static final LocalDateTime TEST_RANGE_START = LocalDateTime.of(2031, 1, 1, 0, 0);
     private static final CallInfo LESSON = new CallInfo("enum", Language.EN, 4200);
-    /** worstCase(1000): 500 token * 0.30 + 1500 * 1.20 (USD / 1M) */
-    private static final BigDecimal WORST_1000 = new BigDecimal("0.001950");
+    /** worstCase(1000): 500 token * 0.30 + 3000 * 1.20 (USD / 1M) */
+    private static final BigDecimal WORST_1000 = new BigDecimal("0.003750");
 
     @Autowired
     private UserRepository userRepository;
@@ -238,9 +238,9 @@ class AiBudgetEnforcementTest {
 
     @Test
     void dailyBudgetCountsReservationsInFlight() {
-        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.01");
+        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.02");
         for (int i = 0; i < 5; i++) {
-            allowed(guard.reserve(admin(), 1000)); // 5 * 0.00195 = 0.00975
+            allowed(guard.reserve(admin(), 1000)); // 5 * 0.00375 = 0.01875
         }
         assertThat(guard.reserve(admin(), 1000)).isEqualTo(new Denied(DenialReason.DAILY_BUDGET_EXHAUSTED));
         assertThat(guard.reserve(admin(), 256)).isEqualTo(new Denied(DenialReason.DAILY_BUDGET_EXHAUSTED));
@@ -251,7 +251,7 @@ class AiBudgetEnforcementTest {
 
     @Test
     void monthlyBudgetHoldsAcrossDays() {
-        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.004", "ai.tutor.budget.monthly-usd=0.004");
+        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.008", "ai.tutor.budget.monthly-usd=0.008");
         allowed(guard.reserve(admin(), 1000));
         allowed(guard.reserve(admin(), 1000));
         assertThat(guard.reserve(admin(), 1000)).isEqualTo(new Denied(DenialReason.DAILY_BUDGET_EXHAUSTED));
@@ -265,9 +265,9 @@ class AiBudgetEnforcementTest {
 
     @Test
     void aBudgetExactlyFilledIsAllowedAndTheNextCentIsNot() {
-        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.003900");
+        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.007500");
         allowed(guard.reserve(admin(), 1000));
-        allowed(guard.reserve(admin(), 1000)); // tam 0.003900
+        allowed(guard.reserve(admin(), 1000)); // tam 0.007500
         assertThat(guard.reserve(admin(), 0)).isEqualTo(new Denied(DenialReason.DAILY_BUDGET_EXHAUSTED));
     }
 
@@ -297,7 +297,7 @@ class AiBudgetEnforcementTest {
 
     @Test
     void concurrentRequestsCannotOverrunTheBudget() throws Exception {
-        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.01");
+        AiTutorGuard guard = guard("ai.tutor.budget.daily-usd=0.02");
         List<Authentication> admins = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             admins.add(admin());
@@ -308,7 +308,7 @@ class AiBudgetEnforcementTest {
 
         assertThat(decisions.stream().filter(Allowed.class::isInstance)).hasSize(5);
         assertThat(decisions.stream().filter(d -> d.equals(new Denied(DenialReason.DAILY_BUDGET_EXHAUSTED)))).hasSize(15);
-        assertThat(committed()).isLessThanOrEqualTo(new BigDecimal("0.01")).isEqualByComparingTo("0.00975");
+        assertThat(committed()).isLessThanOrEqualTo(new BigDecimal("0.02")).isEqualByComparingTo("0.01875");
     }
 
     @Test
@@ -327,8 +327,8 @@ class AiBudgetEnforcementTest {
         try (HikariDataSource otherPool = otherInstancePool()) {
             AiReservationStore otherStore = new AiReservationStore(new JdbcTemplate(otherPool),
                     new DataSourceTransactionManager(otherPool));
-            AiTutorGuard instanceA = guard("ai.tutor.budget.daily-usd=0.01");
-            AiTutorGuard instanceB = guard(otherStore, "ai.tutor.budget.daily-usd=0.01");
+            AiTutorGuard instanceA = guard("ai.tutor.budget.daily-usd=0.02");
+            AiTutorGuard instanceB = guard(otherStore, "ai.tutor.budget.daily-usd=0.02");
             List<Authentication> admins = new ArrayList<>();
             for (int i = 0; i < 16; i++) {
                 admins.add(admin());
@@ -341,7 +341,7 @@ class AiBudgetEnforcementTest {
             });
 
             assertThat(decisions.stream().filter(Allowed.class::isInstance)).hasSize(5);
-            assertThat(committed()).isEqualByComparingTo("0.00975");
+            assertThat(committed()).isEqualByComparingTo("0.01875");
         }
     }
 

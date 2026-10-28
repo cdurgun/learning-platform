@@ -203,7 +203,7 @@ class AiTutorGuardTest {
 
         ArgumentCaptor<AiReservationStore.Request> request = ArgumentCaptor.forClass(AiReservationStore.Request.class);
         verify(store).reserve(request.capture());
-        assertThat(request.getValue().amount()).isEqualByComparingTo("0.022500")
+        assertThat(request.getValue().amount()).isEqualByComparingTo("0.024300")
                 .isEqualByComparingTo(calculator.worstCase(138_000).usd());
         assertThat(request.getValue().userId()).isEqualTo(41L);
         assertThat(request.getValue().now()).isEqualTo(NOW);
@@ -222,7 +222,7 @@ class AiTutorGuardTest {
 
         guard(AiTutorTestSettings.usable()).reserve(signedIn(ADMIN_EMAIL), 138_000);
 
-        assertThat(output).contains("AI Tutor daily budget reached 0.812500 of 1.00 USD")
+        assertThat(output).contains("AI Tutor daily budget reached 0.814300 of 1.00 USD")
                 .doesNotContain("monthly budget").doesNotContain(AiTutorTestSettings.FAKE_KEY);
     }
 

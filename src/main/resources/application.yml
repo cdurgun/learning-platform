@@ -80,7 +80,7 @@ ai:
       connect: 5s
       total: 60s
     limits:
-      max-output-tokens: 1500
+      max-output-tokens: 3000
       max-message-chars: 4000
       max-context-chars: 60000
       max-answer-chars-stored: 8000
