@@ -142,7 +142,11 @@ public class SecurityConfig {
                                                 PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/topics/*/quiz/*/submit"),
                                                 PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/quiz/*/submit"),
                                                 PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/practice/submit"),
-                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/practice")))
+                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/practice"),
+                                                // AI Tutor JSON uç noktaları (ai-tutor.js'in fetch()'i). CSRF
+                                                // muafiyetinde BİLİNÇLİ OLARAK yoklar: oturum adına para harcarlar.
+                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/admin/ai-tutor/messages"),
+                                                PathPatternRequestMatcher.pathPattern("/{lang:en|tr}/admin/ai-tutor/conversations/*")))
                                 .defaultEntryPoint(new LoginUrlAuthenticationEntryPoint(LOGIN_PAGE))
                                 .build()))
                 .sessionManagement(session -> session

@@ -1,5 +1,6 @@
 package com.cdurgun.learning.controller;
 
+import com.cdurgun.learning.config.AiTutorSettings;
 import com.cdurgun.learning.config.CourseAccessPolicy;
 import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.domain.Topic;
@@ -53,6 +54,7 @@ public class TopicController {
     private final QuizService quizService;
     private final CourseAccessPolicy courseAccessPolicy;
     private final CatalogNames catalogNames;
+    private final AiTutorSettings aiTutorSettings;
 
     public TopicController(TopicRepository topicRepository,
                             TopicTranslationRepository topicTranslationRepository,
@@ -63,7 +65,8 @@ public class TopicController {
                             PdfExportService pdfExportService,
                             QuizService quizService,
                             CourseAccessPolicy courseAccessPolicy,
-                            CatalogNames catalogNames) {
+                            CatalogNames catalogNames,
+                            AiTutorSettings aiTutorSettings) {
         this.topicRepository = topicRepository;
         this.topicTranslationRepository = topicTranslationRepository;
         this.contentResolver = contentResolver;
@@ -74,6 +77,7 @@ public class TopicController {
         this.quizService = quizService;
         this.courseAccessPolicy = courseAccessPolicy;
         this.catalogNames = catalogNames;
+        this.aiTutorSettings = aiTutorSettings;
     }
 
     /**
@@ -148,6 +152,9 @@ public class TopicController {
         }
 
         model.addAttribute("contentAvailable", true);
+        // AI Tutor paneli (adım 11) yalnızca ADMIN'e çizilir (topic.html, isAdmin); bu yalnızca
+        // "açık mı" bilgisidir -- yapılandırmanın hiçbir değeri sayfaya gitmez.
+        model.addAttribute("aiTutorAvailable", aiTutorSettings.isUsable());
         model.addAttribute("translation", translation.get());
         model.addAttribute("summaryHtml", SummaryFormatter.toHtml(translation.get().getSummary()));
 

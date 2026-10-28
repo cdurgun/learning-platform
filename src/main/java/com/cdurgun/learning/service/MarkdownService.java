@@ -52,8 +52,9 @@ public class MarkdownService {
     // CodeExampleResolver'a hem üretilen fenced code block'un dil etiketine besleniyor.
     // Geriye dönük uyumluluk otomatik: mevcut TÜM içerik zaten "{{Ad.java}}" yazıyor,
     // bu yüzden extension grubu onlar için her zaman "java" olarak çözülüyor ve üretilen
-    // çıktı birebir öncekiyle aynı.
-    private static final Pattern EXAMPLE_PLACEHOLDER = Pattern.compile("\\{\\{(\\w+)\\.(\\w+)}}");
+    // çıktı birebir öncekiyle aynı. Desen artık ExamplePlaceholder'da (AI Tutor'un ders
+    // bağlamı da aynı tanımı kullanır); değeri değişmedi.
+    private static final Pattern EXAMPLE_PLACEHOLDER = ExamplePlaceholder.PATTERN;
 
     private static final Pattern TIP_BLOCKQUOTE = Pattern.compile(
             "<blockquote>\\s*<p>\\s*💡\\s*Tip\\s*(.*?)</p>\\s*</blockquote>",

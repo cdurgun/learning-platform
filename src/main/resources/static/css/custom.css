@@ -533,3 +533,90 @@ footer .social-instagram:focus-visible {
     flex: 1;
     border-top: 1px solid var(--bs-border-color);
 }
+
+/* AI Tutor (admin/ai-tutor.html + fragments/ai-tutor.html). Uzun kod satırları yalnızca kendi
+   <pre>'si içinde yatay kayar; mesaj listesi ve sayfa yatay taşmaz (min-width: 0). */
+.ai-tutor,
+.ai-tutor-page {
+    min-width: 0;
+}
+
+.ai-tutor-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 60vh;
+    min-height: 6rem;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.ai-tutor-message {
+    max-width: 100%;
+    min-width: 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.ai-tutor-message-user {
+    align-self: flex-end;
+    max-width: 90%;
+    background-color: var(--bs-primary-bg-subtle);
+}
+
+.ai-tutor-message-user .ai-tutor-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.ai-tutor-message-tutor {
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+}
+
+.ai-tutor-role {
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.ai-tutor-answer {
+    overflow-wrap: anywhere;
+}
+
+.ai-tutor-answer pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.ai-tutor-answer pre code {
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.ai-tutor-answer > :last-child {
+    margin-bottom: 0;
+}
+
+/* AI Tutor ders sayfası paneli (topic.html, offcanvas-end): telefonda tam genişlik, lg+ 420px.
+   Sohbet listesi panelin yüksekliğine göre sınırlanır; panel kendi içinde dikey kayar. */
+.ai-tutor-offcanvas {
+    --bs-offcanvas-width: 100%;
+}
+
+@media (min-width: 992px) {
+    .ai-tutor-offcanvas {
+        --bs-offcanvas-width: 420px;
+    }
+}
+
+.ai-tutor-offcanvas .ai-tutor-messages {
+    max-height: 50vh;
+}
+
+.ai-tutor-offcanvas .min-w-0 {
+    min-width: 0;
+}
