@@ -5,7 +5,9 @@ Status: **in production with the tutor turned off (2026-10-28).** Direction appr
 `AI_TUTOR_ENABLED=false` (§13, "Rollout"). No real DeepSeek call has been made yet: §12b comes
 before the first one, and each remaining step still waits for the user's go-ahead. A free local
 rehearsal against a fake provider passed on 2026-10-28 (§12c); it does not verify real provider
-behaviour. DeepSeek facts were read from api-docs.deepseek.com on 2026-10-27 and rechecked on
+behaviour. One real DeepSeek call was then made in that isolated local environment on 2026-10-28
+(§12d); production was not touched and the production tutor stays off. DeepSeek facts were read
+from api-docs.deepseek.com on 2026-10-27 and rechecked on
 2026-10-28 (§10).
 
 ## 0. Approved decisions (user review, 2026-10-27)
@@ -554,6 +556,9 @@ lesson prefix. These are also estimates, not measurements.
 - DeepSeek documents about 0.3 tokens per character for English and 0.6 for Chinese, and nothing
   for Turkish. Code, symbols, emoji or other scripts can need more than 0.5. Nothing guarantees
   that a request uses at most 0.5 tokens per character.
+- Measured once (§12d, 2026-10-28): 104 input tokens for 485 characters, about **0.214**, for a
+  short English question without a lesson. This is a single sample; Turkish text, code and
+  lesson context are still unmeasured.
 - The output part assumes generation stops at `max_tokens`. Whether `max_tokens` also covers
   reasoning tokens is not stated in the DeepSeek docs (see "Thinking setting" below).
 - So **one request can really cost more than its reservation**. The budget is checked only before
@@ -596,14 +601,15 @@ only come from the provider account (below).
 - `pricing_version` and `pricing_period` (`PEAK`, `OFF_PEAK` or `WORST_CASE`) are recorded on every
   row, so an estimate can be traced back to the prices it used.
 
-**Thinking setting (open, YÜKSEK-1 of the step 12 audit):**
+**Thinking setting (YÜKSEK-1 of the step 12 audit; strong evidence for one request, not closed in
+general):**
 
 - Every request sends `thinking: {"type": "disabled"}` together with `max_tokens` (1 500), and no
   `reasoning_effort`.
 - `DeepSeekChatClientTest.sendsTheDocumentedRequest` proves only that this field is in the
   request body we build. It does **not** prove that DeepSeek actually answers without thinking:
   that can only be seen on a real response, as `completion_tokens_details.reasoning_tokens` being 0
-  or absent. No real call has been made yet, so this is unverified.
+  or absent. The first real call (§12d) is the only real evidence so far.
 - Docs checked on 2026-10-28:
   - The [Chat Completions reference](https://api-docs.deepseek.com/api/create-chat-completion/)
     defines both `thinking.type` (`enabled`/`disabled`, default `enabled`) and `reasoning_effort`
@@ -618,6 +624,11 @@ only come from the provider account (below).
   undocumented behaviour. The request stays as it is until the user decides otherwise.
 - The first real call must check `reasoning_tokens` in `ai_usage_log` (and the provider response)
   before the tutor is used further.
+- **Result of the first real call (§12d, 2026-10-28):** for one short English question without a
+  lesson, `reasoning_tokens` was not reported (NULL), the 26 output tokens were the one-sentence
+  answer, and DeepSeek's usage export shows no separate reasoning line. That is strong evidence
+  that thinking was off **for that request**. It is not generalised to Turkish or lesson-context
+  requests, and whether `max_tokens` covers reasoning tokens is still unknown.
 
 **Provider-level cap (to verify, not assumed):**
 
@@ -629,6 +640,9 @@ only come from the provider account (below).
   is free, so it is run only with your approval.
 - Only if the console confirms prepaid-only billing with no auto top-up does the balance act as a
   true hard cap (DeepSeek returns 402 when it runs out).
+- **User-reported on 2026-10-28** (from the DeepSeek console, before the first real call): a
+  topped-up balance of $5 and no automatic top-up setting. The balance alert was disabled at the
+  time.
 - **Cost is labeled as an estimate.** See "How the estimate is calculated" above.
 - **Reporting:** in Phase 1, a SQL query against `ai_usage_log` is enough. A small admin table on
   the tutor page (today, this month, average tokens) is *Recommended*.
@@ -748,9 +762,10 @@ manual check):
 
 ## 12b. Checklist before the first real API call
 
-Added 2026-10-28 after the step 12 audit. No real call has been made yet, including after the
-production deploy of 2026-10-28 (tutor off). The real `usage` object, reasoning tokens and the
-provider's charges are therefore still unverified. Every item is done by the user or with the
+Added 2026-10-28 after the step 12 audit. The first real call was made on 2026-10-28, locally,
+following this checklist; its results are in §12d. Production still has made no real call, and
+the items below stay the checklist for any further first call (for example in production). Every
+item is done by the user or with the
 user's explicit approval; the API key is never displayed or logged.
 
 1. **Provider account settings.** In the DeepSeek console, check the balance (topped-up and
@@ -854,6 +869,78 @@ stay open.
   determined**. The process exit and the free port were confirmed independently.
 - Note for the next local run: `server.address` was not set, so the application listened on all
   interfaces, not only localhost.
+
+## 12d. First real API call (2026-10-28)
+
+One real DeepSeek call, made in the isolated rehearsal environment of §12c and following §12b.
+**Production was not touched; the production tutor stayed off.**
+
+**Differences from §12c:**
+- No `--ai.tutor.base-url` override, so the default `https://api.deepseek.com` was used.
+- `--server.address=127.0.0.1`: the application listened only on localhost (verified).
+- A key created only for this test was stored by the user in the macOS Keychain and passed
+  straight into the application's environment. It never appeared in commands, output, logs or
+  docs; the application log was checked and contains no key or `Bearer` trace.
+- Budgets: `AI_TUTOR_DAILY_BUDGET_USD=0.01`, `AI_TUTOR_MONTHLY_BUDGET_USD=0.05`.
+- The rehearsal database still held the three simulated rows from §12c; the real call is row 4.
+
+**The call:**
+- Time: 2026-10-28 19:16:28Z (off-peak).
+- Question: one short question with no lesson ("In one sentence, what does the final keyword mean
+  for a Java variable?").
+- No retry. The application was stopped with SIGTERM two seconds after the answer, so a second
+  call was not possible.
+
+**Results:**
+- **HTTP 200.** About **1.6 s** end to end, as measured by the client; the provider call itself
+  (`duration_ms`) took 1291 ms.
+- **Answer:** a single sentence. `truncated=false`, `conversationSaved=true`.
+- **`ai_usage_log` row 4:**
+  - `SUCCESS`, `usage_reported=true`, `OFF_PEAK`.
+  - Cache hit 0, cache miss **104**, completion **26**; `reasoning_tokens` NULL (not reported).
+  - `input_chars` 485.
+  - `estimated_cost_usd` **0.000032**.
+- **Reservation row 4:** `SETTLED` and linked to row 4. It had reserved 0.001873 USD. No `ACTIVE`
+  reservation was left.
+- **DeepSeek console** (user's screenshot): 1 API request, 130 tokens.
+- **DeepSeek usage export** (CSV, user-provided):
+  - `input_cache_miss_tokens` 104 at $0.00000015 per token.
+  - `output_tokens` 26 at $0.0000006 per token.
+  - `request_count` 1.
+  - No cache-hit or reasoning line.
+  - Cost **$0.0000312** (paid balance).
+- **Match:**
+  - Tokens match exactly: 104 + 26 = 130.
+  - The provider's prices equal the configured off-peak rates.
+  - The application's unrounded estimate (104 × 0.15 + 26 × 0.60 = 31.2 per million) equals the
+    provider's $0.0000312. The recorded $0.000032 differs **only** because the application rounds
+    up to six decimals (§10).
+
+**Findings:**
+- **Thinking (YÜKSEK-1):** strong evidence that thinking was off for this short English request
+  (see §10, "Thinking setting"). Not generalised to Turkish or lesson-context requests.
+- **Tokens per character:** 104 / 485, about 0.214, below the 0.5 assumption (one sample; §10).
+- **No raw response stored:** the application keeps no copy of the provider's response (the
+  response `model`, `finish_reason` beyond `truncated`, `prompt_tokens`, `total_tokens`, the raw
+  `usage` object). The comparison therefore relied on `ai_usage_log` and the console/CSV.
+- **Unexplained:** the console showed a topped-up balance of $4.99 after a $0.0000312 charge. The
+  reason for this difference was not verified.
+- **Railway (unrelated to the local call):** the docs-only push of `e0a77fd` did trigger a
+  production deployment, `c3c731e9-f3bd-4a59-a95c-0fa9d549609f`.
+  - It was created at 18:22:57Z and stayed `QUEUED` for about 39 minutes, although CI finished
+    successfully at 18:24:36Z. Railway gave only the generic reason "Deployment queued", so the
+    cause of the wait was not determined.
+  - It then started (application up at 19:01:55Z, Flyway: schema up to date, no migration) and
+    reached `SUCCESS` at 19:02:07Z.
+  - Checked at 19:34Z: `AI_TUTOR_ENABLED` and `DEEPSEEK_API_KEY` were still undefined on the
+    service (presence only, no values read), so the production tutor stays off. `/en` returned
+    200.
+
+**Shutdown.**
+- The application was stopped with SIGTERM (exit 143, as expected for SIGTERM).
+- The container was stopped with `docker stop` and **not removed**; its volume and the four
+  rows remain.
+- The response, application log and cookie file were kept outside the repository.
 
 ## 13. Railway configuration
 
@@ -1062,7 +1149,7 @@ paid call unless it says so and is approved for that.
 12. **Evaluation set (paid, approval required).** `questions.yml`, `AiTutorEvaluationRun`, a
     `.gitignore` entry for `.ai-tutor-eval/`. Writing the files is free; **running it** uses your
     key and needs approval. Review the report together; tune context size or prompt if needed.
-    *(Not started; no real call has been made.)*
+    *(Not started. Separately, one single real call was made locally on 2026-10-28, §12d.)*
 13. **Project docs.** `docs/phase-log.md` row (next Faz number) and a short CLAUDE.md note (tutor
     security rule, kill switch, no prompts stored). *(Partly done: phase-log Faz 186 written and
     updated after the deploy; the CLAUDE.md note is not written.)*
@@ -1074,8 +1161,8 @@ paid call unless it says so and is approved for that.
     *(Status 2026-10-28, details in §13, "Rollout":*
     - *Done: commit and push, CI success, flag-off deploy, migrations applied (schema V1151),
       "turned off" seen on the admin page, the `deploy-check` live-site check (32/33; the one
-      failure was a local-HEAD mismatch, see §13), and a free local rehearsal with a fake
-      provider (§12c).*
+      failure was a local-HEAD mismatch, see §13), a free local rehearsal with a fake
+      provider (§12c), and one real DeepSeek call in that isolated local environment (§12d).*
     - *Not done: a production call to the JSON endpoint to see `disabled`; the variable-change
       deploy delay (only a push-triggered deploy was measured); everything after "Only after the
       DeepSeek console check".)*
