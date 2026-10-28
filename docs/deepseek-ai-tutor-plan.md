@@ -3,8 +3,10 @@
 Status: **in production with the tutor turned off (2026-10-28).** Direction approved and revised
 2026-10-27; §17 steps 0–11 implemented, committed as `358c629` and deployed with
 `AI_TUTOR_ENABLED=false` (§13, "Rollout"). No real DeepSeek call has been made yet: §12b comes
-before the first one, and each remaining step still waits for the user's go-ahead. DeepSeek facts
-were read from api-docs.deepseek.com on 2026-10-27 and rechecked on 2026-10-28 (§10).
+before the first one, and each remaining step still waits for the user's go-ahead. A free local
+rehearsal against a fake provider passed on 2026-10-28 (§12c); it does not verify real provider
+behaviour. DeepSeek facts were read from api-docs.deepseek.com on 2026-10-27 and rechecked on
+2026-10-28 (§10).
 
 ## 0. Approved decisions (user review, 2026-10-27)
 
@@ -779,6 +781,80 @@ user's explicit approval; the API key is never displayed or logged.
    findings: thinking really off (YÜKSEK-1), whether `max_tokens` covers reasoning tokens, the
    tokens-per-character ratio for Turkish and code, and the provider-side spending cap.
 
+## 12c. Free rehearsal with a fake provider (2026-10-28)
+
+A local, isolated run of the real application against a fake DeepSeek server, so that the real
+`DeepSeekChatClient`, the real database and the real configuration were exercised together
+without any paid call. **No real DeepSeek API call was made**, and production was not touched:
+the production tutor stayed off.
+
+**Setup (all local, all disposable):**
+- Application: the jar built locally from `main` (application code identical to `358c629`; the
+  later commit and the uncommitted changes touch only docs and scripts), run with the profile name
+  `rehearsal` (there is no `application-rehearsal.yml`, so the base `application.yml` applies plus
+  command-line overrides) on port 8091, `AI_TUTOR_ENABLED=true`, a fake API key,
+  `AI_TUTOR_DAILY_BUDGET_USD=0.10`, `AI_TUTOR_MONTHLY_BUDGET_USD=0.50`.
+- Database: a new `postgres:16-alpine` container (label `purpose=ai-tutor-rehearsal`, bound to
+  `127.0.0.1:5440`). Flyway built the schema from scratch. One ADMIN and one USER test account.
+  The development database was not used.
+- Fake provider: a small Python server on `127.0.0.1:18099` (`ai.tutor.base-url` pointed there).
+  It returned either a fixed answer with fixed usage (cache hit 20, cache miss 100, completion
+  40, reasoning 0) or HTTP 429. It logged request metadata only, never the Authorization value
+  or message text.
+
+**Results.** Every test gave the expected result. Counters are fake-provider requests / `ai_usage_log`
+rows / `ai_tutor_reservation` rows after each step.
+
+| Test | Request | Result | Counters |
+|---|---|---|---|
+| A1 | anonymous, valid CSRF token | 401, no redirect, empty body | 0/0/0 |
+| A2 | anonymous, no CSRF token | 403 (CSRF rejection) | 0/0/0 |
+| U0 | USER, `POST /en` with a CSRF token | 405 (token accepted; no POST handler) | 0/0/0 |
+| U0b | U0 repeated with the exact token value used in U1 (added during the run) | 405 | 0/0/0 |
+| U1 | USER, same token value | 403 (role rejection) | 0/0/0 |
+| AD1 | ADMIN, no CSRF token | 403 (CSRF rejection) | 0/0/0 |
+| N1 | ADMIN, blank message | 400 `invalid_request` | 0/0/0 |
+| N2 | ADMIN, 4001-character message | 400 `invalid_request` | 0/0/0 |
+| AD2 | ADMIN, valid CSRF token, short question | 200 | 1/1/1 |
+| S | ADMIN, second question, field-by-field check | 200 | 2/2/2 |
+| R | ADMIN, fake provider returns 429 | 503 `ai_busy` | 3/3/3 |
+
+- The 403s were told apart with paired requests rather than by status code alone: A1 vs A2,
+  U0/U0b vs U1, AD1 vs AD2.
+- **S:**
+  - `answerHtml` was `<p><strong>Rehearsal answer:</strong> a <code>final</code> variable can be
+    assigned only once.</p>`, with `truncated=false`, `lessonContextUsed=false`,
+    `conversationSaved=true` and `turnsRemaining=5`.
+  - The fake provider received `model=deepseek-flash`, `thinking={"type":"disabled"}`,
+    `max_tokens=1500`, `stream=false`, roles `[system, user]` and no other fields, with the fake
+    key as a Bearer token.
+- **R:** exactly one request reached the fake provider (no retry). The reservation was settled at
+  the worst case.
+- **Records.** All three reservations ended `SETTLED`, each linked to its usage row, with none left
+  `ACTIVE`.
+  - AD2 and S: `SUCCESS`, `usage_reported=true`, tokens 20/100/40/0, `OFF_PEAK`, **0.000040** USD
+    each.
+  - R: `ERROR`/`RATE_LIMITED`, `usage_reported=false`, all token columns NULL, `WORST_CASE`,
+    **0.001865** USD, equal to the reservation's `reserved_usd`.
+  - S's `input_chars` (451) matched the character count the fake provider measured.
+- **These costs are simulated.** They come from the fake provider's fixed token counts and the
+  configured prices. No money was spent, and they say nothing about real token counts or charges.
+
+**What this does not verify:** the real `usage` object, reasoning tokens and thinking mode
+(YÜKSEK-1), real tokens per character, real latency and the provider's charges. All §12b items
+stay open.
+
+**Shutdown.**
+- The application and the fake provider were stopped with SIGTERM: the application shut down
+  gracefully, and both ports were confirmed free.
+- The container was stopped with `docker stop` and **not removed**: the container, its volume and
+  the rehearsal records still exist.
+- The run's logs, responses and cookie files were kept outside the repository.
+- The fake provider's background task reported **exit code 144**; its cause **was not
+  determined**. The process exit and the free port were confirmed independently.
+- Note for the next local run: `server.address` was not set, so the application listened on all
+  interfaces, not only localhost.
+
 ## 13. Railway configuration
 
 - **Add:**
@@ -799,9 +875,11 @@ user's explicit approval; the API key is never displayed or logged.
   - **Not proven:** that Railway's "Wait for CI" setting made this deploy wait for CI. The
     deployment record was created before the CI run, and the start of the build log could not
     be read, so the order is consistent with waiting but does not prove it.
-- **After pushing:** use the `deploy-check` skill. *(The live-site check was not run for the
-  2026-10-28 deploy. CI's deploy-check Python tests only test the skill's own code and do not
-  contact the live site.)*
+- **After pushing:** use the `deploy-check` skill. *(Run against the live site on 2026-10-28,
+  after the deploy of `358c629`: 32 of 33 checks passed. The only failure was the "Expected
+  Output" check, because the local HEAD differed from the live version. That check, run
+  separately against `358c629`, reported no errors. CI's deploy-check Python tests are separate:
+  they only test the skill's own code and do not contact the live site.)*
 - **Off switches (two, independent):**
   - `AI_TUTOR_ENABLED=false`: Railway stages the change; it applies only after a deploy. The docs
     do not say whether this rebuilds or only restarts, so **measure it** during the first
@@ -995,10 +1073,12 @@ paid call unless it says so and is approved for that.
     `AI_TUTOR_ENABLED=true`, deploy, and test as admin in prod.
     *(Status 2026-10-28, details in §13, "Rollout":*
     - *Done: commit and push, CI success, flag-off deploy, migrations applied (schema V1151),
-      "turned off" seen on the admin page.*
-    - *Not done: the `deploy-check` skill (live-site check); a production call to the JSON endpoint to see `disabled`; the
-      variable-change deploy delay (only a push-triggered deploy was measured); everything after
-      "Only after the DeepSeek console check".)*
+      "turned off" seen on the admin page, the `deploy-check` live-site check (32/33; the one
+      failure was a local-HEAD mismatch, see §13), and a free local rehearsal with a fake
+      provider (§12c).*
+    - *Not done: a production call to the JSON endpoint to see `disabled`; the variable-change
+      deploy delay (only a push-triggered deploy was measured); everything after "Only after the
+      DeepSeek console check".)*
 
 **Required vs. recommended vs. deferred:**
 
