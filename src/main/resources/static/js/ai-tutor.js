@@ -17,7 +17,8 @@
     // TutorAnswerRenderer.SAFELIST ile aynı etiket/öznitelik listesi.
     var ALLOWED = {
         P: [], BR: [], HR: [], H3: [], H4: [], H5: [], H6: [], STRONG: [], EM: [],
-        CODE: ['class'], PRE: [], BLOCKQUOTE: [], UL: [], OL: ['start'], LI: [], A: ['href', 'rel']
+        CODE: ['class'], PRE: [], BLOCKQUOTE: [], UL: [], OL: ['start'], LI: [], A: ['href', 'rel'],
+        TABLE: [], THEAD: [], TBODY: [], TR: [], TH: [], TD: []
     };
     // İçeriğiyle birlikte atılan etiketler; diğer izinsiz etiketlerin yalnızca kendisi atılır.
     var DROP = ['SCRIPT', 'STYLE', 'TEMPLATE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'NOSCRIPT',

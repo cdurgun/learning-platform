@@ -597,6 +597,31 @@ footer .social-instagram:focus-visible {
     word-break: normal;
 }
 
+/* Markdown tabloları (TutorAnswerRenderer, öznitelik/class taşımaz). display:block tabloyu
+   kapsayıcıya sığdırır, geniş olanı kendi içinde yatay kaydırır; hücreler kelimeyi bölmez. */
+.ai-tutor-answer table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.ai-tutor-answer th,
+.ai-tutor-answer td {
+    padding: 0.375rem 0.625rem;
+    border: 1px solid var(--bs-border-color);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.ai-tutor-answer th {
+    font-weight: 600;
+    background-color: var(--bs-tertiary-bg);
+}
+
 .ai-tutor-answer > :last-child {
     margin-bottom: 0;
 }

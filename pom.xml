@@ -91,6 +91,13 @@
             <artifactId>commonmark-ext-heading-anchor</artifactId>
             <version>${commonmark.version}</version>
         </dependency>
+        <!-- Yalnızca AI Tutor cevapları için (TutorAnswerRenderer). Ders sayfalarının
+             MarkdownService'i bunu KULLANMAZ: derslerde markdown tablosu yok. -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-gfm-tables</artifactId>
+            <version>${commonmark.version}</version>
+        </dependency>
 
         <!-- Boilerplate azaltma -->
         <dependency>

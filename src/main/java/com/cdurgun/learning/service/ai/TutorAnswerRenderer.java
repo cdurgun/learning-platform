@@ -1,5 +1,7 @@
 package com.cdurgun.learning.service.ai;
 
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.AbstractVisitor;
 import org.commonmark.node.Image;
 import org.commonmark.node.Link;
@@ -30,8 +32,10 @@ import java.util.regex.Pattern;
  *
  * <p><b>Katmanlar</b> (her biri tek başına da güvenli olmayı hedefler, regex ile temizlik YOK):</p>
  * <ol>
- *   <li><b>CommonMark</b> (yalnızca çekirdek, eklenti yok -- tablo yok): {@code escapeHtml(true)}
- *       ile modelin yazdığı her ham HTML metin olarak kaçışlanır; {@code sanitizeUrls(true)}.
+ *   <li><b>CommonMark</b> (çekirdek + yalnızca GFM tablo eklentisi): {@code escapeHtml(true)}
+ *       ile modelin yazdığı her ham HTML metin olarak kaçışlanır -- tablo hücreleri dahil;
+ *       {@code sanitizeUrls(true)}. Tablolar öznitelik taşımaz: hizalamanın {@code align}'ı
+ *       jsoup katmanında atılır.
  *       Görseller bağlantıya çevrilir: modelin seçtiği bir adresten tarayıcı kendiliğinden hiçbir
  *       şey yüklemez.</li>
  *   <li><b>jsoup {@link Safelist}</b>: yalnızca {@link #SAFELIST}'teki etiketler ve öznitelikler
@@ -72,7 +76,8 @@ public class TutorAnswerRenderer {
 
     static final Safelist SAFELIST = new Safelist()
             .addTags("p", "br", "hr", "h3", "h4", "h5", "h6", "strong", "em", "code", "pre",
-                    "blockquote", "ul", "ol", "li", "a")
+                    "blockquote", "ul", "ol", "li", "a",
+                    "table", "thead", "tbody", "tr", "th", "td")
             .addAttributes("a", "href", "rel")
             .addAttributes("code", "class")
             .addAttributes("ol", "start");
@@ -84,8 +89,10 @@ public class TutorAnswerRenderer {
     private final UnaryOperator<String> markdownToHtml;
 
     public TutorAnswerRenderer() {
-        Parser parser = Parser.builder().build();
-        HtmlRenderer renderer = HtmlRenderer.builder().escapeHtml(true).sanitizeUrls(true).build();
+        List<Extension> extensions = List.of(TablesExtension.create());
+        Parser parser = Parser.builder().extensions(extensions).build();
+        HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions)
+                .escapeHtml(true).sanitizeUrls(true).build();
         this.markdownToHtml = markdown -> {
             Node document = parser.parse(markdown);
             ImagesToLinks images = new ImagesToLinks();
