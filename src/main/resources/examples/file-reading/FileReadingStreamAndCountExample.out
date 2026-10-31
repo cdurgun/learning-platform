@@ -1,0 +1,2 @@
+Count via Files.readAllLines().size(): 5
+Count via Files.lines().count() (lazy, must be closed): 5

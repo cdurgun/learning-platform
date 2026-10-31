@@ -1,0 +1,5 @@
+Lines containing "Java":
+  Java is great
+  Java rocks!
+Match count: 2
+Lines containing "hello" (case-insensitive): [Hello World, Hello again]
