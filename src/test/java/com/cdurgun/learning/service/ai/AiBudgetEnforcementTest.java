@@ -19,11 +19,14 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -66,6 +69,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class AiBudgetEnforcementTest {
 
     private static final Instant MONDAY_NOON = Instant.parse("2031-03-10T12:00:00Z");
@@ -545,6 +549,27 @@ class AiBudgetEnforcementTest {
         assertThat(failed.failure().getCategory()).isEqualTo(AiErrorCategory.TIMEOUT);
         assertThat(failed.usageLog().getEstimatedCostUsd()).isEqualByComparingTo(WORST_1000);
         assertThat(failed.usageLog().getPricingPeriod()).isEqualTo("WORST_CASE");
+    }
+
+    @Test
+    void eachWorstCaseSettlementThroughTheGuardWarnsExactlyOnce(CapturedOutput output) {
+        AiTutorGuard guard = guard();
+        String marker = "AI Tutor provider usage was not reported";
+
+        guard.execute(admin(), 1000, LESSON, () -> completion(new TutorUsage(0, 400, 100, null)));
+        assertThat(output.getAll().lines().filter(l -> l.contains(marker))).isEmpty();
+
+        guard.execute(admin(), 1000, LESSON, () -> completion(null));
+        guard.execute(admin(), 1000, LESSON, () -> {
+            throw new AiProviderException(AiErrorCategory.TIMEOUT, null);
+        });
+
+        assertThat(output.getAll().lines().filter(l -> l.contains(marker)).map(l -> l.substring(l.indexOf("(outcome"))))
+                .containsExactly(
+                        "(outcome SUCCESS, category none); recorded at the worst-case estimate of "
+                                + WORST_1000.toPlainString() + " USD for 1000 input chars",
+                        "(outcome ERROR, category TIMEOUT); recorded at the worst-case estimate of "
+                                + WORST_1000.toPlainString() + " USD for 1000 input chars");
     }
 
     @Test

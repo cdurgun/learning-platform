@@ -45,6 +45,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AiUsageRecorderTest {
 
     private static final String REASONING_WARNING = "AI Tutor provider reported";
+    private static final String WORST_CASE_WARNING = "AI Tutor provider usage was not reported";
 
     private static final Instant MONDAY_PEAK_ISTANBUL = Instant.parse("2026-10-26T10:00:00+03:00"); // 07:00 UTC
 
@@ -216,6 +217,60 @@ class AiUsageRecorderTest {
         assertThat(zeroLog.getReasoningTokens()).isZero();
         assertThat(missingLog.getReasoningTokens()).isNull();
         assertThat(output).doesNotContain(REASONING_WARNING);
+    }
+
+    // --- usage not reported: the worst-case row warns once, with category and numbers only ---
+
+    @Test
+    void reportedUsageDoesNotWarnAboutTheWorstCase(CapturedOutput output) {
+        TutorUsage usage = new TutorUsage(0, 10, 10, null);
+        recorder.recordSuccess(call(20), new TutorCompletion("a", false, "deepseek-flash", usage),
+                calculator.forCall(usage, 20, MONDAY_PEAK_ISTANBUL));
+        AiProviderException filtered = new AiProviderException(AiErrorCategory.CONTENT_FILTERED, 200, usage, null);
+        recorder.recordFailure(call(20), filtered, calculator.forCall(usage, 20, MONDAY_PEAK_ISTANBUL));
+
+        assertThat(output).doesNotContain(WORST_CASE_WARNING);
+    }
+
+    @Test
+    void successWithoutUsageWarnsOnceWithNumbersOnly(CapturedOutput output) {
+        CostEstimate cost = calculator.forCall(null, 2000, MONDAY_PEAK_ISTANBUL);
+
+        recorder.recordSuccess(call(2000), new TutorCompletion("secret answer text", false, "deepseek-flash", null), cost);
+
+        assertThat(warnings(output, WORST_CASE_WARNING)).containsExactly(WORST_CASE_WARNING
+                + " (outcome SUCCESS, category none); recorded at the worst-case estimate of "
+                + calculator.worstCase(2000).usd().toPlainString() + " USD for 2000 input chars");
+        assertThat(output.getAll().lines().filter(l -> l.contains(WORST_CASE_WARNING)).findFirst().orElseThrow())
+                .doesNotContain("secret answer text", "enum", "deepseek-flash");
+    }
+
+    @Test
+    void timeoutWithoutUsageWarnsOnceWithItsCategory(CapturedOutput output) {
+        AiProviderException timeout = new AiProviderException(AiErrorCategory.TIMEOUT, null);
+
+        recorder.recordFailure(call(1400), timeout, calculator.forCall(null, 1400, MONDAY_PEAK_ISTANBUL));
+
+        assertThat(warnings(output, WORST_CASE_WARNING)).containsExactly(WORST_CASE_WARNING
+                + " (outcome ERROR, category TIMEOUT); recorded at the worst-case estimate of "
+                + calculator.worstCase(1400).usd().toPlainString() + " USD for 1400 input chars");
+    }
+
+    @Test
+    void unreadableUsageIsTreatedAsNotReportedAndWarns(CapturedOutput output) {
+        TutorUsage negative = new TutorUsage(0, -1, 5, null);
+        AiProviderException failure = new AiProviderException(AiErrorCategory.PROVIDER_ERROR, 200, negative, null);
+
+        recorder.recordFailure(call(100), failure, calculator.forCall(negative, 100, MONDAY_PEAK_ISTANBUL));
+
+        assertThat(warnings(output, WORST_CASE_WARNING)).hasSize(1)
+                .allMatch(l -> l.contains("(outcome ERROR, category PROVIDER_ERROR)"));
+    }
+
+    /** Uyarı satırlarının yalnızca mesaj kısmı (zaman/thread önekinden sonrası). */
+    private static List<String> warnings(CapturedOutput output, String marker) {
+        return output.getAll().lines().filter(l -> l.contains(marker))
+                .map(l -> l.substring(l.indexOf(marker))).toList();
     }
 
     // --- inconsistent input is a programming error and writes nothing ---

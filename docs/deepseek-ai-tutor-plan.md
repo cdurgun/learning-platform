@@ -457,7 +457,7 @@ CREATE INDEX idx_ai_usage_log_created ON ai_usage_log(created_at);
 |---|---|---|
 | `max_tokens` | 3 000 (1 500 until 2026-10-28) | Hard, per request (enforced by the provider) |
 | `thinking: disabled` | Always | Sent on every request (a test asserts the request body). In 10 real rehearsal calls the provider reported no `reasoning_tokens`; that does **not** prove thinking is off in general, and how reasoning tokens relate to `max_tokens` and to the bill is **not yet verified**, see "Thinking setting" below |
-| Max input | 4 000 characters | Hard (`@Size`) |
+| Max input | 4 000 characters | Hard, but a service check, not `@Size`: `TutorConversationStore.checkUserMessage` refuses a longer (or blank) question before any reservation or provider call; the request DTO has no validation annotations |
 | Max lesson context | 60 000 characters | Hard |
 | History window | 6 turns | Hard |
 | Requests in flight per user | 1 | App level, in PostgreSQL (`ai_tutor_reservation`, step 6; safe across instances) |
@@ -686,9 +686,14 @@ pilot, two documentation gaps still open):**
 - **Log hygiene:** log only the category, HTTP status, duration and token counts. No request or
   response bodies, no headers, no user text. The DeepSeek error body is read for its `error.type`,
   then discarded.
-- **Input validation:** Bean Validation on the DTO, including the slug regex and UUID format. A
-  request-body limit (e.g. 16 KB) is enforced in the controller via `@Size` plus a
-  `Content-Length` check.
+- **Input validation:** as built, `TutorMessageRequest` carries no Bean Validation annotations.
+  The message length (4 000) is checked in the service (`TutorConversationStore.checkUserMessage`),
+  the topic slug is checked against a slug pattern in `LessonContextBuilder`, and the
+  conversation id must parse as a UUID (otherwise the JSON body is rejected); all of this happens
+  before any provider call.
+  **A request-body limit (e.g. 16 KB via `@Size` plus a `Content-Length` check) is planned but
+  not implemented:** the JSON body is parsed in full before the length check refuses it. The
+  endpoint is ADMIN-only, which limits the exposure.
 - **Model output is untrusted HTML:** `TutorAnswerRenderer` uses a dedicated CommonMark
   `HtmlRenderer` with `escapeHtml(true)` and `sanitizeUrls(true)`, then a jsoup `Safelist` pass.
   jsoup is already a dependency. Links get `rel="nofollow noopener noreferrer"`. `MarkdownService`

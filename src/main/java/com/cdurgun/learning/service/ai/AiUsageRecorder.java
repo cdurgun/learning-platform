@@ -33,6 +33,10 @@ import java.util.Objects;
  * <p>Sağlayıcı pozitif {@code reasoning_tokens} bildirirse yalnızca sayılarla bir uyarı yazılır:
  * her istek thinking'i kapatıyor, yani bu beklenmedik bir sağlayıcı davranışıdır. Maliyet yine
  * yalnızca {@code completion_tokens}'tan hesaplanır (bkz. {@link AiCostCalculator}).</p>
+ *
+ * <p>Kullanım bildirilmediği ya da güvenilir okunamadığı için en kötü durum tahminiyle yazılan
+ * her satır için de çağrı başına tek bir uyarı yazılır: sonuç, hata kategorisi, tutar ve girdi
+ * boyutu -- içerik yok.</p>
  */
 @Service
 public class AiUsageRecorder {
@@ -127,7 +131,18 @@ public class AiUsageRecorder {
         }
         AiUsageLog saved = repository.save(log.build());
         warnIfReasoningReported(usage);
+        warnIfRecordedAtWorstCase(outcome, errorCategory, call.inputChars(), usd, cost);
         return saved;
+    }
+
+    // Yalnızca kategori ve sayılar: hangi çağrının, kimin ya da hangi dersin olduğu yazılmaz.
+    private static void warnIfRecordedAtWorstCase(AiUsageOutcome outcome, String errorCategory, int inputChars,
+                                                  BigDecimal usd, CostEstimate cost) {
+        if (!cost.usageReported()) {
+            log.warn("AI Tutor provider usage was not reported (outcome {}, category {}); "
+                    + "recorded at the worst-case estimate of {} USD for {} input chars",
+                    outcome, errorCategory == null ? "none" : errorCategory, usd.toPlainString(), inputChars);
+        }
     }
 
     // Yalnızca sayılar: soru, cevap, konu ya da kullanıcı bilgisi bu satıra girmez.
