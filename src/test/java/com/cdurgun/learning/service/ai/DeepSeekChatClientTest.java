@@ -256,6 +256,21 @@ class DeepSeekChatClientTest {
         assertThat(client().complete(prompt()).usage()).isEqualTo(new TutorUsage(0, 40, 3, null));
     }
 
+    // Thinking kapalıyken DeepSeek reasoning sayısını hiç göndermeyebilir: yokluk 0 değil null'dır.
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', nullValues = "NULL", value = {
+            "                                                | NULL",
+            ",\"completion_tokens_details\":null               | NULL",
+            ",\"completion_tokens_details\":{}                 | NULL",
+            ",\"completion_tokens_details\":{\"reasoning_tokens\":null} | NULL",
+            ",\"completion_tokens_details\":{\"reasoning_tokens\":0}    | 0",
+            ",\"completion_tokens_details\":{\"reasoning_tokens\":37}   | 37"})
+    void reasoningTokensAreReportedExactlyAsSent(String details, Integer expected) {
+        respond(200, completion("stop", "\"ok\"", "{\"prompt_tokens\":5,\"completion_tokens\":3,"
+                + "\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":5" + (details == null ? "" : details) + "}"));
+        assertThat(client().complete(prompt()).usage()).isEqualTo(new TutorUsage(0, 5, 3, expected));
+    }
+
     @Test
     void missingOrBrokenUsageIsReportedAsUnknown() {
         respond(200, completion("stop", "\"ok\"", null));

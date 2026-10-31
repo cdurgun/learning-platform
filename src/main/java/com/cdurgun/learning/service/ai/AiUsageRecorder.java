@@ -7,6 +7,8 @@ import com.cdurgun.learning.domain.Language;
 import com.cdurgun.learning.repository.AiUsageLogRepository;
 import com.cdurgun.learning.service.ai.AiCostCalculator.CostEstimate;
 import com.cdurgun.learning.service.ai.AiCostCalculator.PricingPeriod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,9 +29,15 @@ import java.util.Objects;
  * değil. Soru, cevap, ders içeriği ve API anahtarı bu sınıfa hiç gelmez; yalnızca boyutlar.
  * Hangi hataların ücretlendirileceği (en kötü durum mu) burada değil, maliyeti hesaplayan
  * çağıranda kararlaştırılır.</p>
+ *
+ * <p>Sağlayıcı pozitif {@code reasoning_tokens} bildirirse yalnızca sayılarla bir uyarı yazılır:
+ * her istek thinking'i kapatıyor, yani bu beklenmedik bir sağlayıcı davranışıdır. Maliyet yine
+ * yalnızca {@code completion_tokens}'tan hesaplanır (bkz. {@link AiCostCalculator}).</p>
  */
 @Service
 public class AiUsageRecorder {
+
+    private static final Logger log = LoggerFactory.getLogger(AiUsageRecorder.class);
 
     private final AiUsageLogRepository repository;
 
@@ -117,7 +125,18 @@ public class AiUsageRecorder {
                     .completionTokens(usage.completionTokens())
                     .reasoningTokens(usage.reasoningTokens());
         }
-        return repository.save(log.build());
+        AiUsageLog saved = repository.save(log.build());
+        warnIfReasoningReported(usage);
+        return saved;
+    }
+
+    // Yalnızca sayılar: soru, cevap, konu ya da kullanıcı bilgisi bu satıra girmez.
+    private static void warnIfReasoningReported(TutorUsage usage) {
+        if (usage != null && usage.reasoningTokens() != null && usage.reasoningTokens() > 0) {
+            log.warn("AI Tutor provider reported {} reasoning tokens ({} completion tokens) "
+                    + "although thinking is disabled; cost is still priced from completion tokens only",
+                    usage.reasoningTokens(), usage.completionTokens());
+        }
     }
 
     /** Tahminin kendi içinde ve kullanım verisiyle tutarlı olduğunu doğrular; 6 ondalıklı tutarı döndürür. */

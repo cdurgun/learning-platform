@@ -14,8 +14,11 @@ import com.cdurgun.learning.service.ai.AiCostCalculator.PricingPeriod;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +41,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@ExtendWith(OutputCaptureExtension.class)
 class AiUsageRecorderTest {
+
+    private static final String REASONING_WARNING = "AI Tutor provider reported";
 
     private static final Instant MONDAY_PEAK_ISTANBUL = Instant.parse("2026-10-26T10:00:00+03:00"); // 07:00 UTC
 
@@ -165,6 +171,51 @@ class AiUsageRecorderTest {
         assertThat(log.isUsageReported()).isFalse();
         assertThat(log.getCompletionTokens()).isNull();
         assertThat(log.getEstimatedCostUsd()).isPositive();
+    }
+
+    // --- reasoning tokens: thinking is disabled, so a positive count only warns ---
+
+    @Test
+    void positiveReasoningTokensWarnWithCountsOnlyAndDoNotChangeTheCost(CapturedOutput output) {
+        TutorUsage usage = new TutorUsage(0, 1000, 1200, 400);
+        CostEstimate cost = calculator.forCall(usage, 3000, MONDAY_PEAK_ISTANBUL);
+        TutorCompletion completion = new TutorCompletion("secret answer text", false, "deepseek-flash", usage);
+
+        AiUsageLog log = reload(recorder.recordSuccess(call(3000), completion, cost));
+
+        assertThat(log.getReasoningTokens()).isEqualTo(400);
+        assertThat(log.getEstimatedCostUsd())
+                .isEqualTo(calculator.forCall(new TutorUsage(0, 1000, 1200, null), 3000, MONDAY_PEAK_ISTANBUL).usd());
+        assertThat(output).contains(REASONING_WARNING + " 400 reasoning tokens (1200 completion tokens)");
+        String warning = output.getAll().lines().filter(l -> l.contains(REASONING_WARNING)).findFirst().orElseThrow();
+        assertThat(warning).doesNotContain("secret answer text", "enum", "deepseek-flash");
+    }
+
+    @Test
+    void positiveReasoningTokensOnAFailureWithUsageAlsoWarn(CapturedOutput output) {
+        TutorUsage usage = new TutorUsage(0, 700, 20, 7);
+        AiProviderException failure = new AiProviderException(AiErrorCategory.CONTENT_FILTERED, 200, usage, null);
+
+        recorder.recordFailure(call(1400), failure, calculator.forCall(usage, 1400, MONDAY_PEAK_ISTANBUL));
+
+        assertThat(output).contains(REASONING_WARNING + " 7 reasoning tokens (20 completion tokens)");
+    }
+
+    @Test
+    void zeroOrMissingReasoningTokensAreStoredAsReportedWithoutAWarning(CapturedOutput output) {
+        TutorUsage zero = new TutorUsage(0, 10, 10, 0);
+        TutorUsage missing = new TutorUsage(0, 10, 10, null);
+
+        AiUsageLog zeroLog = reload(recorder.recordSuccess(call(20),
+                new TutorCompletion("a", false, "deepseek-flash", zero), calculator.forCall(zero, 20, MONDAY_PEAK_ISTANBUL)));
+        AiUsageLog missingLog = reload(recorder.recordSuccess(call(20),
+                new TutorCompletion("a", false, "deepseek-flash", missing), calculator.forCall(missing, 20, MONDAY_PEAK_ISTANBUL)));
+        AiProviderException timeout = new AiProviderException(AiErrorCategory.TIMEOUT, null);
+        recorder.recordFailure(call(20), timeout, calculator.forCall(null, 20, MONDAY_PEAK_ISTANBUL));
+
+        assertThat(zeroLog.getReasoningTokens()).isZero();
+        assertThat(missingLog.getReasoningTokens()).isNull();
+        assertThat(output).doesNotContain(REASONING_WARNING);
     }
 
     // --- inconsistent input is a programming error and writes nothing ---

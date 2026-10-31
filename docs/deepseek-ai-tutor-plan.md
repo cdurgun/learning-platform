@@ -456,7 +456,7 @@ CREATE INDEX idx_ai_usage_log_created ON ai_usage_log(created_at);
 | Control | Phase 1 default | Kind |
 |---|---|---|
 | `max_tokens` | 3 000 (1 500 until 2026-10-28) | Hard, per request (enforced by the provider) |
-| `thinking: disabled` | Always | Sent on every request (a test asserts the request body); its effect on the provider's real responses is **not yet verified**, see "Thinking setting" below |
+| `thinking: disabled` | Always | Sent on every request (a test asserts the request body). In 10 real rehearsal calls the provider reported no `reasoning_tokens`; that does **not** prove thinking is off in general, and how reasoning tokens relate to `max_tokens` and to the bill is **not yet verified**, see "Thinking setting" below |
 | Max input | 4 000 characters | Hard (`@Size`) |
 | Max lesson context | 60 000 characters | Hard |
 | History window | 6 turns | Hard |
@@ -603,35 +603,61 @@ only come from the provider account (below).
 - `pricing_version` and `pricing_period` (`PEAK`, `OFF_PEAK` or `WORST_CASE`) are recorded on every
   row, so an estimate can be traced back to the prices it used.
 
-**Thinking setting (YÜKSEK-1 of the step 12 audit; strong evidence for one request, not closed in
-general):**
+**Thinking setting (YÜKSEK-1 of the step 12 audit; reviewed again 2026-10-31: low risk for the
+pilot, two documentation gaps still open):**
 
 - Every request sends `thinking: {"type": "disabled"}` together with `max_tokens` (3 000 since
-  2026-10-28, before that 1 500), and no
-  `reasoning_effort`.
-- `DeepSeekChatClientTest.sendsTheDocumentedRequest` proves only that this field is in the
-  request body we build. It does **not** prove that DeepSeek actually answers without thinking:
-  that can only be seen on a real response, as `completion_tokens_details.reasoning_tokens` being 0
-  or absent. The first real call (§12d) is the only real evidence so far.
-- Docs checked on 2026-10-28:
-  - The [Chat Completions reference](https://api-docs.deepseek.com/api/create-chat-completion/)
-    defines both `thinking.type` (`enabled`/`disabled`, default `enabled`) and `reasoning_effort`
-    (`none`/`low`/`high`/`max`, default `high`, "`none` disables thinking mode").
-  - The [Thinking Mode guide](https://api-docs.deepseek.com/guides/thinking_mode/) lists, for the
-    OpenAI (Chat Completions) format, `thinking.type` as the on/off switch and `reasoning_effort` as
-    `low/high/max` only; `none` appears there only for the Responses API.
-  - No page says what happens when both are sent, or which one wins. The only combined example is
-    `thinking: enabled` with `reasoning_effort: "high"`.
-  - Neither page says whether `max_tokens` includes reasoning tokens.
-- Decision: `reasoning_effort: "none"` is **not** added, because sending both would rely on
-  undocumented behaviour. The request stays as it is until the user decides otherwise.
-- The first real call must check `reasoning_tokens` in `ai_usage_log` (and the provider response)
-  before the tutor is used further.
-- **Result of the first real call (§12d, 2026-10-28):** for one short English question without a
-  lesson, `reasoning_tokens` was not reported (NULL), the 26 output tokens were the one-sentence
-  answer, and DeepSeek's usage export shows no separate reasoning line. That is strong evidence
-  that thinking was off **for that request**. It is not generalised to Turkish or lesson-context
-  requests, and whether `max_tokens` covers reasoning tokens is still unknown.
+  2026-10-28, before that 1 500), and no `reasoning_effort`.
+  `DeepSeekChatClientTest.sendsTheDocumentedRequest` asserts this request body. On its own it does
+  not prove that DeepSeek answers without thinking; only real responses show that.
+
+*Established (docs re-read on 2026-10-31, rehearsal calls 2026-10-28 to 2026-10-30):*
+
+- The [Chat Completions reference](https://api-docs.deepseek.com/api/create-chat-completion/) now
+  states that when the `thinking` object is provided, "`type` is required and takes precedence
+  over `reasoning_effort`". `disabled` means "use non-thinking model"; leaving the object out means
+  thinking is on. The 2026-10-28 gap ("no page says which one wins") is closed, so
+  `reasoning_effort: "none"` is still **not** added: it would change nothing.
+- `max_tokens` defaults to 8K in non-thinking mode and 64K in thinking mode; we always send it.
+- The rehearsal database has 10 real DeepSeek calls (ids 4–13): Turkish and English, with and
+  without lesson context (about 22 700 input characters), one that hit the 1 500 limit
+  (`completion_tokens` 1 500, truncated) and several under the 3 000 limit (up to 2 058).
+  **`reasoning_tokens` was NULL (not reported) in all 10**, and `completion_tokens` never exceeded
+  the `max_tokens` that was sent.
+- DeepSeek's usage export for 2026-09-29 to 2026-10-28 contains one request, and it matches id 4
+  exactly (104 cache-miss input tokens, 26 output tokens, $0.0000312; our estimate $0.000032 after
+  rounding up). Its line items are input, output and request count only, with no reasoning line.
+- Since 2026-10-31 `AiUsageRecorder` logs a WARN with token counts only (no question, answer,
+  topic, user or key) when the provider reports `reasoning_tokens` > 0, on success and on a failure
+  that carries usage. 0 and NULL do not warn (`AiUsageRecorderTest`). The cost is unchanged: it is
+  still priced from `completion_tokens` only (`AiCostCalculatorTest.reasoningTokensAreNotPricedOnTopOfCompletionTokens`).
+  `DeepSeekChatClientTest.reasoningTokensAreReportedExactlyAsSent` pins that a missing or null
+  `completion_tokens_details` / `reasoning_tokens` stays NULL, never 0.
+
+*Likely, but not stated anywhere:*
+
+- That thinking is really off on DeepSeek's side. 10/10 calls without reported reasoning, the
+  precedence rule and a bill without a reasoning line are strong evidence, not proof: we do not
+  read `reasoning_content` from the response (`WireMessage` carries only `role` and `content`).
+- That `reasoning_tokens` is part of `completion_tokens`. The docs call
+  `completion_tokens_details` a "breakdown of tokens used in a completion", which implies a subset
+  (the OpenAI convention) but does not say so.
+
+*Still unproven:*
+
+- Whether `max_tokens` covers reasoning tokens. Neither the Chat Completions reference, the
+  [Thinking Mode guide](https://api-docs.deepseek.com/guides/thinking_mode/) nor the
+  [pricing page](https://api-docs.deepseek.com/quick_start/pricing/) says so, and no call has
+  produced reasoning tokens to measure it.
+- Whether reasoning tokens are billed as output. The pricing page only says billing is based on
+  "the total number of input and output tokens".
+- The bill for calls 5–13: the provider export does not contain them, so only 1 of 10 calls has
+  been checked against a bill. After the first pilot days, download the export again and compare
+  its `output_tokens` with the sum of `completion_tokens` in `ai_usage_log`.
+- If thinking were ever switched on (a provider change or a broken request body), the estimate
+  could be too low: the reservation assumes at most `max_tokens` output, and `forCall` ignores
+  reasoning. The new WARN makes that visible; it does not prevent it. A WARN in production
+  reopens YÜKSEK-1.
 
 **Provider-level cap (to verify, not assumed):**
 
@@ -1032,10 +1058,13 @@ One real DeepSeek call, made in the isolated rehearsal environment of §12c and 
 
 ## 15. Risks and open decisions
 
-1. **Thinking enabled by accident.** The default is on, with a 64K `max_tokens` default, which
-   would multiply cost. We send `thinking: disabled` and a test asserts it is in the request body,
-   but the provider-side effect is unverified until a real response shows `reasoning_tokens` at 0
-   or absent (§10, "Thinking setting").
+1. **Thinking enabled by accident.** The default is on. We send `thinking: {"type": "disabled"}`
+   on every request (a test asserts the request body), and the docs say this field takes
+   precedence over `reasoning_effort`. No real call has reported `reasoning_tokens` so far (10/10
+   rehearsal calls); that is a good sign but not proof, because a missing or zero count does not
+   show what the provider did. If thinking were switched on unexpectedly, the cost estimate could
+   be too low: whether reasoning tokens count against `max_tokens` and how they are billed is not
+   yet established. A WARN is logged if a positive count ever appears (§10, "Thinking setting").
 2. **Blank-line keep-alive bypassing timeouts.** Needs a total deadline, proven with the
    trickle-stub test.
 3. **Budget is an estimate.** The reservation check stops concurrent overruns by our own numbers,
