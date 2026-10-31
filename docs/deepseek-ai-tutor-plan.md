@@ -456,7 +456,7 @@ CREATE INDEX idx_ai_usage_log_created ON ai_usage_log(created_at);
 | Control | Phase 1 default | Kind |
 |---|---|---|
 | `max_tokens` | 3 000 (1 500 until 2026-10-28) | Hard, per request (enforced by the provider) |
-| `thinking: disabled` | Always | Sent on every request (a test asserts the request body). In 10 real rehearsal calls the provider reported no `reasoning_tokens`; that does **not** prove thinking is off in general, and how reasoning tokens relate to `max_tokens` and to the bill is **not yet verified**, see "Thinking setting" below |
+| `thinking: disabled` | Always | Sent on every request (a test asserts the request body). In 12 real calls (11 rehearsal, 1 production, up to 2026-10-31) the provider reported no `reasoning_tokens`; that does **not** prove thinking is off in general, and how reasoning tokens relate to `max_tokens` and to the bill is **not yet verified**, see "Thinking setting" below |
 | Max input | 4 000 characters | Hard, but a service check, not `@Size`: `TutorConversationStore.checkUserMessage` refuses a longer (or blank) question before any reservation or provider call; the request DTO has no validation annotations |
 | Max lesson context | 60 000 characters | Hard |
 | History window | 6 turns | Hard |
@@ -619,14 +619,18 @@ pilot, two documentation gaps still open):**
   thinking is on. The 2026-10-28 gap ("no page says which one wins") is closed, so
   `reasoning_effort: "none"` is still **not** added: it would change nothing.
 - `max_tokens` defaults to 8K in non-thinking mode and 64K in thinking mode; we always send it.
-- The rehearsal database has 10 real DeepSeek calls (ids 4–13): Turkish and English, with and
-  without lesson context (about 22 700 input characters), one that hit the 1 500 limit
-  (`completion_tokens` 1 500, truncated) and several under the 3 000 limit (up to 2 058).
-  **`reasoning_tokens` was NULL (not reported) in all 10**, and `completion_tokens` never exceeded
-  the `max_tokens` that was sent.
+- The rehearsal database has 11 real DeepSeek calls (ids 4–14): Turkish and English, with and
+  without lesson context (up to about 22 700 input characters), one that hit the 1 500 limit
+  (`completion_tokens` 1 500, truncated) and several under the 3 000 limit (up to 2 058). Since
+  2026-10-31 there is also 1 production call (§12e). **`reasoning_tokens` was NULL (not
+  reported) in all 12**, and `completion_tokens` never exceeded the `max_tokens` that was sent.
 - DeepSeek's usage export for 2026-09-29 to 2026-10-28 contains one request, and it matches id 4
   exactly (104 cache-miss input tokens, 26 output tokens, $0.0000312; our estimate $0.000032 after
   rounding up). Its line items are input, output and request count only, with no reasoning line.
+- DeepSeek's usage export for 2026-10-31 has two hourly rows, each with one request, and they
+  match rehearsal id 14 and production id 1 (§12e): output tokens equal `completion_tokens`, cost
+  equals our estimate apart from rounding up to 6 decimals, and again no reasoning line. The
+  export gives hourly totals, so these are strong consistency checks, not per-call matches.
 - Since 2026-10-31 `AiUsageRecorder` logs a WARN with token counts only (no question, answer,
   topic, user or key) when the provider reports `reasoning_tokens` > 0, on success and on a failure
   that carries usage. 0 and NULL do not warn (`AiUsageRecorderTest`). The cost is unchanged: it is
@@ -636,7 +640,7 @@ pilot, two documentation gaps still open):**
 
 *Likely, but not stated anywhere:*
 
-- That thinking is really off on DeepSeek's side. 10/10 calls without reported reasoning, the
+- That thinking is really off on DeepSeek's side. 12/12 calls without reported reasoning, the
   precedence rule and a bill without a reasoning line are strong evidence, not proof: we do not
   read `reasoning_content` from the response (`WireMessage` carries only `role` and `content`).
 - That `reasoning_tokens` is part of `completion_tokens`. The docs call
@@ -651,9 +655,13 @@ pilot, two documentation gaps still open):**
   produced reasoning tokens to measure it.
 - Whether reasoning tokens are billed as output. The pricing page only says billing is based on
   "the total number of input and output tokens".
-- The bill for calls 5–13: the provider export does not contain them, so only 1 of 10 calls has
-  been checked against a bill. After the first pilot days, download the export again and compare
-  its `output_tokens` with the sum of `completion_tokens` in `ai_usage_log`.
+- The bill for rehearsal calls 5–13: the provider exports downloaded so far do not contain them,
+  so 3 of 12 calls (rehearsal ids 4 and 14, production id 1) have been checked against a bill, and
+  only as hourly totals with one request in the hour. After the first pilot days, download the
+  export again and compare its `output_tokens` with the sum of `completion_tokens` in
+  `ai_usage_log`.
+- `reasoning_tokens = NULL` only means the provider did not send the field. It is not proof that
+  no reasoning took place.
 - If thinking were ever switched on (a provider change or a broken request body), the estimate
   could be too low: the reservation assumes at most `max_tokens` output, and `forCall` ignores
   reasoning. The new WARN makes that visible; it does not prevent it. A WARN in production
@@ -976,6 +984,73 @@ One real DeepSeek call, made in the isolated rehearsal environment of §12c and 
   rows remain.
 - The response, application log and cookie file were kept outside the repository.
 
+## 12e. Production pilot, first call (2026-10-31)
+
+Admin-only pilot in production, deployment `fcf8c435` (commit `0d2691b`). One question was sent by
+the user from the admin page; no other production call was made.
+
+**Verified:**
+
+- The user, logged in as the only ADMIN, asked "Java'da String ve StringBuilder arasındaki fark
+  nedir?" without a lesson. The answer was shown in full (not truncated), including a Markdown
+  comparison table that rendered correctly.
+- `ai_usage_log` row (id 1, read by the user in production): `created_at` 2026-10-31 18:44:24,
+  `outcome` SUCCESS, `error_category` NULL, `truncated` false, `input_chars` 470, `context_chars`
+  NULL, `usage_reported` true, `completion_tokens` 730, `reasoning_tokens` NULL,
+  `estimated_cost_usd` 0.000454, `pricing_period` OFF_PEAK.
+- `ai_tutor_reservation`: `status` SETTLED, `reserved_usd` 0.003671.
+- `created_at` is UTC by design: `AiUsageRecorder` writes `LocalDateTime.ofInstant(startedAt, UTC)`
+  (`AiUsageRecorderTest.createdAtIsStoredInUtcRegardlessOfTheCallerZone`). 18:44:24 UTC is 21:44:24
+  in Turkey. It is the time the request started (the reservation), not when the answer arrived.
+- OFF_PEAK is correct: 2026-10-31 is a Saturday and `peak-days` is Monday to Friday. The export's
+  unit prices are the off-peak ones ($0.00000015 input, $0.0000006 output per token).
+- Railway logs of `fcf8c435`: no ERROR, no "AI Tutor" line at all, so neither the reasoning WARN
+  nor the worst-case WARN appeared. A successful call logs nothing by design.
+- Railway variables checked by the user in the panel: `AI_TUTOR_ENABLED=true`,
+  `AI_TUTOR_DAILY_BUDGET_USD=0.05`, `AI_TUTOR_MONTHLY_BUDGET_USD=1.00`.
+
+**Tokens and cost:**
+
+- DeepSeek export for 2026-10-31, hour 21:00–22:00 (+03:00): 1 request, 104 cache-miss input
+  tokens, 730 output tokens, cost $0.0004536 (104 × 0.15/M + 730 × 0.60/M). No cache-hit and no
+  reasoning line.
+- Our row: `completion_tokens` 730 = the export's output tokens. Our estimate $0.000454 is the
+  provider's $0.0004536 rounded up to 6 decimals ($0.0000004 high, the safe side). This only adds
+  up if there were no cache-hit tokens, which matches the export; the row's
+  `prompt_cache_hit_tokens` was not part of the values read.
+- Input ratio: 104 tokens for 470 characters, about 0.22 tokens per character (the reservation
+  assumes 0.5).
+
+**Reservation (by design, not an error):** `AiCostCalculator.worstCase` reserves
+⌈470 × 0.5⌉ = 235 input tokens at the highest cache-miss price (0.30/M) = 0.0000705, plus
+`max_tokens` 3 000 at the highest output price (1.20/M) = 0.0036, total 0.0036705, rounded up to
+**0.003671**, exactly the stored value. After the call `settleSuccess` marked it SETTLED, so the
+budget counts the $0.000454 estimate instead
+(`AiTutorGuardTest.theReservationIsTheWorstCaseWithTheConfiguredLimits`,
+`AiBudgetEnforcementTest.successWithReportedUsageReplacesTheReservationWithTheEstimate`).
+
+**The midday call in the same export came from the local rehearsal, not production:** hour
+13:00–14:00 (+03:00), 1 request, 4 729 cache-miss input tokens, 1 708 output tokens,
+$0.00173415. It matches rehearsal `ai_usage_log` id 14 (10:51:32 UTC, SUCCESS, Turkish lesson
+`type-erasure-and-generic-limitations`, `input_chars` 15 320, `context_chars` 14 293, hit 0,
+miss 4 729, completion 1 708, reasoning NULL, OFF_PEAK, estimate $0.001735). The match is by
+time and token counts; the key names in the export were not read. It also shows that the
+rehearsal key and application could still spend.
+
+**Limits of this evidence:**
+
+- The DeepSeek export gives hourly totals. Each hour here held one request, so the match is a
+  strong consistency check, **not** a proven per-call bill match: the provider's request id is not
+  stored by the application.
+- `reasoning_tokens = NULL` means the field was not sent. It does not prove that no reasoning
+  took place (§10, "Thinking setting").
+- One short English call without a lesson. **Not yet done in production:** a lesson-context call,
+  a live POST as a USER account (expected 403; covered by `AiTutorControllerTest.regularUserIsForbidden`
+  and CI, and the USER account was seen not to show the tutor), and a real test of the budget
+  limit stopping a request (covered by `AiBudgetEnforcementTest`, not observed live). Anonymous
+  access was checked live: the page redirects to login, the message endpoint returns 401 with a
+  CSRF token and 403 without one.
+
 ## 13. Railway configuration
 
 - **Add:**
@@ -992,7 +1067,15 @@ One real DeepSeek call, made in the isolated rehearsal environment of §12c and 
     PostgreSQL 18.6, schema at V1151, Tomcat on 8080, healthcheck `/en` passed. The admin page
     showed "The AI Tutor is currently turned off. It can be used once it is enabled in the
     configuration." The JSON endpoint's `disabled` response was not called in production.
-  - **Not done:** setting the key and the flag (needs §12b and approval first).
+  - **Done 2026-10-31 (second step):** `f173297` and `0d2691b` pushed; CI run `41200391047`
+    success (Maven 702, Expected Outputs 79, deploy-check Python tests 23); deployment `fa43dca3`
+    SUCCESS with the tutor still off, deploy-check 0 errors. Two more deployments of the same
+    commit followed, `3a36c042` (18:15Z, later
+    REMOVED) and `fcf8c435` (18:29Z, SUCCESS); both carry a Railway `patchId`, which `fa43dca3`
+    does not. What each patch changed was not read (no `railway variables`). The user checked the
+    panel: `AI_TUTOR_ENABLED=true`, `AI_TUTOR_DAILY_BUDGET_USD=0.05`,
+    `AI_TUTOR_MONTHLY_BUDGET_USD=1.00`; `DEEPSEEK_API_KEY` is a new production key (value not
+    recorded). Results of the first production call: §12e.
   - **Not proven:** that Railway's "Wait for CI" setting made this deploy wait for CI. The
     deployment record was created before the CI run, and the start of the build log could not
     be read, so the order is consistent with waiting but does not prove it.
@@ -1065,11 +1148,12 @@ One real DeepSeek call, made in the isolated rehearsal environment of §12c and 
 
 1. **Thinking enabled by accident.** The default is on. We send `thinking: {"type": "disabled"}`
    on every request (a test asserts the request body), and the docs say this field takes
-   precedence over `reasoning_effort`. No real call has reported `reasoning_tokens` so far (10/10
-   rehearsal calls); that is a good sign but not proof, because a missing or zero count does not
-   show what the provider did. If thinking were switched on unexpectedly, the cost estimate could
-   be too low: whether reasoning tokens count against `max_tokens` and how they are billed is not
-   yet established. A WARN is logged if a positive count ever appears (§10, "Thinking setting").
+   precedence over `reasoning_effort`. No real call has reported `reasoning_tokens` so far (12/12:
+   11 rehearsal, 1 production); that is a good sign but not proof, because a missing or zero
+   count does not show what the provider did. If thinking were switched on unexpectedly, the
+   cost estimate could be too low: whether reasoning tokens count against `max_tokens` and how
+   they are billed is not yet established. A WARN is logged if a positive count ever appears
+   (§10, "Thinking setting").
 2. **Blank-line keep-alive bypassing timeouts.** Needs a total deadline, proven with the
    trickle-stub test.
 3. **Budget is an estimate.** The reservation check stops concurrent overruns by our own numbers,
