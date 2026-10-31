@@ -114,15 +114,14 @@ class ContractFlagTest(unittest.TestCase):
         self.assertNotIn("stdin", flags_of("System.out.println(x); System.err.println(y);"))
         self.assertIn("stdin", eo.BLOCKING_FLAGS)
 
-    def test_file_io_is_blocking(self):
-        for source in ['new FileWriter("a.txt")', 'new FileReader("a.txt")', 'new FileInputStream(f)',
-                       'new FileOutputStream("x")', 'new RandomAccessFile("x", "r")', 'new File("x")',
-                       'Files.readAllLines(p)', 'Path.of("a.txt")', 'Paths.get("a")',
-                       'import java.nio.file.Path;', 'FileSystems.getDefault()']:
-            self.assertIn("io-or-env", flags_of(source), source)
-        for source in ['new StringReader("x")', 'new StringWriter()', 'new PrintWriter(System.out)',
-                       'Profile profile = new Profile();', 'String fileName = "a.txt";']:
-            self.assertNotIn("io-or-env", flags_of(source), source)
+    def test_network_processes_and_environment_are_blocking(self):
+        for source in ['new Socket("example.com", 80)', 'HttpClient.newHttpClient()', 'url.openStream()',
+                       'url.openConnection()', 'System.getenv("HOME")', 'new ProcessBuilder("ls")',
+                       'Runtime.getRuntime().exec("ls")', 'ProcessHandle.current().pid()',
+                       'InetAddress.getLocalHost()']:
+            self.assertIn("external-io", flags_of(source), source)
+        self.assertIn("external-io", eo.BLOCKING_FLAGS)
+        self.assertNotIn("external-io", flags_of('Files.readString(Path.of("a.txt"))'))
 
     def test_reflection_member_order_is_blocking_single_lookups_are_not(self):
         for call in ["getDeclaredFields()", "getFields()", "getDeclaredMethods()", "getMethods()",
@@ -168,6 +167,244 @@ class ContractFlagTest(unittest.TestCase):
                      "built-in-functional-interfaces/FunctionExample", "collectors/JoiningExample"]:
             flags = flags_of((examples / f"{spec}.java").read_text(encoding="utf-8"))
             self.assertFalse(eo.BLOCKING_FLAGS.intersection(flags), spec)
+
+
+def file_program(body: str, imports: str = "import java.nio.file.*;\n") -> str:
+    return imports + "class F {\n    public static void main(String[] args) throws Exception {\n" + body + "\n    }\n}\n"
+
+
+class FileAccessFlagTest(unittest.TestCase):
+    """Files the program creates by relative name are allowed (every run starts in a fresh, empty
+    working directory); whatever that assumption cannot fix stays blocking."""
+
+    def blocking(self, source):
+        return eo.blocking_flags(flags_of(source))
+
+    def test_relative_file_access_is_informational(self):
+        for source in ['new FileWriter("a.txt")', 'new FileReader("a.txt")', 'new FileInputStream(f)',
+                       'new FileOutputStream("x")', 'new RandomAccessFile("x", "r")', 'new File("x")',
+                       'Files.readAllLines(p)', 'Path.of("a.txt")', 'Paths.get("a")',
+                       'import java.nio.file.Path;', 'FileSystems.getDefault().getPath("a")',
+                       'new PrintWriter("out.txt")', 'new PrintStream("out.txt")']:
+            self.assertIn("local-file", flags_of(source), source)
+            self.assertEqual(self.blocking(source), [], source)
+        self.assertNotIn("local-file", eo.BLOCKING_FLAGS)
+        self.assertIn("empty working directory", eo.RISK_NOTES["local-file"])
+
+    def test_file_names_only_in_text_or_comments_are_no_file_access(self):
+        for source in ['new StringReader("x")', 'new StringWriter()', 'new PrintWriter(System.out)',
+                       'Profile profile = new Profile();', 'String fileName = "a.txt";',
+                       'System.out.println("Files.readString(path) returns a String");',
+                       '// Path.of("a.txt") would create a Path\nint x = 1;']:
+            self.assertNotIn("local-file", flags_of(source), source)
+
+    def test_paths_that_leave_the_working_directory_are_blocking(self):
+        for literal in ['"/etc/hosts"', '"/tmp/x.txt"', r'"C:\\data\\x.txt"', '"D:/x.txt"', r'"\\\\server\\share"',
+                        '"~/notes.txt"', '"../x.txt"', '"a/../../b.txt"', r'"..\\x.txt"', '".."']:
+            source = file_program(f"        Files.readString(Path.of({literal}));")
+            self.assertIn("cwd-path", self.blocking(source), literal)
+        resolved = file_program('        Path p = Path.of("a").resolve("..");')
+        self.assertIn("cwd-path", self.blocking(resolved))
+        joined = file_program('        Path p = Path.of("data", "..", "x.txt");')
+        self.assertIn("cwd-path", self.blocking(joined))
+
+    def test_relative_paths_inside_the_working_directory_are_not_blocking(self):
+        for literal in ['"a.txt"', '"demo-output/copy.txt"', '"./x.txt"', '"demo..txt"', '"data.d/x"']:
+            source = file_program(f"        Files.readString(Path.of({literal}));\n"
+                                  '        System.out.println("Loading... done");')
+            self.assertEqual(self.blocking(source), [], literal)
+
+    def test_an_absolute_looking_literal_without_file_access_or_in_a_comment_is_not_a_path(self):
+        self.assertNotIn("cwd-path", flags_of('System.out.println("GET /en/topics/arrays");'))
+        commented = file_program('        // Files.readString(Path.of("/etc/hosts")) would read the host\n'
+                                 '        Files.readString(Path.of("a.txt"));')
+        self.assertEqual(self.blocking(commented), [])
+
+    def test_text_that_depends_on_where_it_runs_is_blocking(self):
+        for call in ["path.toAbsolutePath()", "path.toRealPath()", "file.getAbsolutePath()",
+                     "file.getAbsoluteFile()", "file.getCanonicalPath()", "file.getCanonicalFile()",
+                     "File.listRoots()", "FileSystems.getDefault().getRootDirectories()"]:
+            self.assertIn("cwd-path", self.blocking(file_program(f"        var x = {call};")), call)
+
+    def test_random_temp_file_names_are_blocking(self):
+        for call in ['Files.createTempFile("x", ".txt")', 'Files.createTempDirectory("d")',
+                     'File.createTempFile("x", ".txt")']:
+            self.assertIn("temp-file", self.blocking(file_program(f"        var t = {call};")), call)
+
+    def test_unsorted_directory_listings_are_blocking(self):
+        for body in ['Files.list(Path.of("d")).forEach(System.out::println);',
+                     'Files.walk(Path.of("d")).map(Path::toString).forEach(System.out::println);',
+                     'Files.find(Path.of("d"), 2, (p, a) -> true).toList();',
+                     'try (var s = Files.list(Path.of("d"))) { s.forEach(System.out::println); }',
+                     'try (var s = Files.walk(Path.of("d"))) { s.filter(Files::isRegularFile).sorted().toList(); }',
+                     'print(Files.list(Path.of("d")));',
+                     'try (var ds = Files.newDirectoryStream(Path.of("d"))) { ds.forEach(System.out::println); }',
+                     'for (File f : new File("d").listFiles()) { System.out.println(f); }',
+                     'File dir = new File("d"); String[] names = dir.list();']:
+            source = file_program("        " + body, "import java.io.File;\nimport java.nio.file.*;\n")
+            self.assertIn("directory-order", self.blocking(source), body)
+
+    def test_a_listing_sorted_before_anything_else_is_not_blocking(self):
+        for body in ['Files.walk(Path.of("d")).sorted().forEach(System.out::println);',
+                     'Files.list(Path.of("d")).sorted(Comparator.reverseOrder()).toList();',
+                     'try (var paths = Files.walk(Path.of("d"))) {\n'
+                     '            paths.sorted(Comparator.reverseOrder()).forEach(p -> System.out.println(p));\n'
+                     '        }']:
+            source = file_program("        " + body, "import java.nio.file.*;\nimport java.util.Comparator;\n")
+            self.assertNotIn("directory-order", flags_of(source), body)
+        lines = file_program('        Files.lines(Path.of("a.txt")).forEach(System.out::println);')
+        self.assertNotIn("directory-order", flags_of(lines))
+
+    def test_file_metadata_is_blocking(self):
+        for call in ['Files.getLastModifiedTime(p)', 'Files.readAttributes(p, BasicFileAttributes.class)',
+                     'Files.getAttribute(p, "size")', 'Files.getOwner(p)', 'Files.getPosixFilePermissions(p)',
+                     'Files.probeContentType(p)', 'Files.isHidden(p)', 'Files.isWritable(p)',
+                     'Files.isReadable(p)', 'Files.getFileStore(p)', 'file.lastModified()', 'file.canWrite()',
+                     'file.getFreeSpace()']:
+            self.assertIn("file-metadata", self.blocking(file_program(f"        var x = {call};")), call)
+        size = file_program('        long n = Files.size(Path.of("a.txt")); boolean e = Files.exists(Path.of("a"));')
+        self.assertEqual(self.blocking(size), [])
+
+    def test_optional_specific_file_exceptions_are_blocking(self):
+        for exception in ["NoSuchFileException", "FileAlreadyExistsException", "DirectoryNotEmptyException",
+                          "NotDirectoryException", "AccessDeniedException"]:
+            source = file_program(f'        try {{ Files.readString(Path.of("a")); }} catch ({exception} e) {{ }}')
+            self.assertIn("optional-file-exception", self.blocking(source), exception)
+        instance = file_program('        try { Files.delete(Path.of("a")); }\n'
+                                '        catch (IOException e) { System.out.println(e instanceof NoSuchFileException); }')
+        self.assertIn("optional-file-exception", self.blocking(instance))
+
+    def test_specified_exceptions_and_names_in_text_are_not_blocking(self):
+        specified = file_program('        try { new FileReader("a.txt"); }\n'
+                                 '        catch (FileNotFoundException e) { System.out.println("missing"); }',
+                                 "import java.io.*;\n")
+        self.assertEqual(self.blocking(specified), [])
+        self.assertEqual(self.blocking(file_program(
+            '        Files.writeString(Path.of("a.txt"), "x");\n'
+            '        // a NoSuchFileException would be thrown here if the file were missing\n'
+            '        System.out.println("no NoSuchFileException here");')), [])
+
+    def test_platform_line_separator_is_informational(self):
+        for body in ["writer.newLine();", 'Files.write(Path.of("a.txt"), List.of("x", "y"));',
+                     "String nl = System.lineSeparator();"]:
+            flags = flags_of(file_program("        " + body))
+            self.assertIn("line-separator", flags, body)
+            self.assertEqual(eo.blocking_flags(flags), [], body)
+        self.assertIn('"\\n"', eo.RISK_NOTES["line-separator"])
+        for body in ['System.out.printf("%d%n", 1);', 'System.out.println("x");',
+                     'Files.writeString(Path.of("a.txt"), "x\\ny");']:
+            self.assertNotIn("line-separator", flags_of(file_program("        " + body)), body)
+
+    def test_deleting_moving_or_replacing_files_is_informational(self):
+        for body in ['Files.delete(p);', 'Files.deleteIfExists(p);', 'Files.move(a, b);',
+                     'Files.copy(a, b, StandardCopyOption.REPLACE_EXISTING);',
+                     'File f = new File("a.txt"); f.delete();', 'new File("a.txt").deleteOnExit();']:
+            flags = flags_of(file_program("        " + body, "import java.io.File;\nimport java.nio.file.*;\n"))
+            self.assertIn("deletes-files", flags, body)
+            self.assertEqual(eo.blocking_flags(flags), [], body)
+        self.assertNotIn("deletes-files", flags_of("        restClient.delete().uri(\"/x\").retrieve();"))
+
+    def test_the_lessons_affected_examples(self):
+        def verdict(spec):
+            return eo.describe(spec).split()[0:2]
+
+        runnable = ["file-reading/BufferedReaderExample", "file-reading/FileReadingStreamAndCountExample",
+                    "file-reading/SearchWordInFileExample", "file-reading/ReadFileAsStringExample",
+                    "file-writing/WriteStringExample", "file-writing/AppendToFileExample",
+                    "file-writing/WriteLinesExample", "file-writing/BufferedWriterExample",
+                    "file-writing/WriteCsvExample"]
+        for spec in runnable:
+            flags = eo.precheck(*spec.split("/"))["flags"]
+            self.assertEqual(eo.blocking_flags(flags), [], spec)
+            self.assertIn("local-file", flags, spec)
+        for spec in ["file-writing/WriteLinesExample", "file-writing/BufferedWriterExample"]:
+            self.assertIn("line-separator", eo.precheck(*spec.split("/"))["flags"], spec)
+        blocked = {"file-reading/PathAndFilesBasicsExample": ["cwd-path"],  # prints toAbsolutePath()
+                   "file-reading/FileReadingExceptionHandlingExample": ["optional-file-exception"],
+                   "file-writing/CopyAndDirectoryExample": ["optional-file-exception"],
+                   "scanner/ScannerFileExample": ["temp-file"]}
+        for spec, expected in blocked.items():
+            self.assertEqual(eo.blocking_flags(eo.precheck(*spec.split("/"))["flags"]), expected, spec)
+        # CopyAndDirectoryExample sorts its Files.walk() before deleting: not directory-order.
+        self.assertNotIn("directory-order", eo.precheck("file-writing", "CopyAndDirectoryExample")["flags"])
+
+    def test_no_published_example_is_blocked_by_the_file_flags(self):
+        manifest = Path(__file__).resolve().parent / "manifest.tsv"
+        examples = Path(__file__).resolve().parents[2] / "src/main/resources/examples"
+        for line in manifest.read_text(encoding="utf-8").splitlines()[1:]:
+            slug, name = line.split("\t")[:2]
+            flags = flags_of((examples / slug / f"{name}.java").read_text(encoding="utf-8"))
+            self.assertEqual(eo.blocking_flags(flags), [], f"{slug}/{name}")
+
+
+class SandboxWorkdirTest(unittest.TestCase):
+    """The run container: a fresh tmpfs /tmp is the working directory and the only writable
+    place; the classes are mounted read-only outside it."""
+
+    def test_run_mounts_only_the_classes_read_only_and_works_in_tmp(self):
+        captured = {}
+
+        def fake_run_container(args, command, timeout_s, name):
+            captured["args"], captured["command"] = args, command
+            return {"exit": 0, "stdout": b"", "stderr": b"", "timed_out": False}
+
+        with mock.patch.object(eo, "run_container", fake_run_container):
+            eo.run_variant("Main", Path("/host/work/x/classes"), "2", [])
+        args = captured["args"]
+        self.assertEqual(args[args.index("--workdir") + 1], "/tmp")
+        self.assertIn("--read-only", args)
+        self.assertRegex(args[args.index("--tmpfs") + 1], r"^/tmp:rw,")
+        mounts = [args[i + 1] for i, a in enumerate(args) if a == "-v"]
+        self.assertEqual(mounts, ["/host/work/x/classes:/classes:ro"])
+        self.assertEqual(captured["command"][captured["command"].index("-cp") + 1], "/classes")
+
+    def test_every_variant_runs_in_its_own_container_with_no_shared_writable_mount(self):
+        calls = []
+
+        def fake_run_container(args, command, timeout_s, name):
+            calls.append((name, args))
+            return {"exit": 0, "stdout": b"hi\n", "stderr": b"", "timed_out": False}
+
+        with mock.patch.object(eo, "run_container", fake_run_container):
+            for label, cpus, extra in eo.VARIANTS:
+                eo.run_variant("Main", Path("/host/work/x/classes"), cpus, extra)
+        names = [name for name, _ in calls]
+        self.assertEqual(len(names), len(eo.VARIANTS))
+        self.assertEqual(len(set(names)), len(names))  # a new container (and so a new tmpfs) each time
+        for _, args in calls:
+            self.assertIn("--rm", args)
+            self.assertRegex(args[args.index("--tmpfs") + 1], r"^/tmp:")
+            self.assertEqual([args[i + 1] for i, a in enumerate(args) if a == "-v"],
+                             ["/host/work/x/classes:/classes:ro"])
+
+    def test_selftest_runs_the_workdir_probe_in_every_variant(self):
+        probe = (eo.SELFTEST_SOURCES / "WorkdirProbe.java").read_text(encoding="utf-8")
+        self.assertIn("StandardOpenOption.APPEND", probe)
+        compiled, ran = [], []
+
+        def fake_compile(java_file, work_dir):
+            compiled.append(java_file.stem)
+            return {"exit": 0, "timed_out": False, "stdout": b"", "stderr": b"", "classes": work_dir / "classes"}
+
+        def fake_run(main_class, classes, cpus, extra_props):
+            ran.append((main_class, cpus, tuple(extra_props)))
+            text = {"NetworkProbe": "network: blocked", "FilesystemProbe": "filesystem: ok",
+                    "WorkdirProbe": "workdir: ok", "IdentityProbe": "identity: ok",
+                    "ThreadLimitProbe": "threads: limited", "StdinProbe": "stdin: empty"}.get(main_class, "")
+            return {"exit": 0 if text else 1, "timed_out": main_class == "InfiniteLoopProbe",
+                    "truncated": main_class == "FloodProbe", "stdout": text.encode(), "stderr": b""}
+
+        patches = {"compile_example": fake_compile, "run_variant": fake_run, "verify_image": lambda: "jdk",
+                   "cleanup_leftover_containers": lambda: None}
+        with mock.patch.multiple(eo, **patches), \
+                mock.patch.object(subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")), \
+                redirect_stdout(io.StringIO()) as out, self.assertRaises(SystemExit) as ctx:
+            eo.cmd_selftest()
+        self.assertEqual(ctx.exception.code, 0, out.getvalue())
+        self.assertEqual(compiled.count("WorkdirProbe"), 1)
+        self.assertEqual([r for r in ran if r[0] == "WorkdirProbe"],
+                         [("WorkdirProbe", cpus, tuple(extra)) for _, cpus, extra in eo.VARIANTS])
+        self.assertEqual(out.getvalue().count("PASS WorkdirProbe ["), len(eo.VARIANTS))
 
 
 class TextOnlyFlagTest(unittest.TestCase):
@@ -585,6 +822,28 @@ class GenerateBlockingTest(Sandbox):
         self.assertEqual(record["status"], "CONTRACT_BLOCKED")
         self.assertIn("scanner-locale", record["flags"])
         self.assertFalse((eo.STAGING / "loops/Height.out").exists())
+
+    def test_a_relative_file_example_compiles_once_and_runs_every_variant(self):
+        self.java("loops", "Notes", file_program('        Files.writeString(Path.of("notes.txt"), "hi");\n'
+                                                 '        System.out.println(Files.readString(Path.of("notes.txt")));\n'
+                                                 '        Files.deleteIfExists(Path.of("notes.txt"));').replace("class F", "class Notes"))
+        self.generate("loops/Notes")
+        self.assertEqual(self.compiled, ["Notes"])
+        self.assertEqual(self.ran, ["Notes"] * len(eo.VARIANTS))
+        record = self.record("loops/Notes")
+        self.assertEqual(record["status"], "GENERATED")
+        self.assertIn("local-file", record["flags"])
+        rows = eo.read_review_sheet_unchecked(eo.OUT_ROOT / "review.tsv")
+        self.assertIn("empty working directory", rows[0]["note"])
+
+    def test_a_file_example_that_leaves_the_working_directory_is_neither_compiled_nor_run(self):
+        self.java("loops", "Hosts", file_program('        System.out.println(Files.readString(Path.of("/etc/hosts")));')
+                  .replace("class F", "class Hosts"))
+        self.generate("loops/Hosts", "loops/Hello")
+        self.assertEqual(self.compiled, ["Hello"])
+        record = self.record("loops/Hosts")
+        self.assertEqual(record["status"], "CONTRACT_BLOCKED")
+        self.assertIn("cwd-path", record["flags"])
 
     def test_a_blocking_pattern_only_in_a_comment_still_runs(self):
         self.java("loops", "Hello", HELLO.format(name="Hello", text="hi").replace(

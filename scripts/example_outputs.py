@@ -52,6 +52,14 @@ Isolation (every example, two containers: compile, then run):
   * stdout is capped; the host environment is never passed in
   * stdin is empty (the docker client gets /dev/null, no -i), and the program
     always runs with no command-line arguments
+  * the working directory is the container's own /tmp tmpfs: fresh and EMPTY for every
+    run (each variant is a new container), writable, and the only writable place; the
+    classes are mounted read-only at /classes, outside it. A program that reads and
+    writes files by relative name therefore always does so in a clean, isolated
+    directory, and an output only ever shows that first run in an empty directory.
+    Files outside it, temp-file names, listing order, file metadata and the optional
+    java.nio.file exception types are blocked by contract flags (see CONTRACT_FLAGS);
+    `selftest` (WorkdirProbe) checks the directory itself.
 
 Generation is NOT correctness: a result here only means "this code prints
 exactly these bytes, repeatably, in this environment". Every run is repeated
@@ -160,12 +168,49 @@ CONTRACT_FLAGS = [
     ("floating-point-text", r"\bdouble\b|\bfloat\b|Double|average\(\)"),
     # Also set by array_identity_text(): an array printed as text.
     ("identity-text", r"hashCode\(\)|Object\.toString"),
-    ("io-or-env", r"\bFiles\.|\bPaths\.get\(|\bPath\.of\(|\bjava\.nio\.file\b|\bFileSystems\b"
-                  r"|\bnew\s+(File|FileReader|FileWriter|FileInputStream|FileOutputStream|RandomAccessFile)\s*\("
-                  r"|Socket|HttpClient|openConnection\(|openStream\(|System\.getenv|ProcessBuilder|Runtime\.getRuntime"),
+    # The outside world: network, other processes, environment variables, host names.
+    ("external-io", r"Socket|HttpClient|openConnection\(|openStream\(|System\.getenv|ProcessBuilder|ProcessHandle"
+                    r"|Runtime\.getRuntime|\bInetAddress\b"),
+    # Files are allowed, but ONLY files the program itself creates by relative name in its
+    # working directory. Every run starts in a fresh, empty, writable working directory (the
+    # container's own /tmp; the classes are a read-only mount outside it), so the panel shows a
+    # first run in an empty directory. The flags below block what that assumption cannot fix.
+    # Set by escaping_path_literal() too: an absolute, home-relative or ".." path literal.
+    ("cwd-path", r"\.\s*(toAbsolutePath|toRealPath|getAbsolutePath|getAbsoluteFile|getCanonicalPath|getCanonicalFile)"
+                 r"\s*\(|\b(listRoots|getRootDirectories|getFileStores)\s*\("),
+    # Random names: createTempFile("x", ".txt") -> "x1234567890.txt".
+    ("temp-file", r"\bcreateTemp(File|Directory)\s*\("),
+    # Set by unsorted_directory_listing(): "The elements in the stream are not in any particular
+    # order" (Files.list/walk/find, DirectoryStream, File.list/listFiles).
+    ("directory-order", None),
+    # Times, owner, permissions and file-system data describe the machine and the moment.
+    ("file-metadata", r"\b(getLastModifiedTime|readAttributes|getAttribute|getOwner|getPosixFilePermissions"
+                      r"|probeContentType|isHidden|lastModified|getFileStore|getTotalSpace|getFreeSpace"
+                      r"|getUsableSpace|isReadable|isWritable|isExecutable|canRead|canWrite|canExecute)\s*\("),
+    # The java.nio.file Javadoc lists these as "(optional specific exception)": a provider may
+    # throw a plain IOException instead, so which catch branch runs is not fixed by the API.
+    # (FileNotFoundException from FileReader/FileInputStream/FileOutputStream IS specified.)
+    ("optional-file-exception", r"\b(NoSuchFileException|FileAlreadyExistsException|DirectoryNotEmptyException"
+                                r"|NotDirectoryException|AccessDeniedException|NotLinkException"
+                                r"|FileSystemLoopException)\b"),
+    # Informational, on the code: relative-name file access, allowed by the assumption above.
+    ("local-file", r"\bFiles\s*\.|\bPaths\s*\.\s*get\s*\(|\bPath\s*\.\s*of\s*\(|\bjava\.nio\.file\b|\bFileSystems\b"
+                   r"|\bnew\s+(File|FileReader|FileWriter|FileInputStream|FileOutputStream|RandomAccessFile)\s*\("
+                   r"|\bnew\s+(PrintWriter|PrintStream|Formatter)\s*\(\s*\"\""),
+    # Informational, on the code: deletes, moves or replaces files.
+    # Also set by deletes_java_io_file(): File.delete()/deleteOnExit() where the code uses File.
+    ("deletes-files", r"\bFiles\s*\.\s*(delete|deleteIfExists|move)\s*\(|REPLACE_EXISTING"),
+    # Informational: writes the platform line separator into text (BufferedWriter.newLine(),
+    # Files.write(path, lines), System.lineSeparator()); the sandbox, and so every panel, is Linux
+    # "\n". println/printf("%n") on stdout are the same for every panel and are not flagged.
+    ("line-separator", r"\.\s*newLine\s*\(|lineSeparator\s*\(|\bFiles\s*\.\s*write\s*\("),
 ]
 BLOCKING_FLAGS = {"hash-order", "parallel", "concurrency", "time", "random", "stdin", "default-env",
-                  "scanner-locale", "reflection-order", "identity-text", "io-or-env"}
+                  "scanner-locale", "reflection-order", "identity-text", "external-io", "cwd-path",
+                  "temp-file", "directory-order", "file-metadata", "optional-file-exception"}
+# Informational flags matched on the code (comments and string literals blanked) instead of
+# the raw source: a file API named only in printed text or a comment is no file access.
+CODE_INFO_FLAGS = {"local-file", "deletes-files"}
 # Informational, set by main_reads_args(): the run always passes no arguments (a fixed,
 # repeatable input), so the reviewer checks the output is the branch the lesson shows.
 MAIN_ARGS_FLAG = "main-args"
@@ -176,6 +221,14 @@ RISK_NOTES = {
                  "(not guaranteed by the API); approve only if the lesson presents it that way.",
     "scanner-locale-set": "NOTE scanner-locale-set: useLocale(...) exempts a Scanner from scanner-locale; check "
                           "every Scanner that reads decimals gets a fixed locale before its first read.",
+    "local-file": "NOTE local-file: the output is a first run in a fresh, empty working directory; approve only "
+                  "if the program creates every file it reads (or the lesson presents the missing file as the "
+                  "point) and the output does not depend on what already exists in a reader's directory.",
+    "deletes-files": "NOTE deletes-files: deletes, moves or replaces files; the sandbox only lets it touch its own "
+                     "empty working directory, but a reader runs it in theirs -- check it only touches names the "
+                     "program created itself.",
+    "line-separator": "NOTE line-separator: writes the platform line separator; the panel shows Linux \"\\n\". "
+                      "Reject if the output prints a length, byte count or other number derived from that text.",
 }
 TEXT_ONLY_SUFFIX = ":text-only"
 RISK_NOTES.update({
@@ -266,7 +319,91 @@ def localized_scanner_decimal_read(code: str) -> bool:
     return False
 
 
-DETECTORS = {"identity-text": array_identity_text, "scanner-locale": localized_scanner_decimal_read}
+# Directory listings: Files.list/walk/find and DirectoryStream promise no order, File.list() and
+# listFiles() neither. A Files stream is accepted only when every chain that consumes it sorts
+# it first (Files.walk(dir).sorted(...)..., or a variable whose every use starts with .sorted).
+FILES_LISTING = re.compile(r"\bFiles\s*\.\s*(?:list|walk|find)\s*\(")
+FILES_LISTING_VARIABLE = re.compile(r"\b([A-Za-z_]\w*)\s*=\s*Files\s*\.\s*(?:list|walk|find)\s*\(")
+UNORDERED_LISTING = re.compile(r"\bnewDirectoryStream\s*\(|\.\s*listFiles\s*\(")
+FILE_LIST_CALL = re.compile(r"\.\s*list\s*\(\s*\)")  # java.io.File.list(), only where the code uses File
+
+
+def statement_from(code: str, start: int) -> str:
+    """From start to the end of its statement: a ";" outside brackets, or the bracket that
+    closes the one start sits in (a try-with-resources header)."""
+    depth = 0
+    for i in range(start, len(code)):
+        ch = code[i]
+        if ch in "({[":
+            depth += 1
+        elif ch in ")}]":
+            depth -= 1
+            if depth < 0:
+                return code[start:i]
+        elif ch == ";" and depth == 0:
+            return code[start:i]
+    return code[start:]
+
+
+def sorted_first(chain: str) -> bool:
+    """The chain's first stream operation after the call itself is .sorted(...)."""
+    call_end = chain.find("(")
+    depth = 0
+    for i in range(call_end, len(chain)):
+        if chain[i] == "(":
+            depth += 1
+        elif chain[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return re.match(r"\s*\.\s*sorted\s*\(", chain[i + 1:]) is not None
+    return False
+
+
+def unsorted_directory_listing(code: str) -> bool:
+    if UNORDERED_LISTING.search(code) or (re.search(r"\bnew\s+File\s*\(", code) and FILE_LIST_CALL.search(code)):
+        return True
+    assigned = {m.start(0) + m.group(0).index("Files"): m.group(1) for m in FILES_LISTING_VARIABLE.finditer(code)}
+    for match in FILES_LISTING.finditer(code):
+        name = assigned.get(match.start())
+        if name is None:
+            if not sorted_first(statement_from(code, match.start())):
+                return True
+            continue
+        uses = [u.start() for u in re.finditer(rf"(?<![\w.]){re.escape(name)}\s*\.", code) if u.start() > match.start()]
+        if not uses or not all(re.match(rf"{re.escape(name)}\s*\.\s*sorted\s*\(", code[u:]) for u in uses):
+            return True
+    return False
+
+
+def deletes_java_io_file(code: str) -> bool:
+    """File.delete()/deleteOnExit(): only where the code uses java.io.File (a REST client's
+    delete() is not a file)."""
+    return bool(re.search(r"\bnew\s+File\s*\(", code)
+                and re.search(r"\.\s*(?:delete\s*\(\s*\)|deleteOnExit\s*\()", code))
+
+
+DETECTORS = {"identity-text": array_identity_text, "scanner-locale": localized_scanner_decimal_read,
+             "directory-order": unsorted_directory_listing, "deletes-files": deletes_java_io_file}
+
+# A path literal that leaves the working directory: absolute ("/data", "C:\\x", "\\\\host"),
+# home-relative ("~/x") or with a ".." segment. Checked on the code with only the comments
+# removed, and only when the code uses files at all ("/en/topics" printed by a web example is text).
+STRING_LITERAL = re.compile(r'"""([\s\S]*?)"""|"((?:\\.|[^"\\\n])*)"')
+ESCAPING_PATH = re.compile(r'^(?:/|~|[A-Za-z]:[\\/]|\\\\)|(?:^|[\\/])\.\.(?:[\\/]|$)')
+
+
+def escaping_path_literal(code: str, code_with_literals: str) -> bool:
+    if not re.search(dict(CONTRACT_FLAGS)["local-file"], code):
+        return False
+    for block, literal in STRING_LITERAL.findall(code_with_literals):
+        value = (block or literal).replace("\\\\", "\\")
+        if ESCAPING_PATH.search(value):
+            return True
+    return False
+
+
+# Detectors that need the string literals themselves (run on the code with comments removed).
+LITERAL_DETECTORS = {"cwd-path": escaping_path_literal}
 
 
 def flag_matches(flag: str, pattern, text: str) -> bool:
@@ -278,12 +415,17 @@ def flag_matches(flag: str, pattern, text: str) -> bool:
 
 def contract_flags(source: str) -> list:
     code = strip_comments_and_strings(source)
+    code_with_literals = strip_comments(source)
     flags = []
     for flag, pattern in CONTRACT_FLAGS:
-        if flag not in BLOCKING_FLAGS:
+        literal_detector = LITERAL_DETECTORS.get(flag)
+        if flag in CODE_INFO_FLAGS:
+            if flag_matches(flag, pattern, code):
+                flags.append(flag)
+        elif flag not in BLOCKING_FLAGS:
             if re.search(pattern, source):
                 flags.append(flag)
-        elif flag_matches(flag, pattern, code):
+        elif flag_matches(flag, pattern, code) or (literal_detector and literal_detector(code, code_with_literals)):
             flags.append(flag)
         elif flag_matches(flag, pattern, source):
             flags.append(flag + TEXT_ONLY_SUFFIX)
@@ -328,8 +470,15 @@ def method_body(source: str, after: int) -> str:
 
 def strip_comments_and_strings(source: str) -> str:
     """Blanks out comments, string/text-block and char literals (structure-only analysis)."""
-    pattern = re.compile(r'"""[\s\S]*?"""|"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'|//[^\n]*|/\*[\s\S]*?\*/')
-    return pattern.sub(lambda m: " " if not m.group().startswith(('"', "'")) else '""', source)
+    return LEXICAL_TOKEN.sub(lambda m: " " if not m.group().startswith(('"', "'")) else '""', source)
+
+
+def strip_comments(source: str) -> str:
+    """Blanks out comments only; string and char literals stay as written."""
+    return LEXICAL_TOKEN.sub(lambda m: m.group() if m.group().startswith(('"', "'")) else " ", source)
+
+
+LEXICAL_TOKEN = re.compile(r'"""[\s\S]*?"""|"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'|//[^\n]*|/\*[\s\S]*?\*/')
 
 
 NON_JDK_IMPORT = re.compile(r"^\s*import\s+(?:static\s+)?(?!java\.|javax\.|jdk\.)[\w.]+", re.MULTILINE)
@@ -628,7 +777,8 @@ def write_report(records: list, jdk_version: str):
              "**Nothing in this report is reviewed or published.** A GENERATED output only means the",
              "code printed the same bytes in every variant run -- that is NOT proof that the output is",
              "fixed by the Java API contract or correct for the lesson. Every program ran with no",
-             "command-line arguments and an empty stdin. Decide per example in `review.tsv`.", ""]
+             "command-line arguments, an empty stdin and a fresh, empty working directory. Decide per",
+             "example in `review.tsv`.", ""]
     slugs = list(dict.fromkeys(r["slug"] for r in records))
     for slug in slugs:
         lesson = [r for r in records if r["slug"] == slug]
@@ -993,6 +1143,14 @@ def cmd_selftest():
             ok = result["exit"] == 0 and text.endswith(expected)
             failures += not ok
             print(f"{'PASS' if ok else 'FAIL'} {probe}: {text}")
+        # Exactly like generate: one compile, then every variant in its own container, in order.
+        compiled = compile_example(SELFTEST_SOURCES / "WorkdirProbe.java", WORK / "selftest__WorkdirProbe")
+        for label, cpus, extra in VARIANTS:
+            result = run_variant("WorkdirProbe", compiled["classes"], cpus, extra)
+            text = result["stdout"].decode("utf-8", "replace").strip()
+            ok = result["exit"] == 0 and text == "workdir: ok"
+            failures += not ok
+            print(f"{'PASS' if ok else 'FAIL'} WorkdirProbe [{label}]: {text}")
         for probe, check in [("InfiniteLoopProbe", lambda r: r["timed_out"]),
                              ("FloodProbe", lambda r: r["truncated"] and not r["timed_out"]),
                              ("MemoryProbe", lambda r: r["exit"] != 0 and not r["timed_out"])]:

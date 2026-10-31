@@ -44,7 +44,18 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   insan incelemesinden sonra `promote` yayına taşır ve
   `scripts/example-outputs/manifest.tsv`'ye hash'leriyle yazar. Çıktısı Java API
   sözleşmesiyle sabit olmayan örnekler (HashMap/HashSet sırası, paralel stream,
-  thread, zaman, rastgelelik, I/O) çalıştırmada aynı çıksa bile panele ALINMAZ.
+  thread, zaman, rastgelelik, ağ/süreç/ortam değişkeni) çalıştırmada aynı çıksa bile
+  panele ALINMAZ. Dosya kullanan örnekler YALNIZCA kendi oluşturdukları dosyaları
+  göreli adla, çalışma dizininin içinde okuyup yazıyorsa panele girebilir: her çalıştırma
+  temiz, boş ve izole bir çalışma dizininde başlar (sandbox'ın kendi `/tmp`'si; derlenmiş
+  sınıflar onun dışında, salt okunur), panel de o dizindeki İLK çalıştırmayı gösterir --
+  okuyucunun dizininde önceden var olan dosyalar varsayılmaz. Mutlak, `~`'li ya da `..`
+  ile dışarı çıkan yollar, `toAbsolutePath()` gibi makineye göre değişen yol metinleri,
+  `createTemp*` adları, sıralanmamış dizin listeleri (`Files.list/walk/find`), dosya
+  zamanı/sahibi/izinleri ve Javadoc'ta "optional specific exception" olan
+  `java.nio.file` istisnalarına (`NoSuchFileException`, `FileAlreadyExistsException`
+  vb.) dayanan dallar ENGELLİ kalır (`scripts/example_outputs.py`, `CONTRACT_FLAGS`).
+  Satır sonu Linux `\n`'dir; `newLine()`/`Files.write(path, lines)` yalnızca not düşer.
   `ExampleOutputManifestTest`, `.out`'u olan bir `.java` değişince build'i kırar:
   çıktıyı yeniden üret + incele ya da `.out`'u ve manifest satırını sil. Panel eklemek
   sayfada görünen örneği değiştirdiği için iki dilin `updated_at`'ini de ilerletir
