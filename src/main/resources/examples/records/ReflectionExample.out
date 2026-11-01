@@ -1,0 +1,3 @@
+true
+player : String
+points : int
