@@ -4,7 +4,7 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 
 class Greeter {
-    String greet(String name) {
+    public String greet(String name) {
         return "Hello, " + name + "!";
     }
 }
