@@ -1,0 +1,5 @@
+Istanbul: 2026-07-15T15:00+03:00[Europe/Istanbul]
+Same instant in New York: 2026-07-15T08:00-04:00[America/New_York]
+Same local time relabeled to New York (different instant): 2026-07-15T15:00-04:00[America/New_York]
+Istanbul and 'same instant' New York represent the same instant? true
+Istanbul and 'same local' New York represent the same instant? false
