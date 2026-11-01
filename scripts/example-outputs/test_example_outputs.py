@@ -20,7 +20,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import example_outputs as eo  # noqa: E402
 
-MANIFEST_HEADER = "slug\texample\tjava_sha256\tout_sha256\tjdk_image\torigin\treview\treviewer\treviewed_at\tnote"
+MANIFEST_HEADER = eo.MANIFEST_HEADER
 HELLO = 'class {name} {{\n    public static void main(String[] args) {{\n        System.out.println("{text}");\n    }}\n}}\n'
 
 
@@ -382,7 +382,7 @@ class SandboxWorkdirTest(unittest.TestCase):
         self.assertIn("StandardOpenOption.APPEND", probe)
         compiled, ran = [], []
 
-        def fake_compile(java_file, work_dir):
+        def fake_compile(java_file, work_dir, companions=()):
             compiled.append(java_file.stem)
             return {"exit": 0, "timed_out": False, "stdout": b"", "stderr": b"", "classes": work_dir / "classes"}
 
@@ -675,13 +675,56 @@ class PrecheckTest(Sandbox):
         self.java("demo", "Jdk", "import java.util.List;\nimport javax.crypto.Cipher;\n" + HELLO.format(name="Jdk", text="x"))
         self.assertIsNone(eo.precheck("demo", "Jdk")["status"])
 
-    def test_example_using_a_type_from_a_sibling_file_is_multi_file(self):
+    def uses(self, name, *types):
+        """A runnable example using each given type from another file."""
+        lines = "".join(f"    System.out.println({t}.class);\n" for t in types)
+        self.java("demo", name, f"class {name} {{\n  public static void main(String[] a) {{\n{lines}  }}\n}}\n")
+
+    def test_type_from_a_sibling_file_makes_that_file_a_companion(self):
         self.java("demo", "Point", "public record Point(int x, int y) {}\n")
-        self.java("demo", "PointUsage", "class PointUsage {\n  public static void main(String[] a) {\n"
-                                        "    Point p = new Point(1, 2);\n    System.out.println(p);\n  }\n}\n")
+        self.uses("PointUsage", "Point")
         result = eo.precheck("demo", "PointUsage")
+        self.assertIsNone(result["status"])
+        self.assertEqual(result["companions"], ["Point.java"])
+        self.assertNotIn("depends_on", result)
+
+    def test_companion_is_found_by_the_type_it_declares_not_by_its_file_name(self):
+        self.java("demo", "PlanetEnum", "enum Planet { EARTH }\n")
+        self.uses("PlanetUsage", "Planet")
+        self.assertEqual(eo.precheck("demo", "PlanetUsage")["companions"], ["PlanetEnum.java"])
+
+    def test_companions_are_followed_transitively_and_cycles_end(self):
+        self.java("demo", "First", "class First { Second next; }\n")
+        self.java("demo", "Second", "class Second { Third next; First back; }\n")
+        self.java("demo", "Third", "class Third { }\n")
+        self.uses("Chain", "First")
+        self.assertEqual(eo.precheck("demo", "Chain")["companions"], ["First.java", "Second.java", "Third.java"])
+
+    def test_type_declared_in_two_files_is_not_guessed(self):
+        self.java("demo", "Left", "class Employee { }\n")
+        self.java("demo", "Right", "class Employee { }\n")
+        self.uses("Pick", "Employee")
+        result = eo.precheck("demo", "Pick")
         self.assertEqual(result["status"], "MULTI_FILE")
-        self.assertEqual(result["depends_on"], ["Point"])
+        self.assertEqual(result["depends_on"], ["Employee"])
+        self.assertNotIn("companions", result)
+
+    def test_non_jdk_import_in_a_companion_is_not_run(self):
+        self.java("demo", "Handler", "import org.springframework.stereotype.Service;\nclass Handler { }\n")
+        self.uses("Calls", "Handler")
+        self.assertEqual(eo.precheck("demo", "Calls")["status"], "NON_JDK")
+
+    def test_a_companion_contract_flag_applies_to_the_example(self):
+        self.java("demo", "Clock", "class Clock { long now() { return System.nanoTime(); } }\n")
+        self.uses("Reads", "Clock")
+        self.assertIn("time", eo.precheck("demo", "Reads")["flags"])
+        self.assertRegex(eo.describe("demo/Reads"), r"^WILL_BE_BLOCKED \(time\)")
+
+    def test_an_example_without_companions_reports_none(self):
+        self.java("demo", "Alone")
+        result = eo.precheck("demo", "Alone")
+        self.assertNotIn("companions", result)
+        self.assertNotIn("compiled with", eo.describe("demo/Alone"))
 
     def test_sibling_names_in_comments_strings_or_redeclared_do_not_count(self):
         self.java("demo", "Book", "class Book { String title; }\n")
@@ -707,8 +750,9 @@ class GenerateBlockingTest(Sandbox):
         super().setUp()
         self.compiled, self.ran = [], []
 
-        def fake_compile(java_file, work_dir):
+        def fake_compile(java_file, work_dir, companions=()):
             self.compiled.append(java_file.stem)
+            self.compiled_with = [c.name for c in companions]
             return {"exit": 0, "timed_out": False, "stdout": b"", "stderr": b"", "classes": work_dir / "classes"}
 
         def fake_run(main_class, classes, cpus, extra_props):
@@ -736,6 +780,33 @@ class GenerateBlockingTest(Sandbox):
 
     def record(self, key):
         return next(r for r in eo.load_results() if eo.record_key(r) == key)
+
+    def test_a_companion_is_compiled_hashed_noted_and_shown_for_review(self):
+        day = self.java("loops", "Day", "enum Day { MON }\n")
+        self.java("loops", "Usage", "class Usage {\n  public static void main(String[] a) {\n"
+                                    "    System.out.println(Day.MON);\n  }\n}\n")
+        self.assertIn("[compiled with: Day.java]", eo.describe("loops/Usage"))
+        self.generate("loops/Usage")
+        self.assertEqual(self.compiled, ["Usage"])
+        self.assertEqual(self.compiled_with, ["Day.java"])
+        self.assertEqual(set(self.ran), {"Usage"})
+        record = self.record("loops/Usage")
+        self.assertEqual(record["status"], "GENERATED")
+        self.assertEqual(record["companions"], {"Day.java": sha(day.read_bytes())})
+        report = (eo.OUT_ROOT / "report.md").read_text(encoding="utf-8")
+        self.assertIn(f"Companion: `Day.java` (sha256 `{sha(day.read_bytes())}`)", report)
+        self.assertIn("enum Day { MON }", report)
+        rows = eo.read_review_sheet_unchecked(eo.OUT_ROOT / "review.tsv")
+        self.assertIn("compiled with: Day.java", rows[0]["note"])
+        self.assertEqual(rows[0]["decision"], "")
+
+    def test_a_blocking_flag_in_a_companion_stops_compiling(self):
+        self.java("loops", "Clock", "class Clock { long now() { return System.nanoTime(); } }\n")
+        self.java("loops", "Reads", "class Reads {\n  public static void main(String[] a) {\n"
+                                    "    System.out.println(new Clock().now());\n  }\n}\n")
+        self.generate("loops/Reads")
+        self.assertEqual(self.compiled, [])
+        self.assertEqual(self.record("loops/Reads")["status"], "CONTRACT_BLOCKED")
 
     def test_a_blocked_example_is_neither_compiled_nor_run(self):
         self.assertRegex(eo.describe("loops/Timed"), r"^WILL_BE_BLOCKED \(time\)")
@@ -973,6 +1044,89 @@ class RiskNoteTest(Sandbox):
 
 
 # --- promote --review -----------------------------------------------------------------
+
+class CompileCompanionsTest(Sandbox):
+
+    def test_only_the_example_and_its_companions_reach_the_compiler(self):
+        java = self.java("demo", "Usage")
+        day = self.java("demo", "Day", "enum Day { MON }\n")
+        self.java("demo", "Unrelated")
+        calls = []
+
+        def fake_container(docker, command, timeout, name):
+            calls.append(command)
+            return {"exit": 0, "timed_out": False, "stdout": b"", "stderr": b""}
+
+        work = eo.WORK / "demo__Usage"
+        with mock.patch.object(eo, "run_container", fake_container):
+            eo.compile_example(java, work, [day])
+        self.assertEqual(sorted(p.name for p in (work / "src").iterdir()), ["Day.java", "Usage.java"])
+        self.assertEqual(calls[0][-2:], ["/src/Usage.java", "/src/Day.java"])
+
+
+class PromoteCompanionsTest(Sandbox):
+
+    def setUp(self):
+        super().setUp()
+        self.day = self.java("loops", "Day", "enum Day { MON }\n")
+        self.a = self.generated("loops", "A", b"a\n")
+        self.a["companions"] = {"Day.java": sha(self.day.read_bytes())}
+        self.results(self.a)
+        self.sheet_path = self.sheet("\t".join(["loops", "A", self.a["out_sha256"], "approve", ""]))
+
+    def test_the_manifest_row_records_the_companion_hash(self):
+        with redirect_stdout(io.StringIO()):
+            eo.cmd_promote_review(self.sheet_path, "cdurgun")
+        row = eo.MANIFEST.read_text(encoding="utf-8").splitlines()[1].split("\t")
+        self.assertEqual(len(row), len(eo.MANIFEST_HEADER.split("\t")))
+        self.assertEqual(row[-1], f"Day.java:{sha(self.day.read_bytes())}")
+
+    def test_a_row_without_companions_keeps_the_column_empty(self):
+        self.a.pop("companions")
+        self.results(self.a)
+        with redirect_stdout(io.StringIO()):
+            eo.cmd_promote_review(self.sheet_path, "cdurgun")
+        row = eo.MANIFEST.read_text(encoding="utf-8").splitlines()[1].split("\t")
+        self.assertEqual((len(row), row[-1]), (len(eo.MANIFEST_HEADER.split("\t")), ""))
+
+    def assert_refused(self, expected):
+        before = snapshot(self.root)
+        self.assertIn(expected, self.abort(eo.cmd_promote_review, self.sheet_path, "cdurgun"))
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_a_changed_companion_stops_the_promotion(self):
+        self.day.write_text("enum Day { MON, TUE }\n", encoding="utf-8")
+        self.assert_refused("companion Day.java changed")
+
+    def test_a_deleted_companion_stops_the_promotion(self):
+        self.day.unlink()
+        self.assert_refused("companion Day.java changed")
+
+    def test_a_manifest_with_the_old_header_stops_the_promotion(self):
+        eo.MANIFEST.write_text(eo.MANIFEST_HEADER.rsplit("\t", 1)[0] + "\n", encoding="utf-8")
+        self.assert_refused("must be exactly the header")
+
+
+class RealManifestCompanionsTest(unittest.TestCase):
+    """Runs on the real repository: the Java test can only compare hashes, so this is what
+    notices a published example whose companions are not all recorded."""
+
+    def rows(self):
+        lines = (Path(__file__).resolve().parent / "manifest.tsv").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(lines[0], eo.MANIFEST_HEADER)
+        return [line.split("\t") for line in lines[1:] if line.strip()]
+
+    def test_every_row_has_every_column(self):
+        for row in self.rows():
+            self.assertEqual(len(row), 11, row[:2])
+
+    def test_recorded_companions_match_what_the_source_needs_today(self):
+        for row in self.rows():
+            recorded = [entry.split(":")[0] for entry in row[10].split(",") if entry]
+            result = eo.precheck(row[0], row[1])
+            self.assertIsNone(result["status"], row[:2])
+            self.assertEqual(result.get("companions", []), recorded, row[:2])
+
 
 class PromoteReviewTest(Sandbox):
 

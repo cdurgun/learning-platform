@@ -28,7 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *       ({@code review = approved}),</li>
  *   <li>{@code .java}'nın güncel hash'i, çıktı üretildiğindeki hash'le aynıdır -- kod
  *       değiştiyse eski çıktı geçersizdir: ya yeniden üretilip incelenir ya da silinir,</li>
- *   <li>{@code .out}'un güncel hash'i manifest'tekiyle aynıdır -- çıktı elle değiştirilmemiştir.</li>
+ *   <li>{@code .out}'un güncel hash'i manifest'tekiyle aynıdır -- çıktı elle değiştirilmemiştir,</li>
+ *   <li>örnekle birlikte derlenen dosyalar ({@code companions} sütunu) durur ve hash'leri aynıdır --
+ *       çıktıyı onların kodu da üretir.</li>
  * </ul>
  * Manifest'te dosyası olmayan satır da hatadır. Bu test çıktının DOĞRU olduğunu kanıtlamaz;
  * o, inceleme adımının işidir.
@@ -38,7 +40,7 @@ class ExampleOutputManifestTest {
     private static final Path EXAMPLES = Path.of("src/main/resources/examples");
     private static final Path MANIFEST = Path.of("scripts/example-outputs/manifest.tsv");
     private static final String HEADER =
-            "slug\texample\tjava_sha256\tout_sha256\tjdk_image\torigin\treview\treviewer\treviewed_at\tnote";
+            "slug\texample\tjava_sha256\tout_sha256\tjdk_image\torigin\treview\treviewer\treviewed_at\tnote\tcompanions";
 
     @Test
     void everyPublishedOutputIsReviewedAndMatchesItsSource() throws IOException {
@@ -117,6 +119,59 @@ class ExampleOutputManifestTest {
         assertThat(f.problems()).singleElement().asString().contains("manifest row without");
     }
 
+    @Test
+    void outputWithItsCompanionPasses(@TempDir Path root) throws IOException {
+        Fixture f = new Fixture(root);
+        f.example("demo", "Usage", "class Usage {}", "hi\n");
+        f.companion("demo", "Day", "enum Day { MON }");
+        f.row("demo", "Usage", "approved", "Day");
+
+        assertThat(f.problems()).isEmpty();
+    }
+
+    @Test
+    void changedCompanionInvalidatesTheOutput(@TempDir Path root) throws IOException {
+        Fixture f = new Fixture(root);
+        f.example("demo", "Usage", "class Usage {}", "hi\n");
+        f.companion("demo", "Day", "enum Day { MON }");
+        f.row("demo", "Usage", "approved", "Day");
+        Files.writeString(f.examples.resolve("demo/Day.java"), "enum Day { MON, TUE }");
+
+        assertThat(f.problems()).singleElement().asString()
+                .contains("demo/Usage").contains("companion Day.java changed");
+    }
+
+    @Test
+    void missingCompanionIsRejected(@TempDir Path root) throws IOException {
+        Fixture f = new Fixture(root);
+        f.example("demo", "Usage", "class Usage {}", "hi\n");
+        f.companion("demo", "Day", "enum Day { MON }");
+        f.row("demo", "Usage", "approved", "Day");
+        Files.delete(f.examples.resolve("demo/Day.java"));
+
+        assertThat(f.problems()).singleElement().asString().contains("companion Day.java is missing");
+    }
+
+    @Test
+    void malformedCompanionCellIsRejected(@TempDir Path root) throws IOException {
+        Fixture f = new Fixture(root);
+        f.example("demo", "Usage", "class Usage {}", "hi\n");
+        f.row("demo", "Usage", "approved");
+        f.replaceLastCell("Day.java");
+
+        assertThat(f.problems()).singleElement().asString().contains("malformed companions");
+    }
+
+    @Test
+    void rowWithoutTheCompanionsColumnIsRejected(@TempDir Path root) throws IOException {
+        Fixture f = new Fixture(root);
+        f.example("demo", "Usage", "class Usage {}", "hi\n");
+        f.row("demo", "Usage", "approved");
+        f.dropLastCell();
+
+        assertThat(f.problems()).singleElement().asString().contains("expected 11 columns");
+    }
+
     // --- checker -----------------------------------------------------------------------
 
     static List<String> problems(Path examples, Path manifest) throws IOException {
@@ -146,6 +201,10 @@ class ExampleOutputManifestTest {
                 problems.add(key + ": no manifest row");
                 continue;
             }
+            if (row.length != 11) {
+                problems.add(key + ": expected 11 columns, found " + row.length);
+                continue;
+            }
             if (!"approved".equals(row[6])) {
                 problems.add(key + ": not approved (review = " + row[6] + ")");
             }
@@ -155,8 +214,31 @@ class ExampleOutputManifestTest {
             if (!sha256(out).equals(row[3])) {
                 problems.add(key + ": out changed since it was reviewed");
             }
+            problems.addAll(companionProblems(key, out, row[10]));
         }
         rows.keySet().forEach(key -> problems.add(key + ": manifest row without a .out file"));
+        return problems;
+    }
+
+    private static List<String> companionProblems(String key, Path out, String cell) throws IOException {
+        List<String> problems = new ArrayList<>();
+        if (cell.isEmpty()) {
+            return problems;
+        }
+        for (String entry : cell.split(",", -1)) {
+            String[] parts = entry.split(":", -1);
+            if (parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
+                problems.add(key + ": malformed companions entry '" + entry + "'");
+                continue;
+            }
+            Path companion = out.resolveSibling(parts[0]);
+            if (!Files.isRegularFile(companion)) {
+                problems.add(key + ": companion " + parts[0] + " is missing");
+            } else if (!sha256(companion).equals(parts[1])) {
+                problems.add(key + ": companion " + parts[0]
+                        + " changed since the output was generated -- regenerate and review, or delete the .out");
+            }
+        }
         return problems;
     }
 
@@ -184,10 +266,29 @@ class ExampleOutputManifestTest {
             Files.writeString(dir.resolve(name + ".out"), out);
         }
 
-        void row(String slug, String name, String review) throws IOException {
+        void companion(String slug, String name, String java) throws IOException {
+            Files.writeString(Files.createDirectories(examples.resolve(slug)).resolve(name + ".java"), java);
+        }
+
+        void row(String slug, String name, String review, String... companions) throws IOException {
             Path dir = examples.resolve(slug);
+            List<String> cells = new ArrayList<>();
+            for (String companion : companions) {
+                cells.add(companion + ".java:" + sha256(dir.resolve(companion + ".java")));
+            }
             rows.add(String.join("\t", slug, name, sha256(dir.resolve(name + ".java")),
-                    sha256(dir.resolve(name + ".out")), "image", "generated", review, "reviewer", "2026-10-18", ""));
+                    sha256(dir.resolve(name + ".out")), "image", "generated", review, "reviewer", "2026-10-18", "",
+                    String.join(",", cells)));
+        }
+
+        void replaceLastCell(String value) {
+            String last = rows.remove(rows.size() - 1);
+            rows.add(last.substring(0, last.lastIndexOf('\t') + 1) + value);
+        }
+
+        void dropLastCell() {
+            String last = rows.remove(rows.size() - 1);
+            rows.add(last.substring(0, last.lastIndexOf('\t')));
         }
 
         List<String> problems() throws IOException {

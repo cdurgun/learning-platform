@@ -56,9 +56,13 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `java.nio.file` istisnalarına (`NoSuchFileException`, `FileAlreadyExistsException`
   vb.) dayanan dallar ENGELLİ kalır (`scripts/example_outputs.py`, `CONTRACT_FLAGS`).
   Satır sonu Linux `\n`'dir; `newLine()`/`Files.write(path, lines)` yalnızca not düşer.
-  `ExampleOutputManifestTest`, `.out`'u olan bir `.java` değişince build'i kırar:
-  çıktıyı yeniden üret + incele ya da `.out`'u ve manifest satırını sil. Panel eklemek
-  sayfada görünen örneği değiştirdiği için iki dilin `updated_at`'ini de ilerletir
+  Aynı dersin başka dosyasındaki tipi kullanan örnek o dosyayla (companion, zincirleme
+  bulunur) birlikte derlenir: tip derste tam bir dosyada tanımlı olmalı, yoksa örnek
+  `MULTI_FILE` kalır; companion'ın JDK dışı import'u ve sözleşme bayrakları örneğe de
+  uygulanır, hash'i manifest'in `companions` sütununa yazılır.
+  `ExampleOutputManifestTest`, `.out`'u olan bir `.java` ya da companion'ı değişince
+  build'i kırar: çıktıyı yeniden üret + incele ya da `.out`'u ve manifest satırını sil.
+  Panel eklemek sayfada görünen örneği değiştirdiği için iki dilin `updated_at`'ini de ilerletir
   (aşağıdaki tarih kuralı, örn. `functional-interfaces-streams/V1139`). Dalga akışı
   (Faz 178): `generate --topic SLUG [--dry-run]` → kullanıcı `review.tsv`'de her
   örneğe ayrı `approve`/`reject` verir → `promote --review` (tek hata varsa hiçbir

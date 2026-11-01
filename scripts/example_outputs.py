@@ -25,10 +25,17 @@ Usage:
 `--topic SLUG` expands to the .java examples that lesson embeds (TR order, then any
 EN-only ones) -- still an explicit list, there is no "all lessons" option. `--dry-run`
 prints that list with each example's pre-check result and writes nothing. Examples
-without a main method (NO_MAIN), with non-JDK imports (NON_JDK) or that need another
-example file of the same lesson to compile (MULTI_FILE) are listed but never run, and so
-are examples with a blocking contract flag (CONTRACT_BLOCKED, shown as WILL_BE_BLOCKED in
---dry-run): they are neither compiled nor run, so no container ever starts for them.
+without a main method (NO_MAIN) or with non-JDK imports (NON_JDK) are listed but never
+run, and so are examples with a blocking contract flag (CONTRACT_BLOCKED, shown as
+WILL_BE_BLOCKED in --dry-run): they are neither compiled nor run, so no container ever
+starts for them.
+
+An example that uses a type from another file of its lesson is compiled together with
+that file (a companion, found transitively). A type must be declared in exactly one
+file of the lesson; otherwise nothing is guessed and the example stays MULTI_FILE. The
+companions count as part of the example: their non-JDK imports and contract flags apply
+to it, report.md shows their source, and the manifest records their hashes so that
+ExampleOutputManifestTest fails when one of them changes.
 
 Each `generate` merges its results into results.json by slug/Name, so generating one
 lesson never drops another lesson's staged, not yet promoted results. It also rewrites
@@ -88,6 +95,8 @@ WORK = OUT_ROOT / "work"
 STAGING = OUT_ROOT / "staging"
 SELFTEST_SOURCES = Path(__file__).resolve().parent / "example-outputs/selftest"
 MANIFEST = Path(__file__).resolve().parent / "example-outputs/manifest.tsv"
+MANIFEST_HEADER = ("slug\texample\tjava_sha256\tout_sha256\tjdk_image\torigin\treview\treviewer"
+                   "\treviewed_at\tnote\tcompanions")
 REVIEW_HEADER = "slug\texample\tout_sha256\tdecision\tnote"
 REVIEW_DECISIONS = ("approve", "reject")
 
@@ -503,6 +512,30 @@ def sibling_dependencies(java_file: Path) -> list:
     return deps
 
 
+def declaring_files(folder: Path, type_name: str) -> list:
+    """The .java files of a lesson folder that declare this top-level type."""
+    return [f for f in sorted(folder.glob("*.java"))
+            if type_name in TOP_LEVEL_TYPE.findall(strip_comments_and_strings(f.read_text(encoding="utf-8")))]
+
+
+def resolve_companions(java_file: Path) -> tuple:
+    """(companion files, unresolved type names). Follows dependencies transitively; a type
+    declared in several files is left unresolved rather than guessed."""
+    selected, unresolved = [java_file], []
+    queue = [java_file]
+    while queue:
+        for type_name in sibling_dependencies(queue.pop(0)):
+            declared_in = declaring_files(java_file.parent, type_name)
+            if any(f in selected for f in declared_in):
+                continue
+            if len(declared_in) == 1:
+                selected.append(declared_in[0])
+                queue.append(declared_in[0])
+            elif type_name not in unresolved:
+                unresolved.append(type_name)
+    return sorted(selected[1:]), unresolved
+
+
 def precheck(slug: str, name: str) -> dict:
     """Static checks that decide, without running anything, whether an example can be run."""
     java_file = EXAMPLES / slug / f"{name}.java"
@@ -515,10 +548,17 @@ def precheck(slug: str, name: str) -> dict:
     elif NON_JDK_IMPORT.search(source):
         result["status"] = "NON_JDK"
     else:
-        deps = sibling_dependencies(java_file)
-        if deps:
+        companions, unresolved = resolve_companions(java_file)
+        companion_sources = [c.read_text(encoding="utf-8") for c in companions]
+        if unresolved:
             result["status"] = "MULTI_FILE"
-            result["depends_on"] = deps
+            result["depends_on"] = unresolved
+        elif companions:
+            result["companions"] = [c.name for c in companions]
+            result["flags"] = list(dict.fromkeys(
+                result["flags"] + [f for text in companion_sources for f in contract_flags(text)]))
+            if any(NON_JDK_IMPORT.search(text) for text in companion_sources):
+                result["status"] = "NON_JDK"
     return result
 
 
@@ -590,7 +630,7 @@ def capped(stdout: bytes) -> tuple:
     return stdout[:MAX_STDOUT_BYTES], len(stdout) > MAX_STDOUT_BYTES
 
 
-def compile_example(java_file: Path, work_dir: Path) -> dict:
+def compile_example(java_file: Path, work_dir: Path, companions: list = ()) -> dict:
     src = work_dir / "src"
     classes = work_dir / "classes"
     if work_dir.exists():
@@ -598,12 +638,14 @@ def compile_example(java_file: Path, work_dir: Path) -> dict:
     src.mkdir(parents=True)
     classes.mkdir()
     classes.chmod(0o777)  # writable by the container's "nobody" user
-    shutil.copy2(java_file, src / java_file.name)
+    sources = [java_file, *companions]
+    for source in sources:
+        shutil.copy2(source, src / source.name)
     name = f"{CONTAINER_PREFIX}{uuid.uuid4().hex[:12]}-compile"
     result = run_container(
         docker_args(name, cpus="2", mounts=[(src, "/src", "ro"), (classes, "/classes", "rw")]),
         ["javac", "-J-Xmx256m", "-J-XX:-UsePerfData", "-encoding", "UTF-8", "-d", "/classes",
-         "/src/" + java_file.name],
+         *["/src/" + source.name for source in sources]],
         COMPILE_TIMEOUT_S, name)
     result["classes"] = classes
     return result
@@ -681,6 +723,8 @@ def generate_one(spec: str, jdk_version: str) -> dict:
     record["java_sha256"] = sha256(source_bytes)
     record["flags"] = pre["flags"]
     record["context"] = lesson_context(slug, name)
+    if pre.get("companions"):
+        record["companions"] = {c: sha256((java_file.parent / c).read_bytes()) for c in pre["companions"]}
     if pre["status"]:  # NO_MAIN / NON_JDK / MULTI_FILE: listed, never compiled or run
         record["status"] = pre["status"]
         if "depends_on" in pre:
@@ -690,7 +734,8 @@ def generate_one(spec: str, jdk_version: str) -> dict:
         record["status"] = "CONTRACT_BLOCKED"
         return record
 
-    compiled = compile_example(java_file, WORK / f"{slug}__{name}")
+    compiled = compile_example(java_file, WORK / f"{slug}__{name}",
+                               [java_file.parent / c for c in record.get("companions", {})])
     record["compile"] = {"exit": compiled["exit"], "timed_out": compiled["timed_out"],
                          "stderr": compiled["stderr"].decode("utf-8", "replace")}
     if compiled["timed_out"] or compiled["exit"] != 0:
@@ -787,9 +832,14 @@ def write_report(records: list, jdk_version: str):
         lines += [f"## {slug} -- {len(generated)} generated, {len(others)} blocked or not run", ""]
         for r in generated:
             source = (ROOT / r["java"]).read_text(encoding="utf-8") if (ROOT / r["java"]).is_file() else ""
+            for companion in r.get("companions", {}):
+                companion_file = (ROOT / r["java"]).parent / companion
+                if companion_file.is_file():
+                    source += f"\n// --- companion: {companion} ---\n" + companion_file.read_text(encoding="utf-8")
             opening, closing = fence_for(source, "java")
             lines += [f"### {r['name']} -- GENERATED", "",
                       f"Source: `{r['java']}` (sha256 `{r['java_sha256']}`)"]
+            lines += [f"Companion: `{c}` (sha256 `{digest}`)" for c, digest in r.get("companions", {}).items()]
             if r.get("flags"):
                 lines.append("Review flags: " + flag_text(r["flags"]))
             for flag in r.get("flags", []):
@@ -946,7 +996,10 @@ def write_review_sheet(records: list):
     lines = [REVIEW_HEADER]
     for r in records:
         if r.get("status") == "GENERATED":
-            risk = " ".join(RISK_NOTES[f] for f in r.get("flags", []) if f in RISK_NOTES)
+            notes = [RISK_NOTES[f] for f in r.get("flags", []) if f in RISK_NOTES]
+            if r.get("companions"):
+                notes.append("compiled with: " + ", ".join(r["companions"]))
+            risk = " ".join(notes)
             decision, note = previous.get((record_key(r), r["out_sha256"]), ("", risk))
             lines.append("\t".join([r["slug"], r["name"], r["out_sha256"], decision, note]))
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -963,6 +1016,11 @@ def plan_promotion(key: str, record, manifest_keys: set, expected_out_sha=None) 
     target = EXAMPLES / slug / f"{name}.out"
     if not java_file.is_file() or sha256(java_file.read_bytes()) != record["java_sha256"]:
         raise ReviewError(f"{key}: the .java changed after generation -- regenerate and review again.")
+    for companion, digest in record.get("companions", {}).items():
+        companion_file = EXAMPLES / slug / companion
+        if not companion_file.is_file() or sha256(companion_file.read_bytes()) != digest:
+            raise ReviewError(f"{key}: the companion {companion} changed after generation -- "
+                              f"regenerate and review again.")
     if not staged.is_file():
         raise ReviewError(f"{key}: the staged .out is missing.")
     data = staged.read_bytes()
@@ -980,6 +1038,8 @@ def write_promotions(planned: list, reviewer: str):
     restores the manifest, so a promotion is applied completely or not at all."""
     manifest_before = MANIFEST.read_bytes()
     manifest_lines = manifest_before.decode("utf-8").splitlines()
+    if not manifest_lines or manifest_lines[0] != MANIFEST_HEADER:
+        raise ReviewError(f"{MANIFEST.name}: the first line must be exactly the header {MANIFEST_HEADER!r}.")
     reviewed_at = datetime.now(timezone.utc).date().isoformat()
     written, rows = [], []
     try:
@@ -989,8 +1049,9 @@ def write_promotions(planned: list, reviewer: str):
             if target.read_bytes() != data:
                 raise ReviewError(f"{key}: the written .out differs from the staged bytes.")
             note = "flags: " + ",".join(record["flags"]) if record["flags"] else ""
+            companions = ",".join(f"{c}:{digest}" for c, digest in sorted(record.get("companions", {}).items()))
             rows.append("\t".join([slug, name, record["java_sha256"], sha256(data), record["jdk"]["image"],
-                                   "generated", "approved", reviewer, reviewed_at, note]))
+                                   "generated", "approved", reviewer, reviewed_at, note, companions]))
         MANIFEST.write_text("\n".join(manifest_lines + rows) + "\n", encoding="utf-8")
     except BaseException:
         for target in written:
@@ -1024,7 +1085,8 @@ def describe(spec: str) -> str:
     else:
         verdict = "WILL_RUN"
     info = [f for f in flags if f not in BLOCKING_FLAGS]
-    return f"{verdict:42} {spec}" + (f"  [review: {', '.join(info)}]" if info else "")
+    return (f"{verdict:42} {spec}" + (f"  [review: {', '.join(info)}]" if info else "")
+            + (f"  [compiled with: {', '.join(pre['companions'])}]" if pre.get("companions") else ""))
 
 
 def cmd_generate(specs: list, topics: list = (), dry_run: bool = False):
