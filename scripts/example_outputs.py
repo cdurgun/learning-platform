@@ -213,13 +213,47 @@ CONTRACT_FLAGS = [
     # Files.write(path, lines), System.lineSeparator()); the sandbox, and so every panel, is Linux
     # "\n". println/printf("%n") on stdout are the same for every panel and are not flagged.
     ("line-separator", r"\.\s*newLine\s*\(|lineSeparator\s*\(|\bFiles\s*\.\s*write\s*\("),
+    # Set by object_identity_text(): an instance of a declared class with no toString() (own or
+    # from a declared superclass) printed as text -- "Dog@1b6d3586". Types come from the example
+    # and its companions; a class that overrides toString(), an enum, a record or a JDK type is
+    # never flagged, and a variable is flagged only if EVERY class it can hold lacks toString.
+    ("object-identity", None),
+    # Set by lambda_identity_text(): a lambda, method reference or anonymous class (without its
+    # own toString) printed as text -- "Main$$Lambda/0x0000...@1b6d3586".
+    ("lambda-identity", None),
+    # Set by optional_text(): Optional/OptionalInt/... printed as text. Javadoc: "The exact
+    # presentation format is unspecified and may vary between implementations and versions."
+    # get()/orElse(...)/isPresent() results are values, not Optional text, and are not flagged.
+    ("optional-text", None),
+    # Set by priority_queue_order(): a PriorityQueue printed, iterated, streamed or copied into a
+    # list -- its iterator "is not guaranteed to traverse the elements ... in any particular order".
+    # poll()/peek()/remove() order is fixed and is not flagged.
+    ("priority-queue-order", None),
+    # Set by count_skips_side_effects(): peek()/println in a pipeline that ends in count(), which
+    # may skip the whole pipeline when the size is known from the source (Stream.count Javadoc).
+    ("count-elision", None),
+    # Informational, set by stream_side_effects(): printing from inside a stream pipeline.
+    ("stream-side-effects", None),
+    # Informational: the message text of an exception. Allowed only when the program itself
+    # passes a string LITERAL to its own exception's constructor (see RISK_NOTES).
+    ("exception-message", r"\.\s*get(?:Localized)?Message\s*\(\s*\)"),
+    # Informational, set by caught_exception_text(): a caught exception printed as a whole
+    # (println(e), "..." + e) -- class name + ": " + message.
+    ("exception-text", None),
+    # Informational: stderr. A run that writes anything to stderr (printStackTrace, System.err,
+    # an uncaught exception's stack trace) is STDERR_NOT_EMPTY / RUN_ERROR and is never staged;
+    # the panel only ever shows stdout.
+    ("stderr", r"\bSystem\s*\.\s*err\b|\.\s*printStackTrace\s*\("),
 ]
 BLOCKING_FLAGS = {"hash-order", "parallel", "concurrency", "time", "random", "stdin", "default-env",
                   "scanner-locale", "reflection-order", "identity-text", "external-io", "cwd-path",
-                  "temp-file", "directory-order", "file-metadata", "optional-file-exception"}
+                  "temp-file", "directory-order", "file-metadata", "optional-file-exception",
+                  "object-identity", "lambda-identity", "optional-text", "priority-queue-order",
+                  "count-elision"}
 # Informational flags matched on the code (comments and string literals blanked) instead of
 # the raw source: a file API named only in printed text or a comment is no file access.
-CODE_INFO_FLAGS = {"local-file", "deletes-files"}
+CODE_INFO_FLAGS = {"local-file", "deletes-files", "stream-side-effects", "exception-message",
+                   "exception-text", "stderr"}
 # Informational, set by main_reads_args(): the run always passes no arguments (a fixed,
 # repeatable input), so the reviewer checks the output is the branch the lesson shows.
 MAIN_ARGS_FLAG = "main-args"
@@ -238,6 +272,18 @@ RISK_NOTES = {
                      "program created itself.",
     "line-separator": "NOTE line-separator: writes the platform line separator; the panel shows Linux \"\\n\". "
                       "Reject if the output prints a length, byte count or other number derived from that text.",
+    "stream-side-effects": "RISK stream-side-effects: prints from inside a stream pipeline; the API does not fix "
+                           "the order of such side effects, and short-circuiting operations may visit fewer "
+                           "elements. Approve only if the lesson presents the printed trace as typical, not "
+                           "guaranteed, behaviour.",
+    "exception-message": "RISK exception-message: approve ONLY if every printed message is a string literal the "
+                         "program itself passes to its own exception's constructor. Reject JDK-generated messages "
+                         "(\"/ by zero\", \"For input string: ...\", index messages) and messages built from "
+                         "variables or runtime data unless each part is separately shown to be fixed.",
+    "exception-text": "RISK exception-text: a caught exception printed as a whole is the class name + \": \" + "
+                      "message; the exception-message rule applies to the message part.",
+    "stderr": "NOTE stderr: anything on stderr (stack trace, System.err) makes the run STDERR_NOT_EMPTY / RUN_ERROR, "
+              "so no panel is staged; the panel never shows stderr.",
 }
 TEXT_ONLY_SUFFIX = ":text-only"
 RISK_NOTES.update({
@@ -391,8 +437,451 @@ def deletes_java_io_file(code: str) -> bool:
                 and re.search(r"\.\s*(?:delete\s*\(\s*\)|deleteOnExit\s*\()", code))
 
 
+# --- values converted to text whose text the API does not fix --------------------------------
+# "Printed as text" means: the whole argument of a .print/.println/.append call or of
+# String.valueOf, a string-concatenation operand (+, +=), an argument of printf/format/formatted,
+# or x.toString() / Objects.toString(x). Any other use (a method argument, an assignment, a
+# method call on it) is not text. All analysis runs on code with comments and literals blanked.
+TEXT_CALLS = {"print", "println", "append"}
+FORMAT_CALLS = {"printf", "format", "formatted"}
+OPENERS, CLOSERS = "([{", ")]}"
+
+
+def matching_open(code: str, close: int) -> int:
+    """Index of the bracket that opens the one closing at code[close], or -1."""
+    depth = 0
+    for i in range(close, -1, -1):
+        if code[i] in CLOSERS:
+            depth += 1
+        elif code[i] in OPENERS:
+            depth -= 1
+            if depth == 0:
+                return i
+    return -1
+
+
+def matching_close(code: str, open_: int) -> int:
+    depth = 0
+    for i in range(open_, len(code)):
+        if code[i] in OPENERS:
+            depth += 1
+        elif code[i] in CLOSERS:
+            depth -= 1
+            if depth == 0:
+                return i
+    return -1
+
+
+def enclosing_paren(code: str, pos: int) -> int:
+    """The "(" of the innermost parenthesis around pos within its statement, or -1."""
+    depth = 0
+    for i in range(pos - 1, -1, -1):
+        ch = code[i]
+        if ch in CLOSERS:
+            depth += 1
+        elif ch in OPENERS:
+            if depth == 0:
+                return i if ch == "(" else -1
+            depth -= 1
+        elif ch == ";" and depth == 0:
+            return -1
+    return -1
+
+
+def top_level_args(inner: str) -> list:
+    """The comma-separated arguments of a call's argument text (nested brackets kept whole)."""
+    args, depth, current = [], 0, []
+    for ch in inner:
+        if ch in OPENERS:
+            depth += 1
+        elif ch in CLOSERS:
+            depth -= 1
+        if ch == "," and depth == 0:
+            args.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    args.append("".join(current))
+    return [] if len(args) == 1 and not args[0].strip() else args
+
+
+def in_text_context(code: str, start: int, end: int) -> bool:
+    """code[start:end] is a whole expression that is converted to text (see above)."""
+    after = code[end:].lstrip()
+    before = code[:start].rstrip()
+    if after.startswith("+") and not after.startswith(("++", "+=")):
+        return True
+    if before.endswith("+=") or (before.endswith("+") and not before.endswith("++")):
+        return True
+    open_ = enclosing_paren(code, start)
+    if open_ < 0:
+        return False
+    close = matching_close(code, open_)
+    head = re.search(r"(\.?)\s*([A-Za-z_]\w*)\s*$", code[:open_])
+    if close < 0 or not head:
+        return False
+    dotted, name = head.group(1) == ".", head.group(2)
+    whole_arg = (re.search(r"[(,]\s*$", code[:start]) is not None
+                 and re.match(r"\s*[,)]", code[end:]) is not None)
+    if name in TEXT_CALLS and dotted:
+        return not code[open_ + 1:start].strip() and not code[end:close].strip()
+    if name == "valueOf" and re.search(r"\bString\s*\.\s*valueOf\s*$", code[:open_]):
+        return not code[open_ + 1:start].strip() and not code[end:close].strip()
+    return name in FORMAT_CALLS and dotted and whole_arg
+
+
+def printed_as_text(code: str, name: str) -> bool:
+    """The variable itself (not a.b, a[i], a(...)) is converted to text somewhere."""
+    n = re.escape(name)
+    if re.search(rf"(?<![\w.]){n}\s*\.\s*toString\s*\(\s*\)", code):
+        return True
+    if re.search(rf"\bObjects\s*\.\s*toString\s*\(\s*{n}\s*[,)]", code):
+        return True
+    for m in re.finditer(rf"(?<![\w.$]){n}\b(?!\s*[\[.(\w])", code):
+        if in_text_context(code, m.start(), m.end()):
+            return True
+    return False
+
+
+def chain_start(code: str, end: int) -> int:
+    """Start of the method-call chain / new-expression that ends at code[end] (exclusive)."""
+    i = end
+    while True:
+        j = i
+        while j > 0 and code[j - 1].isspace():
+            j -= 1
+        if j > 0 and code[j - 1] == ")":
+            j = matching_open(code, j - 1)
+            if j < 0:
+                return i
+            head = re.search(r"[A-Za-z_]\w*\s*(?:<[^<>;]*(?:<[^<>;]*>[^<>;]*)*>)?\s*$", code[:j])
+            if head:
+                j = head.start()
+        else:
+            head = re.search(r"[A-Za-z_]\w*\s*$", code[:j])
+            if not head:
+                return i
+            j = head.start()
+        k = j
+        while k > 0 and code[k - 1].isspace():
+            k -= 1
+        if k > 0 and code[k - 1] == ".":
+            i = k - 1
+            continue
+        new = re.search(r"\bnew\s+$", code[:j])
+        return new.start() if new else j
+
+
+# Type declarations, for the object/lambda checks. Parsed from the example AND its companions.
+TYPE_DECLARATION = re.compile(
+    r"((?:\b(?:public|private|protected|static|final|abstract|sealed|non-sealed|strictfp)\s+)*)"
+    r"\b(class|interface|record|enum)\s+([A-Za-z_]\w*)([^{;]*)\{")
+VARIABLE_DECLARATION = re.compile(
+    r"(?<![\w.])((?:[A-Za-z_]\w*\s*\.\s*)*[A-Z]\w*)\s*"
+    r"(<(?:[^<>;(){}=]|<(?:[^<>;(){}=]|<[^<>;(){}=]*>)*>)*>)?\s*((?:\[\s*\]\s*)*)\s+([a-z_]\w*)\s*(?=[=;,):])")
+JDK_CONTAINERS = {"List", "ArrayList", "LinkedList", "Set", "TreeSet", "LinkedHashSet", "SortedSet", "NavigableSet",
+                  "Map", "TreeMap", "LinkedHashMap", "SortedMap", "NavigableMap", "Collection", "Queue", "Deque",
+                  "ArrayDeque", "Stack", "Vector", "SequencedCollection", "SequencedSet", "SequencedMap",
+                  "Entry", "CopyOnWriteArrayList"}
+FUNCTIONAL_JDK = re.compile(
+    r"^(?:Runnable|Callable|Comparator|(?:Bi|Int|Long|Double|Obj(?:Int|Long|Double)?|ToInt|ToLong|ToDouble"
+    r"|(?:Int|Long|Double)To(?:Int|Long|Double))?(?:Supplier|Consumer|Function|Predicate|UnaryOperator"
+    r"|BinaryOperator|Operator))$")
+
+
+def parse_types(code: str) -> dict:
+    """name -> {kind, abstract, supers, own_to_string} for every type declared in code."""
+    found = []
+    for m in TYPE_DECLARATION.finditer(code):
+        brace = m.end() - 1
+        found.append((m, brace, matching_close(code, brace)))
+    types = {}
+    for m, brace, close in found:
+        if close < 0:
+            continue
+        body = code[brace + 1:close]
+        for _, inner_brace, inner_close in found:  # blank nested types: their toString is theirs
+            if brace < inner_brace and inner_close <= close:
+                body = body.replace(code[inner_brace + 1:inner_close], " ")
+        # Only the extends/implements clauses name supertypes (not record components or permits).
+        header = re.sub(r"<[^{]*?>", " ", re.sub(r"\([^{]*?\)", " ", m.group(4)))
+        header = re.split(r"\bpermits\b", header)[0]
+        clauses = re.findall(r"\b(?:extends|implements)\b([^{]*?)(?=\b(?:extends|implements)\b|$)", header)
+        supers = [s.split(".")[-1] for c in clauses for s in re.findall(r"[A-Za-z_][\w.]*", c)]
+        extends = re.search(r"\bextends\s+([A-Za-z_][\w.]*)", header)
+        types[m.group(3)] = {
+            "kind": m.group(2), "abstract": "abstract" in m.group(1),
+            "final": m.group(2) in ("record", "enum") or "final" in m.group(1),
+            "supers": supers, "extends": extends.group(1).split(".")[-1] if extends else None,
+            "body": body, "own_to_string": re.search(r"\bString\s+toString\s*\(\s*\)", body) is not None}
+    return types
+
+
+def has_to_string(types: dict, name: str, seen=()) -> bool:
+    """Does an instance of this declared class print something other than identity text?
+    Enums (name) and records (component text, judged separately) are not identity text; a
+    superclass that is not declared here (a JDK class) is assumed to have its own toString."""
+    t = types.get(name)
+    if t is None or t["kind"] in ("enum", "record"):
+        return True
+    if t["kind"] == "interface" or t["own_to_string"]:
+        return t["kind"] != "interface"
+    parent = t["extends"]
+    if parent is None or name in seen:
+        return False
+    return parent not in types or has_to_string(types, parent, seen + (name,))
+
+
+def runtime_types(types: dict, name: str) -> set:
+    """Declared, instantiable classes an expression of static type `name` can hold."""
+    result, queue, seen = set(), [name], set()
+    while queue:
+        current = queue.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        t = types.get(current)
+        if t and t["kind"] == "class" and not t["abstract"]:
+            result.add(current)
+        if t and t["final"]:
+            continue  # records, enums and final classes have no subclasses
+        queue.extend(sub for sub, info in types.items() if current in info["supers"])
+    return result
+
+
+def identity_type(types: dict, static_type: str, initializer: str = "") -> bool:
+    """Every value of this static type prints Object.toString identity text."""
+    created = re.match(r"\s*new\s+([A-Za-z_][\w.]*)\s*(?:<[^>]*>)?\s*\(", initializer)
+    if created:
+        exact = created.group(1).split(".")[-1]
+        rest = initializer[created.end() - 1:]
+        close = matching_close(rest, 0)
+        if close >= 0 and rest[close + 1:].lstrip().startswith("{"):
+            return False  # an anonymous class: judged by the lambda/anonymous check
+        return exact in types and types[exact]["kind"] == "class" and not has_to_string(types, exact)
+    if static_type not in types:
+        return False
+    candidates = runtime_types(types, static_type)
+    return bool(candidates) and not any(has_to_string(types, c) for c in candidates)
+
+
+def declared_variables(code: str) -> dict:
+    """variable name -> list of (static type, type arguments, array dims, initializer)."""
+    found = {}
+    for m in VARIABLE_DECLARATION.finditer(code):
+        type_name = m.group(1).replace(" ", "").split(".")[-1]
+        if type_name in ("new", "return", "throw", "case", "else"):
+            continue
+        initializer = ""
+        if code[m.end():].lstrip().startswith("=") and not code[m.end():].lstrip().startswith("=="):
+            eq = code.index("=", m.end())
+            initializer = statement_from(code, eq + 1)
+        found.setdefault(m.group(4), []).append((type_name, m.group(2) or "", m.group(3).count("["), initializer))
+    for m in re.finditer(r"\bvar\s+([a-z_]\w*)\s*=", code):
+        initializer = statement_from(code, m.end())
+        created = re.match(r"\s*new\s+([A-Za-z_][\w.]*)", initializer)
+        found.setdefault(m.group(1), []).append(
+            (created.group(1).split(".")[-1] if created else "var", "", 0, initializer))
+    return found
+
+
+def object_identity_text(code: str, context: str = None) -> bool:
+    """An instance of a declared class without toString() (nor one inherited from a declared
+    superclass) converted to text prints Object.toString: class name + "@" + identity hash.
+    A class that overrides toString(), an enum, a record or an unknown (JDK) type is never flagged."""
+    types = parse_types(strip_comments_and_strings(context) if context else code)
+    if not any(t["kind"] == "class" and not has_to_string(types, n) for n, t in types.items()):
+        return False
+    for name, declarations in declared_variables(code).items():
+        def element_identity(decl):
+            type_name, type_args, dims, initializer = decl
+            if dims:
+                return identity_type(types, type_name)
+            if type_name in JDK_CONTAINERS and type_args:
+                return any(identity_type(types, arg) for arg in re.findall(r"[A-Za-z_]\w*", type_args))
+            return identity_type(types, type_name, initializer)
+        if all(element_identity(d) for d in declarations):
+            n = re.escape(name)
+            if printed_as_text(code, name) and not all(d[2] for d in declarations):
+                return True
+            if re.search(rf"\bArrays\s*\.\s*(?:toString|deepToString|asList)\s*\(\s*{n}\s*\)", code):
+                return True
+            if re.search(rf"(?<![\w.]){n}\s*\.\s*forEach\s*\(\s*System\s*\.\s*out\s*::\s*print", code):
+                return True
+    for m in re.finditer(r"\bnew\s+([A-Za-z_][\w.]*)\s*(?:<[^>]*>)?\s*\(", code):
+        close = matching_close(code, m.end() - 1)
+        cls = m.group(1).split(".")[-1]
+        if close < 0 or code[close + 1:].lstrip().startswith(("{", ".")):
+            continue
+        if cls in types and identity_type(types, cls, code[m.start():]) and in_text_context(code, m.start(), close + 1):
+            return True
+    for name, t in types.items():  # `this` printed inside a class none of whose runtime types has toString
+        if t["kind"] == "class" and identity_type(types, name) and printed_as_text(t["body"], "this"):
+            return True
+    return False
+
+
+def lambda_identity_text(code: str, context: str = None) -> bool:
+    """A lambda, method reference or anonymous class without toString() converted to text
+    prints a synthetic class name + "@" + identity hash (Main$$Lambda/0x...@1b6d3586)."""
+    types = parse_types(strip_comments_and_strings(context) if context else code)
+    for name, declarations in declared_variables(code).items():
+        def functional(decl):
+            type_name, _, dims, initializer = decl
+            if dims:
+                return False
+            init = initializer.strip()
+            if re.match(r"(?:\([^()]*\)|[A-Za-z_]\w*)\s*->", init) or re.match(r"[\w.<>\[\]]+\s*::\s*\w+\s*$", init):
+                return True
+            anonymous = re.match(r"new\s+[A-Za-z_][\w.]*\s*(?:<[^>]*>)?\s*\(", init)
+            if anonymous:
+                close = matching_close(init, anonymous.end() - 1)
+                rest = init[close + 1:].lstrip() if close >= 0 else ""
+                if not rest.startswith("{"):
+                    return False  # a named class: judged by object_identity_text
+                body = rest[1:matching_close(rest, 0)] if matching_close(rest, 0) > 0 else rest
+                return re.search(r"\bString\s+toString\s*\(\s*\)", body) is None
+            return FUNCTIONAL_JDK.match(type_name) is not None and type_name not in types
+        if declarations and all(functional(d) for d in declarations) and printed_as_text(code, name):
+            return True
+    return False
+
+
+def optional_expression(code: str, end: int) -> bool:
+    """The call ending at code[end-1] == ")" returns an Optional (or OptionalInt/Long/Double)."""
+    open_ = matching_open(code, end - 1)
+    head = re.search(r"(?:([A-Za-z_]\w*)|(\)))\s*\.\s*([A-Za-z_]\w*)\s*$", code[:open_]) if open_ > 0 else None
+    if not head:
+        return False
+    receiver, chained, method = head.group(1), head.group(2), head.group(3)
+    args = top_level_args(code[open_ + 1:end - 1])
+    if receiver and re.fullmatch(r"Optional(?:Int|Long|Double)?", receiver):
+        return method in ("of", "ofNullable", "empty")
+    if not chained:
+        return False
+    if method in ("findFirst", "findAny", "average") and not args:
+        return True
+    if method in ("max", "min") and len(args) <= 1:
+        return True
+    return method == "reduce" and len(args) == 1
+
+
+def optional_text(code: str) -> bool:
+    """Optional.toString(): "The exact presentation format is unspecified and may vary between
+    implementations and versions." Same for OptionalInt/Long/Double."""
+    names = set()
+    for name, declarations in declared_variables(code).items():
+        if all(re.fullmatch(r"Optional(?:Int|Long|Double)?", t) or
+               (t == "var" and init.rstrip().endswith(")") and optional_expression(init.rstrip(), len(init.rstrip())))
+               for t, _, dims, init in declarations if not dims):
+            if any(not d[2] for d in declarations):
+                names.add(name)
+    if any(printed_as_text(code, n) for n in names):
+        return True
+    for m in re.finditer(r"\)", code):
+        if optional_expression(code, m.end()) and in_text_context(code, chain_start(code, m.end()), m.end()):
+            return True
+    return False
+
+
+def priority_queue_order(code: str) -> bool:
+    """PriorityQueue: "The Iterator provided in method iterator() ... [is] not guaranteed to
+    traverse the elements of the priority queue in any particular order" -- and toString(),
+    forEach, streams and copies into lists follow that iterator. poll()/peek() are fixed."""
+    names = {name for name, declarations in declared_variables(code).items()
+             if any(t == "PriorityQueue" or re.match(r"\s*new\s+(?:java\.util\.)?PriorityQueue\b", init)
+                    for t, _, _, init in declarations)}
+    for name in names:
+        n = re.escape(name)
+        if printed_as_text(code, name):
+            return True
+        if re.search(rf"(?<![\w.]){n}\s*\.\s*(?:forEach|stream|parallelStream|iterator|spliterator|toArray)\s*\(", code):
+            return True
+        if re.search(rf"\bfor\s*\([^;:()]*:\s*{n}\s*\)", code):
+            return True
+        if re.search(rf"\bnew\s+(?:ArrayList|LinkedList|ArrayDeque|Vector)\s*(?:<[^>]*>)?\s*\(\s*{n}\s*\)"
+                     rf"|\b(?:List|Set)\s*\.\s*copyOf\s*\(\s*{n}\s*\)|\.\s*addAll\s*\(\s*{n}\s*\)", code):
+            return True
+    for m in re.finditer(r"\bnew\s+(?:java\.util\.)?PriorityQueue\s*(?:<[^>]*>)?\s*\(", code):
+        close = matching_close(code, m.end() - 1)
+        if close > 0 and in_text_context(code, m.start(), close + 1):
+            return True
+    return False
+
+
+def statement_before(code: str, pos: int) -> str:
+    """From the start of pos's statement up to pos (lambda bodies inside it included)."""
+    depth = 0
+    for i in range(pos - 1, -1, -1):
+        ch = code[i]
+        if ch in CLOSERS:
+            depth += 1
+        elif ch in OPENERS:
+            if depth == 0:
+                return code[i + 1:pos]
+            depth -= 1
+        elif ch == ";" and depth == 0:
+            return code[i + 1:pos]
+    return code[:pos]
+
+
+SIDE_EFFECT = re.compile(r"\.\s*peek\s*\(\s*[^\s)]|\bSystem\s*\.\s*(?:out|err)\b")
+STREAM_VARIABLE = re.compile(r"\b(?:Stream|IntStream|LongStream|DoubleStream)\s*(?:<[^;=]*>)?\s+([a-z_]\w*)\s*=")
+
+
+def count_skips_side_effects(code: str) -> bool:
+    """Stream.count(): "An implementation may choose to not execute the stream pipeline ... if
+    it is capable of computing the count directly from the stream source. In such cases no
+    source elements will be traversed and no intermediate operations will be evaluated." So
+    peek()/println side effects in a pipeline ending in count() may or may not print."""
+    noisy_streams = {m.group(1) for m in STREAM_VARIABLE.finditer(code)
+                     if SIDE_EFFECT.search(statement_from(code, m.end()))}
+    for m in re.finditer(r"\.\s*count\s*\(\s*\)", code):
+        statement = statement_before(code, m.start())
+        if SIDE_EFFECT.search(statement):
+            return True
+        if any(re.search(rf"(?<![\w.]){re.escape(s)}\b", statement) for s in noisy_streams):
+            return True
+    return False
+
+
+INTERMEDIATE_OP = re.compile(r"\.\s*(?:map|mapToObj|mapToInt|mapToLong|mapToDouble|flatMap|filter|sorted|distinct"
+                             r"|takeWhile|dropWhile|mapMulti)\s*\(")
+
+
+def stream_side_effects(code: str) -> bool:
+    """Printing from inside a stream pipeline (peek(), or println in an intermediate operation's
+    lambda): the java.util.stream package docs say the order of such side effects "may be
+    surprising" and short-circuiting operations may skip elements -- informational."""
+    if re.search(r"\.\s*peek\s*\(\s*[^\s)]", code):
+        return True
+    for m in INTERMEDIATE_OP.finditer(code):
+        close = matching_close(code, m.end() - 1)
+        if close > 0 and re.search(r"\bSystem\s*\.\s*(?:out|err)\b", code[m.end():close]):
+            return True
+    return False
+
+
+CATCH_PARAMETER = re.compile(r"\bcatch\s*\(\s*(?:final\s+)?[\w.|\s]+?\s+([a-z_]\w*)\s*\)")
+
+
+def caught_exception_text(code: str) -> bool:
+    """A caught exception printed as a whole: Throwable.toString() is the class name, ": " and
+    getLocalizedMessage() -- so the message rules apply to it too."""
+    return any(printed_as_text(code, name) for name in set(CATCH_PARAMETER.findall(code)))
+
+
 DETECTORS = {"identity-text": array_identity_text, "scanner-locale": localized_scanner_decimal_read,
-             "directory-order": unsorted_directory_listing, "deletes-files": deletes_java_io_file}
+             "directory-order": unsorted_directory_listing, "deletes-files": deletes_java_io_file,
+             "object-identity": object_identity_text, "lambda-identity": lambda_identity_text,
+             "optional-text": optional_text, "priority-queue-order": priority_queue_order,
+             "count-elision": count_skips_side_effects, "stream-side-effects": stream_side_effects,
+             "exception-text": caught_exception_text}
+# Detectors that also read the type declarations of the example's companions.
+CONTEXT_DETECTORS = {"object-identity", "lambda-identity"}
+# Structural detectors (types, variables, call chains): run on raw text, prose in comments parses
+# as code ("a class implementing the interface ... {"), so they give no ":text-only" note.
+STRUCTURAL_FLAGS = {"object-identity", "lambda-identity", "optional-text", "priority-queue-order", "count-elision"}
 
 # A path literal that leaves the working directory: absolute ("/data", "C:\\x", "\\\\host"),
 # home-relative ("~/x") or with a ".." segment. Checked on the code with only the comments
@@ -415,28 +904,32 @@ def escaping_path_literal(code: str, code_with_literals: str) -> bool:
 LITERAL_DETECTORS = {"cwd-path": escaping_path_literal}
 
 
-def flag_matches(flag: str, pattern, text: str) -> bool:
+def flag_matches(flag: str, pattern, text: str, context: str = None) -> bool:
     if pattern and re.search(pattern, text):
         return True
     detector = DETECTORS.get(flag)
+    if detector and flag in CONTEXT_DETECTORS:
+        return bool(detector(text, context))
     return bool(detector and detector(text))
 
 
-def contract_flags(source: str) -> list:
+def contract_flags(source: str, context: str = None) -> list:
+    """context: the example plus its companions, read for type declarations (object/lambda
+    checks); without it only this source's own declarations are known."""
     code = strip_comments_and_strings(source)
     code_with_literals = strip_comments(source)
     flags = []
     for flag, pattern in CONTRACT_FLAGS:
         literal_detector = LITERAL_DETECTORS.get(flag)
         if flag in CODE_INFO_FLAGS:
-            if flag_matches(flag, pattern, code):
+            if flag_matches(flag, pattern, code, context):
                 flags.append(flag)
         elif flag not in BLOCKING_FLAGS:
             if re.search(pattern, source):
                 flags.append(flag)
-        elif flag_matches(flag, pattern, code) or (literal_detector and literal_detector(code, code_with_literals)):
+        elif flag_matches(flag, pattern, code, context) or (literal_detector and literal_detector(code, code_with_literals)):
             flags.append(flag)
-        elif flag_matches(flag, pattern, source):
+        elif flag not in STRUCTURAL_FLAGS and flag_matches(flag, pattern, source, context):
             flags.append(flag + TEXT_ONLY_SUFFIX)
     if main_reads_args(source):
         flags.append(MAIN_ARGS_FLAG)
@@ -555,8 +1048,10 @@ def precheck(slug: str, name: str) -> dict:
             result["depends_on"] = unresolved
         elif companions:
             result["companions"] = [c.name for c in companions]
+            context = "\n".join([source] + companion_sources)
             result["flags"] = list(dict.fromkeys(
-                result["flags"] + [f for text in companion_sources for f in contract_flags(text)]))
+                contract_flags(source, context)
+                + [f for text in companion_sources for f in contract_flags(text, context)]))
             if any(NON_JDK_IMPORT.search(text) for text in companion_sources):
                 result["status"] = "NON_JDK"
     return result

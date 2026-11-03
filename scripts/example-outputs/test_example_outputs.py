@@ -661,6 +661,255 @@ class IdentityTextFlagTest(unittest.TestCase):
             self.assertNotIn("identity-text", eo.precheck(*spec.split("/"))["flags"], spec)
 
 
+# --- text whose format the API does not fix: objects, lambdas, Optional, PriorityQueue, count() ----
+
+NEW_TEXT_FLAGS = ["object-identity", "lambda-identity", "optional-text", "priority-queue-order", "count-elision"]
+EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "src/main/resources/examples"
+
+
+def program(body: str, types: str = "") -> str:
+    return types + "\nclass Main {\n    public static void main(String[] args) {\n" + body + "\n    }\n}\n"
+
+
+def published_specs() -> list:
+    manifest = Path(__file__).resolve().parent / "manifest.tsv"
+    return ["/".join(line.split("\t")[:2])
+            for line in manifest.read_text(encoding="utf-8").splitlines()[1:] if line.strip()]
+
+
+class OutputTextFlagTest(unittest.TestCase):
+
+    def assertFlag(self, flag, source):
+        self.assertIn(flag, flags_of(source), source)
+        self.assertIn(flag, eo.BLOCKING_FLAGS)
+
+    def assertNoFlag(self, flag, source):
+        flags = flags_of(source)
+        self.assertNotIn(flag, flags, source)
+        self.assertNotIn(flag + eo.TEXT_ONLY_SUFFIX, flags, source)
+
+    # object-identity --------------------------------------------------------------------
+    DOG = "class Dog { String name = \"Rex\"; }\n"
+    CAT = "class Cat { public String toString() { return \"Cat\"; } }\n"
+
+    def test_an_object_without_to_string_printed_as_text(self):
+        for body in ['Dog d = new Dog();\nSystem.out.println(d);',
+                     'Dog d = new Dog();\nSystem.out.println("dog: " + d);',
+                     'Dog d = new Dog();\nString s = d + "!";',
+                     'Dog d = new Dog();\nString s = "";\ns += d;',
+                     'Dog d = new Dog();\nSystem.out.printf("%s%n", d);',
+                     'Dog d = new Dog();\nString s = String.valueOf(d);',
+                     'Dog d = new Dog();\nString s = d.toString();',
+                     'Dog d = new Dog();\nString s = Objects.toString(d, "-");',
+                     'Dog d = new Dog();\nnew StringBuilder().append(d);',
+                     'var d = new Dog();\nSystem.out.println(d);',
+                     'System.out.println(new Dog());',
+                     'System.out.println("new: " + new Dog());',
+                     'List<Dog> dogs = List.of(new Dog());\nSystem.out.println(dogs);',
+                     'Map<String, Dog> byName = new TreeMap<>();\nSystem.out.println("map " + byName);',
+                     'Dog[] dogs = {new Dog()};\nSystem.out.println(Arrays.toString(dogs));',
+                     'List<Dog> dogs = new ArrayList<>();\ndogs.forEach(System.out::println);',
+                     'for (Dog d : List.of(new Dog())) { System.out.println(d); }']:
+            self.assertFlag("object-identity", program(body, self.DOG))
+
+    def test_this_printed_inside_a_class_without_to_string(self):
+        self.assertFlag("object-identity", program("new Dog().show();",
+                                                   'class Dog { void show() { System.out.println("I am " + this); } }'))
+
+    def test_an_overridden_or_inherited_to_string_is_not_identity(self):
+        self.assertNoFlag("object-identity", program('Cat c = new Cat();\nSystem.out.println(c + " " + new Cat());', self.CAT))
+        self.assertNoFlag("object-identity", program('Kitten k = new Kitten();\nSystem.out.println(k);',
+                                                     self.CAT + "class Kitten extends Cat { }\n"))
+        self.assertNoFlag("object-identity", program('Base b = new Base();\nSystem.out.println(b);',
+                                                     'abstract class Shape { public abstract String toString(); }\n'
+                                                     'class Base extends Shape { public String toString() { return "B"; } }'))
+
+    def test_a_class_without_to_string_used_only_through_its_methods_is_not_identity(self):
+        for body in ['Dog d = new Dog();\nSystem.out.println(d.name);',
+                     'Dog d = new Dog();\nSystem.out.println("name: " + d.name + d.hashName());',
+                     'Dog d = new Dog();\nshow(d);',
+                     'Dog d = new Dog();\nSystem.out.println(describe(d));',
+                     'Dog d = new Dog();\nSystem.out.println(d.getClass().getSimpleName());',
+                     'Dog d = new Dog();\nSystem.out.println(d == null);']:
+            self.assertNoFlag("object-identity", program(body, self.DOG))
+
+    def test_enums_records_and_jdk_types_are_not_object_identity(self):
+        self.assertNoFlag("object-identity", program("Color c = Color.RED;\nSystem.out.println(c);", "enum Color { RED }"))
+        self.assertNoFlag("object-identity", program("Point p = new Point(1, 2);\nSystem.out.println(p);",
+                                                     "record Point(int x, int y) {}"))
+        self.assertNoFlag("object-identity", program(
+            'List<String> xs = List.of("a");\nStringBuilder sb = new StringBuilder();\n'
+            'System.out.println(xs + " " + sb + new ArrayList<>());'))
+        self.assertNoFlag("object-identity", program("Oops e = new Oops();\nSystem.out.println(e);",
+                                                     "class Oops extends RuntimeException { }"))
+
+    def test_a_variable_is_identity_only_if_every_class_it_can_hold_is(self):
+        hierarchy = "interface Animal { }\nclass Dog implements Animal { }\n" + self.CAT.replace("class Cat", "class Cat implements Animal")
+        self.assertNoFlag("object-identity", program("Animal a = pick();\nSystem.out.println(a);", hierarchy))
+        self.assertFlag("object-identity", program("Animal a = new Dog();\nSystem.out.println(a);", hierarchy))
+        self.assertNoFlag("object-identity", program("Animal a = new Cat();\nSystem.out.println(a);", hierarchy))
+        only_dogs = "interface Animal { }\nclass Dog implements Animal { }\nclass Puppy extends Dog { }\n"
+        self.assertFlag("object-identity", program("Animal a = pick();\nSystem.out.println(a);", only_dogs))
+
+    def test_a_name_reused_with_a_to_string_type_is_not_flagged(self):
+        self.assertNoFlag("object-identity", program("Dog x = new Dog();\nshow(x);\n}\nstatic void other() {\n"
+                                                     "Cat x = new Cat();\nSystem.out.println(x);", self.DOG + self.CAT))
+
+    def test_the_object_check_only_in_a_comment_or_string(self):
+        self.assertNoFlag("object-identity", program('Dog d = new Dog();\n// System.out.println(d);\n'
+                                                     'System.out.println("print d directly: " + d.name);', self.DOG))
+
+    # lambda-identity --------------------------------------------------------------------
+    def test_lambdas_method_references_and_anonymous_classes_printed_as_text(self):
+        for body in ['Runnable r = () -> {};\nSystem.out.println(r);',
+                     'Function<String, Integer> f = String::length;\nSystem.out.println("f=" + f);',
+                     'Predicate<String> p = s -> s.isEmpty();\nSystem.out.println(p);',
+                     'Comparator<String> c = Comparator.comparing(String::length);\nSystem.out.println(c);',
+                     'Supplier<String> s = new Supplier<>() { public String get() { return "x"; } };\n'
+                     'System.out.println(s);',
+                     'Greeter g = name -> "hi " + name;\nSystem.out.println(g);']:
+            self.assertFlag("lambda-identity", program(body, "interface Greeter { String greet(String n); }"))
+
+    def test_calling_a_lambda_or_an_anonymous_class_with_to_string_is_not_lambda_identity(self):
+        for body in ['Function<String, Integer> f = String::length;\nSystem.out.println(f.apply("abc"));',
+                     'Predicate<String> p = s -> s.isEmpty();\nSystem.out.println("empty? " + p.test(""));',
+                     'Supplier<String> s = () -> "x";\nSystem.out.println(s.get());',
+                     'Runnable r = new Runnable() { public void run() {} public String toString() { return "R"; } };\n'
+                     'System.out.println(r);',
+                     'List<String> names = List.of("a");\nnames.forEach(System.out::println);']:
+            self.assertNoFlag("lambda-identity", program(body))
+
+    # optional-text ----------------------------------------------------------------------
+    def test_optional_printed_as_text(self):
+        for body in ['Optional<String> o = Optional.of("a");\nSystem.out.println(o);',
+                     'Optional<String> o = Optional.empty();\nSystem.out.println("o=" + o);',
+                     'OptionalInt m = IntStream.of(1).max();\nSystem.out.println(m);',
+                     'var o = names.stream().findFirst();\nSystem.out.println(o);',
+                     'System.out.println(Optional.of("x"));',
+                     'System.out.println("first: " + names.stream().filter(s -> s.isEmpty()).findFirst());',
+                     'System.out.println(names.stream().max(Comparator.naturalOrder()));',
+                     'System.out.println(IntStream.of(1, 2).average());',
+                     'System.out.println(names.stream().reduce((a, b) -> a + b));',
+                     'System.out.printf("%s%n", Optional.empty());']:
+            self.assertFlag("optional-text", program(body))
+
+    def test_optional_values_are_not_optional_text(self):
+        for body in ['Optional<String> o = Optional.of("a");\nSystem.out.println(o.get() + o.isPresent());',
+                     'Optional<String> o = Optional.empty();\nSystem.out.println(o.orElse("none"));',
+                     'System.out.println(names.stream().findFirst().orElse("none"));',
+                     'System.out.println(names.stream().reduce("", (a, b) -> a + b));',
+                     'System.out.println(Math.max(1, 2) + Collections.max(names) + Integer.max(3, 4));',
+                     'System.out.println(IntStream.of(1, 2).average().getAsDouble());',
+                     'Optional<String> o = Optional.of("a");\no.ifPresent(v -> System.out.println("found: " + v));',
+                     'System.out.println(student.average());']:
+            self.assertNoFlag("optional-text", program(body))
+
+    # priority-queue-order ---------------------------------------------------------------
+    def test_priority_queue_printed_iterated_or_copied(self):
+        for body in ['PriorityQueue<Integer> pq = new PriorityQueue<>(List.of(3, 1));\nSystem.out.println(pq);',
+                     'Queue<Integer> pq = new PriorityQueue<>();\nSystem.out.println("pq " + pq);',
+                     'var pq = new PriorityQueue<Integer>();\nfor (int x : pq) { System.out.println(x); }',
+                     'Queue<Integer> pq = new PriorityQueue<>();\npq.forEach(System.out::println);',
+                     'Queue<Integer> pq = new PriorityQueue<>();\nSystem.out.println(pq.stream().toList());',
+                     'Queue<Integer> pq = new PriorityQueue<>();\nList<Integer> l = new ArrayList<>(pq);',
+                     'System.out.println(new PriorityQueue<>(List.of(3, 1)));']:
+            self.assertFlag("priority-queue-order", program(body))
+
+    def test_priority_queue_poll_and_peek_are_fixed(self):
+        self.assertNoFlag("priority-queue-order", program(
+            'Queue<Integer> pq = new PriorityQueue<>(List.of(3, 1));\n'
+            'System.out.println("head " + pq.peek() + " size " + pq.size());\n'
+            'while (!pq.isEmpty()) { System.out.println(pq.poll()); }\n'
+            'Queue<Integer> copy = new PriorityQueue<>(pq);\nSystem.out.println(copy.poll());'))
+        self.assertNoFlag("priority-queue-order", program(
+            'Queue<Integer> q = new ArrayDeque<>(List.of(3, 1));\nSystem.out.println(q);'))
+
+    # count-elision / stream-side-effects ------------------------------------------------
+    def test_side_effects_in_a_pipeline_that_ends_in_count(self):
+        for body in ['long n = Stream.of(1, 2).peek(x -> System.out.println(x)).count();',
+                     'long n = names.stream().map(s -> { System.out.println(s); return s; }).count();',
+                     'Stream<String> s = names.stream().peek(System.out::println);\nlong n = s.count();']:
+            self.assertFlag("count-elision", program(body))
+
+    def test_count_without_side_effects_and_queue_peek_are_not_count_elision(self):
+        for body in ['long n = names.stream().filter(s -> s.isEmpty()).count();\nSystem.out.println(n);',
+                     'Queue<Integer> q = new ArrayDeque<>();\nSystem.out.println(q.peek() + " " + q.stream().count());',
+                     'names.stream().peek(System.out::println).toList();\nlong n = names.stream().count();']:
+            self.assertNoFlag("count-elision", program(body))
+
+    def test_stream_side_effects_are_informational(self):
+        self.assertNotIn("stream-side-effects", eo.BLOCKING_FLAGS)
+        self.assertIn("stream-side-effects", flags_of(program(
+            'names.stream().peek(s -> System.out.println(s)).anyMatch(s -> s.isEmpty());')))
+        self.assertIn("stream-side-effects", flags_of(program(
+            'names.stream().filter(s -> { System.out.println(s); return true; }).toList();')))
+        self.assertNotIn("stream-side-effects", flags_of(program(
+            'Queue<Integer> q = new ArrayDeque<>();\nSystem.out.println(q.peek());\n'
+            'names.stream().map(String::length).forEach(System.out::println);')))
+
+    # companions -------------------------------------------------------------------------
+    def test_types_from_a_companion_are_known(self):
+        main = program("Dog d = new Dog();\nSystem.out.println(d);")
+        self.assertNotIn("object-identity", flags_of(main))  # Dog unknown: never guessed
+        self.assertIn("object-identity", eo.contract_flags(main, main + self.DOG))
+        self.assertNotIn("object-identity", eo.contract_flags(main, main + self.DOG.replace(
+            "}", "public String toString() { return name; } }")))
+
+    # the lessons ------------------------------------------------------------------------
+    def test_the_lessons_affected_examples(self):
+        expected = {"queues-collections-utility/PriorityQueueExample": "priority-queue-order",
+                    "terminal-operations/ShortCircuitExample": "count-elision",
+                    "stream-fundamentals/LazyEvaluationExample": "count-elision"}
+        for spec, flag in expected.items():
+            self.assertIn(flag, eo.precheck(*spec.split("/"))["flags"], spec)
+            self.assertRegex(eo.describe(spec), r"^WILL_BE_BLOCKED \(.*" + flag, spec)
+        for spec in ["optional/OptionalCreationExample", "optional/OrElseExample", "optional/IfPresentExample",
+                     "terminal-operations/CountMinMaxExample", "terminal-operations/ReduceExample",
+                     "terminal-operations/FindMatchExample", "queues-collections-utility/QueueBasicsExample",
+                     "queues-collections-utility/ArrayDequeAsStackExample",
+                     "introduction-to-generics/GenericInterfaceExample", "polymorphism/InstanceofDesignExample"]:
+            self.assertRegex(eo.describe(spec), r"^WILL_RUN\s", spec)
+
+    def test_no_published_example_is_blocked_by_the_new_flags(self):
+        specs = published_specs()
+        self.assertEqual(len(specs), len(set(specs)))
+        self.assertGreaterEqual(len(specs), 83)
+        for spec in specs:
+            flags = eo.precheck(*spec.split("/"))["flags"]
+            for flag in NEW_TEXT_FLAGS:
+                self.assertNotIn(flag, flags, spec)
+                self.assertNotIn(flag + eo.TEXT_ONLY_SUFFIX, flags, spec)
+
+
+class ExceptionFlagTest(unittest.TestCase):
+
+    def test_messages_and_printed_exceptions_are_informational_with_the_rule_as_note(self):
+        source = program('try { run(); } catch (IllegalStateException e) {\n'
+                         '    System.out.println("caught: " + e.getMessage());\n    System.out.println(e);\n}')
+        flags = flags_of(source)
+        self.assertIn("exception-message", flags)
+        self.assertIn("exception-text", flags)
+        for flag in ("exception-message", "exception-text", "stderr"):
+            self.assertNotIn(flag, eo.BLOCKING_FLAGS)
+            self.assertIn(flag, eo.RISK_NOTES)
+        self.assertIn("string literal", eo.RISK_NOTES["exception-message"])
+        self.assertIn("JDK-generated", eo.RISK_NOTES["exception-message"])
+
+    def test_a_caught_exception_used_without_text_is_not_exception_text(self):
+        flags = flags_of(program('try { run(); } catch (IOException | RuntimeException e) {\n'
+                                 '    System.out.println("failed: " + e.getClass().getSimpleName());\n'
+                                 '    throw new IllegalStateException("wrapped", e);\n}'))
+        self.assertNotIn("exception-text", flags)
+        self.assertNotIn("exception-message", flags)
+        self.assertIn("exception-text", flags_of(program(
+            'try { run(); } catch (IOException | RuntimeException e) { System.out.println("x " + e); }')))
+
+    def test_stderr_is_noted_and_never_staged(self):
+        self.assertIn("stderr", flags_of(program('try { run(); } catch (Exception e) { e.printStackTrace(); }')))
+        self.assertIn("stderr", flags_of(program('System.err.println("warn");')))
+        self.assertNotIn("stderr", flags_of(program('System.out.println("System.err is not used");')))
+
+
 # --- pre-checks: main, imports, multi-file -------------------------------------------
 
 class PrecheckTest(Sandbox):
