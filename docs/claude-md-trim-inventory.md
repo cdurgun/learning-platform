@@ -286,3 +286,67 @@ Etiketler: **SİL** = phase-log'da karşılığı doğrulandı, kalıcı kural y
 **Belirsiz konular (karar/ek doğrulama gerekir):** #2 (microservices Pratik Proje durumu), #5 (ilke kapsamı), #9 (gotcha'nın yeri), #13 (`promoted_at` güncel mi), #15 (`n8n/README.md` kapsamı), #16 (H2 ilkesinin phase-log'daki tam metni), #19/#21 (quiz kurallarının skill'e taşınması).
 
 **Tahmini etki (1,98 B/token; tahmin, ölçüm değil):** 21 işaretçi ≈ 36,9 KB; kalacak kurallar ≈ 3-4 KB → net ≈ 33 KB ≈ 16-17k token tasarruf. Gerçek değer Aşama 8'de `/context` ile ölçülecek.
+
+## 13. Aşama 3 doğrulama sonuçları (2026-11-03; yalnızca okuma — CLAUDE.md ve diğer dokümanlar DEĞİŞMEDİ)
+
+Yöntem: gerçek kod/yapılandırma/migration/doküman okundu; canlı DB sorgulanmadı (şema kaynağı migration'lar). Kanıt bulunamayan yerde tahmin yürütülmedi.
+
+### 13.1 Question Review (kod doğrulaması)
+| İddia | Sonuç | Kanıt |
+|---|---|---|
+| `/{lang}/admin/**` yalnızca ADMIN | **Doğrulandı** — ama kural `/admin/**`'in TAMAMI içindir (AI Tutor admin uç noktaları dahil), yalnızca Question Review'a özgü değil | `config/SecurityConfig.java:94` `.requestMatchers("/{lang:en\|tr}/admin/**").hasRole("ADMIN")`, `anyRequest().permitAll()` (:111) öncesinde |
+| Publish/Reject yalnızca `PENDING_REVIEW`'dan, aksi 409 | **Doğrulandı** (ek: eşzamanlı güncelleme de 409) | `service/QuestionReviewService.java:255-257` (durum kontrolü → CONFLICT), `:270-271` (eşzamanlı güncelleme → CONFLICT); `reviewedBy` oturumdan (`Authentication`, `QuestionReviewController.java:43,49`) |
+| Listeleme yalnızca `PENDING_REVIEW` | **Doğrulandı** | `QuestionReviewService.java:88` `findByStatusOrderByCreatedAtAsc(PENDING_REVIEW)` |
+| CSRF'ye muaf DEĞİL | **Doğrulandı** | muaf liste yalnızca `/api/internal/**`, `/{lang}/topics/*/quiz/*/submit`, `/{lang}/practice/submit`, `/{lang}/quiz/*/submit` (`SecurityConfig.java:126-130`); `admin/question-review.html` CSRF token içeriyor (3 eşleşme). AI Tutor `/admin/ai-tutor/**` de bilinçli olarak muaf DEĞİL (:148-149 yorumu) |
+| Auto-publish aynı kuralı kullanır | **Yeni bulgu** — CLAUDE.md'de hiç yok | `QuestionReviewService.java:144-145` `transition()`'ı yeniden kullanır (PENDING_REVIEW-only/409 aynı); `QuestionAutoPublishController.java:29` `POST /api/internal/questions/{id}/auto-publish`; bayrak `quiz.auto-publish.enabled` varsayılan **false** (`application.yml:64-65`, kapalıyken 503), aynı `X-Api-Key` |
+| Kod yorumu güncel mi | **BAYAT** | `SecurityConfig.java:88-91` "Question Review (Faz A, henüz UI/controller'ı yok…)" — controller ve UI var |
+
+### 13.2 Promotion (kod doğrulaması)
+- **Açık id listesi:** `argparse` `question_ids nargs="+"` zorunlu (`scripts/export_approved_questions.py:189-190`); "tüm PUBLISHED" sorgusu yok.
+- **Tek PUBLISHED olmayan soru tüm partiyi iptal eder:** `:149-155` (`ExportError`, kısmi çıktı yok).
+- **Dosya üzerine yazmaz:** `out_path.exists()` → hata (`main()`); migration numarası mevcut en yüksek + 1 (`:55-58`).
+- **Üretilen SQL her zaman `'PUBLISHED'` ile tek INSERT** (`:123-124`), dosya `question-promotion/` altına.
+- **Script hiçbir veritabanına YAZMAZ:** tek DB erişimi `subprocess.run(["psql","-h",SOURCE_DB_HOST,…,"-c",query])` ile SELECT (`:82-83`, `:63-69`); yazdığı tek şey yerel `.sql` dosyası.
+- **Kritik ayrım — `EXPORT_SOURCE_DB_*` prod host'una ayarlanırsa:** script **bağlanır ve SELECT çalıştırır**; ana bilgisayar izin listesi, localhost kontrolü ya da salt-okunur transaction YOK (`:50-54` yalnızca ortam değişkeni okur, varsayılan `localhost:5433/learning`). Koruma yalnızca *kazara* kimlik bilgisi kullanımına karşıdır (`DB_URL`/`DB_USERNAME`/`DB_PASSWORD` okunmaz, `:46-49`). Script'in docstring'indeki "NEVER connects to production… by construction" (`:12-19`) yalnızca varsayılan yapılandırma için doğrudur. Prod'a YAZMAK ancak üretilen migration'ın normal deploy'da Flyway tarafından uygulanmasıyla olur — script'le değil.
+- **Yeni Mimari maddesinde kullanılacak doğrulanmış ifade (öneri, henüz yazılmadı):** "Script veritabanına yazmaz; yalnızca `EXPORT_SOURCE_DB_*` ile verilen sunucuya `psql` ile SELECT atar (varsayılan: yerel dev). Host kısıtlaması yoktur; değişkenleri prod'a ayarlamak onu okur. Prod'a yazma yalnızca üretilen migration'ın deploy'da uygulanmasıyla olur." **"Prod'a bağlanamaz" ifadesi KULLANILMAYACAK.**
+- **`promoted_at` yok (Faz 143 belirsizliği KAPANDI):** `promoted_at` yalnızca 7 promotion migration'ının yorumunda geçiyor ("intentionally has no promoted_at column", örn. `question-promotion/V489…:22`); hiçbir `ALTER TABLE/ADD COLUMN`, entity ya da Java kodunda yok. (Canlı DB sorgulanmadı.)
+- **Bayat/aşırı iddia (Aşama 4 listesine):** script docstring'i `:12-19` (yukarıdaki ayrım); rationale §5 "Sınır" notu zaten doğru.
+
+### 13.3 Ingestion (Faz 87 maddesi ile güncel kod)
+| Konu | Güncel kod | CLAUDE.md Faz 87 maddesi |
+|---|---|---|
+| `QuestionSource` | `MANUAL, CLAUDE, N8N, OPENAI` (`domain/QuestionSource.java:25-30`) | "`source = AI`" ve `MANUAL/AI` — **BAYAT** |
+| `source` istek alanı | **VAR** (`QuestionIngestRequest.java:27`), `parseEnum` ile izin listesi (`QuestionIngestService.java:70,181-188`); **boş/eksik `source` → 400 "source is required"** (`requireNonBlank`) | "iki alan DTO'da BİLİNÇLİ OLARAK YOK" — **BAYAT** (yalnızca `status` yok) |
+| `status` DTO'da yok | **Doğrulandı**; sunucu `PENDING_REVIEW` atar (`QuestionIngestService.java:94`) | doğru (yalnızca `status` için) |
+| Tip başına doğru şık | SINGLE_CHOICE/CODE_OUTPUT tam bir, MULTIPLE_CHOICE en az bir (`:132,138`) | doğru |
+| X-Api-Key | yapılandırılmamış → 503, yanlış anahtar → 401, sabit-zamanlı karşılaştırma (`QuizIngestApiKeyInterceptor.java:~38-50,55`); yalnızca `/api/internal/**` (`WebConfig.java:71`); CSRF-muaf (`SecurityConfig.java:127`) | doğru |
+| Bayat yorumlar | Interceptor Javadoc `:16` "Spring Security kullanmıyor"; `QuestionIngestRequest` Javadoc `source` izin listesini yalnızca MANUAL/CLAUDE/N8N diye anar (OPENAI eksik) | Aşama 4: ikisi de düzeltilmeli |
+Yeni Mimari ingestion maddesi yalnızca bu tablonun "Güncel kod" sütununu içerecek.
+
+### 13.4 Belirsiz konular — kanıt ve karar
+| Konu | Bulunan kanıt | Sonuç |
+|---|---|---|
+| **Faz 96** microservices Pratik Proje | Yalnızca `inter-service-communication` dersinde `microservices-course-projects` bağlantısı var; `deployment` derslerinde (TR/EN) "Pratik Proje" yok. Faz 96 phase-log satırında "Pratik" geçmiyor (0 eşleşme) → "karar bekleniyor" bilgisi YALNIZCA CLAUDE.md'de. Sonradan çözüldüğüne dair kanıt bulunamadı. | **BELİRSİZ / ek karar.** Silinirse tek kayıt kaybolur. Seçenekler: (a) kullanıcıya sor, (b) silmeden önce bir satırlık not phase-log Faz 96'ya eklensin |
+| **Faz 114** ilke kapsamı | Phase-log satırları 110-112, 114-121, 124, 137 "tekrar öğretmeme" ilkesini anlatıyor: advanced-spring, spring-data-jpa, postgresql. java/react/ai/git/docker için kanıt yok; `.claude/skills` ve known-constraints'te ilke yok. | Kanıtlanan kapsam: **spring-boot (advanced-spring, spring-data-jpa) ve postgresql kursları**. Tüm kurslara genelleştirmek çıkarım olur → **ek karar**. `starter-batch` "pom'da bağımlılık değil" notu phase-log'da VAR (pom'da gerçekten yok: 0 eşleşme) |
+| **Faz 138** `webmvc-test` | `pom.xml:148` `spring-boot-starter-webmvc-test`; `NavbarMenuToggleTest.java:6` `org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc`; phase-log Faz 138 satırı notu içeriyor; known-constraints'te yok | Bilgi **doğrulandı**. `known-constraints.md` uygun yer (araç/bağımlılık tuzağı, Bilinen Kısıtlar niteliğinde); pom'dan çıkarılabilir olduğu için CLAUDE.md'de tutmaya gerek yok → **güvenli, hedef: known-constraints.md** (onayla) |
+| **Faz 143** `promoted_at` | bkz. 13.2: yok | **KAPANDI** |
+| **Faz 145** `n8n/README.md` | 120 satır tamamı okundu. Kapsıyor: n8n Postgres/prod'a bağlanmaz, `retryOnFail:false`+`onError`, env değişkenleri (`$env`, workflow'da `QUESTION_INGEST_BASE_URL`/`QUIZ_INGEST_API_KEY`/`OPENAI_MODEL`), H2 yalnızca yapısal, pinData, CJK koruması, yapısal alanların EN'den kopyalanması, MANUAL filtresi. Workflow JSON: `retryOnFail:false`/`onError` `question-generation-enum-test.json:75,189`. **README'nin üst paragrafı "never publishes/rejects questions" der, ama generation workflow'da `AI Judge …` düğümleri, `Post-Ingest Status Decision` ve "auto-publish" geçer; README'de AI Judge bölümü yok.** | Faz 145 kuralları README'de TAM → CLAUDE.md'den çıkarılabilir. **README bu konuda BAYAT** (Faz 151-152 sonrası); ayrıca yeni Mimari n8n maddesi "yalnızca ingestion" demeyecek: `/api/internal/**` HTTP uç noktaları (ingest, salt-okunur okumalar, bayrakla kapalı `auto-publish`) |
+| **Faz 146** H2 ilkesi | phase-log Faz 146 satırı: "H2 başlıkları konunun kavramsal KAPSAMINI tanımlar… content-fit… LLM prompt'unun gerçek ders metnine topraklanmasıyla… H2 kelime-örtüşmesi kontrolü BİLİNÇLİ OLARAK YOK"; README node 4 ve 7 aynı | **Doğrulandı** — güvenle taşınabilir |
+| **Faz 139** "UI HENÜZ EKLENMEDİ" | `templates/quiz-play.html` ve `quiz-index.html` var; Quiz Area route'ları `SecurityConfig.java:106` | **BAYAT doğrulandı** |
+
+### 13.5 Quiz kuralları — mevcut kaynak ve planlanan hedef
+| Kural | Mevcut kaynaklar | `quiz-questions` skill'i | Aşama 3'te | Planlanan hedef |
+|---|---|---|---|---|
+| Quiz eklemeden önce `grep -rl "INSERT INTO quiz"` ile shell kontrolü | known-constraints.md:1182-1200 (Faz 157); phase-log Faz 157; CLAUDE.md Faz 155-159 | YOK | **CLAUDE.md'de kısa hâliyle KALIR** | Aşama 6'da skill'e taşıma değerlendirilir; taşınana kadar silinmez |
+| Portable link migration: topic/quiz slug'ından id çözümü, `NOT EXISTS` + `ON CONFLICT DO NOTHING` | gerçek örnek `git-fundamentals/V467`/`V468` (10× `NOT EXISTS`); known-constraints.md:1109-1128; CLAUDE.md Faz 150 | YOK | **KALIR (kısa)** | skill (Aşama 6) |
+| `auto-publish`: `POST /api/internal/questions/{id}/auto-publish`, `QUIZ_AUTO_PUBLISH_ENABLED` varsayılan false, `X-Api-Key` | kod (13.1), `application.yml:59-65`, known-constraints.md:939,996 | YOK | **KALIR (kısa; Mimari ingestion maddesinin parçası)** | Mimari maddesi + known-constraints |
+| Soru sayısı 4–7 esnek, EN=TR eşit | skill satır 18 | VAR | silinebilir (kopya) | skill |
+| MC'de tam 2 doğru şık / topic başına 10+10 | yalnızca Faz 150 içeriği; kod kuralı değil (kod: MC ≥ 1), Faz 157 ile 4–7'ye aşıldı | YOK | çıkarım gerektirir; **kalıcı kural DEĞİL** | phase-log (silinebilir) |
+Sonuç: **Faz 150 ve Faz 155-159 "SİL" değil "KISALT"**; yukarıdaki üç kuralın kısa hâli Aşama 6'ya kadar CLAUDE.md'de tutulur. Faz 150 için "DOĞRULA" tamamlandı (kural kod/migration'da var).
+
+### 13.6 21 işaretçinin güncel durumu
+**Güvenle taşınabilir (kanıt tamam, ek karar yok; Mimari maddeleri önce yazılmak koşuluyla):** #1 Faz 87 · #3 Faz 104 · #4 Faz 109 · #6 Faz 123 · #7 Faz 133 · #8 Faz 137 (hepsi durum anlatımı, phase-log'da karşılığı var) · #9 Faz 138 (gotcha → known-constraints.md; auth kısmı Mimari'de kopya) · #10 Faz 139 (ayrı-kavram/paylaşılan submit 1-2 cümle kalır; "UI eklenmedi" bayat) · #11-12 Faz 141/142 (kod doğrulandı; yeni Mimari Question Review maddesi önkoşul) · #13 Faz 143 (kod doğrulandı; yeni ifade 13.2) · #14 Faz 144 (13.3 ile Mimari düzeltmesi) · #15 Faz 145 ve #16 Faz 146 ve #18 Faz 148 (kurallar README/known-constraints'te tam; Mimari n8n maddesi 13.4 ifadesiyle) · #17 Faz 147 (CODE_OUTPUT cümlesi Mimari'ye) · #20 Faz 154 (Docker Engine Bilinen Kısıtlar'da kopya; gömülü-proje istisnası 1 cümle).
+**Ek karar gerektirir:** #2 Faz 96 (karar durumu belirsiz) · #5 Faz 114 (ilke kapsamı) · #19 Faz 150 ve #21 Faz 155-159 (kısa kurallar Aşama 6'ya kadar CLAUDE.md'de kalır; skill'e taşıma kararı) · `n8n/README.md` bayatlığı (README'yi güncellemek ayrı bir iş, bu trim'in kapsamı dışı olabilir — karar).
+
+### 13.7 Aşama 4 düzeltme listesine eklenenler (ek: §11)
+(1) `SecurityConfig.java:88-91` bayat yorum; (2) `QuestionIngestRequest` Javadoc'unda OPENAI eksik; (3) `export_approved_questions.py` docstring'i "by construction" ifadesi; (4) `n8n/README.md` "never publishes/rejects" ifadesi; (5) CLAUDE.md Faz 87 maddesi `source = AI`/"iki alan yok"; (6) Faz 139 "UI eklenmedi". Kod yorumu/script/README değişiklikleri ancak kullanıcı onayıyla ve ayrı commit'te yapılacak.
