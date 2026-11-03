@@ -219,3 +219,21 @@ Her ilgili CLAUDE.md maddesinin backtick'li tanımlayıcıları `docs/architectu
 5. **CLAUDE.md Faz 87 maddesi bayat bir cümle içeriyor** ("review için admin arayüzü YOK"); Faz 141/142'den beri var. Aşama 4'te düzeltilecek.
 6. **Google izin ekranı durumunun nedeni** kaynakta yazılı değil (çıkarım olarak işaretli).
 7. **Rationale boyutu 33,9 KB:** CLAUDE.md'nin ikinci kopyası değil (kural metinleri değil, neden/geçmiş/sınır), ama beklenenden uzun. İstenirse §3 (Beklenen Çıktı, ~9 KB) kısaltılır, çünkü ayrıntının büyük kısmı zaten `scripts/example_outputs.py` yorumlarında.
+
+## 11. Stage 2 kapanış kararları (2026-11-03)
+
+**Stage 4 düzeltme listesi (bayat/yanlış ifadeler):**
+- `QuizIngestApiKeyInterceptor` Javadoc'u "proje henüz Spring Security kullanmıyor" der; Faz 138'den beri yanlış. Aynı aşamada kod yorumu da güncellenir.
+- CLAUDE.md Faz 87 cümlesi "review için ayrı admin arayüzü YOK"; Faz 141/142'den beri güncel değil.
+- Flyway kuralı: `${...}` yasağı bayat (`placeholder-replacement: false`, ae192be). Kısa kural: ayar kapalı, literal kullanım serbest, ayarı değiştirmeden önce mevcut migration'lar taranır; teknik neden `docs/architecture-rationale.md` §2.
+
+**Stage 3 taşıma zorunlu kuralları (ayrı tablo, silmeden önce hedefi doğrulanacak):**
+| Kural | Kaynak (CLAUDE.md) | Hedef | İşlem |
+|---|---|---|---|
+| H2 başlıkları kavramsal kapsamdır, birebir kelime eşleşmesi değil; Validate Output yalnızca yapısal | Faz 146 | `docs/phase-log.md` Faz 146 + `n8n/README.md` | doğrula, eksikse ekle |
+| CJK koruma regex'i, `comparableText()`, Validate Translation, MANUAL ön-filtresi, `n8n execute` pinData'yı yok sayar | Faz 147-148 | `docs/known-constraints.md` Faz 146/148 | doğrula |
+| Question Review: ADMIN-only `/{lang}/admin/**`, `ROLE_` authority, PENDING_REVIEW listesi, `correct` yalnızca ADMIN'e görünür, Publish/Reject 409 | Faz 141/142 | Mimari kural olarak CLAUDE.md'de KALIR (kısa) + phase-log | kısalt, silme |
+
+**Google:** consent-screen yayın durumu ve açma adımları `docs/google-sign-in-operations.md`'ye taşındı; CLAUDE.md'de en fazla tek satır hatırlatma.
+
+**Yalnızca çıkarıma dayanan gerekçeler (kaynakta doğrulanmadı):** güncelleme migration'ında açık tarih / yeni ders INSERT'inde CURRENT_DATE ayrımının nedeni; şablon/stil/SEO değişikliğinin `updated_at`'i neden ilerletmediği; EN yayında yayın gününün yazılma nedeni; `updated_at >= published_at` kısıtının amacı; Google consent-screen durumunun önemi; `sub` seçiminin genel OIDC gerekçesi; HashMap Javadoc ifadesi (genel bilgi); istisna-mesajı kuralının gerekçesi; `EXPORT_SOURCE_DB_*` korumasının sınırı (kasıtlı yanlış host'a karşı korumaz); HotSpot determinizm notu. Doğrulandı: `.out` elle değişiminin build'i kırması (ExampleOutputManifestTest Javadoc).

@@ -20,6 +20,7 @@ migration'la değişir; `published_at` hiçbir yerde yayınlanmaz. (CLAUDE.md, "
 JSON-LD `dateModified`'ı ve sitemap `<lastmod>`'unu `updated_at` besler (SEO/AdSense planı). EN ve TR
 ayrı dosyalardır ve farklı günlerde değişir, bu yüzden tarih `Topic`'te değil çeviride durur
 (V1137 başlığı).
+
 **Gerekçe: neden tarihler otomatik değil.** İçerik `content/{lang}/{slug}.md` dosyasında yaşar; DB satırı
 dosya değişince kendiliğinden değişmez. Bu yüzden tarihler git'ten ya da çalışma anında türetilmez, yalnızca
 migration'la değişir (CLAUDE.md). V1137'nin ilk doldurması da bu ilkeyi izledi: tarihler git geçmişinden bir kez
@@ -39,21 +40,24 @@ yayınlamak yanlış bir iddia olurdu. Bu yüzden kolon ve entity alanı yalnız
 1. *Anlamlı içerik değişimi → aynı commit'te, o slug + dil için, AÇIK tarihli (`DATE '2026-11-03'` gibi) bir `updated_at` migration'ı.*
    Metin değişikliği yalnızca kendi dilini ilerletir. Örnek kod (`examples/{slug}/*`) iki dilin ortak
    kaynağı olduğu için iki dili birden ilerletir (örnek: `functional-interfaces-streams/V1139`).
-   Yazım hatası, `seo_title`/`seo_description`, şablon ve stil değişiklikleri sayfada görünen *içeriği*
-   değiştirmediği için tarihi ilerletmez (SEO açıklamaları `V1135`/`V1136` bilerek hesaba katılmadı).
+   Yazım hatası, `seo_title`/`seo_description`, şablon ve stil değişiklikleri tarihi ilerletmez (V1137 başlığı: "SEO
+   açıklaması, şablon ve stil değişiklikleri sayılmadı"; SEO açıklamaları `V1135`/`V1136`). *Çıkarım:* bu değişiklikler dersin
+   öğretici içeriğini değiştirmediği için "Son güncelleme" iddiası oluşturmaz; kaynaklarda gerekçe yazılı değil.
 2. *Yeni ders migration'ının `INSERT`'i değişmeden çalışır.* İki kolon `DEFAULT CURRENT_DATE` taşır;
    tarih migration'ın o ortamda uygulandığı gün olur. V1137'de varsayılan bilerek **en sona** verildi:
    mevcut 336 satıra uygulanmasın, yalnızca bundan sonra tarih vermeyen `INSERT`'ler için olsun.
 3. *EN yayına alınırken (`publish_{slug}_english` migration'ı) `updated_at` yayın günüyle AÇIKÇA yazılır.* EN çeviri taslak olarak eklendiği günün
-   tarihini taşır (kural 2); yayına alındığı gün sayfada görünür hâle geldiği için tarih onu yansıtmalı.
+   tarihini taşır (kural 2). *Çıkarım (kaynakta gerekçe yok):* yayına alındığı gün çeviri sayfada ilk kez görünür olduğu için
+   tarih taslak ekleme gününü değil yayın gününü yansıtır.
 4. *`published_at` yazıldıktan sonra değişmez; `updated_at >= published_at` DB kısıtıdır*
-   (`chk_topic_translation_updated_not_before_published`). Kısıt, hatalı bir `UPDATE`'in tarihi geriye
-   sarmasını DB seviyesinde reddeder.
+   (`chk_topic_translation_updated_not_before_published`, V1137). Kısıtın amacı kaynakta yazılı değil; *çıkarım:* hatalı
+   bir `UPDATE`'in `updated_at`'i `published_at`'ın gerisine sarmasını DB seviyesinde reddeder.
 
-**Kaynakta yok (çıkarım, doğrulanmadı):** neden *güncelleme* migration'larında tarih `CURRENT_DATE` yerine
-açık yazılıyor, ama *yeni ders* `INSERT`'inde varsayılan kabul ediliyor? Olası neden tekrarlanabilirliktir:
-bir güncelleme geç deploy edilirse `CURRENT_DATE` düzenleme günü yerine deploy gününü yazardı. Hiçbir
-dokümanda açık yazılmamıştır.
+**Doğrulanmamış çıkarım (tarihsel gerekçe bilinmiyor):** *güncelleme* migration'larında tarih neden `CURRENT_DATE` yerine açık
+yazılıyor, ama *yeni ders* `INSERT`'inde `DEFAULT CURRENT_DATE` kabul ediliyor? Makul bir okuma: açık tarih **tekrarlanabilirlik**
+sağlar (aynı migration her ortamda ve her zaman aynı tarihi yazar; geç deploy edilen bir güncelleme düzenleme günü yerine deploy gününü
+yazmaz), `CURRENT_DATE` ise **yeni kaydın tarihini** belirlemek içindir. Bu okuma proje sahibi tarafından makul bulundu ama
+tarihsel gerekçe olarak doğrulanmış bir karar DEĞİLDİR; hiçbir dokümanda yazılı değil.
 
 **Geçmiş / sınırlar.**
 - V1137 sırası bilinçli: kolonlar önce boş bırakılabilir eklenir, 336 satır slug + dil ile doldurulur,
@@ -70,39 +74,37 @@ dokümanda açık yazılmamıştır.
 
 ---
 
-## 2. Flyway `${...}`: yazmama kuralının teknik nedeni ve **güncel durumu**
+## 2. Flyway `${...}`: placeholder replacement kapalı; literal kullanım ve ayarı değiştirme riski
 
-**Kural:** migration dosyalarında (yorumlar dahil) literal `${...}` yazma; Thymeleaf'ten bahsederken
-"dolar-süslü-parantez" de. (CLAUDE.md, "Mimari", "Migration dosyalarında (yorum satırları dahil) literal `${...}` yazma".)
+**Kural (CLAUDE.md'de kısa):** Flyway placeholder replacement `application.yml`'de kapalıdır (`placeholder-replacement: false`);
+migration dosyalarında literal `${...}` bu ayarla kullanılabilir. **Ayarı değiştirmeden önce mevcut migration'lar taranmalıdır**
+(literal `${...}` içeren dosyalar ayar açılırsa uygulamayı durdurur). (CLAUDE.md, "Mimari", Flyway maddesi.)
 
-**Teknik neden.** Flyway'in varsayılan placeholder sözdizimi tam olarak `${...}`'dır ve placeholder
-değiştirme betiğin tamamına (SQL yorumları dahil) uygulanır. Eşleşen her `${...}` için bir placeholder değeri
-beklenir; yoksa `No value provided for placeholder: ${...}` hatası verir ve **tüm uygulama başlamaz** (Flyway
-`migrate` aşamasında düşer). `@{...}` ve `#{...}` tetiklemez; yalnızca `$` önekli olan tetikler.
+**Teknik neden (ayar kapalı değilken).** Flyway'in varsayılan placeholder sözdizimi tam olarak `${...}`'dır ve placeholder
+değiştirme betiğin tamamına (SQL yorumları dahil) uygulanır. Eşleşen her `${...}` için bir placeholder değeri beklenir; yoksa
+`No value provided for placeholder: ${...}` hatası verir ve **tüm uygulama başlamaz** (Flyway `migrate` aşamasında düşer).
+`@{...}` ve `#{...}` tetiklemez; yalnızca `$` önekli olan tetikler.
 
-**Geçmiş.** Faz 23'te `spring-mvc-views-thymeleaf` migration'ları (V108) Thymeleaf'in `${...}` değişken
-ifadesinden söz ederken bu hata gerçekten yaşandı (phase-log Faz 24 satırı bunu "V108'de yaşanan Flyway
-`${...}` placeholder hatası" diye kaydeder). Çözüm, migration'larda "dolar-süslü-parantez" yazmaktı.
+**Geçmiş.** Faz 23'te `spring-mvc-views-thymeleaf` migration'ları (V108) Thymeleaf'in `${...}` değişken ifadesinden söz ederken bu hata
+gerçekten yaşandı (phase-log Faz 24 satırı: "V108'de yaşanan Flyway `${...}` placeholder hatası"). Çözüm o zaman migration'larda
+"dolar-süslü-parantez" yazmaktı; eski CLAUDE.md kuralı bu çözümdü. Sonra `spring-mvc-views-thymeleaf` quiz soruları dersin konusu gereği gerçek
+Thymeleaf `${...}` sözdizimini soru metni/`code_snippet` içinde göstermek zorunda kaldı (hata `question-promotion/V699`'da GERÇEKTEN
+doğrulandı: `No value provided for placeholder: ${topic.title}`). Çözüm, mekanizmayı proje genelinde kapatmaktı:
+`spring.flyway.placeholder-replacement: false` (commit `ae192be`, 2026-09-02). `application.yml` yorumu bunun geriye dönük uyumlu olduğunu
+söyler: hiçbir mevcut migration Flyway placeholder'larına bağımlı değildi. Phase-log Faz 166 satırı da kaydeder ("migration'da
+dolar-süslü-parantez artık hata vermiyor").
 
-**⚠ Güncel durum: kural artık teknik olarak zorunlu değildir (doğrulandı).**
-`application.yml` → `spring.flyway.placeholder-replacement: false` (commit `ae192be`, 2026-09-02). Gerekçesi
-yml'deki yorumda: `spring-mvc-views-thymeleaf` quiz soruları dersin konusu gereği gerçek Thymeleaf `${...}`
-sözdizimini soru metni/`code_snippet` içinde göstermek zorundadır; ayar olmadan Flyway bunu placeholder sanıp
-`No value provided for placeholder: ${topic.title}` ile uygulamayı durdurur (`question-promotion/V699`'da
-GERÇEKTEN doğrulandı). Doğrulamalarım (2026-11-03): `application-prod.yml`, `application-dev.yml` ve
-`application-test.yml` bu ayarı geçersiz kılmıyor; migration klasöründe **32 dosya** literal `${` içeriyor ve
-uygulama başlıyor; tam test seti (725 test, Flyway sıfırdan) geçiyor. Phase-log Faz 166 satırı da bunu kaydeder
-("migration'da dolar-süslü-parantez artık hata vermiyor").
-Dolayısıyla CLAUDE.md'deki kural, ayar kaldırılırsa/geçersiz kılınırsa tekrar geçerli olan **önlem**
-niteliğindedir. **Karar bekliyor:** kural CLAUDE.md'de "önlem; ayar `application.yml`'de" notuyla kalsın mı,
-kaldırılsın mı (Aşama 4'te kullanıcıya sorulacak; bu belge bunu kendiliğinden değiştirmez).
+**Doğrulama (2026-11-03).** `application-prod.yml`, `application-dev.yml`, `application-test.yml` ayarı geçersiz kılmıyor;
+migration klasöründe **32 dosya** literal `${` içeriyor ve uygulama başlıyor; tam test seti (725 test, Flyway sıfırdan) geçiyor.
 
-**Sınırlar.** Ayar kapalıyken Flyway'in placeholder özelliği hiçbir migration'da kullanılamaz (proje bunu
-kullanmıyor, kod taramasında bağımlılık yok). `docs/deepseek-ai-tutor-plan.md` (satır 451) hâlâ eski kuralı
-"CLAUDE.md rules to follow" altında sayar.
+**İstisnalar ve sınırlar.**
+- Ayar kapalıyken Flyway'in placeholder özelliği hiçbir migration'da kullanılamaz (proje kullanmıyor; kod taramasında bağımlılık yok).
+- Ayar açılır ya da bir profil onu geçersiz kılarsa, bu 32 dosya (ve bundan sonra eklenecekler) uygulamayı yeniden durdurur. Bu yüzden
+  değiştirmeden önce `grep -rl '\${' src/main/resources/db/migration` ile taramak gerekir.
+- `docs/deepseek-ai-tutor-plan.md` (satır 451) hâlâ eski kuralı ("never write a literal dollar-curly-brace placeholder") "CLAUDE.md rules to
+  follow" altında sayar: tarihsel bir plan metni, değiştirilmedi.
 
-**Kaynaklar:** `src/main/resources/application.yml` (flyway bloğu yorumu); `docs/phase-log.md` Faz 24, Faz 166;
-`git log -S placeholder-replacement`.
+**Kaynaklar:** `src/main/resources/application.yml` (flyway bloğu yorumu); `docs/phase-log.md` Faz 24, Faz 166; `git log -S placeholder-replacement`.
 
 ---
 
@@ -111,7 +113,7 @@ kullanmıyor, kod taramasında bağımlılık yok). `docs/deepseek-ai-tutor-plan
 **Kural:** `.out` yalnızca `scripts/example_outputs.py` ile üretilir; API sözleşmesiyle sabit olmayan çıktılar
 panele alınmaz. (CLAUDE.md, "Mimari", "'Beklenen Çıktı' paneli".) **Engellenen kategorilerin tam ve
 güncel listesi `CONTRACT_FLAGS` içindedir** (`scripts/example_outputs.py`); bu belge listeyi kopyalamaz,
-ayrımın nedenini açıklar. Script başlığı da isolasyon ayrıntılarının tek kaynağıdır.
+ayrımın nedenini açıklar. Script başlığı da izolasyon ayrıntılarının tek kaynağıdır.
 
 **Genel ilke.** Panel "bu programın çıktısı budur" iddiasıdır. Aynı çıktının birkaç çalıştırmada çıkması bu
 iddiayı kanıtlamaz: Java API sözleşmesi çıktıyı *sabitlemiyorsa* başka JVM'de, sürümde ya da makinede farklı
@@ -121,9 +123,9 @@ iddiayı kanıtlamaz: Java API sözleşmesi çıktıyı *sabitlemiyorsa* başka 
 insan incelemesine işaret eder). Varyantlar (CPU sayısı, ForkJoin paralelliği, `tr` locale, İstanbul saat dilimi,
 identity hash) yalnızca bariz belirsizliği yakalamak içindir.
 
-**`HashMap`/`HashSet` sırası (`hash-order`).** Javadoc, `HashMap` yineleme sırası için bir garanti vermez
-(zamanla değişebilir); HotSpot'un mevcut davranışı belirli bir koşuda tekrarlanabilir olsa da bu bir
-sözleşme değildir. Aynı mantık `toSet`/`groupingBy`/`toMap`/`partitioningBy` ve `Set.of`/`Map.of` için de
+**`HashMap`/`HashSet` sırası (`hash-order`).** `HashMap` Javadoc'u yineleme sırası için garanti vermez ve sıranın zamanla sabit
+kalacağını da garanti etmez (Javadoc bilgisi; script yorumu bayrağı yalnızca "iteration order of hash-based collections" diye anar). Belirli bir
+JVM'de aynı koşuda tekrarlanabilir görünmesi bir sözleşme değildir (genel bilgi). Aynı mantık `toSet`/`groupingBy`/`toMap`/`partitioningBy` ve `Set.of`/`Map.of` için de
 uygulanır. (Sırası kendisi tanımlı `TreeMap`/`LinkedHashMap`/`List` bu bayrağı tetiklemez; diğer bayraklar yine uygulanır.)
 
 **Dosya örnekleri: neyin neden serbest, neyin neden engelli.** Kendi oluşturduğu dosyaları *göreli adla*,
@@ -153,7 +155,7 @@ charset, ağ/süreç/ortam değişkeni, `Object.toString()` kimlik metni (`Dog@1
 pipeline'ı atlayabilmesi, `get(Declared)Fields/Methods` sırası (Javadoc: "not sorted and are not in any
 particular order"; HotSpot tesadüfen bildirim sırasını korur).
 
-**İstisna mesajı kuralı (2026-11-03).** Bu otomatik bir engel değil, insan incelemesi kuralıdır (`exception-message`,
+**İstisna mesajı kuralı (`exception-message` bayrağı, commit `56ef740`, 2026-11-03).** Bu otomatik bir engel değil, insan incelemesi kuralıdır (`exception-message`,
 `RISK_NOTES`): mesaj yalnızca programın *kendi* istisna kurucusuna verdiği *string literal* ise onaylanır. JDK'nın
 ürettiği mesajlar (`"/ by zero"`, `"For input string: ..."`, index mesajları) ve değişken/çalışma zamanı verisinden
 kurulan mesajlar, her parça ayrıca sabit olduğu gösterilmedikçe reddedilir. Script bunun *nedenini* ayrıca yazmaz
@@ -167,8 +169,8 @@ transitif) birlikte derlenir; tip derste *tam bir dosyada* tanımlıysa. Aksi h�
 **İnsan inceleme akışı.** Sandbox çıktıyı üretir, ama panele yalnızca insan incelemesinden sonra girer: `generate`
 (izole Docker, sabit imaj digest'i, `--network none`, salt-okunur kök dosya sistemi, boş stdin, parametresiz) → `review.tsv`'de
 her örnek için ayrı `approve`/`reject` → `promote --review` (tek hata varsa hiçbir dosya yazılmaz, hash'ler hâlâ eşleşmeli).
-Çalıştırmadan önce `--dry-run` listesi gösterilir. `.out` elle yazılmaz ya da düzeltilmez: elle düzeltme, sandbox'ın
-gerçek çıktısıyla panelin ayrışmasına yol açar ve manifest hash'ini bozar.
+Çalıştırmadan önce `--dry-run` listesi gösterilir. `.out` elle yazılmaz ya da düzeltilmez (CLAUDE.md). Doğrulanmış neden: `ExampleOutputManifestTest`
+Javadoc'u `.out`'un güncel hash'inin manifest'tekiyle aynı olmasını ister ("çıktı elle değiştirilmemiştir"), yani elle değiştirilmiş bir `.out` build'i kırar.
 
 **Staging neden `.example-outputs/` (Faz 180).** Eskiden `target/` altındaydı; herhangi bir oturumun `mvn clean`'i
 incelenmemiş çıktıları siliyordu. Bu yüzden köke, git-ignored dizine taşındı (`StagingLocationTest` korur).
@@ -242,12 +244,13 @@ hiçbir kod yolu yoktur. Ortam değişkeni adları, `application-prod.yml`'in ok
 **kasıtlı olarak farklıdır** (`EXPORT_SOURCE_DB_HOST/PORT/NAME/USER/PASSWORD`): kullanıcı kabuğunda ilgisiz bir sebeple
 prod kimlik bilgilerini dışa aktarmış olsa bile script bunları yanlışlıkla **devralamaz**. Varsayılanlar projenin kendi
 `docker-compose.yml` dev kurulumuna (`localhost:5433`, `learning`) eşittir.
+
 **Sınır (çıkarım, script kodundan):** koruma *isimlendirme ve kod yolu yokluğu* ile sağlanır, bir kimlik duvarı değildir:
 biri `EXPORT_SOURCE_DB_HOST`'u bilerek prod'a işaret ederse script (yalnızca SELECT ile) oradan okurdu. Güvence yanlışlıkla
 kimlik bilgisi alma ve yazma yolunun yokluğudur.
 
 **Diğer koruma kararları (kullanıcı kararı, Faz 143).**
-- **Asla "tüm PUBLISHED" yok:** yalnızca açıkça verilen dev `question.id`'ler. Yanlış id, yanlış batch demektir.
+- **Asla "tüm PUBLISHED" yok:** yalnızca açıkça verilen dev `question.id`'ler (kullanıcının bilinçli kararı; script başlığı: "never a blanket 'export everything PUBLISHED' query").
 - **Statü kontrolü:** `PUBLISHED` olmayan (PENDING_REVIEW/REJECTED/DRAFT) tek bir id bile **tüm batch'i** açık bir hatayla iptal eder
   (sessizce atlamak kısmi/yanıltıcı çıktı üretirdi); seçeneği olmayan soru da reddedilir.
 - **Tekrar-promote önleme bir SÜREÇ sorumluluğudur,** yapısal koruma iddia edilmez: migration başlığındaki dev id listesi
@@ -271,8 +274,8 @@ Eşleme `user_identity(provider, provider_subject)` ile yapılır (`UNIQUE(provi
 Profil fotoğrafı ve token DB'ye yazılmaz.
 
 **Neden e-postası eşleşen hesaba OTOMATİK bağlanmaz (kullanıcı kararı 1).** Kayıtta e-posta **doğrulanmıyor**.
-Biri başkasının e-postasıyla önceden hesap açmış olabilir; otomatik bağlama, o önceden kaydedilmiş hesabın Google sahibine
-(ya da tersine) devredilmesi, yani **hesap ele geçirme** yolu olurdu. Bu yüzden o hesabın **şifresi** istenir
+Kaynak (phase-log Faz 185): "önceden kaydedilmiş bir e-posta hesap ele geçirmeye yol açardı". Yani kayıtta e-posta sahipliği
+kanıtlanmadığı için, e-postaya güvenerek otomatik bağlamak **hesap ele geçirme** yolu olurdu. Bu yüzden o hesabın **şifresi** istenir
 (`/{lang}/login/google/link`, 5 yanlış denemede akış biter). Google'dan gelen `email_verified` değilse kimlik reddedilir.
 
 **Diğer politika kararları.**
@@ -305,15 +308,12 @@ uygulamayı başlatmaz (bilinçli fail-fast; yanlış yapılandırma sessizce Go
 Scope yalnızca `openid email profile`; ID token imzası/issuer/audience/süre/nonce ve `state` Spring tarafından doğrulanır, aynı `state`
 ikinci kez kullanılamaz.
 
-**Etkinleştirme / yeniden kurulum notları (CLAUDE.md'deki 2026-10-24 açma tarifi; phase-log'da yok).** Google Console'da prod OAuth istemcisi
-oluşturulur; redirect URI **birebir** `https://www.learnforgex.com/login/oauth2/code/google` olmalı (kodda `app.base-url` + `/login/oauth2/code/google`);
-OAuth izin ekranının **yayın durumu kontrol edilir**; iki değişken (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) Railway'e BİRLİKTE eklenir; yeniden
-deploy edilir; sonra canlıda yeni hesap + bağlama + ADMIN reddi denenir. *(İzin ekranı durumunun neden önemli olduğu kaynakta yazılı değil; çıkarım:
-yayınlanmamış/test modundaki bir ekran yalnızca tanımlı test kullanıcılarına izin verir.)* ADMIN erken reddi `GoogleOidcUserService.loadUser` ve
-`GoogleSignInController.render`'da, ikisi de `GoogleAccountService.isGoogleSignInBlockedForEmail` üzerinden `allowsGoogleSignIn`'e sorar. Prod doğrulamaları
-(2026-10-24/25: gerçek Google hesabıyla yeni hesap, giriş, bağlama, oturum korunumu; ADMIN reddi `google_admin_not_allowed`) ve deployment kimlikleri phase-log Faz 185 satırındadır.
+**Uygulama noktaları (ADMIN erken reddi).** `GoogleOidcUserService.loadUser` ve `GoogleSignInController.render`, ikisi de
+`GoogleAccountService.isGoogleSignInBlockedForEmail` üzerinden `allowsGoogleSignIn`'e sorar (kural yine tek yerde). Prod doğrulamaları
+(2026-10-24/25) ve deployment kimlikleri phase-log Faz 185 satırındadır. **Etkinleştirme/yeniden kurulum adımları (Google Console, redirect URI,
+izin ekranı, Railway değişkenleri) güvenlik kuralı değil işletim bilgisidir: `docs/google-sign-in-operations.md`.**
 
-**Kaynaklar:** `docs/phase-log.md` Faz 185 (tam anlatım); `GoogleAccountService`, `GoogleOidcUserService`, `GoogleSignInConfig`,
+**Kaynaklar:** `docs/phase-log.md` Faz 185 (tam anlatım); `docs/google-sign-in-operations.md` (işletim); `GoogleAccountService`, `GoogleOidcUserService`, `GoogleSignInConfig`,
 `application-prod.yml`; `docs/known-constraints.md`.
 
 ---
