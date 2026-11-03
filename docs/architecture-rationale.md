@@ -110,78 +110,64 @@ migration klasöründe **32 dosya** literal `${` içeriyor ve uygulama başlıyo
 
 ## 3. "Beklenen Çıktı" sözleşmesi: neden bazı çıktılar panele alınmaz
 
-**Kural:** `.out` yalnızca `scripts/example_outputs.py` ile üretilir; API sözleşmesiyle sabit olmayan çıktılar
-panele alınmaz. (CLAUDE.md, "Mimari", "'Beklenen Çıktı' paneli".) **Engellenen kategorilerin tam ve
-güncel listesi `CONTRACT_FLAGS` içindedir** (`scripts/example_outputs.py`); bu belge listeyi kopyalamaz,
-ayrımın nedenini açıklar. Script başlığı da izolasyon ayrıntılarının tek kaynağıdır.
+**Kural:** `.out` yalnızca `scripts/example_outputs.py` ile üretilir ve elle yazılmaz/düzeltilmez; API sözleşmesiyle sabit olmayan çıktılar
+panele alınmaz. (CLAUDE.md, "Mimari", "'Beklenen Çıktı' paneli".) **Ayrıntı ve düzenli ifadeler kod yorumlarındadır:** bayrakların tam listesi ve tarayan kalıplar `CONTRACT_FLAGS` ile `BLOCKING_FLAGS`'te, bayrak başına inceleme notları `RISK_NOTES`'ta; izolasyon, varyantlar, companion ve inceleme akışı script başlığında; manifest/hash
+kuralı `ExampleOutputManifestTest` Javadoc'unda; staging konumu `StagingLocationTest`'te (Python, `scripts/example-outputs/test_example_outputs.py`).
+Bu bölüm, script'i açmadan uyulabilmesi için kuralları ve gerekçelerini özetler; fark olursa script geçerlidir.
 
-**Genel ilke.** Panel "bu programın çıktısı budur" iddiasıdır. Aynı çıktının birkaç çalıştırmada çıkması bu
-iddiayı kanıtlamaz: Java API sözleşmesi çıktıyı *sabitlemiyorsa* başka JVM'de, sürümde ya da makinede farklı
-çıkabilir. Script bunu kendi yorumunda deneyle de kaydeder: pilot sırasında paralel örnekler 9 varyant
-çalıştırmasının hepsinde aynı baytları yazdı; bu yüzden "birbirine eşit çıktı" garanti sayılmaz ve
-**engelleyici** bir bayrak, hiçbir `.out` hazırlanmaması demektir (yalnızca bilgilendirici bayraklar
-insan incelemesine işaret eder). Varyantlar (CPU sayısı, ForkJoin paralelliği, `tr` locale, İstanbul saat dilimi,
-identity hash) yalnızca bariz belirsizliği yakalamak içindir.
+**İlke.** Panel "bu programın çıktısı budur" iddiasıdır; aynı çıktının birkaç çalıştırmada çıkması bunu kanıtlamaz (script yorumu: pilotta paralel
+örnekler 9 varyantın hepsinde aynı baytları yazdı). Bu yüzden **engelleyici** bayrak hiçbir `.out` hazırlanmaması demektir; bilgilendirici bayrak
+yalnızca insan incelemesine işaret eder.
 
-**`HashMap`/`HashSet` sırası (`hash-order`).** `HashMap` Javadoc'u yineleme sırası için garanti vermez ve sıranın zamanla sabit
-kalacağını da garanti etmez (Javadoc bilgisi; script yorumu bayrağı yalnızca "iteration order of hash-based collections" diye anar). Belirli bir
-JVM'de aynı koşuda tekrarlanabilir görünmesi bir sözleşme değildir (genel bilgi). Aynı mantık `toSet`/`groupingBy`/`toMap`/`partitioningBy` ve `Set.of`/`Map.of` için de
-uygulanır. (Sırası kendisi tanımlı `TreeMap`/`LinkedHashMap`/`List` bu bayrağı tetiklemez; diğer bayraklar yine uygulanır.)
+**`HashMap`/`HashSet` sırası (`hash-order`).** `HashMap` Javadoc'u yineleme sırası için garanti vermez ve sıranın zamanla sabit kalacağını da
+garanti etmez (Javadoc bilgisi; script yorumu yalnızca "iteration order of hash-based collections" der). Belirli bir JVM'de tekrarlanabilir
+görünmesi sözleşme değildir. Aynı mantık `toSet`/`groupingBy`/`toMap`/`partitioningBy` ve `Set.of`/`Map.of` için geçerlidir.
 
-**Dosya örnekleri: neyin neden serbest, neyin neden engelli.** Kendi oluşturduğu dosyaları *göreli adla*,
-çalışma dizini içinde okuyup yazan örnek panele girebilir, çünkü her çalıştırma temiz, boş, yazılabilir bir
-çalışma dizininde başlar (sandbox'ın kendi `/tmp`'si; derlenmiş sınıflar bunun dışında, salt okunur) ve panel
-o dizindeki **ilk** çalıştırmayı gösterir; okuyucunun dizininde önceden var olan dosyalar varsayılmaz.
-Aşağıdakiler bu varsayımın düzeltemediği şeyler olduğu için ENGELLİdir:
-- **Mutlak, `~`'li ya da `..` ile dışarı çıkan yollar; `toAbsolutePath()`/`getCanonicalPath()` gibi makine yolu
-  yazdıran çağrılar (`cwd-path`).** Çıktı makinenin dizin yapısını yazar.
-- **`createTempFile`/`createTempDirectory` (`temp-file`).** Adlar rastgele üretilir (`x1234567890.txt`), her
-  çalıştırmada farklıdır.
-- **Sıralanmamış dizin listeleri (`directory-order`):** `Files.list/walk/find`, `DirectoryStream`, `File.list/listFiles`.
-  Javadoc: "The elements in the stream are not in any particular order."
-- **Dosya zamanı, sahibi, izinleri, dosya sistemi bilgisi (`file-metadata`):** makineyi ve anı anlatır.
-- **`java.nio.file` Javadoc'unda "(optional specific exception)" olan istisnalar (`optional-file-exception`):**
-  `NoSuchFileException`, `FileAlreadyExistsException`, `DirectoryNotEmptyException`, `NotDirectoryException`,
-  `AccessDeniedException`, `NotLinkException`, `FileSystemLoopException`. Bir provider bunların yerine düz
-  `IOException` atabilir; hangi `catch` dalının çalışacağı API ile sabit değildir. **Karşıt örnek:**
-  `FileReader`/`FileInputStream`/`FileOutputStream` için `FileNotFoundException` *belirtilmiştir* ve engellenmez.
-- **Satır sonu:** panel Linux `\n`'dir. `newLine()`/`Files.write(path, lines)` yalnızca bilgilendirici not düşer
-  (`line-separator`); `println`/`printf("%n")` stdout'ta her panel için aynı olduğundan işaretlenmez.
+**Dosya örnekleri.** Serbest: kendi oluşturduğu dosyaları *göreli adla*, her çalıştırmada temiz/boş/yazılabilir çalışma dizininde (sandbox `/tmp`;
+sınıflar dışarıda, salt okunur) okuyup yazan örnek; panel o dizindeki **ilk** çalıştırmayı gösterir, önceden var olan dosya varsayılmaz. Engelli:
 
-**Diğer sözleşme-dışı çıktılar (kısaca).** Paralel/iş parçacığı sırası, zaman (`now()`), rastgelelik,
-`System.in` (sandbox'ta boş stdin: çıktı dersin anlattığı girişi *göstermez*), varsayılan locale/saat dilimi/
-charset, ağ/süreç/ortam değişkeni, `Object.toString()` kimlik metni (`Dog@1b6d3586`), lambda kimlik metni,
-`Optional` metni ("exact presentation format is unspecified"), `PriorityQueue` yazdırma sırası, `count()`'un
-pipeline'ı atlayabilmesi, `get(Declared)Fields/Methods` sırası (Javadoc: "not sorted and are not in any
-particular order"; HotSpot tesadüfen bildirim sırasını korur).
+| Bayrak | Engellenen | Neden |
+|---|---|---|
+| `cwd-path` | mutlak, `~`'li, `..` ile çıkan yol; `toAbsolutePath()`/`getCanonicalPath()` vb. | makine yolunu yazdırır |
+| `temp-file` | `createTempFile`/`createTempDirectory` | rastgele ad (`x1234567890.txt`), her çalıştırmada farklı |
+| `directory-order` | `Files.list/walk/find`, `DirectoryStream`, `File.list/listFiles` | sırasız ("not in any particular order") |
+| `file-metadata` | dosya zamanı, sahibi, izinleri, dosya sistemi bilgisi | makineyi ve anı anlatır |
+| `optional-file-exception` | `java.nio.file` Javadoc'unda "(optional specific exception)" olan: `NoSuchFileException`, `FileAlreadyExistsException`, `DirectoryNotEmptyException`, `NotDirectoryException`, `AccessDeniedException`, `NotLinkException`, `FileSystemLoopException` | provider düz `IOException` atabilir; hangi `catch` dalının çalışacağı API ile sabit değil. `FileNotFoundException` (`FileReader`/`FileInputStream`/`FileOutputStream`) *belirtilmiştir*, engellenmez |
+| `line-separator` (bilgi) | `newLine()`, `Files.write(path, lines)` | panel Linux `\n`; yalnızca not düşer (`println`/`printf("%n")` işaretlenmez) |
 
-**İstisna mesajı kuralı (`exception-message` bayrağı, commit `56ef740`, 2026-11-03).** Bu otomatik bir engel değil, insan incelemesi kuralıdır (`exception-message`,
-`RISK_NOTES`): mesaj yalnızca programın *kendi* istisna kurucusuna verdiği *string literal* ise onaylanır. JDK'nın
-ürettiği mesajlar (`"/ by zero"`, `"For input string: ..."`, index mesajları) ve değişken/çalışma zamanı verisinden
-kurulan mesajlar, her parça ayrıca sabit olduğu gösterilmedikçe reddedilir. Script bunun *nedenini* ayrıca yazmaz
-(JDK mesajlarının API sözleşmesiyle sabit olmaması bu ilkenin doğal okumasıdır; çıkarım).
+**Diğer engelleyici bayraklar** (hepsi `BLOCKING_FLAGS`; bu çıktıların hiçbiri panele girmez):
 
-**Companion kuralı (Faz 177/178).** Aynı dersin başka dosyasındaki tipi kullanan örnek o dosyayla (zincirleme,
-transitif) birlikte derlenir; tip derste *tam bir dosyada* tanımlıysa. Aksi hâlde tahmin yürütülmez ve örnek
-`MULTI_FILE` kalır. Companion'ın JDK dışı import'u ve sözleşme bayrakları örneğe de uygulanır; hash'i manifest'in
-`companions` sütununa yazılır, böylece companion değişince `ExampleOutputManifestTest` build'i kırar (aynı test, `.out`'u olan bir `.java` değişince de kırar). Çıkış yolu iki tanedir: çıktıyı yeniden üret + incele (`generate` → `promote`), ya da `.out` dosyasını ve manifest satırını sil.
+| Bayrak | Kapsam | Neden |
+|---|---|---|
+| `parallel`, `concurrency` | `parallel()`, `Thread`, `Executor`, `CompletableFuture` | zamanlama/sıra API ile sabit değil |
+| `time`, `random` | `now()`, `currentTimeMillis`, `nanoTime`; `Random`, `Math.random`, `UUID.randomUUID` | her çalıştırmada farklı |
+| `stdin` | `System.in`, `System.console()` | sandbox boş stdin verir; ders girdisi olmadan çıktı yanıltır (`new Scanner(String)` işaretlenmez) |
+| `default-env` | `ZoneId.systemDefault`, `Locale.getDefault`, `Charset.defaultCharset`, `System.getProperty`, `availableProcessors`, `ofLocalized*` | JVM varsayılanları makineyi anlatır |
+| `scanner-locale` | `Scanner` ile ondalık sayı okuma (`useLocale` ile sabitlenmediyse) | ondalık ayırıcı locale'e bağlı (`scanner-locale-set` bilgi bayrağıdır) |
+| `external-io` | ağ, `ProcessBuilder`, `System.getenv`, `InetAddress` | dış dünyaya bağlı |
+| `identity-text`, `object-identity`, `lambda-identity` | `hashCode()`, `toString()`i olmayan nesne, lambda/anonim sınıf metni (`Dog@1b6d3586`) | kimlik metni çalıştırmaya göre değişir |
+| `optional-text` | `Optional` yazdırma | Javadoc: biçim "unspecified" |
+| `priority-queue-order` | `PriorityQueue`'yu yazdırma/dolaşma/kopyalama | iterator sırası garanti değil (`poll`/`peek` serbest) |
+| `count-elision` | `count()` ile biten pipeline'da `peek`/`println` | kaynak boyutu biliniyorsa pipeline atlanabilir |
+| `reflection-order` | `getDeclaredFields/Methods/...()` | Javadoc: "not sorted and not in any particular order" (HotSpot'un bildirim sırasını koruması sözleşme değil) |
 
-**İnsan inceleme akışı.** Sandbox çıktıyı üretir, ama panele yalnızca insan incelemesinden sonra girer: `generate`
-(izole Docker, sabit imaj digest'i, `--network none`, salt-okunur kök dosya sistemi, boş stdin, parametresiz) → `review.tsv`'de
-her örnek için ayrı `approve`/`reject` → `promote --review` (tek hata varsa hiçbir dosya yazılmaz, hash'ler hâlâ eşleşmeli).
-Çalıştırmadan önce `--dry-run` listesi gösterilir. `.out` elle yazılmaz ya da düzeltilmez (CLAUDE.md). Doğrulanmış neden: `ExampleOutputManifestTest`
-Javadoc'u `.out`'un güncel hash'inin manifest'tekiyle aynı olmasını ister ("çıktı elle değiştirilmemiştir"), yani elle değiştirilmiş bir `.out` build'i kırar.
+**Bilgilendirici bayraklar** panelden dışlamaz, yalnızca insan incelemesine not düşer: `fail-fast` (`ConcurrentModificationException`), `locale-format`, `floating-point-text`, `stream-side-effects`, `local-file`, `deletes-files`, `main-args`, `exception-text`, `stderr`. Stderr'e yazan koşu hiç panele alınmaz (yalnızca stdout gösterilir).
 
-**Staging neden `.example-outputs/` (Faz 180).** Eskiden `target/` altındaydı; herhangi bir oturumun `mvn clean`'i
-incelenmemiş çıktıları siliyordu. Bu yüzden köke, git-ignored dizine taşındı (`StagingLocationTest` korur).
+**İstisna mesajı kuralı (`exception-message`, `56ef740`, 2026-11-03).** İnsan incelemesi kuralı: mesaj yalnızca programın *kendi* istisna kurucusuna verdiği
+*string literal* ise onaylanır; JDK'nın ürettiği mesajlar (`"/ by zero"`, `"For input string: ..."`, index mesajları) ve değişken/çalışma zamanı verisinden
+kurulanlar, her parça ayrıca sabit gösterilmedikçe reddedilir (`RISK_NOTES`). Nedeni script'te yazılı değil (çıkarım: JDK mesajları API ile sabit değil).
 
-**Panel eklemek neden `updated_at`'i ilerletir.** Panel sayfada görünen örneği değiştirir, ve örnek dosyalar iki dilin
-ortak kaynağı olduğu için iki dilin tarihi ilerler (bkz. bölüm 1, kural 1).
+**Companion, `.out` ve manifest.** Aynı dersin başka dosyasındaki tipi kullanan örnek o dosyayla (zincirleme) derlenir; tip dersin tam *bir* dosyasında
+tanımlı olmalı, yoksa örnek `MULTI_FILE` kalır. Companion'ın JDK dışı import'u ve bayrakları örneğe de uygulanır, hash'i `manifest.tsv` `companions`
+sütununa yazılır. `ExampleOutputManifestTest`, `.out`'u olan bir `.java` ya da companion'ı değişince **ve** `.out` elle değiştirilince build'i kırar. Çıkış yolu:
+çıktıyı yeniden üret + incele (`generate` → `promote`), ya da `.out`'u ve manifest satırını sil.
 
-**Kaynaklar:** `scripts/example_outputs.py` (modül docstring'i, `CONTRACT_FLAGS` yorumları, `RISK_NOTES`);
-`docs/phase-log.md` Faz 177-181, 189-193; `ExampleOutputManifestTest`, `StagingLocationTest`.
+**Akış, staging, tarih.** Panele yalnızca insan incelemesinden sonra girilir (`generate` izole Docker + sabit imaj digest'i → `review.tsv`'de örnek başına `approve`/`reject`
+→ `promote --review`: tek hata varsa hiçbir dosya yazılmaz; önce `--dry-run` listesi gösterilir). Staging, `mvn clean` incelenmemiş çıktıları silmesin diye
+`target/` dışındaki git-ignored `.example-outputs/`'tadır (Faz 180). Panel eklemek sayfada görünen örneği değiştirdiği, örnek dosyalar iki dilin ortak kaynağı olduğu için
+iki dilin `updated_at`'ini ilerletir (bkz. §1, kural 1).
 
----
+**Kaynaklar:** `scripts/example_outputs.py`; `ExampleOutputManifestTest`; `StagingLocationTest`; `docs/phase-log.md` Faz 177-181, 189-193.
 
 ## 4. Internal API ve `X-Api-Key` fail-closed
 
