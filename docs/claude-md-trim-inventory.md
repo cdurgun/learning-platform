@@ -89,3 +89,10 @@ Konu İçin)`, `## Örnek Yazım İlkeleri`, `## Bilinen Kısıtlar`. Başlıkla
   Yalıtım: tek kullanımlık `postgres:16-alpine` container'ı (127.0.0.1:5443), `SPRING_DATASOURCE_URL` ile; var olan
   hiçbir DB container'ına dokunulmadı. Test sonrası container silindi.
 - `scripts/example-outputs` Python testleri: 139 test, OK. `deploy-check` Python testleri: 23 test, OK.
+
+### Gerçek token ölçümü (Aşama 1, `/context`, yeni oturum)
+
+- `Memory files: 45.6k` token (%11,4): **CLAUDE.md ~45k**, MEMORY.md 596 token.
+- Bu, bayt/4,24 tahminiyle (~21k) **uyuşmuyor**: gerçek oran yaklaşık **1,98 bayt/token** (Türkçe + kod + sembol yoğun metin, ASCII dışı karakterler çok baytlı).
+- Bu belge ve sonraki raporlardaki bütün token tahminleri **1,98 bayt/token** ile hesaplanır. `/context` değeri yuvarlanmış (±~1k).
+- `/usage` ekranındaki "21k tokens per request" ile `/context`'teki 45k farkı açıklanamadı; karar `/context` ölçümüne dayanır.
