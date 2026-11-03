@@ -113,7 +113,7 @@ migration klasöründe **32 dosya** literal `${` içeriyor ve uygulama başlıyo
 **Kural:** `.out` yalnızca `scripts/example_outputs.py` ile üretilir ve elle yazılmaz/düzeltilmez; API sözleşmesiyle sabit olmayan çıktılar
 panele alınmaz. (CLAUDE.md, "Mimari", "'Beklenen Çıktı' paneli".) **Ayrıntı ve düzenli ifadeler kod yorumlarındadır:** bayrakların tam listesi ve tarayan kalıplar `CONTRACT_FLAGS` ile `BLOCKING_FLAGS`'te, bayrak başına inceleme notları `RISK_NOTES`'ta; izolasyon, varyantlar, companion ve inceleme akışı script başlığında; manifest/hash
 kuralı `ExampleOutputManifestTest` Javadoc'unda; staging konumu `StagingLocationTest`'te (Python, `scripts/example-outputs/test_example_outputs.py`).
-Bu bölüm, script'i açmadan uyulabilmesi için kuralları ve gerekçelerini özetler; fark olursa script geçerlidir.
+Bu bölüm, script'i açmadan uyulabilmesi için kuralları ve gerekçelerini özetler; fark olursa script geçerlidir. Script'te ilgili davranış değiştiğinde bu bölüm de aynı değişiklikte gözden geçirilmelidir.
 
 **İlke.** Panel "bu programın çıktısı budur" iddiasıdır; aynı çıktının birkaç çalıştırmada çıkması bunu kanıtlamaz (script yorumu: pilotta paralel
 örnekler 9 varyantın hepsinde aynı baytları yazdı). Bu yüzden **engelleyici** bayrak hiçbir `.out` hazırlanmaması demektir; bilgilendirici bayrak
