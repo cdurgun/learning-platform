@@ -220,7 +220,7 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   CODE_OUTPUT), `difficulty` (mevcut `Difficulty` enum'u yeniden kullanılıyor,
   yeni bir enum YARATILMADI), `status` (`QuestionStatus`:
   DRAFT/PENDING_REVIEW/PUBLISHED/REJECTED) ve `source` (`QuestionSource`:
-  MANUAL/AI) taşıyan genel bir havuz sorusu. Eski `QuizOption` →
+  MANUAL/CLAUDE/N8N/OPENAI) taşıyan genel bir havuz sorusu. Eski `QuizOption` →
   `QuestionOption`'a yeniden adlandırıldı (anlamı değişmedi). `QuizQuestion`
   ADI KORUNDU ama anlamı tamamen değişti — artık bir soru DEĞİL, yeni `Quiz`
   entity'si (bir topic+language'e bağlı, editoryal olarak KÜRE edilmiş/curated,
@@ -246,18 +246,9 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   Puanlama
   (`QuestionScorer`) her iki modda AYNI kuralı kullanır: seçilen şık id
   kümesi doğru şık id kümesiyle BİREBİR eşleşmeli (MULTIPLE_CHOICE kısmi
-  doğru cevabı KABUL ETMEZ). **AI/n8n ingestion** (`POST
-  /api/internal/questions/ingest`, `QuizIngestApiKeyInterceptor` ile
-  `X-Api-Key` korumalı — anahtar `quiz.ingest.api-key`/`QUIZ_INGEST_API_KEY`
-  env'den, YAPILANDIRILMAMIŞSA istekler REDDEDİLİR/fail-closed) her zaman
-  `status = PENDING_REVIEW` + `source = AI` ile kaydeder — istek gövdesinde
-  (`QuestionIngestRequest`) bu iki alan BİLİNÇLİ OLARAK YOK, yani "sunucu
-  ezer" kuralı bir runtime kontrolüne değil DTO tasarımına dayanıyor; tip
-  başına doğru-şık-sayısı doğrulaması (SINGLE_CHOICE/CODE_OUTPUT tam bir,
-  MULTIPLE_CHOICE bir veya daha fazla) burada yapılır. Review için ayrı bir
-  admin arayüzü YOK (bilinçli v1 sadeleştirmesi) — inceleme,
-  `status`/`reviewed_by`/`reviewed_at` kolonları üzerinden doğrudan DB
-  `UPDATE`'iyle yapılır. **Şema (`V287`-`V293`, core/enum alt klasörlerinde):**
+  doğru cevabı KABUL ETMEZ). **AI/n8n ingestion, insan incelemesi ve
+  auto-publish** için aşağıdaki "Ingestion", "Question Review" ve "Auto-publish"
+  maddelerine bak. **Şema (`V287`-`V293`, core/enum alt klasörlerinde):**
   eski `quiz_question`/`quiz_option` tabloları yerinde `question`/
   `question_option`'a yeniden adlandırılıp yeni kolonlar eklendi; yeni
   `quiz`+`quiz_question_link` tabloları kuruldu; eski enum quiz verisi bu
@@ -395,6 +386,66 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   devre dışı çizilir. Sitemap yayındaki TÜM kursların topic'lerini listeler.
   Quiz/soru içeriğini yeni bir yoldan açığa çıkaran bir rota/özellik eklenirse
   AYNI policy'ye bağlanmalı (ayrıntı: `docs/phase-log.md` "Faz 160", "Faz 161").
+
+- **Ingestion (`POST /api/internal/questions/ingest`):** `QuizIngestApiKeyInterceptor`
+  yalnızca `/api/internal/**` için `X-Api-Key` ister (sabit-zamanlı karşılaştırma; anahtar
+  `quiz.ingest.api-key`/`QUIZ_INGEST_API_KEY` env'den). Anahtar YAPILANDIRILMAMIŞSA `503`
+  (fail-closed), anahtar yanlışsa `401`. Bu yol CSRF'den muaftır, yani tek kapı interceptor'dır.
+  `QuestionIngestRequest`'te `status` alanı BİLİNÇLİ OLARAK YOKTUR: sunucu her soruyu
+  `PENDING_REVIEW` ile kaydeder ("sunucu ezer" kuralı DTO tasarımına dayanır).
+  `source` alanı VARDIR ve zorunludur (eksik/boş → `400`); değeri `QuestionSource` izin
+  listesinden (`MANUAL`, `CLAUDE`, `N8N`, `OPENAI`) biri olmalıdır, dışı `400`. `source`
+  denetim amaçlıdır, hiçbir yetki kararını etkilemez. Tip başına doğru şık sayısı burada
+  doğrulanır: SINGLE_CHOICE/CODE_OUTPUT tam bir, MULTIPLE_CHOICE en az bir (tam iki gibi
+  bir zorunluluk YOKTUR).
+- **Question Review (insan incelemesi):** `/{lang:en|tr}/admin/**` (yalnızca Question
+  Review değil, TÜM admin rotaları) `SecurityConfig`'te `hasRole("ADMIN")` ile korunur;
+  yetki yalnızca `app_user.role`'den gelir (`ROLE_` + rol adı). Kod hiçbir yerde ADMIN
+  atamaz (kayıt ve Google yolu hep `Role.USER`); ADMIN yükseltmesi kod dışında elle
+  yapılır, rol-yönetim arayüzü ya da migration'ı yoktur. `GET .../admin/questions`
+  yalnızca `PENDING_REVIEW` soruları listeler ve doğru şıkkı ADMIN'e gösterir (public
+  DTO'lardan farklı, bilinçli). `POST .../admin/questions/{id}/publish|reject`
+  (`QuestionReviewService`) yalnızca `PENDING_REVIEW`'dan geçişe izin verir: başka
+  durumdaki ya da eşzamanlı güncellenmiş soru `409` alır ve değişmez; `reviewed_by`
+  (oturumdaki kullanıcı) ve `reviewed_at` doldurulur. Bunlar gerçek tarayıcı formlarıdır
+  ve CSRF'ye muaf DEĞİLDİR (muaf liste yalnızca `/api/internal/**` ile üç quiz/practice
+  submit yoludur); formlar `_csrf` token'ı taşır. `PUBLISHED` yapmak soruyu public havuza
+  sokar ama hiçbir sabit quiz'e eklemez (yukarıdaki Faz 87 maddesi).
+- **Auto-publish (Question Review'dan AYRI bir mekanizma):** `POST
+  /api/internal/questions/{id}/auto-publish`, n8n'in AI Judge yolu içindir, bir insan
+  formu değildir. Aynı `X-Api-Key` interceptor'ı korur VE ikinci bir anahtar gerekir:
+  `quiz.auto-publish.enabled` (`QUIZ_AUTO_PUBLISH_ENABLED`), varsayılan `false`; kapalıyken
+  uç nokta `503` döner. Durum geçişi insan Publish/Reject'iyle AYNI
+  `QuestionReviewService.transition()` kuralını kullanır (yalnızca `PENDING_REVIEW`,
+  aksi `409`); `reviewed_by` sabit `n8n-ai-judge`'dır. Yeni bir yayın yolu eklenirse bu
+  iki mekanizmayı karıştırma: ikisi de aynı geçiş kuralına bağlanmalı.
+- **Promotion (dev → prod):** yeni soru ÜRETİMİ/incelemesi hiçbir zaman migration olmaz;
+  yalnızca promotion migration'dır (`db/migration/question-promotion/`, her zaman
+  `status='PUBLISHED'`). `scripts/export_approved_questions.py` yalnızca AÇIK dev
+  `question.id` listesiyle çalışır (asla "tüm PUBLISHED"); listedeki tek bir soru bile
+  `PUBLISHED` değilse TÜM parti iptal edilir; var olan migration dosyasının üzerine yazmaz.
+  Script hiçbir veritabanına YAZMAZ: yalnızca `EXPORT_SOURCE_DB_*` ile verilen sunucuya
+  `psql` ile SELECT atar (varsayılan yerel dev). Host izin listesi ya da salt-okunur
+  doğrulaması YOKTUR: bu değişkenler bilerek prod'a ayarlanırsa script oradan okur.
+  Değişken adları, prod'un `DB_URL`/`DB_USERNAME`/`DB_PASSWORD`'ünden kasıtlı olarak
+  farklıdır; koruma kazara kimlik bilgisi devralmaya karşıdır. Prod'a yazma yalnızca
+  üretilen migration'ın normal deploy'da Flyway ile uygulanmasıyla olur. Tekrar-promote
+  önleme bir SÜREÇ sorumluluğudur (migration başlığındaki dev id listesi); `promoted_at`
+  kolonu ya da unique constraint YOKTUR (migration ve Java kodunda doğrulandı, canlı DB
+  sorgulanmadı). Gerekçe: `docs/architecture-rationale.md`.
+- **n8n sınırı ve soru üretimi:** n8n Postgres'e, prod'a ya da dosya sistemine DOĞRUDAN
+  bağlanmaz; yalnızca `/api/internal/**` HTTP uç noktalarını `X-Api-Key` ile çağırır:
+  ingestion, salt-okunur okumalar (`GenerationToolingController`: topic metadata/içerik,
+  mevcut sorular, çeviri adayları; hiçbir `Question` yazmaz) ve bayrakla kapalı
+  auto-publish. Workflow'larda `retryOnFail: false` (retry duplicate yaratabilir) ve API
+  anahtarı `$env`'den okunur, dosyaya yazılmaz; ayrıntı `n8n/README.md`. Üretimde H2
+  başlıkları konunun kavramsal KAPSAMINI tanımlar, kelime-eşleşme şartı DEĞİLDİR: içerik
+  uyumu prompt'un gerçek ders metnine topraklanmasıyla sağlanır, `Validate Output`
+  yalnızca YAPISAL doğrulama yapar.
+- **CODE_OUTPUT soruları:** kod YALNIZCA `codeSnippet` (+ `codeLanguage`) alanında tutulur,
+  `question` metninde fenced blok olarak tekrarlanmaz. Tekrarlanmışsa admin ekranında
+  `QuestionReviewView.questionDisplayText()` bunu yalnızca SUNUMDA düşürür, DB'deki
+  `question` sütunu değişmez.
 
 ## Token ve Bağlam Verimliliği (Faz 75'ten itibaren, kullanıcı+ChatGPT kararı)
 
