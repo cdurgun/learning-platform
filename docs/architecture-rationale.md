@@ -362,5 +362,13 @@ shell + EN link + TR link) körü körüne tekrarlanınca disposable-DB doğrula
 hatasıyla başarısız oldu. **Kalıcı ders:** yeni quiz soruları eklemeden önce `grep -rl "INSERT INTO quiz"` ile topic'in migration'ları taranır;
 shell varsa yalnızca promotion + link yazılır.
 
-**Kaynaklar:** `docs/phase-log.md` Faz 87, 88, 141, 142, 150, 157; `docs/known-constraints.md` ("Faz 157"); `QuestionRepository`,
+**Quiz Area ve seed'ler (Faz 139).** Quiz Area (`QuizDefinition`: `course` FK + kategorilerle `@ManyToMany`) sabit quiz'e ve Practice'e eklenen AYRI bir
+kavramdır; onların yerine geçmez. **Boş kategori kümesi = tüm kurs** (`QuizDefinition` Javadoc'u). Soru çekme tarafı Quiz Area'ya özgüdür, submit/puanlama ise
+`PracticeService.submit` ile paylaşılır. **Seed durumu (2026-11-05 migration taraması, `db/migration/quiz-area/`):** `java` için `V430`
+(`basic-java` = `java-basics` + `control-flow`; `advanced-java` = `exceptions` + `generics` + `collections` + `oop` + `concurrency` +
+`functional-interfaces-streams`; `all-java` = tüm kurs), `spring-boot` için `V1015`, `ai` için `V1064`. `react`, `postgresql`, `git-github` ve `docker`
+kurslarının henüz `quiz_definition` seed'i yoktur. Bu liste zamanla bayatlar; yeniden doğrulamak için
+`grep -rl "INSERT INTO quiz_definition" src/main/resources/db/migration`.
+
+**Kaynaklar:** `docs/phase-log.md` Faz 87, 88, 139, 141, 142, 150, 157; `docs/known-constraints.md` ("Faz 157"); `QuestionRepository`,
 `QuizService`, `QuestionScorer`, `QuestionReviewService`.
