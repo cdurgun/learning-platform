@@ -907,6 +907,28 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   `target/classes`'ın güncel olduğu (ya taze bir `cp -r` ile ya da başarılı bir
   `mvn -o compile`/`test-compile` ile) doğrulanmalı, aksi halde "migration bulunamadı"
   değil, DAHA SİNSİ bir "migration sessizce atlandı" sonucu alınır.
+- **DÜZELTME (2026-11-05, Faz 143 ve Faz 149 kayıtlarındaki yöntem için): `mvn -o flyway:migrate`
+  artık önerilen doğrulama yolu DEĞİL.** Yukarıdaki Faz 143 ve Faz 149 kayıtları o günkü durum için
+  olduğu gibi korunmuştur; bu madde yalnızca güncel durumu ayırır. (1) Maven Flyway plugin'i projede
+  tanımlı değildir (prefix, Spring Boot BOM'undaki `pluginManagement` girdisiyle çözülür) ve
+  `application.yml`'i OKUMAZ: URL, kullanıcı ve parola `-Dflyway.*` / `FLYWAY_*` ile açıkça
+  verilmeden bağlanamaz (`flyway:info` "Unable to connect to the database" ile 2026-11-05'te doğrulandı).
+  (2) Plugin'in `placeholderReplacement` varsayılanı `true`, uygulamanınki `false` (`application.yml`);
+  `cleanDisabled` varsayılanı da plugin'de `false`. Migration klasöründe literal dolar-süslü-parantez
+  içeren dosyalar (V541 ve sonrası) bulunduğundan, Faz 143'teki "kod yolu prod'da kullanılanla BİREBİR
+  aynı" ifadesi bugün için geçerli değildir: plugin yolu uygulamanın gerçek Spring Boot migration
+  yoluyla aynı değildir (plugin'in bu dosyalarda düşeceği descriptor varsayılanından ÇIKARIMDIR,
+  çalıştırılıp doğrulanmadı). **Güncel yöntem:** tek kullanımlık PostgreSQL + Spring Boot test profili
+  (`SPRING_DATASOURCE_*`) + `LearningPlatformApplicationTests` + `flyway_schema_history` kontrolü
+  (adımlar: `quiz-questions` skill'i; repoda script dosyası yoktur). **2026-11-05 gerçek
+  çalıştırması:** `postgres:16-alpine` (PostgreSQL 16.14), yalnızca 127.0.0.1, boş veritabanı; Spring
+  Boot geçici veritabanının adresine bağlandı (Hibernate log'u doğruladı); test geçti, 1.157 migration
+  (V1..V1157) uygulandı, sürüm kümesi dosyalarla birebir eşleşti, V1157 `success=true`; container silindi,
+  diğer container'lar değişmedi; kalıcı `learning` ve `learning_test` veritabanlarına erişilmedi.
+  **Henüz DENENMEMİŞ senaryolar:** başarısız migration'da davranış (PostgreSQL'de başarısız kaydın
+  kalmaması belgelenmiş Flyway davranışından beklenir, gözlenmedi); Ctrl-C ve TERM/HUP sırasında cleanup;
+  `docker start` hatasında cleanup; `kill -9` sonrası kalan container (`lp.migration-verify=1`
+  etiketli, sonraki çalıştırma durur). Kapsam yalnızca `V<n>__*.sql`.
 - **KRİTİK, GÜNCEL BİR BUL (Faz 151, `question-generation-enum-test.json`'ın ilk
   gerçek `string` topic'i çalıştırması): bu sandbox'ta kurulu n8n sürümünde
   (`docker.n8n.io/n8nio/n8n:latest`, bu Faz'da tespit edilen sürüm 2.35.3),
