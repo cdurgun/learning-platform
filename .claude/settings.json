@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${CLAUDE_PROJECT_DIR}/scripts/check_claude_md.py\" --hook",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
