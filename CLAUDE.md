@@ -541,42 +541,14 @@ phase-log'u ilgili anahtar kelimeyle (kategori slug'ı, teknik terim, "Faz N")
 `grep`'le, baştan sona `Read` etme. İsimlendirme konvansiyonu, migration deseni ve
 daha önce çözülmüş hata sınıfları için önce oraya bak.
 
-**Şu an proje durumu (Faz 82 itibarıyla):** 4 kurs (`java`, `spring-boot`,
-`react`, `ai`). `ai` kursunda artık 5 kategori var: `ai-fundamentals`,
-`large-language-models`, `tools-mcp`, `ai-agents` (her biri 4 topic, TR+EN
-tamamlandı) ve **`ai-development-tools`** (artık İKİ topic): `developing-
-with-claude-code` (V263-V265, TR+EN ikisi de yayında, bkz. "Faz 81") ve
-yeni `claude-code-cli-commands` (V266-V267, TR published=true + EN
-published=false -- içerik yazıldı ama kullanıcı henüz incelemedi, bkz. "Faz
-82"). **GÜNCELLEME (Faz 87):** V259-V262 (Quiz özelliği, `enum` konusu)
-artık BU sandbox kopyasında da mevcut -- daha önce burada "kullanıcının
-kendi yerel ortamındaki numaralarla çakışmasın diye kasıtlı olarak
-atlandı" deniyordu, bu artık tarihsel bir not, güncel durum değil. Migration'lar
-şu an V1'den **V293'e kadar boşluksuz** mevcut: V259-V262 orijinal Quiz
-şeması+içeriği, V263-V267 `ai-development-tools` kategorisi, V287-V293 ise
-Quiz'in genel bir "soru havuzu" (Question Pool) mimarisine yeniden
-tasarlanması (bkz. "Faz 87" ve yukarıdaki "Mimari" bölümündeki ilgili madde).
 **GÜNCELLEME (Faz 96):** `spring-boot` kursunun `microservices` kategorisi
 artık **12/12 topic TR+EN tamamlandı** (`microservices-fundamentals`'tan
 `deployment`'a kadar, Faz 40'ta wave'lere bölünen orijinal ChatGPT planının
 tamamı) -- migration'lar şu an V1'den **V317'ye kadar boşluksuz**. Kategori
 kuralı gereği bir "Pratik Proje" eklenebilecek doğal nokta bu, ama ayrı bir
 repo/tag/build gerektirdiği için henüz üretilmedi, kullanıcının ayrı bir
-kararı bekleniyor. **GÜNCELLEME (Faz 104):** `java` kursuna Faz 97-104
-arasında eklenen **`exceptions` kategorisi artık 7/7 topic TR+EN
-tamamlandı** (`introduction-to-exceptions`, `try-catch-finally`,
-`exception-hierarchy`, `checked-vs-unchecked-exceptions`,
-`throw-and-throws`, `custom-exceptions`, `exception-handling-best-
-practices` -- kendi ayrı üst-seviye kategorisi, Faz 99'da `java-basics`'ten
-ayrıldı, bkz. "Mimari" bölümü). Migration'lar şu an V1'den **V339'a kadar
-boşluksuz**. **GÜNCELLEME (Faz 109):** `java` kursuna `exceptions`'ın hemen
-ardına, Faz 105-109 arasında eklenen **`generics` kategorisi artık 6/6 topic
-TR+EN tamamlandı** (`introduction-to-generics`, `generic-methods`,
-`bounded-type-parameters`, `wildcards`, `generics-with-collections`,
-`type-erasure-and-generic-limitations` -- kendi ayrı üst-seviye kategorisi,
-`java-basics` içine hiç konulmadı, `exceptions`/Faz 99 ile aynı desen).
-Kullanıcının açık talimatı gereği bu kategoriye bir Pratik Proje
-eklenmedi. Migration'lar şu an V1'den **V358'e kadar boşluksuz**.
+kararı bekleniyor.
+
 **GÜNCELLEME (Faz 114):** `spring-boot` kursunun `advanced-spring` kategorisi
 (4 topic, TR+EN) tamamlandı; spring-core/spring-mvc/microservices'in içine değil,
 kendi ayrı üst-seviye kategorisidir. **Kapsam kuralı (yalnızca Spring Boot,
@@ -591,93 +563,6 @@ derlenmemiştir. Bu kural Java ve React kurslarına genellenmez. Kullanıcının
 talimatı gereği bu kategoriye henüz bir Pratik Proje eklenmedi. Ayrıntı:
 `docs/phase-log.md` (Faz 110-114).
 
-**GÜNCELLEME (Faz 123):** `spring-boot` kursuna, spring-core(1)/spring-
-mvc(2)/microservices(3)/advanced-spring(4)'ten sonra sort_order=5'e
-eklenen **`spring-data-jpa` kategorisi artık 9/9 topic TR+EN tamamlandı**:
-`jpa-hibernate-and-spring-data-jpa` (Faz 115), `entities-and-repositories`
-(Faz 116), `query-methods-and-jpql` (Faz 117), `pagination-sorting-and-
-projections` (Faz 118), `dynamic-queries-with-specifications` (Faz 119),
-`relationships-fetching-and-n-plus-1` (Faz 120), `persistence-context-
-and-locking` (Faz 121), `jpa-auditing` (Faz 122), `testing-spring-data-
-jpa` (Faz 123) -- spring-core/spring-mvc/microservices/advanced-spring'in
-İÇİNE değil, kendi ayrı üst-seviye kategorisi. Kategori, içerik
-yazılmadan önce kullanıcının PLAN MODE'da onayladığı 9 topic'lik bir
-roadmap'e göre inşa edildi (bkz. Faz 115 notu). **ÖNEMLİ:** bu kategori,
-mevcut Spring topic'lerinin (spring-core'daki `transaction-management`
-Faz 82 -- `@Transactional`/dirty checking/lazy loading/`LazyInitialization
-Exception`/`join fetch`/open-in-view; spring-mvc'deki `rest-api-design`
-Faz -- `Pageable`/`Page`/`Sort`'un controller-seviyesi çözümlenmesi VE
-`spring-mvc-testing`'in `@DataJpaTest`'i yalnızca isim olarak anması)
-ZATEN kapsamlıca işlediği temelleri TEKRAR ÖĞRETMİYOR -- yalnızca o
-topic'lerin bilinçli olarak açık bıraktığı boşlukları (repository-
-seviyesi gerçek sayfalama, `Specification`, N+1'in kendisi, persistence
-context'in NEDEN dirty checking'i mümkün kıldığı, `@DataJpaTest`'in
-gerçek implementasyonu) dolduruyor, gerçek migration başlıklarıyla
-doğrulanmış referanslarla. Birçok topic, bu projenin GERÇEK kodundan
-(`Topic`/`Category`/`TopicRepository`/`QuizQuestion`/`QuestionIngestService`/
-`application-test.yml`'in kendi yorumu) doğrudan alınan motivasyon ve
-örnekler kullandı, uydurma paralel bir domain model yaratmak yerine.
-Kullanıcının açık talimatı gereği bu kategoriye bir Pratik Proje
-eklenmedi. Migration'lar şu an V1'den **V399'a kadar boşluksuz**. Kesin
-sayılar ve tam liste için `docs/phase-log.md`.
-
-**GÜNCELLEME (Faz 133):** java/spring-boot/react/ai'dan sonra BEŞİNCİ,
-bağımsız top-level course olarak Faz 124'te açılan **`postgresql`
-kursunun `postgresql-foundations` kategorisi artık 10/10 topic TR+EN
-tamamlandı**: `postgresql-and-the-relational-model` (Faz 124),
-`connecting-to-postgresql` (Faz 125), `databases-schemas-tables-and-
-basic-sql` (Faz 126), `postgresql-data-types` (Faz 127), `constraints-
-and-keys` (Faz 128), `inserting-updating-and-deleting-data` (Faz 129),
-`select-and-filtering` (Faz 130), `sorting-limiting-and-pagination` (Faz
-131), `joins` (Faz 132), `aggregation-and-group-by` (Faz 133) --
-kullanıcının PLAN MODE'da onayladığı 14 topic'lik roadmap'in (bkz. Faz
-124 notu) ilk 10'u, sırayla, her birinde durup onay beklenerek. **ÖNEMLİ:**
-bu kategori, bu projenin Spring Data JPA kategorisinin (Faz 115-123)
-`Pageable`/`Sort`/`@OneToMany`/`join fetch` gibi Java-seviyesi API'lerin
-ZATEN kapsadığı hiçbir şeyi TEKRAR ÖĞRETMİYOR -- yalnızca o API'lerin
-ALTINDA gerçekte hangi ham SQL'e (`LIMIT`/`OFFSET`, gerçek `JOIN`,
-`GROUP BY`) dönüştüğünü gösteriyor, her seferinde ilgili Spring Data JPA
-topic'ine gerçek migration başlığıyla doğrulanmış referansla. Kategorinin
-neredeyse her örneği bu projenin GERÇEK şemasından/kodundan: `V1__init_
-schema.sql`'in kendisi (`CREATE TABLE`, `ON DELETE CASCADE`), gerçek
-`quiz_question_link`'in `ON DELETE RESTRICT`'i (kendi gerçek migration
-yorumuyla), gerçek `TopicRepository.findBySlugWithCategoryAndCourse`
-JPQL `join fetch`'i, ve bu projenin kendi gerçek iki-adımlı TR/EN yayın
-iş akışını bulan bir `LEFT JOIN` sorgusu. Kullanıcının açık talimatı
-gereği bu kategoriye bir Pratik Proje eklenmedi. Migration'lar şu an
-V1'den **V419'a kadar boşluksuz**. Kesin sayılar ve tam liste için
-`docs/phase-log.md`.
-
-**GÜNCELLEME (Faz 137):** `postgresql` kursunun `advanced-postgresql`
-kategorisi de (Faz 134-137) **4/4 topic TR+EN tamamlandı**:
-`subqueries-ctes-and-window-functions` (Faz 134), `postgresql-specific-
-data-types` (Faz 135), `indexes-and-query-performance-with-explain`
-(Faz 136), `transactions-and-concurrency-in-postgresql` (Faz 137) --
-bu son topic'le **TÜM `postgresql` kursu (14/14 topic, 2 kategori)
-TAMAMLANDI** (bkz. Faz 124'teki onaylanmış 14 topic'lik roadmap). Bu
-kategori, Foundations'ın aksine, bilinçli olarak PostgreSQL'e özgü
-derinliğin yoğunlaştığı yer: `subqueries-ctes-and-window-functions`
-korelasyonlu subquery/CTE/window fonksiyonlarını GROUP BY'ın aksine
-satırları çökertmeden hesaplama olarak öğretti; `postgresql-specific-
-data-types`, UUID/JSONB/array'leri -- bu projenin gerçek şemasının
-HİÇBİRİNİ kullanmadığı AÇIKÇA belirtilerek, tüm örnekler illüstratif
-olarak etiketlenerek -- kapsadı; `indexes-and-query-performance-with-
-explain`, "Sorting, Limiting, and Pagination"ın (Faz 131) `OFFSET`
-maliyeti ve "Constraints and Keys"in (Faz 128) otomatik PK index'i
-ileri referanslarını, bu projenin kendi gerçek `idx_topic_category`
-index'iyle kapattı; `transactions-and-concurrency-in-postgresql`,
-`BEGIN`/`COMMIT`/`ROLLBACK`/MVCC/`SELECT ... FOR UPDATE`/deadlock'ı,
-"Transaction Management"in (Faz 82) isolation kapsamını (dirty/non-
-repeatable/phantom read, `READ_COMMITTED` varsayılanı) hiç TEKRARLAMADAN
-işledi. Kursun her topic'i, Spring Data JPA kursunun (Faz 115-123)
-Java-seviyesi API'lerinin (`Pageable`, `@OneToMany`/`join fetch`,
-`@Lock`) ALTINDA gerçekte hangi ham SQL'e dönüştüğünü gösterdi, hiçbirini
-tekrar öğretmeden -- her ikisi de gerçek migration başlıklarıyla
-doğrulanmış çapraz referanslarla. Kullanıcının açık talimatı gereği bu
-kursa hiçbir yerinde bir Pratik Proje eklenmedi. Migration'lar şu an
-V1'den **V427'ye kadar boşluksuz**. Kesin sayılar ve tam liste için
-`docs/phase-log.md`.
-
 **GÜNCELLEME (Faz 139):** **Quiz Area** (`QuizDefinition`: `course` FK +
 kategorilerle `@ManyToMany`) sabit quiz'in (`Quiz`/`QuizService`) ve Practice'in
 YERİNE GEÇMEZ; bilinçli olarak ayrı, ek bir kavramdır ve var olan sabit quiz
@@ -686,39 +571,6 @@ koduna dokunulmadı (bkz. "Mimari" bölümündeki Faz 87 maddesi, Question Pool)
 submit/puanlama YENİDEN YAZILMADI, `PracticeService.submit` Practice ile
 paylaşılır. Hangi kurslarda `quiz_definition` seed'i olduğu:
 `docs/architecture-rationale.md` §7. Ayrıntı: `docs/phase-log.md` "Faz 139".
-
-**GÜNCELLEME (Faz 148):** **EN->TR çeviri workflow'u** eklendi -- mevcut
-PUBLISHED/PENDING_REVIEW EN sorularının TR karşılıklarını üretip
-`PENDING_REVIEW`/`source=OPENAI` olarak ekliyor, `correct`/şık yapısı/
-`difficulty`/`type`/`codeSnippet`/`topic` HİÇBİRİ modelin çıktısından
-alınmıyor -- hep orijinal EN sorudan birebir kopyalanıyor. Yeni salt-okunur
-`GET /api/internal/questions/for-translation` (`source` alanı dahil --
-`MANUAL` kaynaklı sorular, bu projede zaten EN+TR ÇİFTİ yazıldığı için
-çeviri adayı listesinden atlanıyor). Yeni `n8n/workflows/question-
-translation-en-to-tr.json` (8 düğüm). **Üç gerçek bulgu keşfedilip
-düzeltildi:** (1) `MANUAL` ön-filtresi olmadan ilk çalıştırma, zaten TR
-karşılığı olan sorulara redundant, farklı-kelime-kalıplı TR kopyaları
-üretti (fuzzy dedup'ın 0.6 Jaccard eşiğinin altında kaldı) -- yapısal
-filtreyle düzeltildi; (2) Faz 147'nin `comparableText()`'i CODE_OUTPUT'lar
-için hâlâ yetersizdi (paylaşılan boilerplate + "son satır" bazen anlamsız
-bir `}` oluyordu) -- parantez/noktalı-virgül temizlenmiş SON ANLAMLI
-satırı karşılaştıracak şekilde düzeltildi, HER İKİ workflow'a da uygulandı;
-(3) **n8n'in HTTP transport katmanında, Türkçe metni ARA SIRA ama
-DETERMİNİSTİK şekilde CJK karakterlerine bozan bir encoding hatası**
-bulundu (4 ayrı gerçek çağrıda da AYNI bozuk çıktı) -- kök nedeni bu
-sandbox'tan izole edilemedi, bunun yerine `Validate Translation`'a bir CJK-
-koruma regex'i eklendi (4/4 çalıştırmada bozuk çeviriyi submit'ten önce
-yakalayıp eledi, bkz. `docs/known-constraints.md` "Faz 148"). 4. denemeden
-sonra bu TEK soru 5. bir ücretli çağrı yerine elle çevrilip submit edildi.
-**Generation workflow'u da varsayılana döndürüldü:** `Topic Selection`'daki
-tek-dil zorlaması kaldırıldı -- artık her yeni üretim hem EN hem TR
-bağımsız olarak (her biri kendi gerçek markdown dosyasına topraklanarak)
-üretecek. Sonuç: 5 EN sorunun (44/45/46/47/48) TAMAMI bir TR karşılığına
-sahip (53/54/57/55/58), topic/type/difficulty/codeSnippet/doğru-şık-deseni
-birebir eşleşiyor, hiçbiri PUBLISHED değil -- kullanıcının onayı
-bekleniyor. Testler **92/92**. Migration'lar hâlâ V1'den **V430'a kadar
-boşluksuz** (bu Faz'da migration YOK). Ayrıntılı uygulama akışı için
-`docs/phase-log.md`'de "Faz 148"i grep'le.
 
 **Quiz sorusu eklemek:** `.claude/skills/quiz-questions` skill'i tek doğruluk kaynağıdır
 (4-7 çift, `INSERT INTO quiz` shell kontrolü, `NOT EXISTS`/`ON CONFLICT DO NOTHING` link
