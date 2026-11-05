@@ -376,3 +376,35 @@ Faz 87 satır içi paragrafı (bayat; "Şu an proje durumu" bloğu), Faz 96 (kul
 - `Proje Yapısı` `n8n/` satırı "hiç bağlanmıyor (bkz. Faz 145)" ve `GenerationToolingController` açıklamaları (Faz 146-148 anotasyonları): Aşama 5'te sadeleştirilirken auto-publish eklenmeli.
 - Henüz yapılmayan kod/yorum düzeltmeleri (onay gerekir): `SecurityConfig.java:88-91` yorumu, `QuizIngestApiKeyInterceptor` Javadoc'u (Spring Security), `QuestionIngestRequest` Javadoc'unda `OPENAI` eksik, `export_approved_questions.py` docstring'i.
 - Silinen Faz 141 paragrafı `docs/question-review-promotion-proposal.md`'ye atıf yapıyordu; bu dosya `docs/` altında YOK (git geçmişinde de bulunamadı) → atıf zaten kopuktu.
+
+## 15. Aşama 5 uygulama kaydı (2026-11-05)
+
+Aşama 4 commit sayısı düzeltmesi: Aşama 4'te **6** commit vardı (`aa8ce48`, `fdf2afc`, `f078257`, `3e9869f`, `ec01120`, `482894e`); raporda "5" yazılması hataydı. Aşama 5 commit'leri: `6112493` (Proje Yapısı), `9981355` (Bilinen Kısıtlar), bu envanter kaydı. Önceki commit'ler değiştirilmedi/squash edilmedi.
+
+### 15.1 Proje Yapısı (6,3 KB → 4,8 KB)
+- **Düzeltilen çelişki:** `export_approved_questions.py` satırı "production'a bağlanamaz" diyordu; artık "hiçbir veritabanına YAZMAZ, yalnızca `EXPORT_SOURCE_DB_*` ile verilen sunucudan SELECT eder (bkz. Mimari, Promotion)".
+- **Doğrulama:** bölümde adı geçen tüm sınıflar `git ls-files` ile `.java` olarak bulundu; `templates/auth|admin`, `static/img` dosyaları, `db/migration/quiz-area|question-promotion|auth|ai-tutor`, `pages/{en,tr}`, `fonts/`, `scripts/example-outputs/`, `.github/workflows/test.yml` mevcut.
+- **Bayat ve çıkarılanlar:** tüm "-- Faz N" ek açıklamaları; "V1..V519" (gerçek en yüksek V1157; migration numarası artık yazılmıyor); "9 düğümlü/8 düğümlü" pipeline sayıları (gerçek: 16/9 düğüm); scripts/n8n bloklarının kod çitinin dışında kalması (biçim hatası); n8n ingestion satırındaki "hiç bağlanmıyor" ifadesi.
+- **Eklenenler (gerçekte var olup listede olmayanlar):** AI Tutor (`service/ai`, `web/ai`, `AiTutor*`), Google girişi sınıfları, `CourseAccessPolicy`, `PdfExportService`, `QuestionAutoPublishController`, `web/publish`, `pages/`, `fonts/`, `application*.yml`, `scripts/example_outputs.py` + `example-outputs/`, CI workflow. Bölüm "yönlendirme içindir, tam liste değildir" notu taşır.
+
+### 15.2 Bilinen Kısıtlar (5,6 KB → 4,8 KB)
+| Eski madde | Yeni durum |
+|---|---|
+| Maven Central engelli | "Eski Claude sandbox'ı kısıtları" maddesine taşındı, **ortama bağlı** olarak işaretlendi. Yerelde (2026-11-05) doğrulandı: Maven Central 200, npm 200, PyPI 200, jsdelivr 301 |
+| Faz 140 `mvn` workaround | Aynı maddeye 2 satıra indirildi; ayrıntı `known-constraints.md` "Faz 140" (kaldırılmadı) |
+| CI maddesi | Korundu; run id/commit/zaman damgası ayrıntısı çıkarıldı; "Railway -DskipTests" ve "Wait for CI KANITLANMADI" ifadeleri AYNEN anlamıyla korundu; yerel test koşulu (JDK 21, TZ, 5433/ayrı port) eklendi |
+| `javac` ile derleme yapılmıyor | Korundu (kullanıcı tercihi); `/tmp/.../scratch` ifadesi "scratch dizini" yapıldı |
+| npm/pypi erişilebilir, jsdelivr erişilemiyor | Sandbox maddesine birleştirildi, yerel durum eklendi |
+| Docker Engine var | Korundu; yerelde 29.8.0 görüldü; "mevcut container'lara dokunma" kuralı genelleştirildi (sandbox'taki iki container yerine, yerelde ayrıca `n8n-bootcamp` ve `lp-table-fix-test-db` da var) |
+| Branch / `//` yorum maddeleri | Korundu |
+| (yeni) JDK 21 / Lombok | EKLENDİ (aşağıda) |
+| (yeni) MockMvc | `known-constraints.md`'deki Boot 4 maddesine işaretçi |
+
+### 15.3 JDK 21 / Lombok — doğrulama ve konum
+Doğrulama (2026-11-05, kopya dizinde temiz derleme; çalışma ağacının `target/`'ı kullanılmadı): `pom.xml` `java.version` = 21; Lombok `1.18.46` (Boot 4.1.0 BOM, `spring-boot-dependencies-4.1.0.pom:130`); Temurin 26 ile `mvn -o compile` → **BUILD FAILURE, 200 "cannot find symbol"** (örn. `Topic.getCategory()`, `CourseAccessPolicy.java:85`); Temurin 21 ile aynı kaynak → **BUILD SUCCESS**. JDK 22-25 denenmedi; kök neden izole edilmedi (pom'da `annotationProcessorPaths` yok; JDK 23+ örtük annotation processing'i varsayılan kapatır -- bu yalnızca olası açıklama, burada kanıtlanmadı). Konum: **CLAUDE.md "Bilinen Kısıtlar" ilk madde** ("Maven'ı JDK 21 ile çalıştır… `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`"), CI maddesi de Temurin 21'i anar; ayrıca kullanıcı belleği `build-with-jdk21.md` (2026-10-17) aynı kuralı kaydediyor.
+
+### 15.4 ZIP teslim kuralı — korundu, değiştirilmedi
+Konum: CLAUDE.md "Token ve Bağlam Verimliliği" bölümü, "ZIP teslimatı" maddesi (bu bölümde HİÇBİR değişiklik yapılmadı; Aşama 5 kapsamı Proje Yapısı + Bilinen Kısıtlar). Neden korunuyor: (1) kullanıcı kararı (Aşama 5'te sorulacaktı; kullanıcı "şimdilik koru, geçersiz olduğuna dair kanıt yok" dedi); (2) kural, eski sandbox'ta (kullanıcının dosyaları elle kopyaladığı akış) konmuş; bu repoda onu geçersiz kılan bir ifade yok. Not (kanıt DEĞİL, gözlem): son oturumlarda değişiklikler doğrudan yerel repoya commit ediliyor, yani kural fiilen kullanılmıyor olabilir; geçerliliği kullanıcının kararıdır.
+
+### 15.5 Dokunulmadığı doğrulananlar
+Faz 96 ve Faz 114 paragrafları, Faz 150 ve Faz 155-159 paragrafları (`INSERT INTO quiz`, `ON CONFLICT`, `NOT EXISTS`, `auto-publish` kuralları) CLAUDE.md'de duruyor (kontrol: önceki sürüme göre sayılar aynı, `GÜNCELLEME (Faz 96)`=1, `(Faz 114)`=1, `(Faz 150)`=1, `(Faz 155-159)`=1). Kod ve README dosyaları bu aşamada değiştirilmedi.
