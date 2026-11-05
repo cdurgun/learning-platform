@@ -34,6 +34,11 @@ bir alternatiftir, bu skill onu kullanmaz). SQL elle yazılmaz: sorular bir JSON
      — migration'ları temiz `learning_test` veritabanına uygular. Bu makinede Maven
      varsayılan JDK'sı (26) Lombok'u kırar, JDK 21 şart.
    - Soru ve bağlantı sayılarını `learning_test`'te SQL ile say (dil başına çift sayısı kadar).
+   - Tekrar kontrolü: `check` spec içinde ve konunun mevcut havuzunda BİREBİR (normalize) aynı
+     soruyu hata sayar; benzer ama farklı sorular için bulanık (near-duplicate) tarama YOKTUR,
+     onu `preview` çıktısında gözle yap (aynı cümle kalıbı, aynı senaryo).
+   - İsteğe bağlı uçtan uca doğrulama: uygulamayı çalıştırıp quiz'i gerçek HTTP ile gönder
+     (tüm doğrular → tam skor; MULTIPLE_CHOICE'ta kısmi doğru → o soru yanlış sayılır).
    - Link migration'ları idempotent olmalı: aynı veritabanında ikinci kez uygulanınca
      (ya da promotion zaten çalışmışken) soru/link sayısı değişmemeli (bkz. "Migration kuralları").
    - Yeni eklenen migration'ın gerçekten uygulandığından emin ol: `mvn -o flyway:migrate`
