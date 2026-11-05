@@ -1960,6 +1960,54 @@ def cmd_promote_review(sheet: Path, reviewer: str):
         sys.exit(f"ABORT: {e}")
 
 
+IDENTITY_HASH_LINE = re.compile(r"^identity-hash: mode=(\S+) distinct=(\d+) allOne=(true|false) "
+                                r"text=(Object@1|Object@<hash>) consistent=(true|false)$")
+
+
+def identity_hash_selftest() -> int:
+    """The identity-hash variant must really change identity hashes, or identity text
+    ("Dog@1b6d3586") would print the same in every run and be staged. Runs IdentityHashProbe
+    without and with that variant's options; an option the JVM rejects, or accepts but ignores
+    (an unsupported value such as hashCode=9 is accepted silently), is a FAIL, never a PASS.
+    Returns the number of failures."""
+    variant = next((v for v in VARIANTS if v[0] == "identity-hash"), None)
+    if variant is None:
+        print("FAIL IdentityHashProbe: no identity-hash variant in VARIANTS")
+        return 1
+    compiled = compile_example(SELFTEST_SOURCES / "IdentityHashProbe.java", WORK / "selftest__IdentityHashProbe")
+    if compiled["exit"] != 0:
+        print(f"FAIL IdentityHashProbe: does not compile: {compiled['stderr'].decode('utf-8', 'replace')[:300]}")
+        return 1
+    failures, texts = 0, {}
+    for label, cpus, extra in [("base", "2", []), variant]:
+        result = run_variant("IdentityHashProbe", compiled["classes"], cpus, extra)
+        text = result["stdout"].decode("utf-8", "replace").strip()
+        stderr = result["stderr"].decode("utf-8", "replace").strip()
+        match = IDENTITY_HASH_LINE.match(text)
+        if result["exit"] != 0 or not match:
+            reason = stderr.splitlines()[0] if stderr else f"exit={result['exit']} stdout={text!r}"
+            print(f"FAIL IdentityHashProbe [{label}]: JVM option not supported or probe failed: {reason}")
+            failures += 1
+            continue
+        mode, distinct, all_one, shown, consistent = match.groups()
+        texts[label] = shown
+        if label == "base":
+            ok = all_one == "false" and int(distinct) > 1 and shown == "Object@<hash>" and consistent == "true"
+            detail = "identity hashes vary"
+        else:
+            ok = mode == "2" and all_one == "true" and shown == "Object@1" and consistent == "true"
+            detail = "every identity hash is 1" if ok else "options accepted but identity hashes unchanged"
+        failures += not ok
+        print(f"{'PASS' if ok else 'FAIL'} IdentityHashProbe [{label} {' '.join(extra) or 'no options'}]: "
+              f"{detail}: {text}")
+    if len(texts) == 2:
+        ok = texts["base"] != texts[variant[0]]
+        failures += not ok
+        print(f"{'PASS' if ok else 'FAIL'} IdentityHashProbe: identity text differs between base and "
+              f"{variant[0]} ({texts['base']} vs {texts[variant[0]]}), so generate cannot stage it")
+    return failures
+
+
 def cmd_selftest():
     """Runs probe programs under exactly the same container settings and checks each restriction."""
     cleanup_leftover_containers()
@@ -1980,6 +2028,7 @@ def cmd_selftest():
             ok = result["exit"] == 0 and text.endswith(expected)
             failures += not ok
             print(f"{'PASS' if ok else 'FAIL'} {probe}: {text}")
+        failures += identity_hash_selftest()
         # Exactly like generate: one compile, then every variant in its own container, in order.
         compiled = compile_example(SELFTEST_SOURCES / "WorkdirProbe.java", WORK / "selftest__WorkdirProbe")
         for label, cpus, extra in VARIANTS:

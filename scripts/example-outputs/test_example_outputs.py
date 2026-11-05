@@ -388,6 +388,8 @@ class SandboxWorkdirTest(unittest.TestCase):
 
         def fake_run(main_class, classes, cpus, extra_props):
             ran.append((main_class, cpus, tuple(extra_props)))
+            if main_class == "IdentityHashProbe":
+                return identity_hash_run(extra_props)
             text = {"NetworkProbe": "network: blocked", "FilesystemProbe": "filesystem: ok",
                     "WorkdirProbe": "workdir: ok", "IdentityProbe": "identity: ok",
                     "ThreadLimitProbe": "threads: limited", "StdinProbe": "stdin: empty"}.get(main_class, "")
@@ -405,6 +407,69 @@ class SandboxWorkdirTest(unittest.TestCase):
         self.assertEqual([r for r in ran if r[0] == "WorkdirProbe"],
                          [("WorkdirProbe", cpus, tuple(extra)) for _, cpus, extra in eo.VARIANTS])
         self.assertEqual(out.getvalue().count("PASS WorkdirProbe ["), len(eo.VARIANTS))
+        self.assertEqual(out.getvalue().count("PASS IdentityHashProbe"), 3, out.getvalue())
+
+
+BASE_HASH_LINE = "identity-hash: mode=unavailable distinct=16 allOne=false text=Object@<hash> consistent=true"
+VARIANT_HASH_LINE = "identity-hash: mode=2 distinct=1 allOne=true text=Object@1 consistent=true"
+
+
+def identity_hash_run(extra_props, supported=True, honoured=True):
+    """What the real JVM printed for IdentityHashProbe (2026-11-05, pinned image)."""
+    if not extra_props:
+        return {"exit": 0, "timed_out": False, "truncated": False, "stdout": BASE_HASH_LINE.encode(), "stderr": b""}
+    if not supported:
+        return {"exit": 1, "timed_out": False, "truncated": False, "stdout": b"",
+                "stderr": b"Unrecognized VM option 'hashCode=2'\nError: Could not create the Java Virtual Machine."}
+    line = VARIANT_HASH_LINE if honoured else BASE_HASH_LINE.replace("mode=unavailable", "mode=9")
+    return {"exit": 0, "timed_out": False, "truncated": False, "stdout": line.encode(), "stderr": b""}
+
+
+class IdentityHashSelftestTest(unittest.TestCase):
+
+    def run_check(self, fake_run, variants=None):
+        compiled = {"exit": 0, "timed_out": False, "stdout": b"", "stderr": b"", "classes": Path("/x/classes")}
+        with mock.patch.object(eo, "compile_example", return_value=compiled), \
+                mock.patch.object(eo, "run_variant", side_effect=fake_run), \
+                mock.patch.object(eo, "VARIANTS", variants if variants is not None else eo.VARIANTS), \
+                redirect_stdout(io.StringIO()) as out:
+            failures = eo.identity_hash_selftest()
+        return failures, out.getvalue()
+
+    def test_the_probe_checks_identity_hashes_not_the_user_like_identity_probe(self):
+        hash_probe = (eo.SELFTEST_SOURCES / "IdentityHashProbe.java").read_text(encoding="utf-8")
+        user_probe = (eo.SELFTEST_SOURCES / "IdentityProbe.java").read_text(encoding="utf-8")
+        self.assertIn("System.identityHashCode", hash_probe)
+        self.assertIn("getVMOption(\"hashCode\")", hash_probe)
+        self.assertNotIn("identityHashCode", user_probe)
+        self.assertNotIn("hashCode", user_probe)
+        self.assertIn("-XX:hashCode=2", dict((v[0], v[2]) for v in eo.VARIANTS)["identity-hash"])
+
+    def test_a_working_variant_passes_base_variant_and_difference(self):
+        failures, out = self.run_check(lambda m, c, cpus, extra: identity_hash_run(extra))
+        self.assertEqual(failures, 0, out)
+        self.assertEqual(out.count("PASS"), 3, out)
+        self.assertIn("every identity hash is 1", out)
+        self.assertIn("Object@<hash> vs Object@1", out)
+
+    def test_an_unsupported_option_is_reported_as_a_failure(self):
+        failures, out = self.run_check(lambda m, c, cpus, extra: identity_hash_run(extra, supported=False))
+        self.assertGreaterEqual(failures, 1)
+        self.assertIn("FAIL IdentityHashProbe [identity-hash]: JVM option not supported", out)
+        self.assertIn("Unrecognized VM option", out)
+        self.assertNotIn("identity text differs", out)
+
+    def test_an_option_accepted_but_ignored_is_a_failure_not_a_silent_pass(self):
+        failures, out = self.run_check(lambda m, c, cpus, extra: identity_hash_run(extra, honoured=False))
+        self.assertEqual(failures, 2, out)
+        self.assertIn("options accepted but identity hashes unchanged", out)
+        self.assertIn("FAIL IdentityHashProbe: identity text differs", out)
+
+    def test_a_missing_variant_is_a_failure(self):
+        failures, out = self.run_check(lambda *a: self.fail("must not run"),
+                                       variants=[v for v in eo.VARIANTS if v[0] != "identity-hash"])
+        self.assertEqual(failures, 1)
+        self.assertIn("no identity-hash variant", out)
 
 
 class TextOnlyFlagTest(unittest.TestCase):
