@@ -766,46 +766,14 @@ bekleniyor. Testler **92/92**. Migration'lar hâlâ V1'den **V430'a kadar
 boşluksuz** (bu Faz'da migration YOK). Ayrıntılı uygulama akışı için
 `docs/phase-log.md`'de "Faz 148"i grep'le.
 
-**GÜNCELLEME (Faz 150):** **`git-github` kursunun TÜM 11 topic'i (2
-kategori: `git-fundamentals` 6/6, `advanced-git` 5/5) artık "Test Your
-Knowledge" quiz'ine sahip -- kurs artık uçtan uca 220 soruyla (110 EN +
-110 TR) tamamlandı.** Bu Faz'da 9 topic (`undoing-changes`,
-`branches-and-merging`, `github-and-remotes`, `pull-requests`,
-`rebase-and-squash`, `merge-conflicts`, `stash`,
-`advanced-git-and-best-practices`, `practical-git-github-workflow`) --
-`git-fundamentals`/`working-with-commits` zaten Faz 148'den önce
-tamamlanmıştı (bkz. V467-V470) -- ayrı kullanıcı isteklerinde, AYNI
-kurulmuş desenle işlendi: her topic için 10 EN + 10 TR soru (genelde
-7 SINGLE_CHOICE + 3 MULTIPLE_CHOICE, MULTIPLE_CHOICE'ta her zaman tam
-2 doğru şık) gerçek AI-Judge auto-publish endpoint'i (`POST
-/api/internal/questions/{id}/auto-publish`) ile PUBLISHED edildi,
-sonra V467-V468'in portable promotion-migration deseniyle (topic/quiz
-slug'larından dinamik id çözümü, `NOT EXISTS` + `ON CONFLICT DO
-NOTHING` duplicate-güvenliği) mevcut sabit quiz'e pozisyon 1-10'da
-link'lendi. **4 topic'te (`stash` 1, `advanced-git-and-best-practices`
-2, `practical-git-github-workflow` 1) CODE_OUTPUT tipi soru da
-kullanıldı** -- her biri dersin GERÇEKTEN gömdüğü bir komut çıktısı
-örneğine (`git stash list`, `git reflog`, `git blame`,
-`FullWorkflowDemo.sh`'ın rebase-conflict çıktısı) dayanıyor, hiçbiri
-zorlama değil (proje kuralı: CODE_OUTPUT yalnızca genuine bir
-komut-çıktısı yorumlama senaryosu varsa kullanılır). Her topic
-sonrasında AYNI doğrulama seti çalıştırıldı: yapısal SQL kontrolü (4
-şık, tip başına doğru sayısı), near-duplicate taraması (yalnızca
-boilerplate soru-kalıbı örtüşmesi olan yanlış pozitifler elendi),
-doğru-cevap harf dağılımının hesaplanıp raporlanması (her topic'te
-dengeliydi, tek bir harf en fazla 4/13 -- matematiksel olarak
-kaçınılmaz), atılabilir bir `postgres:16-alpine` container'ında
-sıfırdan fresh-DB migration doğrulaması + idempotency re-run,
-mevcut dev DB'de idempotency re-run, gerçek HTTP quiz submit'i (tam
-doğru → tam skor, kısmi MULTIPLE_CHOICE → o soru yanlış), ve `mvn
-test` (Faz 140 workaround'uyla, her seferinde 100/100). Migration'lar
-şu an V1'den **V488'e kadar boşluksuz**. Bu Faz sırasında bir gerçek,
-sandbox-özel bulgu keşfedildi: `mvn -o flyway:migrate`'in
-`target/classes`'ı (derlenmiş çıktı) taradığı, `src/main/resources`'ı
-DEĞİL -- yeni bir migration eklenip hemen disposable-DB doğrulamasına
-geçilirse migration SESSİZCE atlanıyor (bkz.
-`docs/known-constraints.md` "Faz 149"). Ayrıntılı uygulama akışı için
-`docs/phase-log.md`'de "Faz 150"yi grep'le.
+**Quiz sorusu eklemek:** `.claude/skills/quiz-questions` skill'i tek doğruluk kaynağıdır
+(4-7 çift, `INSERT INTO quiz` shell kontrolü, `NOT EXISTS`/`ON CONFLICT DO NOTHING` link
+migration'ları, auto-publish ve diğer yayın yolları, MULTIPLE_CHOICE kuralı). Skill'siz de
+unutulmaması gereken kural: bir topic'e quiz sorusu eklemeden önce o topic'in var olan
+migration'larında `grep -rl "INSERT INTO quiz"` ile quiz shell'inin zaten eklenip eklenmediğini
+tara; ekleniyorsa shell migration'ı yazma (`duplicate key` hatası). Kurs bazlı kapsam ve
+tarihçe: `docs/phase-log.md` (Faz 150, Faz 155-159); shell hatasının hikâyesi:
+`docs/known-constraints.md` ("Faz 157").
 
 **GÜNCELLEME (Faz 154):** java/spring-boot/react/ai/postgresql/git-github'den
 sonra YEDİNCİ Course olarak **`docker` kursu eklendi** (`course.sort_order=7`)
@@ -863,32 +831,6 @@ iki önceden var olan ilgisiz untracked dosyası (`AGENTS.md`,
 `scripts/promote-published-questions.sql`) BİLİNÇLİ OLARAK commit'e dahil
 edilmedi. Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 154"i
 grep'le.
-
-**GÜNCELLEME (Faz 155-159):** Faz 154'ten sonra beş ayrı Faz'da, `ai`
-kursunun kalan dört kategorisi (`ai-fundamentals`+`large-language-models`
-Faz 155'te, `tools-mcp`+`ai-agents` Faz 156'da), `docker` kursunun 8 quiz-
-uygun topic'i (`docker-practical-project` hariç, Faz 157'de) ve `postgresql`
-kursunun HER İKİ kategorisi (`postgresql-foundations` Faz 158'de,
-`advanced-postgresql` Faz 159'da) için quiz soruları eklendi -- git-github'ın
-Faz 150'deki desenin AYNISI (n8n/OpenAI/AI Judge KULLANILMADI, tüm sorular
-doğrudan bir Claude Code oturumunda üretilip kendi kendine review edildi).
-**Faz 159 ile birlikte `postgresql` kursu 14/14 topic'le (Foundations 10 +
-Advanced 4) uçtan uca quiz kapsamına kavuştu** -- git-github'ın Faz 150'deki
-milestone'uyla aynı nitelikte. **Faz 157'de kurulan, kalıcı bir konvansiyon:**
-topic başına soru sayısı artık her kategoride sabit 7 değil, dersin gerçek
-uzunluğuna/kavram yoğunluğuna göre 4-7 arasında ESNEK belirleniyor (EN=TR
-eşitliği her topic için hâlâ korunarak) -- `docker`/`postgresql` batch'lerinin
-ikisi de bu deseni kullandı, `ai` kursunun Faz 155/156'daki batch'leri henüz
-eski sabit-7 deseniyle yazılmıştı. **Faz 157'de GERÇEK bir hata bulunup
-düzeltildi:** `docker` kursunun topic-oluşturma migration'ları (git-github
-gibi, ama `ai`/`postgresql`'in aksine) her topic için quiz shell'ini İÇERİK
-YAZILIRKEN zaten ekliyormuş -- ilk taslağın kendi shell migration'ı bu yüzden
-disposable-DB'de gerçek bir `duplicate key` hatasıyla çakıştı, 8 fazladan
-dosya silinip batch yeniden numaralandırıldı (bkz. `docs/known-constraints.md`
-"Faz 157"). **Kalıcı kural:** yeni bir kursa/topic'e quiz soruları eklemeden
-önce, o topic'in var olan migration'larında `grep -rl "INSERT INTO quiz"` ile
-shell'in zaten var olup olmadığı ÖNCE kontrol edilmeli. Ayrıntılı uygulama
-akışı için `docs/phase-log.md`'de "Faz 155" ile "Faz 159" arasını grep'le.
 
 ## Proje Yapısı
 
