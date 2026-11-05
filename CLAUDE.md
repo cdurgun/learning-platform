@@ -474,26 +474,15 @@ maliyeti artırır. Kural seti:
 - Kod örnekleri için zaten geçerli olan kural aşağıdaki "Örnek Yazım
   İlkeleri"nde — burada tekrar edilmiyor, orası tek doğruluk kaynağı.
 
-**ZIP teslimatı (Faz 75'ten itibaren DEĞİŞTİ — kullanıcı kararı):**
+**ZIP teslimatı (Faz 75 kararı, koşullu hâle getirildi):**
 
-- Artık HER ZAMAN tam proje zip'i DEĞİL, **yalnızca o görev için
-  oluşturulan/değiştirilen dosyalar** zip'lenir (kullanıcı kendi yerel
-  kopyasına bunları üzerine kopyalayıp birleştiriyor — proje Maven/Spring
-  olduğu için eksik dosya olmadıkça derlenmeye devam eder).
-- Zip kökü **`learning-platform`** olarak kalır (ChatGPT'nin önerdiği
-  `java-learning-platform` kullanıcı tarafından reddedildi — gerçek klasör
-  adıyla tutarsız olurdu, ayrıca proje artık yalnızca Java değil dört kurs
-  içeriyor).
-- Orijinal dizin yapısı proje köküne göre korunur (ör.
-  `src/main/resources/content/tr/{slug}.md`).
-- Değişmemiş dosyalar asla tekrar eklenmez/kopyalanmaz; `target/`,
-  `node_modules/`, `.git/`, build çıktıları ve diğer üretilmiş dosyalar
-  hariç tutulur.
-- **Zip oluşturmadan önce:** (1) bu görev için değişen dosyaların listesini
-  çıkar, (2) yalnızca bunların zip'e girdiğini doğrula, (3) zip kökünün
-  `learning-platform` olduğunu doğrula, (4) değişmemiş/üretilmiş dosyaların
-  dışarıda kaldığını doğrula.
-- Tam proje zip'i yalnızca kullanıcı açıkça isterse üretilir.
+- Git deposuna erişim varsa Git üzerinden çalış; ZIP gerekmez.
+- Erişim yoksa YALNIZCA bu görevde oluşturulan/değiştirilen dosyaları ZIP'e
+  al, tüm projeyi tekrar paketleme (tam proje zip'i yalnızca kullanıcı açıkça
+  isterse). Zip kökü `learning-platform`, yollar proje köküne göre korunur
+  (ör. `src/main/resources/content/tr/{slug}.md`); `target/`, `node_modules/`,
+  `.git/` ve diğer üretilmiş dosyalar hariç. Zip'ten önce değişen dosya
+  listesini çıkarıp yalnızca bunların girdiğini doğrula.
 
 ## Örnek Yazım İlkeleri (Faz 18'den itibaren, tüm konular için geçerli)
 
@@ -545,25 +534,12 @@ güncelleme) → `V{n+3}__{slug}_sections_N_to_ek.sql` (ikinci yarı + ekler) �
 
 ## Faz Geçmişi ve Kararlar
 
-**Faz 76'da CLAUDE.md'yi küçültmek için taşındı** (kullanıcı+ChatGPT kararı,
-bkz. Faz 75/76 notları — özet aşağıda "Bilinen Kısıtlar" bölümünde de var).
-76 fazın (Faz 1'den bu yana) TAM, ayrıntılı anlatımı artık burada değil,
-**`docs/phase-log.md`**'de — hiçbir şey silinmedi, birebir taşındı.
-
-**KALICI KURAL (Faz 76'dan itibaren):** yeni bir Faz tamamlandığında, tablo
-satırı artık CLAUDE.md'ye DEĞİL, doğrudan `docs/phase-log.md`'nin "Tamamlanan
-Fazlar" tablosuna eklenir. Buradaki (aşağıdaki) özet yalnızca büyük/kilometre
-taşı niteliğindeki değişikliklerde (yeni kategori/kurs, mimari karar, CLAUDE.md
-organizasyon değişikliği) güncellenir — HER Faz'da değil, aksi hâlde CLAUDE.md
-yeniden şişmeye başlar.
-
-**Yeni bir konuya/karara başlamadan önce şunu yap:** `docs/phase-log.md`'yi
-`grep`'le (ilgili anahtar kelimeyle — bir kategori slug'ı, bir teknik terim, "Faz
-N" gibi). Bu dosyayı `Read` ile baştan sona okumaya GEREK YOK — script/grep ile
-arama yeterli (bkz. "Token ve Bağlam Verimliliği" yukarıda). Özellikle şunlar
-için mutlaka önce oraya bak: bir kategori/topic'in isimlendirme konvansiyonu,
-bir migration deseni, daha önce çözülmüş bir hata sınıfı, ya da "bunu daha önce
-nasıl yapmıştık" sorusu.
+Biten fazlar `docs/phase-log.md` tablosuna eklenir, CLAUDE.md'ye değil; buraya
+yalnızca yeni kurs/kategori, mimari karar ya da CLAUDE.md organizasyon değişikliği
+gibi kilometre taşları özetlenir. Yeni bir konuya ya da karara başlamadan önce
+phase-log'u ilgili anahtar kelimeyle (kategori slug'ı, teknik terim, "Faz N")
+`grep`'le, baştan sona `Read` etme. İsimlendirme konvansiyonu, migration deseni ve
+daha önce çözülmüş hata sınıfları için önce oraya bak.
 
 **Şu an proje durumu (Faz 82 itibarıyla):** 4 kurs (`java`, `spring-boot`,
 `react`, `ai`). `ai` kursunda artık 5 kategori var: `ai-fundamentals`,
@@ -601,29 +577,19 @@ TR+EN tamamlandı** (`introduction-to-generics`, `generic-methods`,
 `java-basics` içine hiç konulmadı, `exceptions`/Faz 99 ile aynı desen).
 Kullanıcının açık talimatı gereği bu kategoriye bir Pratik Proje
 eklenmedi. Migration'lar şu an V1'den **V358'e kadar boşluksuz**.
-**GÜNCELLEME (Faz 114):** `spring-boot` kursuna, spring-core(1)/spring-
-mvc(2)/microservices(3)'ten sonra sort_order=4'e eklenen **`advanced-
-spring` kategorisi artık 4/4 topic TR+EN tamamlandı**: `java-bean-
-validation` (Faz 110), `exception-handling` (Faz 111), `task-execution-
-and-scheduling` (Faz 112, `@Async`/`CompletableFuture` anlatımı Faz
-113'te pedagojik olarak genişletildi), `spring-batch` (Faz 114) --
-spring-core/spring-mvc/microservices'in İÇİNE değil, kendi ayrı üst-
-seviye kategorisi. Kullanıcının orijinal "Scheduling and Batch Jobs"
-fikri Faz 112'de ikiye bölünmüştü, ikinci yarısı (`spring-batch`) Faz
-114'te tamamlandı. **ÖNEMLİ:** ilk üç topic BİLİNÇLİ OLARAK mevcut Spring
-topic'lerinin (spring-mvc'deki `validation-exception-handling` Faz 22,
-spring-core'daki `transaction-management` Faz 82, `java` kursundaki
-`threads` Faz 45) ZATEN kapsamlıca işlediği temelleri TEKRAR ÖĞRETMİYOR
--- yalnızca o topic'lerin üzerine inşa edilen, gerçekten yeni/daha derin
-materyale odaklanıyor. `spring-batch` bunun İSTİSNASI -- müfredata İLK
-KEZ giren tamamen yeni bir teknoloji olduğu için temellerden başlıyor,
-TEK tutarlı bir çalışan örnek (CSV'den sipariş içe aktarma) etrafında
-kurulu (bkz. Faz 110/111/112/113/114 notları). `spring-boot-starter-batch`
-pom.xml'de bir bağımlılık DEĞİL -- `microservices` kategorisinin Kafka/
-Eureka örnekleriyle AYNI kısıt (elle, dikkatle yazılmış, derlenmemiş
-örnekler). Kullanıcının açık talimatı gereği bu kategoriye henüz bir
-Pratik Proje eklenmedi. Migration'lar şu an V1'den **V371'e kadar
-boşluksuz**.
+**GÜNCELLEME (Faz 114):** `spring-boot` kursunun `advanced-spring` kategorisi
+(4 topic, TR+EN) tamamlandı; spring-core/spring-mvc/microservices'in içine değil,
+kendi ayrı üst-seviye kategorisidir. **Kapsam kuralı (yalnızca Spring Boot,
+Spring Data JPA ve PostgreSQL kurslarında geçerli):** bu kurslarda yeni bir
+konu, mevcut konularda ZATEN kapsamlıca işlenmiş temelleri tekrar öğretmez;
+yalnızca o konuların bilinçli açık bıraktığı boşlukları doldurur ve gerçek
+migration başlıklarıyla doğrulanmış çapraz referans verir. İstisna: müfredata ilk
+kez giren yeni bir teknoloji (`spring-batch`) temellerden başlar.
+`spring-boot-starter-batch` pom.xml'de bir bağımlılık DEĞİL; bu kategorinin
+örnekleri, `microservices`'in Kafka/Eureka örnekleri gibi, elle yazılmış ve
+derlenmemiştir. Bu kural Java ve React kurslarına genellenmez. Kullanıcının açık
+talimatı gereği bu kategoriye henüz bir Pratik Proje eklenmedi. Ayrıntı:
+`docs/phase-log.md` (Faz 110-114).
 
 **GÜNCELLEME (Faz 123):** `spring-boot` kursuna, spring-core(1)/spring-
 mvc(2)/microservices(3)/advanced-spring(4)'ten sonra sort_order=5'e
@@ -712,25 +678,14 @@ kursa hiçbir yerinde bir Pratik Proje eklenmedi. Migration'lar şu an
 V1'den **V427'ye kadar boşluksuz**. Kesin sayılar ve tam liste için
 `docs/phase-log.md`.
 
-**GÜNCELLEME (Faz 139):** Yeni bir top-level **Quiz Area** eklendi --
-kategori-kapsamlı, rastgele soru çekilen, yeniden kullanılabilir quiz
-tanımları (`QuizDefinition`, `course` FK + kategorilerle `@ManyToMany`,
-boş kategori kümesi = tüm kurs konvansiyonu). Var olan sabit/topic-gömülü
-`Quiz`/`QuizQuestion`/`QuizService`'e HİÇ DOKUNULMADI -- Quiz Area
-BİLİNÇLİ OLARAK ayrı, ek bir kavram (bkz. "Mimari" bölümündeki Faz 87
-maddesi, Question Pool). Sidebar'da (`fragments/layout.html`) course
-ağacından bağımsız, kendi "QUIZ" bölümü var (`QuizNav`/
-`QuizNavigationService`, `GlobalModelAttributes`'e sitewide enjekte
-edilir). Submit/puanlama YENİDEN YAZILMADI -- `PracticeService.submit`
-AYNEN kullanır (draw tarafı yeni, submit tarafı Practice ile paylaşılan).
-`java` kursu için gerçek seed (`basic-java`=`java-basics`+`control-flow`,
-`advanced-java`=`exceptions`+`generics`+`collections`+`oop`+`concurrency`+
-`functional-interfaces-streams`, `all-java`=tüm kurs) V430'da eklendi;
-`spring-boot` ve `ai` kursları için seed'ler sonradan eklendi;
-`react`, `postgresql`, `git-github` ve `docker` kurslarının henüz bir
-`quiz_definition` seed'i yok (migration taraması, 2026-11-05). Soru
-çekme/cevap gönderme UI'ı vardır (`quiz-play.html`, CSRF muafiyetli submit rotası). Ayrıntılı uygulama akışı için
-`docs/phase-log.md`'de "Faz 139"u grep'le.
+**GÜNCELLEME (Faz 139):** **Quiz Area** (`QuizDefinition`: `course` FK +
+kategorilerle `@ManyToMany`) sabit quiz'in (`Quiz`/`QuizService`) ve Practice'in
+YERİNE GEÇMEZ; bilinçli olarak ayrı, ek bir kavramdır ve var olan sabit quiz
+koduna dokunulmadı (bkz. "Mimari" bölümündeki Faz 87 maddesi, Question Pool).
+**Boş kategori kümesi = tüm kurs.** Soru çekme (draw) tarafı Quiz Area'ya özgüdür;
+submit/puanlama YENİDEN YAZILMADI, `PracticeService.submit` Practice ile
+paylaşılır. Hangi kurslarda `quiz_definition` seed'i olduğu:
+`docs/architecture-rationale.md` §7. Ayrıntı: `docs/phase-log.md` "Faz 139".
 
 **GÜNCELLEME (Faz 148):** **EN->TR çeviri workflow'u** eklendi -- mevcut
 PUBLISHED/PENDING_REVIEW EN sorularının TR karşılıklarını üretip
@@ -774,62 +729,17 @@ tara; ekleniyorsa shell migration'ı yazma (`duplicate key` hatası). Kurs bazl�
 tarihçe: `docs/phase-log.md` (Faz 150, Faz 155-159); shell hatasının hikâyesi:
 `docs/known-constraints.md` ("Faz 157").
 
-**GÜNCELLEME (Faz 154):** java/spring-boot/react/ai/postgresql/git-github'den
-sonra YEDİNCİ Course olarak **`docker` kursu eklendi** (`course.sort_order=7`)
--- Java/Spring Boot'u zaten bilen ama Docker'ı bilmeyen bir geliştirici için,
-yalnızca komut listesi değil Docker'ın gerçek Java geliştirme akışına nasıl
-oturduğunu öğreten bir müfredat. **2 kategori, 9 topic, hepsi TR+EN, tek
-seferde tüm kurs değil topic-topic kullanıcı onayıyla inşa edildi**
-(kullanıcının açık pacing kararı, postgresql/git-github'daki desenle aynı):
-`docker-fundamentals` (sort_order=1, 4 topic -- `what-is-docker`,
-`docker-cli-fundamentals`, `docker-images-and-dockerfiles`,
-`dockerizing-a-spring-boot-application`) ve `docker-in-practice`
-(sort_order=2, 5 topic -- `docker-networking`, `docker-volumes`,
-`docker-compose`, `production-docker-for-java-applications`,
-`docker-practical-project`). Migration'lar V493-V519 (course+category+topic
-shell → code_example/quiz-shell sections → publish-english, git-github'ın
-V432/V433/V434 üçlü-dosya deseninin BİREBİR aynısı; `docker-networking`'in
-V505'i AYRICA 2. kategoriyi de kuruyor, `rebase-and-squash`'ın V450'siyle
-aynı desen). **İçerik bu projenin kendi gerçek gerçeklerine sıkı sıkıya
-topraklandı** -- jenerik Docker örnekleri değil: `pom.xml`'deki gerçek
-coordinate'ler (`com.cdurgun:learning-platform:0.1.0-SNAPSHOT`, Java 21),
-`application-prod.yml`'in kendi gerçek yorumu (sırların ortam
-değişkenlerinden okunması), ve Spring Data JPA kursundaki gerçek topic
-başlıklarına ("Entities and the Repository Abstraction", "JPA, Hibernate,
-and Spring Data JPA") doğrulanmış çapraz referanslar. `docker-practical-
-project` (kapanış dersi), React kategorilerinin ayrı-repo/tag konvansiyonu
-(Faz 30) yerine BİLİNÇLİ OLARAK gömülü kaldı -- deliverable config + küçük
-bir uygulama olduğu için, ayrı bir build/tag yaşam döngüsü gerektiren bir
-client-side proje değil; kendi self-contained "task tracker" Spring Boot +
-PostgreSQL uygulaması (tek dosyada nested `@Entity`/`Repository`/
-`@RestController`, bu kodun kendi çok-sınıflı örnek konvansiyonuyla aynı,
-bkz. `EnumeratedFieldExample.java`), kursun her önceki dersinin (multi-stage
-build, non-root user, `HEALTHCHECK`, named volume, otomatik networking,
-sağlık-koşullu `depends_on`) üzerine hiçbir yeni mekanizma eklemeden inşa
-ediyor. **Kullanıcının ayrı bir "full-course review" isteği üzerine
-kapsamlı, salt-okunur bir doğrulama geçişi yapıldı** (migration sıralaması,
-FK çözümlemesi, quiz shell tutarlılığı, `code_example`↔`{{}}` embed 1:1
-karşılığı, TR/EN self-reference doğruluğu, script reproducibility) ve GERÇEK
-4 sorun bulundu/düzeltildi: (1) `docker-images-and-dockerfiles`'ta 2
-`code_example` satırı (`CmdOnlyDockerfile`, `EntrypointDefaultCmdDockerfile`)
-hiçbir `{{}}` embed'ine karşılık gelmiyordu -- CMD vs ENTRYPOINT içeriği
-yanlışlıkla elle tekrar yazılmıştı, gerçek embed'lerle değiştirildi; (2)
-`docker-cli-fundamentals`'ta iki kesik self-reference (`docker stop`/`docker
-start` ve `docker ps` komut soneki eksikti); (3)
-`production-docker-for-java-applications`'ta bir kesik self-reference
-(`(Layer Caching)` soneki eksikti); (4) `docker-volumes`'un
-`VolumePersistenceDemo.sh`'ı, kendi oluşturmadığı bir `--network`'e bağımlıydı
--- temiz bir ortamda tek başına çalıştırılırsa başarısız olurdu, flag
-kaldırıldı. **Bu geçişte ayrıca bu sandbox'ta GERÇEKTEN çalışan bir Docker
-Engine olduğu keşfedildi** (`docker --version` → 29.6.2, ZATEN çalışan
-gerçek container'lar: `postgres:16-alpine` adıyla `learning-platform-db`,
-ve n8n) -- bkz. `docs/known-constraints.md` "Faz 154", bu daha önce hiç
-doğrulanmamış, gelecekteki Docker kursu bakımı için önemli bir yetenek.
-Tüm değişiklikler tek bir commit'te (`17531cb`) birleştirildi -- projenin
-iki önceden var olan ilgisiz untracked dosyası (`AGENTS.md`,
-`scripts/promote-published-questions.sql`) BİLİNÇLİ OLARAK commit'e dahil
-edilmedi. Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 154"i
-grep'le.
+**GÜNCELLEME (Faz 154):** YEDİNCİ Course olarak **`docker` kursu** eklendi
+(`course.sort_order=7`; `docker-fundamentals` 4 + `docker-in-practice` 5 topic,
+hepsi TR+EN). İçerik jenerik Docker örnekleri değil, bu projenin kendi gerçeklerine
+(`pom.xml` coordinate'leri, `application-prod.yml`, Spring Data JPA kursunun gerçek
+topic başlıkları) topraklanır. **Bilinçli istisna:** kapanış dersi
+`docker-practical-project`, React'in ayrı repo + tag kuralına (yukarıdaki "React
+course'unda her kategori..." maddesi, Faz 30) UYMAZ ve derste gömülü kalır:
+teslim edilen şey config + küçük bir Spring Boot/PostgreSQL uygulamasıdır, ayrı bir
+build/tag yaşam döngüsü gerektiren bir istemci projesi değil. Docker örnekleri bu
+ortamda gerçekten çalıştırılıp doğrulanabilir (bkz. "Bilinen Kısıtlar", "Docker
+Engine var"). Ayrıntı: `docs/phase-log.md` "Faz 154".
 
 ## Dokümanlar ve Skill'ler
 
