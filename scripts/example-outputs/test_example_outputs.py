@@ -1130,6 +1130,20 @@ class ExceptionFlagTest(unittest.TestCase):
         self.assertIn("string literal", eo.RISK_NOTES["exception-message"])
         self.assertIn("JDK-generated", eo.RISK_NOTES["exception-message"])
 
+    def test_literal_variable_and_jdk_messages_get_the_same_flags_and_the_rule_is_manual(self):
+        literal = program('try { throw new IllegalStateException("order not found"); }\n'
+                          'catch (IllegalStateException e) { System.out.println(e.getMessage()); }')
+        built = program('int id = 42;\ntry { throw new IllegalStateException("order " + id + " not found"); }\n'
+                        'catch (IllegalStateException e) { System.out.println(e.getMessage()); }')
+        jdk = program('int zero = 0;\ntry { System.out.println(1 / zero); }\n'
+                      'catch (ArithmeticException e) { System.out.println(e.getMessage()); }')
+        self.assertEqual(flags_of(literal), flags_of(built))
+        self.assertEqual(flags_of(literal), flags_of(jdk))
+        self.assertEqual(eo.blocking_flags(flags_of(built)), [])
+        for text in (eo.RISK_NOTES["exception-message"], eo.__doc__):
+            self.assertIn("does not tell a literal", text)
+            self.assertIn("manual review rule", text.lower())
+
     def test_a_caught_exception_used_without_text_is_not_exception_text(self):
         flags = flags_of(program('try { run(); } catch (IOException | RuntimeException e) {\n'
                                  '    System.out.println("failed: " + e.getClass().getSimpleName());\n'

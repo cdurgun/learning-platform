@@ -74,6 +74,19 @@ with varied CPU count, ForkJoinPool parallelism, locale, timezone and
 identity-hash mode; any difference marks the example NONDETERMINISTIC and no
 .out is written. APIs whose output order or format is not fixed by the Java
 API contract are only flagged -- deciding is a human review step.
+
+Manual review rules the tool cannot check (it flags, the reviewer decides):
+  * Exception messages. The tool does not tell a literal message from one built from
+    variables or produced by the JDK: getMessage()/getLocalizedMessage() is the
+    informational exception-message flag, a caught exception printed whole is
+    exception-text, and all three kinds -- new X("order not found"), new X("order " + id
+    + " not found"), the JDK's "/ by zero" -- get the same flags and may print identically
+    in every variant. Only a string literal the program itself passes to its own
+    exception's constructor is approved; JDK messages are rejected, and messages built
+    from variables or runtime data are not approved unless each part is separately shown
+    to be fixed. Stack traces and anything on stderr never reach a panel (STDERR_NOT_EMPTY).
+  * A record's implicit toString() is the informational record-text flag; the 2026-11-01
+    review decision rejects such output.
 """
 
 import argparse
@@ -257,7 +270,9 @@ CONTRACT_FLAGS = [
     # Informational, set by stream_side_effects(): printing from inside a stream pipeline.
     ("stream-side-effects", None),
     # Informational: the message text of an exception. Allowed only when the program itself
-    # passes a string LITERAL to its own exception's constructor (see RISK_NOTES).
+    # passes a string LITERAL to its own exception's constructor (see RISK_NOTES). The tool
+    # does NOT tell a literal from a message built from variables or produced by the JDK --
+    # all three get this same flag; telling them apart is a manual review rule.
     ("exception-message", r"\.\s*get(?:Localized)?Message\s*\(\s*\)"),
     # Informational, set by caught_exception_text(): a caught exception printed as a whole
     # (println(e), "..." + e) -- class name + ": " + message.
@@ -307,7 +322,9 @@ RISK_NOTES = {
     "exception-message": "RISK exception-message: approve ONLY if every printed message is a string literal the "
                          "program itself passes to its own exception's constructor. Reject JDK-generated messages "
                          "(\"/ by zero\", \"For input string: ...\", index messages) and messages built from "
-                         "variables or runtime data unless each part is separately shown to be fixed.",
+                         "variables or runtime data unless each part is separately shown to be fixed. The tool "
+                         "does not tell a literal from a message built from variables or produced by the JDK; "
+                         "this is a manual review rule.",
     "exception-text": "RISK exception-text: a caught exception printed as a whole is the class name + \": \" + "
                       "message; the exception-message rule applies to the message part.",
     "stderr": "NOTE stderr: anything on stderr (stack trace, System.err) makes the run STDERR_NOT_EMPTY / RUN_ERROR, "
