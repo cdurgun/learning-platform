@@ -892,85 +892,71 @@ akışı için `docs/phase-log.md`'de "Faz 155" ile "Faz 159" arasını grep'le.
 
 ## Proje Yapısı
 
+Aşağıdaki liste yönlendirme içindir, tam sınıf listesi değildir; ayrıntı için dizine bak.
+
 ```
 src/main/java/com/cdurgun/learning/
-    domain/          Course, Category, Topic, TopicTranslation, CodeExample, Language, Difficulty,
-                     Question, QuestionOption, QuestionType, QuestionStatus, QuestionSource (soru
-                     havuzu -- Faz 87), Quiz, QuizQuestion (Quiz<->Question join/sıra entity'si),
-                     User, Role (opsiyonel kimlik doğrulama -- Faz 138), QuizDefinition (Quiz Area
-                     kapsam tanımı, course FK + Category ile @ManyToMany -- Faz 139)
-    domain/converter/ Language <-> DB (tr/en kodu) dönüştürücüsü
-    repository/      Spring Data JPA repository'leri (UserRepository, QuizDefinitionRepository dahil)
-    service/         ContentResolver, CodeExampleResolver, MarkdownService, NavigationService,
-                     QuizService (sabit quiz), PracticeService (soru havuzu/Practice), QuestionScorer
-                     (paylaşılan puanlama kuralı), QuestionIngestService (manuel/Claude/n8n
-                     ortak ingestion giriş noktası -- Faz 144),
-                     CustomUserDetailsService, UserRegistrationService (Faz 138), QuizDefinitionService
-                     (Quiz Area draw -- Faz 139), QuizNavigationService (Quiz Area sidebar nav -- Faz 139),
-                     QuestionReviewService (listeleme + publish/reject, `status='PENDING_REVIEW'`
-                     dışında 409 -- Faz 141/142), GenerationToolingService (salt-okunur, n8n'in
-                     soru üretim workflow'u için topic metadata/içerik/mevcut-soru okuması --
-                     hiçbir Question YAZMAZ, Faz 146)
-    controller/      HomeController, TopicController, PracticeController, QuestionIngestController,
-                     AuthController (login/register sayfaları -- Faz 138), QuestionReviewController
-                     (ADMIN-only: `GET /{lang}/admin/questions`, `POST .../{id}/publish`,
-                     `POST .../{id}/reject` -- Faz 141/142), GenerationToolingController
-                     (salt-okunur `/api/internal/topics/{slug}[/content]` +
-                     `/api/internal/questions/existing` -- Faz 146; `/api/internal/
-                     questions/for-translation` -- Faz 148)
-    config/          LangParamLocaleResolver, WebConfig, QuizIngestApiKeyInterceptor (ingestion
-                     rotasını X-Api-Key ile korur), SecurityConfig (Faz 141'den itibaren
-                     `/{lang:en|tr}/admin/**` → `hasRole("ADMIN")` kuralı da içeriyor), LangPath (Faz 138)
-    web/nav/         Sidebar/anasayfa navigasyon DTO'ları (CourseNav, QuizNav -- Faz 139)
-    web/quiz/        Sabit quiz + Practice GET/submit DTO'ları (QuizQuestionView, QuestionView,
-                     QuizAnswer, QuizSubmitRequest/Response, PracticeSubmitRequest/Response, ...)
-    web/ingest/      AI ingestion istek/yanıt DTO'ları (QuestionIngestRequest/Option/Response)
-    web/auth/        Kayıt formu bağlama DTO'su (RegisterForm -- Faz 138)
-    web/review/      Question Review DTO'su (QuestionReviewView + nested ReviewOptionView --
-                     `correct` alanını BİLİNÇLİ OLARAK gizlemiyor, public DTO'ların aksine -- Faz 141;
-                     `questionDisplayText()` -- CODE_OUTPUT'ta `question`'a AI'nın yanlışlıkla
-                     gömdüğü fenced kod bloğunu sunumdan düşüren türetilmiş görünüm metodu,
-                     DB'ye hiç dokunmaz -- Faz 147)
-    web/internal/    Generation tooling DTO'ları (TopicMetadataResponse, ExistingQuestionView --
-                     Faz 146; TranslationSourceQuestionView -- EN->TR çeviri workflow'u için
-                     tam soru+şık verisi, `source` alanı dahil -- Faz 148)
+    domain/          JPA entity'leri ve enum'lar: Course > Category > Topic > TopicTranslation,
+                     CodeExample; soru havuzu (Question, QuestionOption, QuestionType/Status/Source),
+                     Quiz + QuizQuestion (Quiz<->Question join/sıra entity'si), QuizDefinition
+                     (Quiz Area kapsam tanımı); User, Role, UserIdentity (kimlik doğrulama/Google);
+                     AiUsageLog (AI Tutor); converter/ (Language <-> DB tr/en kodu)
+    repository/      Spring Data JPA repository'leri
+    service/         İçerik ve render: ContentResolver, CodeExampleResolver, MarkdownService,
+                     NavigationService, PdfExportService. Quiz: QuizService (sabit quiz),
+                     PracticeService (soru havuzu), QuestionScorer (paylaşılan puanlama),
+                     QuizDefinitionService + QuizNavigationService (Quiz Area).
+                     Soru hattı: QuestionIngestService, QuestionReviewService (listeleme +
+                     publish/reject + auto-publish geçişi), GenerationToolingService
+                     (n8n için salt-okunur okuma, hiçbir Question YAZMAZ).
+                     Kimlik: CustomUserDetailsService, UserRegistrationService,
+                     GoogleAccountService, GoogleOidcUserService. ai/ = AI Tutor
+    controller/      HomeController, CourseController, TopicController, PageController,
+                     SitemapController, PracticeController, QuizAreaController, AuthController,
+                     GoogleSignInController, AiTutor*Controller; soru hattı:
+                     QuestionIngestController, QuestionAutoPublishController,
+                     QuestionReviewController (ADMIN-only), GenerationToolingController
+    config/          SecurityConfig, CourseAccessPolicy, GoogleSignInConfig, WebConfig,
+                     LangParamLocaleResolver, LangPath, QuizIngestApiKeyInterceptor
+                     (`/api/internal/**` için X-Api-Key), AiTutor* yapılandırması
+    web/             DTO'lar, alan başına alt paket: nav/ (CourseNav, QuizNav), quiz/, ingest/,
+                     publish/, internal/, review/ (QuestionReviewView -- `correct` alanını
+                     BİLİNÇLİ OLARAK gizlemez, ADMIN görünümü), auth/, ai/
 
 src/main/resources/
     content/{tr,en}/{slug}.md     Ders içerikleri (tek doğruluk kaynağı)
-    examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri
-    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde (V1..V519,
-                                   quiz-area/ -- Faz 139, question-promotion/ -- promotion
-                                   script'inin ürettiği migration'lar için, Faz 143)
-    templates/                    Thymeleaf şablonları (Bootstrap + highlight.js)
-    templates/auth/               login.html / register.html (Faz 138)
-    templates/admin/              question-review.html -- ADMIN-only, Publish/Reject artık
-                                   gerçek CSRF-korumalı POST formları (Faz 141/142)
-    static/css/custom.css         Sidebar accordion (.sidebar-toggle/.chevron) dahil özel stiller
-    static/img/                   LearnForgeX marka varlıkları (favicon.svg/logo.svg/logo-dark.svg,
-                                   favicon.ico/-16.png/-32.png, apple-touch-icon.png -- Faz 48)
+    examples/{slug}/*.java        Gerçek, derlenebilir kod örnekleri (+ üretilmiş `.out` dosyaları)
+    pages/{en,tr}/               Statik sayfalar (about, contact, privacy, terms)
+    fonts/                        PDF dışa aktarımı için DejaVu fontları
+    db/migration/{konu-slug}/     Flyway migration'ları, konu bazlı alt klasörlerde
+                                   (quiz-area/, question-promotion/, auth/, ai-tutor/ dahil)
+    templates/                    Thymeleaf şablonları; auth/ (login/register), admin/
+                                   (question-review.html -- CSRF'li POST formları), fragments/, error/
+    static/                       css/ (custom.css), js/, img/ (LearnForgeX marka varlıkları,
+                                   favicon'lar, og-image), robots.txt
     messages*.properties          Arayüz metni çevirileri
-```
+    application*.yml              Yapılandırma (dev/prod/test profilleri)
 
 scripts/
-    export_approved_questions.py  Development→Production question promotion export --
-                                   yalnızca AÇIK dev question id listesi, salt-okunur,
-                                   production'a bağlanamaz (bkz. Faz 143)
+    example_outputs.py            "Beklenen Çıktı" üretim/inceleme/promote aracı
+    example-outputs/              manifest.tsv ve Python testleri (bkz. Mimari, "Beklenen Çıktı")
+    export_approved_questions.py  Dev -> prod soru promotion export'u: yalnızca AÇIK dev
+                                   question id listesi; hiçbir veritabanına YAZMAZ, yalnızca
+                                   `EXPORT_SOURCE_DB_*` ile verilen sunucudan SELECT eder
+                                   (bkz. Mimari, "Promotion")
     export-approved-questions.sh  Yukarıdakinin ince CLI sarmalayıcısı
 
 n8n/
-    workflows/question-ingestion-test-batch.json  Manual Trigger → Code → HTTP Request
-                                   (var olan Ingestion API'ye POST) -- PostgreSQL'e/prod'a
-                                   hiç bağlanmıyor (bkz. Faz 145)
-    workflows/question-generation-enum-test.json  9 düğümlü büyük ölçekli soru üretim
-                                   pipeline'ı (Topic Selection → ... → Record Results) --
-                                   Faz 147'de gerçek OpenAI'a geçirildi, Faz 148'de
-                                   varsayılana (hem EN hem TR, hesaplanmış soru sayısı)
-                                   döndürüldü
-    workflows/question-translation-en-to-tr.json  8 düğümlü EN->TR çeviri pipeline'ı --
-                                   mevcut PUBLISHED/PENDING_REVIEW EN sorularını çevirir,
-                                   `correct`/tip/zorluk/kod/topic'i hiç değiştirmez
-                                   (bkz. Faz 148)
-    README.md                     Kurulum/çalıştırma talimatı (env değişkenleri, n8n CLI)
+    README.md                     Workflow'ların kapsamı, env değişkenleri, n8n CLI kullanımı
+    workflows/question-ingestion-test-batch.json   Yalnızca ingestion uç noktasını çağırır
+    workflows/question-generation-enum-test.json   Soru üretim hattı: salt-okunur okumalar,
+                                   OpenAI, kopya kontrolü, ingestion, AI Judge + (bayrakla
+                                   açılan) auto-publish
+    workflows/question-translation-en-to-tr.json   EN -> TR çeviri hattı: `correct`/tip/zorluk/
+                                   kod/topic'i modelden DEĞİL EN sorusundan kopyalar
+
+.github/workflows/test.yml        CI (bkz. "Bilinen Kısıtlar", test doğrulaması)
+```
 
 ## Bilinen Kısıtlar / Dikkat Edilecekler (Güncel Durum Özeti)
 
