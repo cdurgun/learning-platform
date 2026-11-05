@@ -350,3 +350,29 @@ Sonuç: **Faz 150 ve Faz 155-159 "SİL" değil "KISALT"**; yukarıdaki üç kura
 
 ### 13.7 Aşama 4 düzeltme listesine eklenenler (ek: §11)
 (1) `SecurityConfig.java:88-91` bayat yorum; (2) `QuestionIngestRequest` Javadoc'unda OPENAI eksik; (3) `export_approved_questions.py` docstring'i "by construction" ifadesi; (4) `n8n/README.md` "never publishes/rejects" ifadesi; (5) CLAUDE.md Faz 87 maddesi `source = AI`/"iki alan yok"; (6) Faz 139 "UI eklenmedi". Kod yorumu/script/README değişiklikleri ancak kullanıcı onayıyla ve ayrı commit'te yapılacak.
+
+## 14. Aşama 4 uygulama kaydı (2026-11-05)
+
+Commit sırası (hepsi yerel, push YOK): `aa8ce48` known-constraints (Faz 138 gotcha) → `fdf2afc` n8n/README.md → `f078257` architecture-rationale (doğrulanmış davranışa hizalama) → `3e9869f` CLAUDE.md yeni Mimari kuralları → silme commit'i (aşağıdaki 8 paragraf). Kod yorumları, script docstring'i ve `SecurityConfig`/Javadoc düzeltmeleri BU aşamada yapılmadı (kapsam dışı, onay bekliyor).
+
+### 14.1 Silinen paragraflar → karşılıkları (eski kapsam yeni kapsamla karşılaştırıldı)
+| Silinen (eski konum, bayt) | Eski içerik | Kalıcı kural nerede korunuyor | Tarihsel/durum bilgisi nerede |
+|---|---|---|---|
+| Faz 138 (716-730, 1053 B) | Auth eklendi; `app_user` V428; navbar; test sayısı; Boot 4 `webmvc-test` gotcha | Auth: Mimari'deki "Kullanıcı kimlik doğrulaması" maddesi (zaten vardı, yeni gated sayfa/CSRF-muafiyet kuralı dahil). Gotcha: `docs/known-constraints.md` (yeni madde, kanıt `pom.xml`, `NavbarMenuToggleTest`) | phase-log Faz 138 satırı |
+| Faz 141 (752-778, 1942 B) | ADMIN rolü kuralı, listeleme, `correct` görünürlüğü, elle ADMIN yükseltme, PENDING havuzdan izole | Mimari "Question Review" maddesi; PENDING'in havuzdan izolasyonu Faz 87 maddesindeki sabit `PUBLISHED` filtresinde | phase-log Faz 141; test sayıları ve canlı doğrulama anlatımı |
+| Faz 142 (780-798, 1388 B) | Publish/Reject, `PENDING_REVIEW`-only, 409, `reviewedBy/At`, CSRF'ye muaf değil | Mimari "Question Review" maddesi | phase-log Faz 142 |
+| Faz 143 (800-818, 1459 B) | Promotion: açık id, migration alt klasörü, yalnızca promotion migration, süreç sorumluluğu, `promoted_at` yok | Mimari "Promotion" maddesi (kodla doğrulanmış ifadeyle: "prod'a bağlanamaz" YOK); gerekçe rationale §5 | phase-log Faz 143; disposable-DB tekniği known-constraints (Faz 143) |
+| Faz 144 (820-836, 1277 B) | `QuestionSource` değerleri, `source` alanı + izin listesi, `status` DTO'da yok | Mimari "Ingestion" maddesi (güncel değerlerle, `OPENAI` dahil, `source` zorunlu) ve düzeltilen Faz 87 satırı | phase-log Faz 144 |
+| Faz 145 (838-856, 1319 B) | n8n DB/prod'a bağlanmaz, `retryOnFail:false`, anahtar `$env` | Mimari "n8n sınırı" maddesi; ayrıntı `n8n/README.md` | phase-log Faz 145; known-constraints Faz 145 |
+| Faz 146 (858-891, 2621 B) | 3 salt-okunur endpoint, H2 kavramsal kapsam, `pinData`, stand-in tekniği | Mimari "n8n sınırı ve soru üretimi" (H2 ilkesi, salt-okunur endpoint'ler); `pinData`/stand-in: known-constraints Faz 146 | phase-log Faz 146 |
+| Faz 147 (893-934, 3263 B) | OpenAI geçişi, 3 bug, prompt kuralları, CODE_OUTPUT, `questionDisplayText()`, soru sayıları | Mimari "CODE_OUTPUT soruları" maddesi; credential/anahtar kuralı ve prompt ayrıntısı `n8n/README.md`; `OPENAI` değeri Mimari'de | phase-log Faz 147; known-constraints Faz 147 |
+Toplam silinen ≈ 14,3 KB. `CLAUDE.md`: 93,6 KB (ekleme sonrası) → **79,1 KB** (bu aşamada net ≈ −10,0 KB: −14,3 KB paragraf, +4,4 KB yeni kural, küçük düzeltmeler).
+
+### 14.2 Bilinçli olarak SİLİNMEYENLER
+Faz 87 satır içi paragrafı (bayat; "Şu an proje durumu" bloğu), Faz 96 (kullanıcı kararı bekleniyor), Faz 104/109/114/123/133/137 (kararla bekletilen ya da toplu silme dışı), **Faz 139** (yalnızca "UI HENÜZ EKLENMEDİ" cümlesi kaldırıldı, yerine UI'ın var olduğu yazıldı; "spring-boot/react için seed henüz eklenmedi" cümlesi DOĞRULANMADI, korundu), Faz 148, Faz 150, Faz 154, Faz 155-159 (Quiz kuralları Aşama 6'ya kadar), Faz 140 (Aşama 5).
+
+### 14.3 Aşama 5 için bırakılan bayat ifadeler
+- `Proje Yapısı` `scripts/export_approved_questions.py` satırı: "production'a bağlanamaz (bkz. Faz 143)" → yeni Promotion kuralıyla ÇELİŞİYOR (kodla doğrulanmış gerçek: prod'a YAZMAZ, ama `EXPORT_SOURCE_DB_*` prod'a ayarlanırsa SELECT için bağlanır).
+- `Proje Yapısı` `n8n/` satırı "hiç bağlanmıyor (bkz. Faz 145)" ve `GenerationToolingController` açıklamaları (Faz 146-148 anotasyonları): Aşama 5'te sadeleştirilirken auto-publish eklenmeli.
+- Henüz yapılmayan kod/yorum düzeltmeleri (onay gerekir): `SecurityConfig.java:88-91` yorumu, `QuizIngestApiKeyInterceptor` Javadoc'u (Spring Security), `QuestionIngestRequest` Javadoc'unda `OPENAI` eksik, `export_approved_questions.py` docstring'i.
+- Silinen Faz 141 paragrafı `docs/question-review-promotion-proposal.md`'ye atıf yapıyordu; bu dosya `docs/` altında YOK (git geçmişinde de bulunamadı) → atıf zaten kopuktu.
