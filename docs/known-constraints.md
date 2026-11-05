@@ -1200,3 +1200,12 @@ fazda TR+EN tamamlanmış olarak teslim ediliyor.
   desenin tamamı yazılmalı. Bu kontrol Faz 158/159'da (`postgresql` kursu)
   draft'tan ÖNCE yapıldı ve gerçekten hiçbir shell bulunmadığı doğrulandı,
   standart dört-dosyalık desen sorunsuz kullanıldı.
+
+- **Boot 4: `@AutoConfigureMockMvc` artık `spring-boot-starter-test`'te DEĞİL (Faz 138'de
+  bulundu; Faz 138 paragrafı CLAUDE.md'den buraya taşındı).** MockMvc kullanan her test
+  için `spring-boot-starter-webmvc-test` (test scope) gerekir ve annotation'ın paketi
+  `org.springframework.boot.webmvc.test.autoconfigure`'dır (eski `...test.autoconfigure.web.servlet`
+  paketi Boot 4.1'de YOK; eski import derleme hatası verir). Bu starter
+  `spring-boot-starter-test`'i transitive içerdiği için ikisi birlikte eklenmez. Güncel
+  kanıt: `pom.xml` (`spring-boot-starter-webmvc-test`, test scope, açıklayıcı yorumuyla),
+  `NavbarMenuToggleTest.java` (import satırı). Ayrıntı: `docs/phase-log.md` Faz 138.
