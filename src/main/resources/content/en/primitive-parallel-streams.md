@@ -16,7 +16,7 @@ Primitive stream types arrived alongside the Stream API in Java 8 (2014) -- the 
 
 ## Creating an IntStream: range(), rangeClosed(), of()
 
-`IntStream.range(start, end)` produces a range that **excludes** the end (`[start, end)`); `IntStream.rangeClosed(start, end)` **includes** it. `IntStream.of(...)` builds a stream from literal values -- the primitive counterpart of `Stream.of(...)`.
+`IntStream.range(start, end)` produces a range that **excludes** the end (`[start, end)`); `IntStream.rangeClosed(start, end)` **includes** it. `IntStream.of(...)` builds a stream from literal values -- the primitive counterpart of `Stream.of(...)`. The example prints the ranges with `forEachOrdered()` because only it guarantees encounter order; why plain `forEach()` does not is covered in the "Ordering: forEach() vs. forEachOrdered()" section.
 
 {{IntStreamCreationExample.java}}
 
@@ -75,7 +75,7 @@ A single-shot `nanoTime()` measurement can't show this **correctly**, though -- 
 
 - **Adding elements to a non-thread-safe collection (like `ArrayList`) inside a parallel `forEach()`.** This creates a real race condition -- the result size can come out **silently** smaller than expected, with no exception thrown at all (genuinely observed in the example above: some runs delivered only about 96,900-99,200 of the expected 100,000 elements). The fact that the bug doesn't happen every time makes it even more dangerous -- it can slip past testing unnoticed.
 - **Assuming "more threads always means faster."** As shown in "Why Isn't It Always Faster?", parallel streams are often slower for small data or cheap operations.
-- **Relying on ordering in a parallel stream.** `forEach()` doesn't preserve it; use `forEachOrdered()` or plain `stream()` if order is required.
+- **Relying on ordering in a parallel stream.** `forEach()` doesn't preserve it; use `forEachOrdered()` if order is required (on a plain sequential `stream()` it costs nothing extra).
 - **Using `IntStream`/`LongStream`/`DoubleStream` where it isn't needed.** With only a handful of elements, or no numeric aggregation involved, the autoboxing cost is negligible; unnecessary `mapToInt()`/`boxed()` chains just add complexity.
 
 ## Summary, Cheat Sheet, and Glossary
@@ -95,7 +95,7 @@ stream.mapToInt(fn)                      // object -> primitive stream
 intStream.boxed() / .mapToObj(fn)          // primitive -> object stream
 
 collection.parallelStream()                  // run in parallel
-stream.forEach(x -> ...)                       // no ordering guarantee (parallel)
+stream.forEach(x -> ...)                       // no ordering guarantee (visible in parallel)
 stream.forEachOrdered(x -> ...)                  // ordering guaranteed
 ```
 

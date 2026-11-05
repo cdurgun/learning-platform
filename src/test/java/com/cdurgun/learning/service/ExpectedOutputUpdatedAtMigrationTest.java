@@ -56,14 +56,15 @@ class ExpectedOutputUpdatedAtMigrationTest {
 
     @Test
     void theSixTargetTranslationsCarryTheNewDate() {
-        // collectors daha sonra V1140'la (Collectors.toList() düzeltmesi) yeniden ilerledi.
+        // collectors daha sonra V1140'la (Collectors.toList() düzeltmesi), primitive-parallel-streams
+        // V1158'le (IntStreamCreationExample -> forEachOrdered) yeniden ilerledi.
         assertThat(allDates()).filteredOn(targeted()).containsExactly(
                 "built-in-functional-interfaces|en|2026-08-17|" + TARGET_DATE,
                 "built-in-functional-interfaces|tr|2026-08-17|" + TARGET_DATE,
                 "collectors|en|2026-08-17|2026-10-19",
                 "collectors|tr|2026-08-17|2026-10-19",
-                "primitive-parallel-streams|en|2026-08-17|" + TARGET_DATE,
-                "primitive-parallel-streams|tr|2026-08-17|" + TARGET_DATE);
+                "primitive-parallel-streams|en|2026-08-17|2026-11-05",
+                "primitive-parallel-streams|tr|2026-08-17|2026-11-05");
     }
 
     @Test

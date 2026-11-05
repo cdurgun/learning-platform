@@ -16,7 +16,7 @@ Primitive stream tipleri, Stream API ile birlikte Java 8'de (2014) geldi -- tasa
 
 ## IntStream Oluşturmak: range(), rangeClosed(), of()
 
-`IntStream.range(başlangıç, bitiş)`, bitiş **hariç** bir aralık üretir (`[başlangıç, bitiş)`); `IntStream.rangeClosed(başlangıç, bitiş)`, bitiş **dahil** üretir. `IntStream.of(...)`, literal değerlerden bir stream oluşturur -- `Stream.of(...)`'un primitive karşılığı.
+`IntStream.range(başlangıç, bitiş)`, bitiş **hariç** bir aralık üretir (`[başlangıç, bitiş)`); `IntStream.rangeClosed(başlangıç, bitiş)`, bitiş **dahil** üretir. `IntStream.of(...)`, literal değerlerden bir stream oluşturur -- `Stream.of(...)`'un primitive karşılığı. Örnek, aralıkları `forEachOrdered()` ile yazdırıyor, çünkü karşılaşma sırasını yalnızca o garanti eder; düz `forEach()`'in neden etmediği "Sıralama: forEach() vs forEachOrdered()" bölümünde anlatılıyor.
 
 {{IntStreamCreationExample.java}}
 
@@ -75,7 +75,7 @@ Bunu, tek seferlik bir `nanoTime()` ölçümüyle **doğru** göstermek mümkün
 
 - **Paralel `forEach()` içinde thread-safe olmayan bir koleksiyona (`ArrayList` gibi) eleman eklemek.** Bu, gerçek bir veri yarışı (race condition) oluşturur -- sonuç boyutu beklenenden **sessizce** küçük çıkabilir, hiçbir istisna fırlatılmadan (aşağıdaki örnekte gerçekten gözlemlendi: bazı çalıştırmalarda 100.000 beklenen elemandan yalnızca ~96.900-99.200'ü sonuca ulaştı). Hatanın her zaman değil, yalnızca bazen ortaya çıkması, bu hatayı daha da tehlikeli kılar -- testlerde fark edilmeyebilir.
 - **"Daha çok thread, her zaman daha hızlı" varsayımı.** "Neden Her Zaman Daha Hızlı Değildir?" bölümünde görüldüğü gibi, küçük veri/ucuz işlem için paralel stream genellikle daha yavaştır.
-- **Paralel bir stream'de sıralamaya güvenmek.** `forEach()` sırayı korumaz; sıra gerekiyorsa `forEachOrdered()` ya da baştan `stream()` kullanılmalı.
+- **Paralel bir stream'de sıralamaya güvenmek.** `forEach()` sırayı korumaz; sıra gerekiyorsa `forEachOrdered()` kullanılmalı (düz, sıralı bir `stream()` üzerinde ek bir maliyeti yoktur).
 - **`IntStream`/`LongStream`/`DoubleStream`'i gerekmediği yerde kullanmak.** Yalnızca birkaç eleman varsa ya da sayısal bir toplama yapılmıyorsa, autoboxing maliyeti önemsizdir; gereksiz `mapToInt()`/`boxed()` zincirleri kodu karmaşıklaştırır.
 
 ## Özet, Cheat Sheet ve Terimler Sözlüğü
@@ -95,7 +95,7 @@ stream.mapToInt(fn)                    // object -> primitive stream
 intStream.boxed() / .mapToObj(fn)        // primitive -> object stream
 
 collection.parallelStream()                // paralel çalışma
-stream.forEach(x -> ...)                     // sıra garantisi yok (paralelde)
+stream.forEach(x -> ...)                     // sıra garantisi yok (paralelde görünür)
 stream.forEachOrdered(x -> ...)                // sıra garantili
 ```
 

@@ -7,10 +7,12 @@ import java.util.stream.IntStream;
 // sum(), average(), max(), min().
 class IntStreamCreationExample {
     public static void main(String[] args) {
-        IntStream.range(1, 5).forEach(n -> System.out.print(n + " ")); // exclusive end
+        // forEachOrdered() processes the elements in encounter order (1, 2, 3, ...), which the
+        // API guarantees; plain forEach() promises no order, not even on a sequential stream.
+        IntStream.range(1, 5).forEachOrdered(n -> System.out.print(n + " ")); // exclusive end
         System.out.println();
 
-        IntStream.rangeClosed(1, 5).forEach(n -> System.out.print(n + " ")); // inclusive
+        IntStream.rangeClosed(1, 5).forEachOrdered(n -> System.out.print(n + " ")); // inclusive
         System.out.println();
 
         int sum = IntStream.rangeClosed(1, 100).sum();
