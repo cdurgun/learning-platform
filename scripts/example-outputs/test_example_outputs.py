@@ -960,6 +960,54 @@ class HashOrderCoverageTest(unittest.TestCase):
                       flags_of(program('// a ConcurrentHashMap would not keep this order\nList<String> l = List.of("a");')))
 
 
+class ForEachOrderFlagTest(unittest.TestCase):
+    FLAG = "stream-foreach-order"
+
+    def test_stream_for_each_on_a_sequential_stream_is_a_risk_note(self):
+        self.assertNotIn(self.FLAG, eo.BLOCKING_FLAGS)
+        self.assertIn("forEachOrdered", eo.RISK_NOTES[self.FLAG])
+        for body in ['IntStream.range(1, 5).forEach(System.out::println);',
+                     'List<String> names = List.of("a");\nnames.stream().map(String::trim).forEach(System.out::println);',
+                     'Stream.of("a", "b").forEach(s -> System.out.println(s));',
+                     'Arrays.stream(new int[] {1, 2}).forEach(System.out::println);',
+                     'var s = Stream.of("a");\ns.forEach(System.out::println);',
+                     'Stream<String> s = Stream.of("a");\ns.filter(x -> true).forEach(System.out::println);',
+                     'try (var lines = Files.lines(Path.of("a.txt"))) { lines.forEach(System.out::println); }',
+                     'words().forEach(System.out::println);\n}\nstatic Stream<String> words() { return Stream.of("a");']:
+            flags = flags_of(program(body))
+            self.assertIn(self.FLAG, flags, body)
+
+    def test_iterable_and_map_for_each_and_for_each_ordered_are_not_flagged(self):
+        for body in ['List<String> names = List.of("a");\nnames.forEach(System.out::println);',
+                     'Map<String, Integer> m = new TreeMap<>();\nm.forEach((k, v) -> System.out.println(k + v));',
+                     'Deque<Integer> d = new ArrayDeque<>();\nd.forEach(System.out::println);',
+                     'List<String> names = List.of("a");\nnames.stream().forEachOrdered(System.out::println);',
+                     'IntStream.range(1, 5).forEachOrdered(System.out::println);',
+                     'Optional<String> o = Optional.of("a");\no.map(String::trim).ifPresent(System.out::println);',
+                     'List<String> names = List.of("a");\nnames.stream().toList().forEach(System.out::println);']:
+            self.assertNotIn(self.FLAG, flags_of(program(body)), body)
+
+    def test_parallel_and_unordered_sources_stay_blocked_by_their_own_flags(self):
+        flags = flags_of(program('List<Integer> xs = List.of(1);\nxs.parallelStream().forEach(System.out::println);'))
+        self.assertIn("parallel", eo.blocking_flags(flags))
+        self.assertNotIn(self.FLAG, flags)
+        flags = flags_of(program('var s = Stream.of(1).parallel();\ns.forEach(System.out::println);'))
+        self.assertIn("parallel", eo.blocking_flags(flags))
+        self.assertNotIn(self.FLAG, flags)
+        flags = flags_of(program('Set<String> s = new HashSet<>();\ns.forEach(System.out::println);\n'
+                                 's.stream().forEachOrdered(System.out::println);'))
+        self.assertIn("hash-order", eo.blocking_flags(flags))
+        flags = flags_of(program('Queue<Integer> pq = new PriorityQueue<>();\npq.forEach(System.out::println);'))
+        self.assertIn("priority-queue-order", eo.blocking_flags(flags))
+
+    def test_the_lessons_for_each_uses(self):
+        self.assertIn(self.FLAG, eo.precheck("terminal-operations", "ForEachExample")["flags"])
+        noted = [spec for spec in published_specs() if self.FLAG in eo.precheck(*spec.split("/"))["flags"]]
+        self.assertEqual(noted, ["primitive-parallel-streams/IntStreamCreationExample"])
+        for spec in ["file-reading/SearchWordInFileExample", "file-writing/WriteLinesExample"]:
+            self.assertNotIn(self.FLAG, eo.precheck(*spec.split("/"))["flags"], spec)
+
+
 class RecordTextFlagTest(unittest.TestCase):
     POINT = "record Point(int x, int y) { }\n"
 

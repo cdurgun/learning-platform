@@ -250,6 +250,10 @@ CONTRACT_FLAGS = [
     # Record.toString: "the precise format ... is unspecified and subject to change". Not
     # blocking; the 2026-11-01 review decision rejects such output (see RISK_NOTES).
     ("record-text", None),
+    # Informational, set by stream_foreach_order(): Stream.forEach on a sequential stream, whose
+    # order the API does not promise (forEachOrdered does). Iterable.forEach and forEachOrdered
+    # are not flagged; a parallel pipeline is already blocked by parallel.
+    ("stream-foreach-order", None),
     # Informational, set by stream_side_effects(): printing from inside a stream pipeline.
     ("stream-side-effects", None),
     # Informational: the message text of an exception. Allowed only when the program itself
@@ -270,7 +274,7 @@ BLOCKING_FLAGS = {"hash-order", "parallel", "concurrency", "time", "random", "st
                   "count-elision", "count-unresolved"}
 # Informational flags matched on the code (comments and string literals blanked) instead of
 # the raw source: a file API named only in printed text or a comment is no file access.
-CODE_INFO_FLAGS = {"local-file", "deletes-files", "record-text", "stream-side-effects", "exception-message",
+CODE_INFO_FLAGS = {"local-file", "deletes-files", "record-text", "stream-foreach-order", "stream-side-effects", "exception-message",
                    "exception-text", "stderr"}
 # Informational, set by main_reads_args(): the run always passes no arguments (a fixed,
 # repeatable input), so the reviewer checks the output is the branch the lesson shows.
@@ -293,6 +297,9 @@ RISK_NOTES = {
     "record-text": "RISK record-text: prints a record's implicit toString(), whose format the Record Javadoc "
                    "calls \"unspecified and subject to change\". Reject (review decision of 2026-11-01) unless "
                    "the printed lines never show that text.",
+    "stream-foreach-order": "RISK stream-foreach-order: Stream.forEach is \"explicitly nondeterministic\" even on a "
+                            "sequential stream; only forEachOrdered promises encounter order (HotSpot keeps it in "
+                            "practice). Approve only if the lesson does not present the printed order as guaranteed.",
     "stream-side-effects": "RISK stream-side-effects: prints from inside a stream pipeline; the API does not fix "
                            "the order of such side effects, and short-circuiting operations may visit fewer "
                            "elements. Approve only if the lesson presents the printed trace as typical, not "
@@ -900,7 +907,7 @@ STREAM_TO_STREAM = {"map", "mapToObj", "mapToInt", "mapToLong", "mapToDouble", "
                     "asLongStream", "asDoubleStream"}
 STREAM_START = re.compile(r"\.\s*(?:stream|parallelStream|chars|codePoints|lines|splitAsStream|results|datesUntil)"
                           r"\s*\(|\b(?:Stream|IntStream|LongStream|DoubleStream|StreamSupport)\s*\.\s*\w+\s*\("
-                          r"|\bArrays\s*\.\s*stream\s*\(")
+                          r"|\bArrays\s*\.\s*stream\s*\(|\bFiles\s*\.\s*(?:walk|list|find|lines)\s*\(")
 METHOD_DECLARATION = re.compile(r"(?<![\w.])(?!(?:if|for|while|switch|catch|synchronized|return|new|else)\b)"
                                 r"([A-Za-z_][\w.]*(?:\s*<[^;{}()]*>)?(?:\s*\[\s*\])*)\s+([a-z_]\w*)\s*"
                                 r"\(([^;{}()]*)\)\s*(?:throws\s+[\w.,\s]+)?\{")
@@ -1005,6 +1012,8 @@ def is_stream_expression(expr: str, streams: set) -> bool:
     name, receiver = call
     if name in STREAM_SOURCE_CALLS:
         return True
+    if name in ("walk", "list", "find", "lines") and re.search(r"(?<![\w.])Files\s*$", receiver):
+        return True
     if name in STREAM_FACTORIES:
         return re.search(r"(?<![\w.])(?:Stream|IntStream|LongStream|DoubleStream)\s*$", receiver) is not None
     if name in STREAM_TO_STREAM:  # Optional.map/filter return an Optional: needs a stream underneath
@@ -1076,6 +1085,34 @@ def count_unresolved(code: str) -> bool:
                for _, receiver in count_receivers(code))
 
 
+PARALLEL_PIPELINE = re.compile(r"\.\s*parallel\s*\(\s*\)|\.\s*parallelStream\s*\(")
+
+
+def stream_foreach_order(code: str) -> bool:
+    """Stream.forEach on a sequential stream. Javadoc: "The behavior of this operation is explicitly
+    nondeterministic. For parallel stream pipelines, this operation does not guarantee to respect
+    the encounter order of the stream" -- only forEachOrdered promises encounter order. Not flagged:
+    forEachOrdered; Iterable.forEach / Map.forEach (List, Deque, TreeMap, ...: "in the order of
+    iteration, if that order is specified" -- unordered sources are hash-order / priority-queue-order);
+    a parallel pipeline (already blocked by parallel)."""
+    streams = stream_variables(code)
+    names = set(streams)
+    methods = declared_methods(code)
+    for m in re.finditer(r"\.\s*forEach\s*\(", code):
+        receiver = code[chain_start(code, m.start()):m.start()]
+        kind, root = expression_root(receiver)
+        stream = is_stream_expression(receiver, names) or (
+            kind == "call" and any(t in STREAM_TYPE_NAMES for t, _ in methods.get(root, [])) and
+            re.fullmatch(r"\s*[A-Za-z_]\w*\s*\([^()]*\)\s*", receiver) is not None)
+        if not stream:
+            continue
+        if PARALLEL_PIPELINE.search(receiver) or (kind == "name" and root in streams and
+                                                  any(PARALLEL_PIPELINE.search(r) for r in streams[root])):
+            continue
+        return True
+    return False
+
+
 INTERMEDIATE_OP = re.compile(r"\.\s*(?:map|mapToObj|mapToInt|mapToLong|mapToDouble|flatMap|filter|sorted|distinct"
                              r"|takeWhile|dropWhile|mapMulti)\s*\(")
 
@@ -1116,6 +1153,7 @@ DETECTORS = {"identity-text": array_identity_text, "scanner-locale": localized_s
              "object-identity": object_identity_text, "lambda-identity": lambda_identity_text,
              "optional-text": optional_text, "priority-queue-order": priority_queue_order,
              "count-elision": count_skips_side_effects, "count-unresolved": count_unresolved,
+             "stream-foreach-order": stream_foreach_order,
              "stream-side-effects": stream_side_effects,
              "exception-text": caught_exception_text, "record-text": record_text}
 # Detectors that also read the type declarations of the example's companions.
