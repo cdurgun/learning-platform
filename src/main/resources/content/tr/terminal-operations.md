@@ -18,7 +18,7 @@ Terminal operation'ların çoğu, Stream API ile birlikte Java 8'de (2014) geldi
 
 ## forEach(): Yan Etki Uygulamak
 
-`forEach(Consumer<T>)`, her elemanda bir yan etki çalıştırır ve `void` döndürür -- bir `for-each` döngüsünün terminal operation karşılığıdır. Hiçbir şey döndürmediği için, bir pipeline'ı yalnızca **bitirebilir**, asla devam ettiremez.
+`forEach(Consumer<T>)`, her elemanda bir yan etki çalıştırır ve `void` döndürür -- bir `for-each` döngüsünün terminal operation karşılığıdır. Hiçbir şey döndürmediği için, bir pipeline'ı yalnızca **bitirebilir**, asla devam ettiremez. Ancak bir `for-each` döngüsünden farklı olarak `forEach()`, elemanları hangi sırayla işleyeceğine dair hiçbir söz vermez -- sıralı bir stream'de bile (JDK orada pratikte karşılaşma sırasını korur, ama API bunu garanti etmez); paralel bir stream'de ise sıra gerçekten değişir. Sıra önemliyse, elemanları her stream'de karşılaşma sırasıyla işleyen `forEachOrdered()` kullanılır.
 
 {{ForEachExample.java}}
 
@@ -87,7 +87,8 @@ Bir terminal operation, bir stream pipeline'ını tüketip bir sonuç üretir: `
 Hızlı referans:
 
 ```java
-stream.forEach(x -> ...)      // yan etki, void döner
+stream.forEach(x -> ...)      // yan etki, void döner, sıra garantisi yok
+stream.forEachOrdered(x -> ...) // aynısı, karşılaşma sırasıyla
 stream.count()                 // long, bazen kaynaktan doğrudan hesaplanır
 stream.reduce(id, op)           // T, her zaman değer döner
 stream.reduce(op)                 // Optional<T>

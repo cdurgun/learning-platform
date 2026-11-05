@@ -10,10 +10,11 @@ class ForEachExample {
                 .map(String::toUpperCase)
                 .forEach(System.out::println);
 
-        // forEach() does not guarantee processing order for parallel streams -- for a
-        // sequential stream (the default, and the only kind used in this course) the
-        // encounter order IS preserved, exactly like a plain for loop.
-        names.stream().forEach(name -> System.out.print(name + " "));
+        // forEach() makes no promise about the order it visits the elements in -- not even on
+        // a sequential stream (the JDK keeps encounter order there in practice, but the API
+        // does not guarantee it), and on a parallel stream the order really does vary.
+        // forEachOrdered() processes the elements in encounter order on any stream.
+        names.stream().forEachOrdered(name -> System.out.print(name + " "));
         System.out.println();
     }
 }

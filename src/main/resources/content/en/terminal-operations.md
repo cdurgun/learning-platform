@@ -18,7 +18,7 @@ Most terminal operations arrived with the Stream API in Java 8 (2014). `toList()
 
 ## forEach(): Applying a Side Effect
 
-`forEach(Consumer<T>)` runs a side effect on every element and returns `void` -- the terminal-operation counterpart of a for-each loop. Since it returns nothing, it can only **end** a pipeline, never continue one.
+`forEach(Consumer<T>)` runs a side effect on every element and returns `void` -- the terminal-operation counterpart of a for-each loop. Since it returns nothing, it can only **end** a pipeline, never continue one. Unlike a for-each loop, though, `forEach()` makes no promise about the order it visits the elements in -- not even on a sequential stream (the JDK keeps encounter order there in practice, but the API does not guarantee it), and on a parallel stream the order really does vary. When the order matters, use `forEachOrdered()`, which processes the elements in encounter order on any stream.
 
 {{ForEachExample.java}}
 
@@ -87,7 +87,8 @@ A terminal operation consumes a stream pipeline and produces a result: `forEach(
 Quick reference:
 
 ```java
-stream.forEach(x -> ...)        // side effect, returns void
+stream.forEach(x -> ...)        // side effect, returns void, no ordering guarantee
+stream.forEachOrdered(x -> ...) // same, in encounter order
 stream.count()                   // long, sometimes computed directly from the source
 stream.reduce(id, op)             // T, always returns a value
 stream.reduce(op)                   // Optional<T>
