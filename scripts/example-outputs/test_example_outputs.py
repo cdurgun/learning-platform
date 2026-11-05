@@ -922,6 +922,49 @@ class OutputTextFlagTest(unittest.TestCase):
                 self.assertNotIn(flag + eo.TEXT_ONLY_SUFFIX, flags, spec)
 
 
+class RecordTextFlagTest(unittest.TestCase):
+    POINT = "record Point(int x, int y) { }\n"
+
+    def test_a_record_printed_with_its_implicit_to_string_is_noted_not_blocked(self):
+        self.assertNotIn("record-text", eo.BLOCKING_FLAGS)
+        self.assertIn("subject to change", eo.RISK_NOTES["record-text"])
+        self.assertIn("2026-11-01", eo.RISK_NOTES["record-text"])
+        for body in ['Point p = new Point(1, 2);\nSystem.out.println(p);',
+                     'var p = new Point(1, 2);\nSystem.out.println("p = " + p);',
+                     'System.out.println(new Point(1, 2));',
+                     'List<Point> ps = List.of(new Point(1, 2));\nSystem.out.println(ps);',
+                     'List<Point> ps = List.of(new Point(1, 2));\nps.forEach(System.out::println);',
+                     'Point[] ps = {new Point(1, 2)};\nSystem.out.println(Arrays.toString(ps));',
+                     'Shape s = new Point(1, 2);\nSystem.out.printf("%s%n", s);']:
+            flags = flags_of(program(body, "interface Shape { }\n" + self.POINT.replace(") {", ") implements Shape {")))
+            self.assertIn("record-text", flags, body)
+            self.assertEqual(eo.blocking_flags(flags), [], body)
+        self.assertIn("record-text", flags_of(program(
+            "new Point(1, 2).show();", 'record Point(int x, int y) { void show() { System.out.println("I am " + this); } }')))
+
+    def test_record_components_and_records_with_their_own_to_string_are_not_record_text(self):
+        for body in ['Point p = new Point(1, 2);\nSystem.out.println(p.x() + ", " + p.y());',
+                     'Point p = new Point(1, 2);\nSystem.out.println(p.equals(new Point(1, 2)));',
+                     'Point p = new Point(1, 2);\nSystem.out.println(p.hashCode() == p.hashCode());',
+                     'System.out.println(new Point(1, 2).x());']:
+            self.assertNotIn("record-text", flags_of(program(body, self.POINT)), body)
+        self.assertNotIn("record-text", flags_of(program(
+            'Point p = new Point(1, 2);\nSystem.out.println(p);',
+            'record Point(int x, int y) { public String toString() { return x + "," + y; } }')))
+        self.assertNotIn("record-text", flags_of(program("Color c = Color.RED;\nSystem.out.println(c);", "enum Color { RED }")))
+
+    def test_a_record_from_a_companion_is_known(self):
+        main = program("Point p = new Point(1, 2);\nSystem.out.println(p);")
+        self.assertNotIn("record-text", flags_of(main))
+        self.assertIn("record-text", eo.contract_flags(main, main + self.POINT))
+
+    def test_the_records_rejected_on_2026_11_01_are_noted_and_published_ones_are_not(self):
+        for name in ["TeamMutableTrap", "TeamDefensiveCopy", "NestedRecordExample", "SerializableRecordExample"]:
+            self.assertIn("record-text", eo.precheck("records", name)["flags"], name)
+        for spec in published_specs():
+            self.assertNotIn("record-text", eo.precheck(*spec.split("/"))["flags"], spec)
+
+
 class ExceptionFlagTest(unittest.TestCase):
 
     def test_messages_and_printed_exceptions_are_informational_with_the_rule_as_note(self):

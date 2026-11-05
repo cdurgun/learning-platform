@@ -236,6 +236,10 @@ CONTRACT_FLAGS = [
     # field, a method declared elsewhere) in a program that prints from inside a stream pipeline.
     # Not decidable statically, so blocked rather than passed silently.
     ("count-unresolved", None),
+    # Informational, set by record_text(): a record without its own toString() printed as text.
+    # Record.toString: "the precise format ... is unspecified and subject to change". Not
+    # blocking; the 2026-11-01 review decision rejects such output (see RISK_NOTES).
+    ("record-text", None),
     # Informational, set by stream_side_effects(): printing from inside a stream pipeline.
     ("stream-side-effects", None),
     # Informational: the message text of an exception. Allowed only when the program itself
@@ -256,7 +260,7 @@ BLOCKING_FLAGS = {"hash-order", "parallel", "concurrency", "time", "random", "st
                   "count-elision", "count-unresolved"}
 # Informational flags matched on the code (comments and string literals blanked) instead of
 # the raw source: a file API named only in printed text or a comment is no file access.
-CODE_INFO_FLAGS = {"local-file", "deletes-files", "stream-side-effects", "exception-message",
+CODE_INFO_FLAGS = {"local-file", "deletes-files", "record-text", "stream-side-effects", "exception-message",
                    "exception-text", "stderr"}
 # Informational, set by main_reads_args(): the run always passes no arguments (a fixed,
 # repeatable input), so the reviewer checks the output is the branch the lesson shows.
@@ -276,6 +280,9 @@ RISK_NOTES = {
                      "program created itself.",
     "line-separator": "NOTE line-separator: writes the platform line separator; the panel shows Linux \"\\n\". "
                       "Reject if the output prints a length, byte count or other number derived from that text.",
+    "record-text": "RISK record-text: prints a record's implicit toString(), whose format the Record Javadoc "
+                   "calls \"unspecified and subject to change\". Reject (review decision of 2026-11-01) unless "
+                   "the printed lines never show that text.",
     "stream-side-effects": "RISK stream-side-effects: prints from inside a stream pipeline; the API does not fix "
                            "the order of such side effects, and short-circuiting operations may visit fewer "
                            "elements. Approve only if the lesson presents the printed trace as typical, not "
@@ -725,6 +732,51 @@ def object_identity_text(code: str, context: str = None) -> bool:
     return False
 
 
+def record_text(code: str, context: str = None) -> bool:
+    """A record without its own toString() converted to text. Record.toString(): "the precise
+    format produced by this method is unspecified and subject to change" -- informational, the
+    2026-11-01 review decision keeps such output off the page."""
+    types = parse_types(strip_comments_and_strings(context) if context else code)
+    records = {n for n, t in types.items() if t["kind"] == "record" and not t["own_to_string"]}
+    if not records:
+        return False
+
+    def holds_record(static_type: str, initializer: str = "") -> bool:
+        created = re.match(r"\s*new\s+([A-Za-z_][\w.]*)\s*(?:<[^>]*>)?\s*\(", initializer)
+        if created:
+            return created.group(1).split(".")[-1] in records
+        if static_type in records:
+            return True
+        t = types.get(static_type)  # an interface whose every declared implementation is such a record
+        if not t or t["kind"] != "interface":
+            return False
+        impls = {n for n, info in types.items() if static_type in info["supers"] and info["kind"] in ("class", "record")}
+        return bool(impls) and impls <= records
+
+    for name, declarations in declared_variables(code).items():
+        def element(decl):
+            type_name, type_args, dims, initializer = decl
+            if dims:
+                return holds_record(type_name)
+            if type_name in JDK_CONTAINERS and type_args:
+                return any(holds_record(arg) for arg in re.findall(r"[A-Za-z_]\w*", type_args))
+            return holds_record(type_name, initializer)
+        if declarations and all(element(d) for d in declarations):
+            n = re.escape(name)
+            if printed_as_text(code, name) and not all(d[2] for d in declarations):
+                return True
+            if re.search(rf"\bArrays\s*\.\s*(?:toString|deepToString)\s*\(\s*{n}\s*\)", code):
+                return True
+            if re.search(rf"(?<![\w.]){n}\s*\.\s*forEach\s*\(\s*System\s*\.\s*out\s*::\s*print", code):
+                return True
+    for m in re.finditer(r"\bnew\s+([A-Za-z_][\w.]*)\s*(?:<[^>]*>)?\s*\(", code):
+        close = matching_close(code, m.end() - 1)
+        if close > 0 and m.group(1).split(".")[-1] in records and not code[close + 1:].lstrip().startswith(".") \
+                and in_text_context(code, m.start(), close + 1):
+            return True
+    return any(printed_as_text(types[r]["body"], "this") for r in records)
+
+
 def lambda_identity_text(code: str, context: str = None) -> bool:
     """A lambda, method reference or anonymous class without toString() converted to text
     prints a synthetic class name + "@" + identity hash (Main$$Lambda/0x...@1b6d3586)."""
@@ -1055,9 +1107,9 @@ DETECTORS = {"identity-text": array_identity_text, "scanner-locale": localized_s
              "optional-text": optional_text, "priority-queue-order": priority_queue_order,
              "count-elision": count_skips_side_effects, "count-unresolved": count_unresolved,
              "stream-side-effects": stream_side_effects,
-             "exception-text": caught_exception_text}
+             "exception-text": caught_exception_text, "record-text": record_text}
 # Detectors that also read the type declarations of the example's companions.
-CONTEXT_DETECTORS = {"object-identity", "lambda-identity"}
+CONTEXT_DETECTORS = {"object-identity", "lambda-identity", "record-text"}
 # Structural detectors (types, variables, call chains): run on raw text, prose in comments parses
 # as code ("a class implementing the interface ... {"), so they give no ":text-only" note.
 STRUCTURAL_FLAGS = {"object-identity", "lambda-identity", "optional-text", "priority-queue-order", "count-elision",
