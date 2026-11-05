@@ -727,10 +727,10 @@ AYNEN kullanır (draw tarafı yeni, submit tarafı Practice ile paylaşılan).
 `java` kursu için gerçek seed (`basic-java`=`java-basics`+`control-flow`,
 `advanced-java`=`exceptions`+`generics`+`collections`+`oop`+`concurrency`+
 `functional-interfaces-streams`, `all-java`=tüm kurs) V430'da eklendi;
-`spring-boot`/`react` kursları için henüz eklenmedi (kullanıcının açık
-talimatıyla sonraki bir faza bırakıldı). Migration'lar şu an V1'den
-**V430'a kadar boşluksuz**. Soru çekme/cevap gönderme UI'ı
-vardır (`quiz-play.html`, CSRF muafiyetli submit rotası). Ayrıntılı uygulama akışı için
+`spring-boot` ve `ai` kursları için seed'ler sonradan eklendi;
+`react`, `postgresql`, `git-github` ve `docker` kurslarının henüz bir
+`quiz_definition` seed'i yok (migration taraması, 2026-11-05). Soru
+çekme/cevap gönderme UI'ı vardır (`quiz-play.html`, CSRF muafiyetli submit rotası). Ayrıntılı uygulama akışı için
 `docs/phase-log.md`'de "Faz 139"u grep'le.
 
 **GÜNCELLEME (Faz 148):** **EN->TR çeviri workflow'u** eklendi -- mevcut
