@@ -1068,7 +1068,9 @@ class ForEachOrderFlagTest(unittest.TestCase):
     def test_the_lessons_for_each_uses(self):
         self.assertIn(self.FLAG, eo.precheck("terminal-operations", "ForEachExample")["flags"])
         noted = [spec for spec in published_specs() if self.FLAG in eo.precheck(*spec.split("/"))["flags"]]
-        self.assertEqual(noted, ["primitive-parallel-streams/IntStreamCreationExample"])
+        # IntStreamCreationExample (the only published one) switched to forEachOrdered on 2026-11-05.
+        self.assertEqual(noted, [])
+        self.assertNotIn(self.FLAG, eo.precheck("primitive-parallel-streams", "IntStreamCreationExample")["flags"])
         for spec in ["file-reading/SearchWordInFileExample", "file-writing/WriteLinesExample"]:
             self.assertNotIn(self.FLAG, eo.precheck(*spec.split("/"))["flags"], spec)
 
