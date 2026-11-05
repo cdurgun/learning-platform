@@ -960,72 +960,59 @@ n8n/
 
 ## Bilinen Kısıtlar / Dikkat Edilecekler (Güncel Durum Özeti)
 
-**Faz 76'da CLAUDE.md'yi küçültmek için özetlendi.** Tam kronolojik geçmiş
-(bir kısıtın nasıl keşfedildiği, hangi fazda değiştiği) artık
-**`docs/known-constraints.md`**'de — hiçbir şey silinmedi, birebir taşındı.
-Aşağıdaki, en son doğrulanmış durumun kısa özeti; ortam oturumdan oturuma
-değişebileceği için, görev bu kısıtlardan birine gerçekten bağlıysa **önce
-bash ile yeniden doğrula** (ör. `mvn -version`, `curl -I https://repo.maven.apache.org`).
+Tam kronolojik geçmiş (bir kısıtın nasıl keşfedildiği, hangi fazda değiştiği)
+**`docs/known-constraints.md`**'de; hiçbir şey silinmedi. Aşağıdaki, kısa özettir.
+Ortam oturumdan oturuma değişir (eski Claude sandbox'ı, kullanıcının kendi Mac'i):
+görev bir kısıta gerçekten bağlıysa **önce bash ile yeniden doğrula** (`mvn -version`,
+`curl -sI https://repo.maven.apache.org`, `docker ps`).
 
-- **Maven Central (`repo.maven.apache.org`, `repo1.maven.org`) bu sandbox'ta
-  engelli** (proxy 403 döndürüyor) — Spring Boot/harici Maven bağımlılığı
-  gerektiren hiçbir Java kodu (`mvn compile`, `spring-boot:run`) gerçekten
-  derlenip çalıştırılamıyor. Yalnızca harici bağımlılık gerektirmeyen saf JDK
-  kodu (`java.util.*` gibi) `javac`/`java` ile gerçekten derlenebilir.
-- **GÜNCELLEME (Faz 140):** `mvn -o compile`/`mvn -o test`'in Lombok'u offline
-  hiç işleyememesi (aşağıdaki madde) bir Maven/plugin-çözümleme sorunu -- Lombok'un
-  KENDİSİ değil. `~/.m2`'de ZATEN cache'lenmiş bağımlılıklarla, `javac`'ı Lombok
-  jar'ını `-processorpath`+`-proc:full` ile DOĞRUDAN çağırmak GERÇEK bir derleme
-  (main+test, sıfır hata) üretiyor -- bu classpath'le testler de (`junit-platform-
-  launcher` ile) ve hatta uygulamanın kendisi de (`java -cp ... 
-  LearningPlatformApplication`, gerçek Tomcat+Postgres+Flyway) GERÇEKTEN
-  çalıştırılabiliyor, `curl` ile uçtan uca doğrulama dahil. Ayrıntılı komut
-  tarifi için `docs/known-constraints.md`'de "Faz 140"ı grep'le -- bu, önceki
-  "mvn kullanılamaz" sonucunu geçersiz KILMIYOR, yalnızca bir workaround'un var
-  olduğunu belgeliyor. (Güncel test kaynağı için bir sonraki maddeye bakın.)
-- **Test doğrulaması (Faz 180'den itibaren): GitHub Actions CI.** `.github/workflows/test.yml`
-  `main`'e her push'ta, her pull request'te ve elle (`workflow_dispatch`) çalışır: Temurin 21,
-  `postgres:16-alpine` servis container'ı (5433, `application-test.yml` ile aynı DB/kullanıcı;
-  Flyway şemayı sıfırdan kurar), `TZ=Europe/Istanbul`, `mvn -B test` ve ardından
-  `scripts/example-outputs` Python testleri; Maven başarısız olursa Surefire raporları artifact
-  olarak yüklenir. İlk çalıştırma (run 39273156540, commit `4e44638`): Maven 243/243, Python
-  40/40. **Railway'in build'i `mvn ... -DskipTests` çalıştırır, yani deploy testleri HİÇ
-  çalıştırmaz.** Workflow'un kendisi deploy'u durdurmaz; Railway panelindeki "Wait for CI"
-  ayarı 2026-10-24'te kullanıcı tarafından ETKİN olarak doğrulandı (Faz 180'de henüz
-  açılmamıştı). Bu ayarın deploy'u CI'a gerçekten beklettiği bağımsız olarak KANITLANMADI:
-  `4f623e3`'te sıralama tutarlıydı (deployment kaydı 20:20:59Z, CI'ın Maven adımı 20:22:32Z
-  bitti, uygulama 20:24Z açıldı) ama bu bir kanıt değil, CI kırılınca `SKIPPED` da hiç
-  gözlenmedi -- push'tan sonra CI sonucunu ve deploy-check'i yine ayrı ayrı kontrol et.
-  Bir değişikliğin test kanıtı: o commit'in CI çalıştırması + yerelde JDK 21 ile `mvn test`.
-- **`javac`/`java` ile gerçek derleme, Faz 12'den beri varsayılan olarak
-  YAPILMIYOR** (oturum maliyeti/limit nedeniyle) — yeni `.java` dosyaları elle
-  dikkatli yazılıp gözden geçirilir. İstisna: kullanıcı özellikle isterse, ya da
-  dosya sıra dışı riskliyse (deadlock/timeout içeren thread örnekleri gibi),
-  ya da kod saf JDK ise (Maven bağımlılığı yok) — bu durumda önce
-  `/tmp/.../scratch/`'te derleyip çalıştır, sonra doğrulanmış hâliyle asıl
-  `examples/` klasörüne kopyala (bkz. Node/TypeScript için de aynı yöntem,
-  Faz 72 notu).
-- **`registry.npmjs.org` ve `pypi.org` bu sandbox'ta ERİŞİLEBİLİR** — React
-  (`.jsx`) ve Node/TypeScript (MCP SDK gibi) kodu `npm install` ile gerçekten
-  kurulup derlenip çalıştırılarak doğrulanabilir; bu, Java/Spring'in aksine
-  gerçek bir uçtan uca doğrulama imkânı sunar (bkz. Faz 41, 72).
-- **Bu sandbox'ta gerçek, çalışan bir Docker Engine var** (Faz 154'te
-  keşfedildi, `docker --version` → 29.6.2) — `docker` kursunun örnekleri
-  (`docker build`/`docker run`/`docker compose up` gibi) burada gerçekten
-  çalıştırılıp doğrulanabilir. Zaten çalışan iki container var:
-  `learning-platform-db` (`postgres:16-alpine`, bu projenin kendi dev
-  veritabanı) ve bir `n8n` container'ı — yeni bir test container'ı bunlarla
-  çakışmayan bir `--name` almalı, ikisi durdurulup kaldırılmamalı.
-- **`cdn.jsdelivr.net` bu sandbox'ta ERİŞİLEMİYOR** (Faz 68'de keşfedildi) —
-  Playwright ile bir sayfa doğrulaması Bootstrap'e bağımlıysa, CDN linki
-  kullanma; önce `npm install bootstrap@{sürüm} --no-save` ile yerel bir kopya
-  indirip mock HTML'de ona göreli yol ver (aksi hâlde sayfa stilsiz/boş render
-  olur, yanıltıcı sonuç verir).
-- **Ayrı, uzun ömürlü git branch'leri kullanılmıyor** — `react-course-projects`/
+- **Maven'ı JDK 21 ile çalıştır (kullanıcının Mac'inde varsayılan JDK 26'dır).**
+  `pom.xml` `java.version` = 21; Lombok sürümü Spring Boot 4.1.0 BOM'undan gelir (1.18.46).
+  JDK 26 ile temiz bir `mvn compile`, Lombok'un ürettiği erişimciler (ör. `getCategory()`)
+  için çok sayıda "cannot find symbol" hatasıyla başarısız olur; aynı kaynak JDK 21 ile
+  derlenir (2026-11-05'te doğrulandı; JDK 22-25 denenmedi, kök neden izole edilmedi).
+  Her `mvn`/`spring-boot:run` öncesi `JAVA_HOME`'u JDK 21'e çevir:
+  `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`. CI de Temurin 21 kullanır.
+- **Test doğrulaması: GitHub Actions CI** (`.github/workflows/test.yml`; `main`'e her
+  push, her pull request, elle `workflow_dispatch`): Temurin 21, `postgres:16-alpine`
+  servis container'ı (5433, `application-test.yml` ile aynı DB/kullanıcı; Flyway şemayı
+  sıfırdan kurar), `TZ=Europe/Istanbul`, `mvn -B test`, ardından `scripts/example-outputs`
+  Python testleri; Maven başarısız olursa Surefire raporları artifact olarak yüklenir.
+  Yerelde aynı koşul: JDK 21, `TZ=Europe/Istanbul` ve 5433'te `learning_test` DB'si (testler
+  `application-test.yml`'deki adresi kullanır; mevcut container'lara dokunmamak için atılabilir
+  bir container ve `SPRING_DATASOURCE_URL` ile başka port kullanılabilir).
+  **Railway'in build'i `mvn ... -DskipTests` çalıştırır, yani deploy testleri HİÇ çalıştırmaz.**
+  Workflow'un kendisi deploy'u durdurmaz; Railway panelindeki "Wait for CI" ayarı kullanıcı
+  tarafından ETKİN olarak doğrulandı (2026-10-24) ama deploy'u CI'a gerçekten beklettiği
+  bağımsız olarak KANITLANMADI -- push'tan sonra CI sonucunu ve deploy-check'i yine ayrı ayrı
+  kontrol et. Bir değişikliğin test kanıtı: o commit'in CI çalıştırması + yerelde JDK 21 ile
+  `mvn test`.
+- **Eski Claude sandbox'ının kısıtları (ortama bağlı, o ortamda gözlemlendi):** Maven Central
+  (`repo.maven.apache.org`) proxy 403 veriyordu, bu yüzden `mvn compile`/`test` çalışmıyordu
+  (workaround: `javac`'ı Lombok jar'ını `-processorpath`+`-proc:full` ile doğrudan çağırmak,
+  ayrıntı `docs/known-constraints.md` "Faz 140"); `cdn.jsdelivr.net` erişilemiyordu (Playwright
+  doğrulamasında Bootstrap'i `npm install bootstrap --no-save` ile yerel kopyadan ver);
+  `registry.npmjs.org` ve `pypi.org` erişilebilirdi. **Kullanıcının Mac'inde (2026-11-05)
+  Maven Central, npm, PyPI ve jsdelivr'e erişim vardır**; bu maddelerden hangisinin geçerli
+  olduğunu ortamda doğrula.
+- **Docker Engine var** (sandbox'ta 29.6.2, kullanıcının Mac'inde 29.8.0 görüldü) --
+  `docker` kursunun örnekleri (`docker build`/`run`/`compose up`) gerçekten çalıştırılıp
+  doğrulanabilir. Çalışan container'lar arasında projenin kendi dev veritabanı
+  (`learning-platform-db`, `postgres:16-alpine`) ve n8n vardır: HİÇBİRİ durdurulmamalı,
+  silinmemeli, testler onlara bağlanmamalı; yeni test container'ı çakışmayan bir `--name` alır.
+- **`javac`/`java` ile gerçek derleme, Faz 12'den beri varsayılan olarak YAPILMIYOR** (oturum
+  maliyeti/limit nedeniyle) -- yeni `.java` dosyaları elle dikkatli yazılıp gözden geçirilir.
+  İstisna: kullanıcı özellikle isterse, dosya sıra dışı riskliyse (deadlock/timeout içeren
+  thread örnekleri gibi) ya da kod saf JDK ise (Maven bağımlılığı yok) -- bu durumda önce
+  scratch dizininde derleyip çalıştır, sonra doğrulanmış hâliyle asıl `examples/` klasörüne
+  kopyala (Node/TypeScript için de aynı yöntem, Faz 72 notu).
+- **Ayrı, uzun ömürlü git branch'leri kullanılmıyor** -- `react-course-projects`/
   `microservices-course-projects` gibi kurs-proje repoları `main` üzerinde, yalnızca
   tag'lerle versiyonlanıyor.
+- **MockMvc testleri:** Boot 4'te paket ve starter değişti; ayrıntı
+  `docs/known-constraints.md` ("Boot 4: `@AutoConfigureMockMvc`").
 - Çok satırlı `//` Java yorumlarında her satırın başına `//` tekrar yazılmalı
-  (bir örnekte bunu unutup gerçek bir derleme hatası bırakılmıştı) — yazarken kontrol et.
+  (bir örnekte bunu unutup gerçek bir derleme hatası bırakılmıştı) -- yazarken kontrol et.
 
-Daha fazla ayrıntı, geçmiş hata örnekleri, ve her kısıtın hangi fazda nasıl
-keşfedildiği için `docs/known-constraints.md`'yi grep'le.
+Daha fazla ayrıntı, geçmiş hata örnekleri ve her kısıtın hangi fazda nasıl keşfedildiği
+için `docs/known-constraints.md`'yi grep'le.
