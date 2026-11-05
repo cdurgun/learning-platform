@@ -159,15 +159,14 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
 - **Flyway migration numaraları sıralı ve geçmişe dönük asla değiştirilmez** — her
   değişiklik yeni bir `V{n}__aciklama.sql` dosyası. SQL string literal'lerinde Türkçe
   apostrof geçen metinlerde (`Interface'in` gibi) SQL escaping'i (`''`) unutma.
-- **Migration dosyalarında (yorum satırları dahil) literal `${...}` yazma** —
-  Flyway'in varsayılan placeholder sözdizimi tam olarak `${...}` ve dosyanın
-  tamamını (SQL yorumları dahil) bu kalıba karşı tarıyor; eşleşen her `${...}`
-  için bir placeholder değeri bekliyor, yoksa "No value provided for
-  placeholder" hatasıyla **tüm uygulama başlamıyor** (Faz 23'te
-  `spring-mvc-views-thymeleaf` migration'larında Thymeleaf'in `${...}` değişken
-  ifadesinden bahsederken gerçekten yaşandı). Thymeleaf'ten bahseden bir migration
-  yazarken `${...}` yerine "dolar-süslü-parantez" gibi betimleyici bir ifade
-  kullan — `@{...}` ve `#{...}` sorun değil, yalnızca `$` önekli olan tetikliyor.
+- **Flyway placeholder değiştirme KAPALIDIR** (`application.yml`:
+  `spring.flyway.placeholder-replacement: false`; dev/prod/test profilleri geçersiz
+  kılmaz) — migration dosyalarında (yorum satırları dahil) literal `${...}`
+  kullanılabilir. Bu ayarı açmadan ya da bir profilde değiştirmeden önce
+  `grep -rl '\${' src/main/resources/db/migration` ile migration'ları tara ve etkisini
+  değerlendir: ayar açıkken eşleşen her `${...}` "No value provided for placeholder"
+  hatasıyla **tüm uygulamanın başlamasını engeller**. Gerekçe ve geçmiş:
+  `docs/architecture-rationale.md` §2.
 - **Migration dosyaları `db/migration/{konu-slug}/` alt klasörlerinde tutulur**
   (`core/`, `enum/`, `record/`, ... `threads/`) — Flyway, `classpath:db/migration`
   konumunu recursive taradığı için alt klasör derinliği versiyon sırasını etkilemez, bu
