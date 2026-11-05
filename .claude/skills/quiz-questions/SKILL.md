@@ -116,11 +116,16 @@ derleyip çalıştırır ve üç şeyi karşılaştırır: gerçek çıktı `exp
 **Tipler**
 - `SINGLE_CHOICE` çoğunluktur; tam 1 doğru.
 - `MULTIPLE_CHOICE`: soru metni birden fazla seçilebileceğini söyler. Puanlama kısmi doğruyu
-  kabul etmez (seçilen küme doğru kümeyle birebir eşleşmeli). **Sistemin (ingestion/puanlama)
-  kuralı: MULTIPLE_CHOICE en az bir doğru şık ister; tam iki zorunluluğu YOKTUR.** Buna karşılık
-  bu skill'in `build_quiz.py` denetimi kendi yazım konvansiyonu olarak en az 2 doğru şık ister
-  (daha azı hata) ve tam 2 dışını uyarır; bu skill'e özgü bir kısıttır, sistem kuralı değildir.
-  `SINGLE_CHOICE` ve `CODE_OUTPUT` her zaman tam 1 doğru şıktır.
+  kabul etmez (seçilen küme doğru kümeyle birebir eşleşmeli). Doğru şık sayısı için İKİ AYRI
+  kapsam vardır, karıştırma:
+  - **Sistem düzeyi doğrulama (uygulama):** `QuestionIngestService` MULTIPLE_CHOICE için en az
+    bir doğru şık ister; tam iki gibi bir zorunluluk YOKTUR. `SINGLE_CHOICE` ve `CODE_OUTPUT`
+    tam bir doğru şık ister.
+  - **`build_quiz.py` içerik üretim kontrolü (bu skill'e özgü, daha sıkı bir yazım konvansiyonu):**
+    MULTIPLE_CHOICE için en az 2 doğru şık ister (daha azı `check` hatasıdır) ve tam 2 dışını
+    uyarır. Bu, sistemin kuralı değildir; yalnızca bu skill'in ürettiği sorulara uygulanır.
+    Script'in davranışı bilerek değiştirilmedi (başka iş akışları/testler üzerindeki etkisi
+    incelenmeden değiştirilmeyecek; script yalnızca bu skill tarafından çağrılır).
 - `CODE_OUTPUT` yalnızca cevap gösterilen kodun çıktısına/davranışına bağlıysa ve ders bu tür
   bir kodu gerçekten gösteriyorsa. Kod yalnızca `code` alanına yazılır, soru metnine değil.
   Tersi de kural: cevabı gösterilen koda bağlı bir soru `SINGLE_CHOICE` olamaz, çünkü `code`
