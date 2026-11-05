@@ -144,7 +144,17 @@ VARIANTS = [
 # the program read stdin. A blocking pattern that matches ONLY there is still reported, as
 # the informational "<flag>:text-only". Informational patterns run on the raw source.
 CONTRACT_FLAGS = [
-    ("hash-order", r"\bHash(Map|Set)\b|Collectors\.(toSet|groupingBy|toMap|partitioningBy)\b|\b(Set|Map)\.of\("),
+    # Iteration order of hash-based collections is unspecified: HashMap/HashSet, the other hash maps
+    # (Hashtable, its subclass java.util.Properties, ConcurrentHashMap and its newKeySet(),
+    # IdentityHashMap, WeakHashMap), the immutable Set.of/Map.of/Map.ofEntries/Set.copyOf/Map.copyOf
+    # ("iteration order is unspecified and is subject to change"), collectors that build one of them
+    # (toSet, toMap, groupingBy, partitioningBy, their unmodifiable and concurrent forms), and
+    # Stream.unordered(). LinkedHashMap/LinkedHashSet, TreeMap/TreeSet and EnumMap/EnumSet are ordered.
+    ("hash-order", r"\bHash(Map|Set)\b|\b(ConcurrentHashMap|IdentityHashMap|WeakHashMap|Hashtable)\b"
+                   r"|\bnew\s+(java\s*\.\s*util\s*\.\s*)?Properties\s*\("
+                   r"|Collectors\s*\.\s*(toSet|groupingBy|toMap|partitioningBy|toUnmodifiableSet|toUnmodifiableMap"
+                   r"|toConcurrentMap|groupingByConcurrent)\b|\b(Set|Map)\s*\.\s*(of|ofEntries|copyOf)\s*\("
+                   r"|\.\s*unordered\s*\(\s*\)"),
     ("parallel", r"parallel\(|parallelStream\("),
     ("concurrency", r"\bThread\b|Executor|CompletableFuture"),
     ("time", r"\.now\(|currentTimeMillis|nanoTime"),
@@ -156,7 +166,7 @@ CONTRACT_FLAGS = [
     # The JVM's default zone / locale / charset / properties describe the machine, not the
     # program. The locale and timezone variant runs may happen not to show a difference.
     ("default-env", r"ZoneId\.systemDefault\(|TimeZone\.getDefault\(|Locale\.getDefault\(|Clock\.systemDefaultZone\("
-                    r"|Charset\.defaultCharset\(|System\.getProperty\(|Runtime\.version\(|availableProcessors\("
+                    r"|Charset\.defaultCharset\(|System\.getPropert(y|ies)\(|Runtime\.version\(|availableProcessors\("
                     r"|\.ofLocalized(Date|Time|DateTime)\("),
     # Set by localized_scanner_decimal_read(): a Scanner reads numbers with its locale, which
     # starts as Locale.getDefault(Locale.Category.FORMAT); a decimal token like "5.6" fails

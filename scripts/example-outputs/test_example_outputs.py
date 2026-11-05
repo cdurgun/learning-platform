@@ -922,6 +922,44 @@ class OutputTextFlagTest(unittest.TestCase):
                 self.assertNotIn(flag + eo.TEXT_ONLY_SUFFIX, flags, spec)
 
 
+class HashOrderCoverageTest(unittest.TestCase):
+
+    def test_other_hash_maps_immutable_copies_and_their_collectors_are_hash_order(self):
+        for body in ['Map<String, Integer> m = new ConcurrentHashMap<>();',
+                     'Set<String> s = ConcurrentHashMap.newKeySet();',
+                     'Map<String, Integer> m = new IdentityHashMap<>();',
+                     'Map<String, Integer> m = new WeakHashMap<>();',
+                     'Map<String, Integer> m = new Hashtable<>();',
+                     'Properties p = new Properties();\np.setProperty("a", "1");\nSystem.out.println(p);',
+                     'var p = new java.util.Properties();',
+                     'Set<String> s = Set.copyOf(List.of("b", "a"));',
+                     'Map<String, Integer> m = Map.copyOf(new TreeMap<>());',
+                     'Map<String, Integer> m = Map.ofEntries(Map.entry("a", 1));',
+                     'Set<String> s = names.stream().collect(Collectors.toUnmodifiableSet());',
+                     'var m = names.stream().collect(Collectors.toUnmodifiableMap(x -> x, String::length));',
+                     'var m = names.stream().collect(Collectors.toConcurrentMap(x -> x, String::length));',
+                     'var m = names.stream().collect(Collectors.groupingByConcurrent(String::length));',
+                     'names.stream().unordered().forEachOrdered(System.out::println);',
+                     'Set<String> s = names.stream().collect(Collectors.toCollection(HashSet::new));']:
+            flags = flags_of(program(body))
+            self.assertIn("hash-order", flags, body)
+            self.assertIn("hash-order", eo.blocking_flags(flags), body)
+
+    def test_ordered_collections_and_list_copies_are_not_hash_order(self):
+        for body in ['Map<String, Integer> m = new LinkedHashMap<>();\nSet<String> s = new LinkedHashSet<>();',
+                     'Map<String, Integer> m = new TreeMap<>();\nSet<String> s = new TreeSet<>();',
+                     'Map<Day, Integer> m = new EnumMap<>(Day.class);\nSet<Day> s = EnumSet.allOf(Day.class);',
+                     'Map<String, Integer> m = new ConcurrentSkipListMap<>();',
+                     'var e = Map.entry("a", 1);\nList<String> l = List.copyOf(names);',
+                     'List<String> l = names.stream().collect(Collectors.toUnmodifiableList());',
+                     'IdentityHashMapDemo d = new IdentityHashMapDemo();']:
+            flags = flags_of(program(body))
+            self.assertNotIn("hash-order", flags, body)
+        self.assertIn("default-env", eo.blocking_flags(flags_of(program('System.getProperties().list(System.out);'))))
+        self.assertIn("hash-order" + eo.TEXT_ONLY_SUFFIX,
+                      flags_of(program('// a ConcurrentHashMap would not keep this order\nList<String> l = List.of("a");')))
+
+
 class RecordTextFlagTest(unittest.TestCase):
     POINT = "record Point(int x, int y) { }\n"
 
