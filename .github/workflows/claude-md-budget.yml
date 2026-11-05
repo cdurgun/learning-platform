@@ -1,0 +1,41 @@
+# Warn-only size/history budget for CLAUDE.md (Stage 7 of the CLAUDE.md trim).
+# Never blocks: the job cannot fail on thresholds (the script exits 0 without --strict)
+# and continue-on-error keeps even an unexpected script error from turning the run red.
+# Thresholds are PROVISIONAL and live in scripts/check_claude_md.py only.
+# Independent of test.yml and of Railway's deploy behaviour.
+name: claude-md-budget
+
+on:
+  push:
+    paths:
+      - CLAUDE.md
+      - scripts/check_claude_md.py
+      - scripts/test_check_claude_md.py
+      - .github/workflows/claude-md-budget.yml
+  pull_request:
+    paths:
+      - CLAUDE.md
+      - scripts/check_claude_md.py
+      - scripts/test_check_claude_md.py
+      - .github/workflows/claude-md-budget.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Budget script tests
+        run: python3 -B -m unittest discover -s scripts -p 'test_check_claude_md.py'
+
+      - name: CLAUDE.md budget report
+        if: ${{ !cancelled() }}
+        run: |
+          python3 -B -I scripts/check_claude_md.py --github | tee report.txt
+          { echo '```'; cat report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
