@@ -29,9 +29,44 @@ bir alternatiftir, bu skill onu kullanmaz). SQL elle yazılmaz: sorular bir JSON
 7. **Kullanıcıya göster ve onay al.** `preview` çıktısını (şıkların nihai sırasıyla) sun.
    Onay gelmeden migration üretme.
 8. **Üret:** `... build_quiz.py generate SPEC.json` (önce `--dry-run` ile dosya adlarına bak).
-9. **Doğrula:**
+9. **Doğrula** — iki aşama, bu sırayla: önce 9a, geçerse 9b.
+
+   **9a — Yeni migration doğrulaması (ZORUNLU, geçici PostgreSQL; günlük testlerden ÖNCE).**
+   Yeni eklenen migration'ların gerçekten ve sıfırdan uygulandığını, kalıcı `learning`/`learning_test`
+   veritabanlarına DOKUNMADAN doğrula (2026-11-05'te gerçek çalıştırmayla doğrulanmış prosedür;
+   repoda script dosyası YOKTUR, adımlar bu sırayla uygulanır). `mvn -o flyway:migrate` ARTIK
+   kullanılmaz (ayrıntı: `docs/known-constraints.md`, "Faz 149" altındaki DÜZELTME). Önce
+   `src/main/resources/db/migration` altındaki `V<n>__*.sql` sürüm kümesini ve hedef sürüm(ler)i belirle.
+   9a'nın 9b'den önce olmasının nedeni: kusurlu bir migration kalıcı `learning_test`'e hiç ulaşmamalı;
+   uygulandıktan sonra dosya değiştirilirse Flyway checksum uyuşmazlığı verir.
+     1. Başlamadan önce DUR koşulları: ortamda `SPRING_*`, `JAVA_TOOL_OPTIONS`, `_JAVA_OPTIONS`,
+        `JDK_JAVA_OPTIONS`, `MAVEN_OPTS`, `MAVEN_ARGS`, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` ya da
+        `DATABASE_URL` tanımlıysa; `lp.migration-verify=1` etiketli başka bir container varsa.
+     2. Tek kullanımlık `postgres:16-alpine` container: `docker create --pull=never` (benzersiz ad,
+        `lp.migration-verify=1` etiketi, `-p 127.0.0.1::5432`, rastgele parola, ayrı veritabanı adı),
+        sonra `docker start`. Dönen tam ID'yi doğrula; temizliği YALNIZCA bu ID ile yap. PostgreSQL'in
+        TCP üzerinden hazır olmasını bekle (başlangıçtaki geçici sunucu TCP dinlemez), veritabanının
+        boş olduğunu doğrula.
+     3. `SPRING_DATASOURCE_URL` (`jdbc:postgresql://127.0.0.1:<port>/<db>`), `SPRING_DATASOURCE_USERNAME`
+        ve `SPRING_DATASOURCE_PASSWORD` değerlerini yalnızca şu komuta ver (JDK 21):
+        `mvn -o -B test -Dtest=LearningPlatformApplicationTests`. Test geçmeli ve Surefire raporunda
+        `tests="1"` ile hata/başarısızlık/atlama 0 olmalı. `mvn test` yaşam döngüsü `process-resources`'ı
+        da çalıştırır, `target/classes` bayat kalmaz.
+     4. Geçici container'da `flyway_schema_history`: `success` olan sürümlerin kümesi dosya kümesine
+        birebir eşit (metin olarak sıralanmış), `NOT success` kayıt yok, her hedef için
+        `SELECT success FROM flyway_schema_history WHERE version = '<n>'` sonucu `t`. Geçici veritabanı
+        boş kaldıysa test başka bir veritabanına bağlanmış olabilir: başarısız say, başarı mesajı verme.
+     5. Her durumda (hata dahil) yalnızca kendi container'ını sil; silinemediyse açıkça raporla.
+     Kapsam: yalnızca `V<n>__*.sql`. `R__`, callback `.sql`, `U__`, Java migration ya da noktalı sürüm
+     eklenirse yöntem yeniden değerlendirilmeli (kümeler uyuşmaz, doğrulama bilerek başarısız olur).
+   Herhangi bir adım ya da kontrol başarısız olursa DUR: migration düzeltilmeden 9b'ye GEÇİLMEZ.
+   Migration dosyası düzeltildiğinde 9a baştan, yeni bir geçici container'la yeniden çalıştırılır.
+
+   **9b — Günlük test ve içerik denetimi (kalıcı `learning_test`).** Bu aşama yeni migration
+   doğrulaması değildir. Migration doğrulaması 9a'da tamamlanmış olmalıdır. Bu aşamadaki Spring Boot
+   testleri bekleyen migration'ları kalıcı `learning_test` veritabanına uygulayabilir.
    - `JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home mvn -q test`
-     — migration'ları temiz `learning_test` veritabanına uygular. Bu makinede Maven
+     — bekleyen migration'ları kalıcı `learning_test` veritabanına uygular. Bu makinede Maven
      varsayılan JDK'sı (26) Lombok'u kırar, JDK 21 şart.
    - Soru ve bağlantı sayılarını `learning_test`'te SQL ile say (dil başına çift sayısı kadar).
    - Tekrar kontrolü: `check` spec içinde ve konunun mevcut havuzunda BİREBİR (normalize) aynı
@@ -41,10 +76,6 @@ bir alternatiftir, bu skill onu kullanmaz). SQL elle yazılmaz: sorular bir JSON
      (tüm doğrular → tam skor; MULTIPLE_CHOICE'ta kısmi doğru → o soru yanlış sayılır).
    - Link migration'ları idempotent olmalı: aynı veritabanında ikinci kez uygulanınca
      (ya da promotion zaten çalışmışken) soru/link sayısı değişmemeli (bkz. "Migration kuralları").
-   - Yeni eklenen migration'ın gerçekten uygulandığından emin ol: `mvn -o flyway:migrate`
-     derlenmiş `target/classes`'ı tarar, `src/main/resources`'ı değil; yeni dosya henüz
-     derlenmediyse SESSİZCE atlanır. `mvn test` derlemeyi yaptığı için bu adımda güvenlidir
-     (ayrıntı: `docs/known-constraints.md`, "Faz 149").
    - `CONTENT_CHECK_PSQL="docker exec learning-platform-db psql -U learning -d learning_test" python3 .claude/skills/content-check/check_content.py --slug {slug}`
      — quiz metnindeki bölüm atıflarını denetler. Dev veritabanı, uygulama bir kez
      başlatılana kadar yeni migration'ı görmez; bu yüzden test veritabanına karşı çalıştır.
