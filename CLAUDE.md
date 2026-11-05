@@ -832,6 +832,31 @@ iki önceden var olan ilgisiz untracked dosyası (`AGENTS.md`,
 edilmedi. Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 154"i
 grep'le.
 
+## Dokümanlar ve Skill'ler
+
+Bu dosya yalnızca KURALLARI taşır; gerekçe, tarihçe ve işletim adımları aşağıdaki dosyalardadır.
+Hiçbiri otomatik yüklenmez: göreve göre `grep` ile ara, baştan sona `Read` ile okuma.
+
+- `docs/phase-log.md` -- tamamlanan fazların tablosu (konu/kategori adı, migration deseni, daha önce
+  çözülmüş hata sınıfı). Yeni bir karardan önce burada ara.
+- `docs/known-constraints.md` -- kısıtların tam kronolojik geçmişi ve workaround tarifleri.
+- `docs/architecture-rationale.md` -- Mimari kuralların NEDENİ (kuralın kendisi burada, Mimari'de).
+  Başlıklar: çeviri tarihleri (`published_at`/`updated_at`), Flyway `${...}`, "Beklenen Çıktı"
+  sözleşmesi (bayrak tabloları dahil), Internal API ve `X-Api-Key`, dev -> prod promotion,
+  Google hesap bağlama politikası, soru havuzu ve yayınlama. İlgili kuralı değiştirmeden önce oku;
+  `scripts/example_outputs.py` davranışı değişirse "Beklenen Çıktı" bölümü de gözden geçirilmeli.
+- `docs/google-sign-in-operations.md` -- Google girişini açma/yeniden kurma runbook'u (kural değil).
+- `docs/google-seo-adsense-plan.md` -- SEO/AdSense yol haritası ve kararları (ders sayfalarının
+  anonim açık kalması gerekçesi dahil).
+- `docs/deepseek-ai-tutor-plan.md` -- AI Tutor mimarisi ve devreye alma planı; güncel durum için
+  planın kendisine bak, burada tarihli durum tutulmaz.
+- `docs/mcp-server-plan.md`, `docs/skills-plan.md`, `docs/ProjectPlan.md` -- ilgili plan dokümanları.
+- `n8n/README.md` -- n8n workflow'larının kapsamı ve çalıştırılması.
+- Skill'ler (`.claude/skills/`): `content-check` (ders içeriğini yalnızca raporlar: bölüm atıfları,
+  `{{Dosya.ext}}` gömmeleri, migration'lar, SEO uzunlukları; içerik değişikliğinden sonra, commit'ten
+  önce), `deploy-check` (push'tan sonra canlı site ve Railway deployment kontrolü),
+  `quiz-questions` (bir topic'e quiz sorusu ve migration'ları yazma).
+
 ## Proje Yapısı
 
 Aşağıdaki liste yönlendirme içindir, tam sınıf listesi değildir; ayrıntı için dizine bak.
