@@ -232,6 +232,10 @@ CONTRACT_FLAGS = [
     # Set by count_skips_side_effects(): peek()/println in a pipeline that ends in count(), which
     # may skip the whole pipeline when the size is known from the source (Stream.count Javadoc).
     ("count-elision", None),
+    # Set by count_unresolved(): count() on a stream the analysis cannot follow (a parameter, a
+    # field, a method declared elsewhere) in a program that prints from inside a stream pipeline.
+    # Not decidable statically, so blocked rather than passed silently.
+    ("count-unresolved", None),
     # Informational, set by stream_side_effects(): printing from inside a stream pipeline.
     ("stream-side-effects", None),
     # Informational: the message text of an exception. Allowed only when the program itself
@@ -249,7 +253,7 @@ BLOCKING_FLAGS = {"hash-order", "parallel", "concurrency", "time", "random", "st
                   "scanner-locale", "reflection-order", "identity-text", "external-io", "cwd-path",
                   "temp-file", "directory-order", "file-metadata", "optional-file-exception",
                   "object-identity", "lambda-identity", "optional-text", "priority-queue-order",
-                  "count-elision"}
+                  "count-elision", "count-unresolved"}
 # Informational flags matched on the code (comments and string literals blanked) instead of
 # the raw source: a file API named only in printed text or a comment is no file access.
 CODE_INFO_FLAGS = {"local-file", "deletes-files", "stream-side-effects", "exception-message",
@@ -826,23 +830,188 @@ def statement_before(code: str, pos: int) -> str:
 
 
 SIDE_EFFECT = re.compile(r"\.\s*peek\s*\(\s*[^\s)]|\bSystem\s*\.\s*(?:out|err)\b")
-STREAM_VARIABLE = re.compile(r"\b(?:Stream|IntStream|LongStream|DoubleStream)\s*(?:<[^;=]*>)?\s+([a-z_]\w*)\s*=")
+STREAM_TYPE_NAMES = {"Stream", "IntStream", "LongStream", "DoubleStream"}
+# Calls that return a stream when called on a stream (or start one from a source).
+STREAM_TO_STREAM = {"map", "mapToObj", "mapToInt", "mapToLong", "mapToDouble", "flatMap", "flatMapToInt",
+                    "flatMapToLong", "flatMapToDouble", "filter", "sorted", "distinct", "takeWhile", "dropWhile",
+                    "mapMulti", "peek", "limit", "skip", "boxed", "parallel", "sequential", "unordered", "onClose",
+                    "asLongStream", "asDoubleStream"}
+STREAM_START = re.compile(r"\.\s*(?:stream|parallelStream|chars|codePoints|lines|splitAsStream|results|datesUntil)"
+                          r"\s*\(|\b(?:Stream|IntStream|LongStream|DoubleStream|StreamSupport)\s*\.\s*\w+\s*\("
+                          r"|\bArrays\s*\.\s*stream\s*\(")
+METHOD_DECLARATION = re.compile(r"(?<![\w.])(?!(?:if|for|while|switch|catch|synchronized|return|new|else)\b)"
+                                r"([A-Za-z_][\w.]*(?:\s*<[^;{}()]*>)?(?:\s*\[\s*\])*)\s+([a-z_]\w*)\s*"
+                                r"\(([^;{}()]*)\)\s*(?:throws\s+[\w.,\s]+)?\{")
+
+
+def declared_methods(code: str) -> dict:
+    """method name -> list of (return type, body) for every method declared in code."""
+    found = {}
+    for m in METHOD_DECLARATION.finditer(code):
+        close = matching_close(code, m.end() - 1)
+        if close > 0:
+            found.setdefault(m.group(2), []).append((m.group(1).split("<")[0].strip(), code[m.end():close]))
+    return found
+
+
+def printing_methods(methods: dict) -> set:
+    """Declared methods that print (directly or through another printing method)."""
+    printing = {n for n, decls in methods.items() if any(SIDE_EFFECT.search(b) for _, b in decls)}
+    changed = True
+    while changed:
+        changed = False
+        for n, decls in methods.items():
+            if n not in printing and any(calls_any(b, printing) for _, b in decls):
+                printing.add(n)
+                changed = True
+    return printing
+
+
+def calls_any(text: str, names: set) -> bool:
+    return any(re.search(rf"(?<![\w.]){re.escape(n)}\s*\(|::\s*{re.escape(n)}\b", text) for n in names)
+
+
+def has_side_effect(text: str, printing: set) -> bool:
+    return SIDE_EFFECT.search(text) is not None or calls_any(text, printing)
+
+
+def last_call(expr: str):
+    """(name, receiver text) of the outermost call an expression ends with, or None."""
+    expr = expr.rstrip()
+    if not expr.endswith(")"):
+        return None
+    open_ = matching_open(expr, len(expr) - 1)
+    head = re.search(r"(?:(\.)\s*)?([A-Za-z_]\w*)\s*(?:<[^<>;]*>)?\s*$", expr[:open_]) if open_ > 0 else None
+    if not head:
+        return None
+    return head.group(2), expr[:head.start()] if head.group(1) else None
+
+
+def expression_root(expr: str) -> tuple:
+    """The first token of a call chain: ("new"|"literal"|"this"|"call"|"class"|"name"|"other", name)."""
+    m = re.match(r"\s*(?:\(\s*[A-Z]\w*(?:<[^>]*>)?\s*\)\s*)?(new\b|\"\"|this\b|[A-Za-z_]\w*)\s*(\(|\.|::)?", expr)
+    if not m:
+        return "other", ""
+    token, after = m.group(1), m.group(2)
+    if token == "new":
+        return "new", ""
+    if token == '""':
+        return "literal", ""
+    if token == "this":
+        return "this", ""
+    if after == "(":
+        return "call", token
+    if token[0].isupper():
+        return "class", token
+    return "name", token
+
+
+def stream_variables(code: str) -> dict:
+    """name -> right-hand sides assigned to it (declaration and every later `name = ...`), for
+    every variable that holds a stream: declared Stream/IntStream/... or `var x = <stream>`.
+    A stream variable with no right-hand side is a parameter or an unassigned field."""
+    declarations = declared_variables(code)
+    names = {n for n, decls in declarations.items() if any(t in STREAM_TYPE_NAMES and not d for t, _, d, _ in decls)}
+    changed = True
+    while changed:  # `var` variables: their initializer is a stream (possibly from another stream variable)
+        changed = False
+        for n, decls in declarations.items():
+            if n not in names and any(t == "var" and is_stream_expression(init, names) for t, _, _, init in decls):
+                names.add(n)
+                changed = True
+    assigned = {}
+    for n in names:
+        rhs = [statement_from(code, m.end()) for m in re.finditer(rf"(?<![\w.]){re.escape(n)}\s*=(?!=)", code)]
+        assigned[n] = rhs
+    return assigned
+
+
+STREAM_SOURCE_CALLS = {"stream", "parallelStream", "chars", "codePoints", "lines", "splitAsStream", "results",
+                       "datesUntil"}
+STREAM_FACTORIES = {"of", "ofNullable", "empty", "range", "rangeClosed", "iterate", "generate", "concat"}
+
+
+def is_stream_expression(expr: str, streams: set) -> bool:
+    """The expression's value is a stream: a source call, a stream factory, an intermediate
+    operation on one of those, or another stream variable."""
+    expr = expr.strip()
+    if re.fullmatch(r"[a-z_]\w*", expr):
+        return expr in streams
+    call = last_call(expr)
+    if not call or call[1] is None:
+        return False
+    name, receiver = call
+    if name in STREAM_SOURCE_CALLS:
+        return True
+    if name in STREAM_FACTORIES:
+        return re.search(r"(?<![\w.])(?:Stream|IntStream|LongStream|DoubleStream)\s*$", receiver) is not None
+    if name in STREAM_TO_STREAM:  # Optional.map/filter return an Optional: needs a stream underneath
+        kind, root = expression_root(expr)
+        return STREAM_START.search(receiver) is not None or (kind == "name" and root in streams)
+    return False
+
+
+def stream_state(expr: str, code: str, streams: dict, methods: dict, printing: set, seen: frozenset) -> str:
+    """"noisy" (a side effect may run before count()), "clean", or "unknown" for a stream expression."""
+    if has_side_effect(expr, printing):
+        return "noisy"
+    kind, root = expression_root(expr)
+    if kind in ("new", "literal", "class"):
+        return "clean"
+    if kind == "call":
+        decls = methods.get(root)
+        if not decls:
+            return "unknown"
+        return "noisy" if any(has_side_effect(body, printing) for _, body in decls) else "clean"
+    if kind == "name" and root in streams:
+        if root in seen:
+            return "clean"
+        if not streams[root]:
+            return "unknown"  # a parameter or an unassigned field: any stream may arrive
+        states = {stream_state(rhs, code, streams, methods, printing, seen | {root}) for rhs in streams[root]}
+        return "noisy" if "noisy" in states else "unknown" if "unknown" in states else "clean"
+    if kind == "name" and root in declared_variables(code):
+        return "clean"  # a collection, array, string, ...: count() starts a new pipeline from it
+    return "unknown"
+
+
+def count_receivers(code: str) -> list:
+    """For every `.count()`: (its statement up to the call, the receiver chain's text)."""
+    result = []
+    for m in re.finditer(r"\.\s*count\s*\(\s*\)", code):
+        result.append((statement_before(code, m.start()), code[chain_start(code, m.start()):m.start()]))
+    return result
 
 
 def count_skips_side_effects(code: str) -> bool:
     """Stream.count(): "An implementation may choose to not execute the stream pipeline ... if
     it is capable of computing the count directly from the stream source. In such cases no
     source elements will be traversed and no intermediate operations will be evaluated." So
-    peek()/println side effects in a pipeline ending in count() may or may not print."""
-    noisy_streams = {m.group(1) for m in STREAM_VARIABLE.finditer(code)
-                     if SIDE_EFFECT.search(statement_from(code, m.end()))}
-    for m in re.finditer(r"\.\s*count\s*\(\s*\)", code):
-        statement = statement_before(code, m.start())
-        if SIDE_EFFECT.search(statement):
+    peek()/println side effects in a pipeline ending in count() may or may not print. The
+    pipeline is followed through stream variables (typed or `var`, reassignments included) and
+    declared methods that return a stream or print."""
+    methods = declared_methods(code)
+    printing = printing_methods(methods)
+    streams = stream_variables(code)
+    for statement, receiver in count_receivers(code):
+        if has_side_effect(statement, printing):
             return True
-        if any(re.search(rf"(?<![\w.]){re.escape(s)}\b", statement) for s in noisy_streams):
+        if stream_state(receiver, code, streams, methods, printing, frozenset()) == "noisy":
             return True
     return False
+
+
+def count_unresolved(code: str) -> bool:
+    """count() on a stream the analysis cannot follow (a parameter, a field, `this.x`, a method
+    that is not declared here) in a program that prints from inside a stream pipeline: whether
+    count() skips those side effects cannot be decided, so the example is not passed silently."""
+    methods = declared_methods(code)
+    printing = printing_methods(methods)
+    if not (stream_side_effects(code) or intermediate_calls_any(code, printing)):
+        return False
+    streams = stream_variables(code)
+    return any(stream_state(receiver, code, streams, methods, printing, frozenset()) == "unknown"
+               for _, receiver in count_receivers(code))
 
 
 INTERMEDIATE_OP = re.compile(r"\.\s*(?:map|mapToObj|mapToInt|mapToLong|mapToDouble|flatMap|filter|sorted|distinct"
@@ -862,6 +1031,15 @@ def stream_side_effects(code: str) -> bool:
     return False
 
 
+def intermediate_calls_any(code: str, printing: set) -> bool:
+    """A declared printing method is called or referenced inside an intermediate operation."""
+    for m in INTERMEDIATE_OP.finditer(code):
+        close = matching_close(code, m.end() - 1)
+        if close > 0 and calls_any(code[m.end():close], printing):
+            return True
+    return False
+
+
 CATCH_PARAMETER = re.compile(r"\bcatch\s*\(\s*(?:final\s+)?[\w.|\s]+?\s+([a-z_]\w*)\s*\)")
 
 
@@ -875,13 +1053,15 @@ DETECTORS = {"identity-text": array_identity_text, "scanner-locale": localized_s
              "directory-order": unsorted_directory_listing, "deletes-files": deletes_java_io_file,
              "object-identity": object_identity_text, "lambda-identity": lambda_identity_text,
              "optional-text": optional_text, "priority-queue-order": priority_queue_order,
-             "count-elision": count_skips_side_effects, "stream-side-effects": stream_side_effects,
+             "count-elision": count_skips_side_effects, "count-unresolved": count_unresolved,
+             "stream-side-effects": stream_side_effects,
              "exception-text": caught_exception_text}
 # Detectors that also read the type declarations of the example's companions.
 CONTEXT_DETECTORS = {"object-identity", "lambda-identity"}
 # Structural detectors (types, variables, call chains): run on raw text, prose in comments parses
 # as code ("a class implementing the interface ... {"), so they give no ":text-only" note.
-STRUCTURAL_FLAGS = {"object-identity", "lambda-identity", "optional-text", "priority-queue-order", "count-elision"}
+STRUCTURAL_FLAGS = {"object-identity", "lambda-identity", "optional-text", "priority-queue-order", "count-elision",
+                    "count-unresolved"}
 
 # A path literal that leaves the working directory: absolute ("/data", "C:\\x", "\\\\host"),
 # home-relative ("~/x") or with a ".." segment. Checked on the code with only the comments

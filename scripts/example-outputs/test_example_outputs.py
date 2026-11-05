@@ -663,7 +663,8 @@ class IdentityTextFlagTest(unittest.TestCase):
 
 # --- text whose format the API does not fix: objects, lambdas, Optional, PriorityQueue, count() ----
 
-NEW_TEXT_FLAGS = ["object-identity", "lambda-identity", "optional-text", "priority-queue-order", "count-elision"]
+NEW_TEXT_FLAGS = ["object-identity", "lambda-identity", "optional-text", "priority-queue-order", "count-elision",
+                  "count-unresolved"]
 EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "src/main/resources/examples"
 
 
@@ -834,7 +835,47 @@ class OutputTextFlagTest(unittest.TestCase):
     def test_count_without_side_effects_and_queue_peek_are_not_count_elision(self):
         for body in ['long n = names.stream().filter(s -> s.isEmpty()).count();\nSystem.out.println(n);',
                      'Queue<Integer> q = new ArrayDeque<>();\nSystem.out.println(q.peek() + " " + q.stream().count());',
+                     'List<String> names = List.of("a");\n'
                      'names.stream().peek(System.out::println).toList();\nlong n = names.stream().count();']:
+            self.assertNoFlag("count-elision", program(body))
+            self.assertNoFlag("count-unresolved", program(body))
+
+    def test_count_follows_var_streams_reassignments_and_declared_methods(self):
+        for body in ['var noisy = names.stream().peek(System.out::println);\nlong n = noisy.count();',
+                     'var a = names.stream().peek(x -> System.out.println(x));\nvar b = a.map(String::trim);\n'
+                     'System.out.println(b.count());',
+                     'var s = names.stream().map(x -> { System.out.println(x); return x; });\nlong n = s.count();',
+                     'Stream<String> s = names.stream();\ns = s.peek(System.out::println);\nlong n = s.count();',
+                     'long n = noisy().count();\n}\n'
+                     'static Stream<String> noisy() { return List.of("a").stream().peek(System.out::println);',
+                     'long n = names.stream().map(Main::log).count();\n}\n'
+                     'static String log(String s) { System.out.println(s); return s;',
+                     'long n = names.stream().filter(x -> check(x)).count();\n}\n'
+                     'static boolean check(String s) { show(s); return true; }\n'
+                     'static void show(String s) { System.out.println(s);']:
+            self.assertFlag("count-elision", program(body))
+
+    def test_count_on_clean_var_streams_is_not_flagged(self):
+        for body in ['List<String> names = List.of("a");\nvar s = names.stream().filter(x -> x.isEmpty());\n'
+                     'System.out.println(s.count());',
+                     'List<String> names = List.of("a");\nvar o = Optional.of("a").map(String::trim);\n'
+                     'System.out.println(names.stream().count() + o.get());',
+                     'List<String> names = List.of("a");\nSystem.out.println(total(names.stream()));\n}\n'
+                     'static long total(Stream<String> s) { return s.count();',
+                     'long n = clean().count();\n}\nstatic Stream<String> clean() { return Stream.of("a");']:
+            self.assertNoFlag("count-elision", program(body))
+            self.assertNoFlag("count-unresolved", program(body))
+
+    def test_count_on_a_stream_that_cannot_be_followed_is_blocked_not_passed(self):
+        self.assertIn("count-unresolved", eo.BLOCKING_FLAGS)
+        for body in ['List<String> names = List.of("a");\nnames.stream().peek(System.out::println).toList();\n'
+                     'System.out.println(total(names.stream()));\n}\n'
+                     'static long total(Stream<String> s) { return s.count();',
+                     'List<String> names = List.of("a");\nnames.stream().peek(System.out::println).toList();\n'
+                     'System.out.println(Helper.make().count() + other().count());',
+                     'List<String> names = List.of("a");\nnames.stream().map(x -> { System.out.println(x); return x; })'
+                     '.toList();\nSystem.out.println(this.items.count());']:
+            self.assertFlag("count-unresolved", program(body))
             self.assertNoFlag("count-elision", program(body))
 
     def test_stream_side_effects_are_informational(self):
