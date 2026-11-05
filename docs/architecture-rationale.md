@@ -172,7 +172,7 @@ iki dilin `updated_at`'ini ilerletir (bkz. §1, kural 1).
 ## 4. Internal API ve `X-Api-Key` fail-closed
 
 **Kural:** `/api/internal/**` yalnızca `X-Api-Key` ile; anahtar yapılandırılmamışsa istekler reddedilir.
-n8n PostgreSQL'e ya da prod'a doğrudan bağlanmaz, yalnızca bu API'yi çağırır. (CLAUDE.md, "Mimari": Faz 87 maddesi ve Faz 144-148 güncellemeleri.)
+n8n PostgreSQL'e ya da prod'a doğrudan bağlanmaz; yalnızca `/api/internal/**` HTTP uç noktalarını çağırır (ingest, salt-okunur okumalar, bayrakla kapalı `auto-publish`). (CLAUDE.md, "Mimari": Faz 87 maddesi ve Faz 144-148 güncellemeleri.)
 
 **Kimlik doğrulama modeli.** Bu yol tarayıcı oturumu olmayan makineden makineye bir çağrıdır, bu yüzden
 Spring Security'nin form girişi değil, paylaşılan sır (`QuizIngestApiKeyInterceptor`) kullanılır:
@@ -214,7 +214,8 @@ yorumları); `docs/phase-log.md` Faz 87, 144, 145, 146, 148; `n8n/README.md`.
 ## 5. Development → Production promotion ve `EXPORT_SOURCE_DB_*` ayrımı
 
 **Kural:** yeni soru üretimi/incelemesi hiçbir zaman migration olarak yazılmaz; yalnızca *promotion* bir
-migration'dır; export script yalnızca AÇIK dev id listesi alır ve production'a bağlanamaz.
+migration'dır; export script yalnızca AÇIK dev id listesi alır ve hiçbir veritabanına YAZMAZ (üretilen migration'ın prod'a yazılması
+yalnızca normal deploy'da Flyway ile olur).
 (CLAUDE.md, "Mimari" / Faz 143 güncellemesi.)
 
 **Neden üretim migration olarak yazılmaz (gerçek bir tasarım hatasından).** Önceki taslak, `PENDING_REVIEW`
@@ -225,22 +226,25 @@ prod'da gerçek bir **duplicate satır** yaratırdı. Nihai tasarım: üretim/in
 (`QuestionIngestController`, kaynağı fark etmez); yalnızca onaylanan soru doğrudan `status = 'PUBLISHED'` ile tek bir
 `INSERT` migration'ı (`db/migration/question-promotion/`) olarak taşınır.
 
-**`EXPORT_SOURCE_DB_*` ≠ `DB_*` gerekçesi.** Script kaynağı `psql` ile **yalnızca SELECT** ile okur; production'a bağlanabilecek
-hiçbir kod yolu yoktur. Ortam değişkeni adları, `application-prod.yml`'in okuduğu `DB_URL`/`DB_USERNAME`/`DB_PASSWORD`'den
+**`EXPORT_SOURCE_DB_*` ≠ `DB_*` gerekçesi.** Script kaynağı `psql` ile **yalnızca SELECT** ile okur ve hiçbir veritabanına yazmaz; ama
+bağlandığı sunucuyu yalnızca `EXPORT_SOURCE_DB_*` belirler (host izin listesi ya da salt-okunur transaction yoktur,
+`scripts/export_approved_questions.py` `:50-54`, `:82-83`). Ortam değişkeni adları, `application-prod.yml`'in okuduğu `DB_URL`/`DB_USERNAME`/`DB_PASSWORD`'den
 **kasıtlı olarak farklıdır** (`EXPORT_SOURCE_DB_HOST/PORT/NAME/USER/PASSWORD`): kullanıcı kabuğunda ilgisiz bir sebeple
 prod kimlik bilgilerini dışa aktarmış olsa bile script bunları yanlışlıkla **devralamaz**. Varsayılanlar projenin kendi
 `docker-compose.yml` dev kurulumuna (`localhost:5433`, `learning`) eşittir.
 
-**Sınır (çıkarım, script kodundan):** koruma *isimlendirme ve kod yolu yokluğu* ile sağlanır, bir kimlik duvarı değildir:
-biri `EXPORT_SOURCE_DB_HOST`'u bilerek prod'a işaret ederse script (yalnızca SELECT ile) oradan okurdu. Güvence yanlışlıkla
-kimlik bilgisi alma ve yazma yolunun yokluğudur.
+**Sınır (script kodundan doğrulandı):** koruma *isimlendirme* ile sağlanır, bir kimlik duvarı değildir: biri
+`EXPORT_SOURCE_DB_HOST`'u bilerek prod'a işaret ederse script bağlanır ve (yalnızca SELECT ile) oradan okur. Güvence, yanlışlıkla
+prod kimlik bilgisi devralmamak ve scriptin hiçbir yere yazmamasıdır. Script'in docstring'indeki "NEVER connects to production…
+by construction" ifadesi yalnızca varsayılan yapılandırma için doğrudur.
 
 **Diğer koruma kararları (kullanıcı kararı, Faz 143).**
 - **Asla "tüm PUBLISHED" yok:** yalnızca açıkça verilen dev `question.id`'ler (kullanıcının bilinçli kararı; script başlığı: "never a blanket 'export everything PUBLISHED' query").
 - **Statü kontrolü:** `PUBLISHED` olmayan (PENDING_REVIEW/REJECTED/DRAFT) tek bir id bile **tüm batch'i** açık bir hatayla iptal eder
   (sessizce atlamak kısmi/yanıltıcı çıktı üretirdi); seçeneği olmayan soru da reddedilir.
 - **Tekrar-promote önleme bir SÜREÇ sorumluluğudur,** yapısal koruma iddia edilmez: migration başlığındaki dev id listesi
-  tek kayıttır; `promoted_at` kolonu ya da unique constraint bilinçli olarak EKLENMEDİ.
+  tek kayıttır; `promoted_at` kolonu ya da unique constraint bilinçli olarak EKLENMEDİ (migration'lar ve Java kodu taranarak doğrulandı: yalnızca 7
+  promotion migration'ının yorumunda "yok" diye geçer; canlı DB sorgulanmadı).
 - **Taşınabilirlik:** topic dev `topic.id` ile değil `slug` alt sorgusuyla çözülür; dev id'ler yalnızca dokümantasyon/provenance
   (hiçbir SQL'de FK değeri değil); `reviewed_by`/`reviewed_at` dev satırından aynen kopyalanır (gerçek inceleme provenance'ı korunur,
   yeni bir "promoted_at" damgası yok). Flyway sürüm numarası klasör taranarak otomatik belirlenir.
