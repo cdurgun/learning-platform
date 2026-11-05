@@ -408,3 +408,39 @@ Konum: CLAUDE.md "Token ve Bağlam Verimliliği" bölümü, "ZIP teslimatı" mad
 
 ### 15.5 Dokunulmadığı doğrulananlar
 Faz 96 ve Faz 114 paragrafları, Faz 150 ve Faz 155-159 paragrafları (`INSERT INTO quiz`, `ON CONFLICT`, `NOT EXISTS`, `auto-publish` kuralları) CLAUDE.md'de duruyor (kontrol: önceki sürüme göre sayılar aynı, `GÜNCELLEME (Faz 96)`=1, `(Faz 114)`=1, `(Faz 150)`=1, `(Faz 155-159)`=1). Kod ve README dosyaları bu aşamada değiştirilmedi.
+
+## 16. Aşama 6 uygulama kaydı (2026-11-05)
+
+Commit'ler (önceki commit'lere dokunulmadı): `b8e46c0` skill kuralları → `b46bbc7` skill tekrar-kontrolü/HTTP notu → `16dee18` CLAUDE.md quiz paragraflarının işaretçiyle değişimi → `54e25ba` "Dokümanlar ve Skill'ler" bölümü → bu kayıt.
+
+### 16.1 CLAUDE.md (silinen) ↔ skill karşılaştırması
+Silinen: Faz 150 paragrafı (2,7 KB) ve Faz 155-159 paragrafı (2,0 KB). Kural düzeyinde eşleştirme (skill'de `SKILL.md` metni arandı):
+| CLAUDE.md'deki kural | Skill'de |
+|---|---|
+| `grep -rl "INSERT INTO quiz"` shell kontrolü; shell varsa yalnızca promotion+link | "Migration kuralları", `INSERT INTO quiz` maddesi (+ script `preview` "Quiz shell: VAR/yok") |
+| docker `duplicate key` hatası (kök neden) | aynı madde, `quiz_topic_id_language_slug_key` ile |
+| Portable link migration: slug ile id çözümü, `NOT EXISTS`, `ON CONFLICT DO NOTHING` | `NOT EXISTS / ON CONFLICT` maddesi (kodla birebir: `build_quiz.py` `link_sql`) |
+| auto-publish endpoint, kapalı varsayılan, geçiş kuralı | "Yayın yolları ve auto-publish" (`QUIZ_AUTO_PUBLISH_ENABLED` varsayılan false → 503, PENDING_REVIEW-only → 409, `n8n-ai-judge`) |
+| 4–7 esnek soru, EN=TR eşit; eski sabit 7 / 10+10 | adım 3 (4–7 çift, eski kalıplar geçersiz) |
+| MC: sistem kuralı ≥1; tam 2 sayı kuralı değil | "Tipler" maddesi (aşağıdaki not) |
+| CODE_OUTPUT yalnızca gerçek komut/kod çıktısı senaryosunda | "Tipler" (zaten vardı) |
+| n8n/OpenAI/AI Judge kullanılmaz | giriş paragrafı (zaten vardı) |
+| `mvn -o flyway:migrate` `target/classes` tuzağı | adım 9 (eklendi) |
+| yeniden çalıştırma/idempotency | adım 9 (eklendi) |
+| near-duplicate taraması | adım 9: `check` yalnızca BİREBİR tekrarı yakalar; bulanık tarama YOK, gözle (eklendi, sınır açıkça yazıldı) |
+| gerçek HTTP quiz submit doğrulaması | adım 9, isteğe bağlı (eklendi) |
+| 220 soru/milestone, migration numaraları, kurs bazlı sayılar | skill'e taşınmadı: tarihçe, `docs/phase-log.md` Faz 150 / 155-159 satırlarında (satırlar mevcut) |
+CLAUDE.md'de bilerek KALAN: tek paragraflık işaretçi + `grep -rl "INSERT INTO quiz"` kuralının kısa hâli (skill yalnızca tetiklenince yüklenir; kural dosya-bağımsız kalsın diye).
+
+### 16.2 Bulgu: skill'in MC denetimi sistem kuralından sıkı
+`build_quiz.py:328-332`: MULTIPLE_CHOICE için **en az 2 doğru şık HATA, tam 2 dışı UYARI**. Sistem kuralı ise en az bir (`QuestionIngestService` 137-138). SKILL.md artık bu ayrımı açıkça yazıyor ("sistem kuralı: en az bir; tam iki zorunluluğu YOKTUR; skill denetimi kendi konvansiyonu"). Script DEĞİŞTİRİLMEDİ (kapsam dışı). Karar gerekir: script gevşetilsin mi (≥1) yoksa skill'e özgü konvansiyon olarak kalsın mı.
+
+### 16.3 Dokümanlar ve Skill'ler bölümü
+Yeni bölüm yalnızca doğrulanmış yolları anar (11 yol için `os.path.exists` = True): phase-log, known-constraints, architecture-rationale (başlıklar isimle, numarasız), google-sign-in-operations, google-seo-adsense-plan, deepseek-ai-tutor-plan ("tarihli durum burada tutulmaz"), mcp-server-plan, skills-plan, ProjectPlan, n8n/README, üç skill. Dokümanların tarihli durumları CLAUDE.md'ye kopyalanmadı.
+
+### 16.4 Kullanıcı notlarının doğrulanması
+(1) JDK 21/Lombok: CLAUDE.md "Bilinen Kısıtlar" ilk madde, "JDK 22-25 denenmedi" ifadesi korunuyor. (2) Eski sandbox maddesi "ortama bağlı… ortamda doğrula" olarak işaretli. (3) ZIP kuralı "Token ve Bağlam Verimliliği"nde aynen duruyor; Aşama 8'de yeniden değerlendirilecek. (4) CI ve Railway ayrı: "Railway'in build'i `mvn ... -DskipTests` çalıştırır, deploy testleri HİÇ çalıştırmaz" ve GitHub Actions maddesi ayrı cümlelerde. Faz 96 ve 114 paragrafları dokunulmadı (sayım: her biri 1).
+
+### 16.5 Açık noktalar
+- AI Tutor için CLAUDE.md'de kalıcı değişmez kural maddesi YOK (yalnızca yapı satırları ve plan dokümanı işaretçisi). İlk plandaki "yalnızca kalıcı invariantlar" maddesi henüz yazılmadı; kodla doğrulanmadan yazılmayacak.
+- Faz 139 "spring-boot/react seed'i henüz eklenmedi" cümlesi hâlâ doğrulanmadı.
