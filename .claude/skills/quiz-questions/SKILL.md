@@ -15,7 +15,10 @@ bir alternatiftir, bu skill onu kullanmaz). SQL elle yazılmaz: sorular bir JSON
    varsa yeni sorular mevcutlara eklenir (script pozisyonu ve batch numarasını kendisi bulur).
 2. **Dersi oku:** `content/en/{slug}.md`, `content/tr/{slug}.md` ve gömülen örnek dosyalar.
    Sorular yalnızca dersin gerçekten anlattığına dayanır.
-3. **Kavramları listele, çiftleri seç.** Dersin uzunluğuna ve kavram yoğunluğuna göre 4–7 çift.
+3. **Kavramları listele, çiftleri seç.** Dersin uzunluğuna ve kavram yoğunluğuna göre **4–7 çift**
+   (her çift = 1 EN + 1 TR soru, yani her dilde eşit sayıda soru). Sayı artık sabit değildir:
+   eski 7'lik (ai batch'leri) ve 10+10'luk (git-github) kalıplar geçerli değil, dersin gerçek
+   uzunluğu ve kavram yoğunluğu belirler.
 4. **Spec'i yaz** — proje içine değil, geçici dizine (scratchpad).
 5. **Denetle:** `python3 .claude/skills/quiz-questions/build_quiz.py check SPEC.json`.
    Hata ve uyarı sıfır olmalı. `check`, Java kod çıktısı sorularını gerçekten derleyip
@@ -31,6 +34,12 @@ bir alternatiftir, bu skill onu kullanmaz). SQL elle yazılmaz: sorular bir JSON
      — migration'ları temiz `learning_test` veritabanına uygular. Bu makinede Maven
      varsayılan JDK'sı (26) Lombok'u kırar, JDK 21 şart.
    - Soru ve bağlantı sayılarını `learning_test`'te SQL ile say (dil başına çift sayısı kadar).
+   - Link migration'ları idempotent olmalı: aynı veritabanında ikinci kez uygulanınca
+     (ya da promotion zaten çalışmışken) soru/link sayısı değişmemeli (bkz. "Migration kuralları").
+   - Yeni eklenen migration'ın gerçekten uygulandığından emin ol: `mvn -o flyway:migrate`
+     derlenmiş `target/classes`'ı tarar, `src/main/resources`'ı değil; yeni dosya henüz
+     derlenmediyse SESSİZCE atlanır. `mvn test` derlemeyi yaptığı için bu adımda güvenlidir
+     (ayrıntı: `docs/known-constraints.md`, "Faz 149").
    - `CONTENT_CHECK_PSQL="docker exec learning-platform-db psql -U learning -d learning_test" python3 .claude/skills/content-check/check_content.py --slug {slug}`
      — quiz metnindeki bölüm atıflarını denetler. Dev veritabanı, uygulama bir kez
      başlatılana kadar yeni migration'ı görmez; bu yüzden test veritabanına karşı çalıştır.
@@ -101,8 +110,12 @@ derleyip çalıştırır ve üç şeyi karşılaştırır: gerçek çıktı `exp
 
 **Tipler**
 - `SINGLE_CHOICE` çoğunluktur; tam 1 doğru.
-- `MULTIPLE_CHOICE` tam 2 doğru; soru metni birden fazla seçilebileceğini söyler. Puanlama kısmi
-  doğruyu kabul etmez.
+- `MULTIPLE_CHOICE`: soru metni birden fazla seçilebileceğini söyler. Puanlama kısmi doğruyu
+  kabul etmez (seçilen küme doğru kümeyle birebir eşleşmeli). **Sistemin (ingestion/puanlama)
+  kuralı: MULTIPLE_CHOICE en az bir doğru şık ister; tam iki zorunluluğu YOKTUR.** Buna karşılık
+  bu skill'in `build_quiz.py` denetimi kendi yazım konvansiyonu olarak en az 2 doğru şık ister
+  (daha azı hata) ve tam 2 dışını uyarır; bu skill'e özgü bir kısıttır, sistem kuralı değildir.
+  `SINGLE_CHOICE` ve `CODE_OUTPUT` her zaman tam 1 doğru şıktır.
 - `CODE_OUTPUT` yalnızca cevap gösterilen kodun çıktısına/davranışına bağlıysa ve ders bu tür
   bir kodu gerçekten gösteriyorsa. Kod yalnızca `code` alanına yazılır, soru metnine değil.
   Tersi de kural: cevabı gösterilen koda bağlı bir soru `SINGLE_CHOICE` olamaz, çünkü `code`
@@ -138,12 +151,52 @@ derleyip çalıştırır ve üç şeyi karşılaştırır: gerçek çıktı `exp
 **Zorluk**
 - Konunun kendi zorluğu etrafında dağıt; her şeyi `BEGINNER` yapma.
 
-## Script'in ürettiği dosyalar
+## Migration kuralları
 
-Var olan konvansiyonla aynı: `question-promotion/V{n}__promote_questions_{slug}-batch-{k}.sql`,
-gerekirse `{slug}/V{n+1}__{slug}_quiz_topic.sql` (quiz shell), ardından EN ve TR link
-migration'ları. Shell yalnızca hiçbir migration'da yoksa üretilir: bazı kursların (ör. docker)
-konu migration'ı shell'i zaten ekler, ikincisi `duplicate key` ile uygulamayı durdurur. Script
-var olan bir dosyanın üzerine yazmaz ve üretilen SQL elle düzenlenmez — düzeltme gerekiyorsa
-spec'i düzelt, dosyaları silip yeniden üret (yalnızca henüz commit edilmemişse; commit edilmiş
-bir migration asla değiştirilmez).
+**Dosya seti (dört dosyalık standart desen).** Script şunları üretir:
+`question-promotion/V{n}__promote_questions_{slug}-batch-{k}.sql` (her iki dilin soruları,
+`status='PUBLISHED'`, `source='CLAUDE'`), gerekirse `{slug}/V{n+1}__{slug}_quiz_topic.sql` (quiz
+shell), ardından EN ve TR link migration'ları. `k` = o konunun var olan promotion dosyası sayısı
++ 1; link pozisyonu = quiz'in mevcut son pozisyonu + 1 (script bunu veritabanından okur, okuyamazsa
+durur). Script var olan bir dosyanın üzerine yazmaz ve üretilen SQL elle düzenlenmez --
+düzeltme gerekiyorsa spec'i düzelt, dosyaları silip yeniden üret (yalnızca henüz commit
+edilmemişse; commit edilmiş bir migration asla değiştirilmez).
+
+**`INSERT INTO quiz` (shell) kuralı.** Bir konuya soru eklemeden önce, o konunun var olan
+migration'larında quiz shell'inin zaten eklenip eklenmediğini ÖNCE tara:
+`grep -rl "INSERT INTO quiz" src/main/resources/db/migration` (konunun slug'ına göre süz). Script
+aynı taramayı yapar (`preview` çıktısında "Quiz shell: VAR/yok"). Shell zaten varsa yalnızca
+promotion + EN link + TR link yazılır (shell migration'ı ATLANIR); yoksa dört dosyanın tamamı
+yazılır. Neden: bazı kursların konu-oluşturma migration'ları (docker, git-github) shell'i içerik
+yazılırken zaten ekler; `ai` ve `postgresql` kurslarında eklemez. Bu, her kurs için doğru olmadığı
+için önceden varsayılmaz: docker quiz'i hazırlanırken dört dosya hiç sorgulanmadan tekrarlandı ve
+disposable-DB doğrulaması `duplicate key value violates unique constraint
+"quiz_topic_id_language_slug_key"` ile başarısız oldu.
+
+**`NOT EXISTS` / `ON CONFLICT DO NOTHING` (link migration) davranışı.** Her soru metne (kod
+sorusuysa `code_snippet` dahil) göre aranır; yoksa oluşturulur ve şıkları yalnızca yeni eklenen
+soruya yazılır (`NOT EXISTS` kontrolü). Quiz, sabit bir id ile değil `topic.slug` + `language` +
+quiz slug'ı (`default`) ile çözülür, yani migration taşınabilirdir (dev ve prod'da id'ler farklı).
+Bağlantı `ON CONFLICT (quiz_id, question_id) DO NOTHING` ile yazılır. Sonuç: dosya hem temiz
+veritabanında hem promotion migration'ı zaten çalışmış veritabanında güvenle uygulanır ve yeniden
+çalıştırmak kopya yaratmaz. Bir soruyu `PUBLISHED` yapmak onu sabit quiz'e kendiliğinden eklemez;
+bağlantı için link migration şarttır.
+
+## Yayın yolları ve auto-publish
+
+Bu skill'in soruları ingestion API'den GEÇMEZ: promotion migration'ı soruyu doğrudan
+`status='PUBLISHED'`, `source='CLAUDE'` olarak yazar; insan onayı bu skill'de adım 7'dir. Diğer
+yollar:
+
+- **Ingestion** (`POST /api/internal/questions/ingest`, n8n/OpenAI hattı) her soruyu her zaman
+  `PENDING_REVIEW` kaydeder. Tip başına doğru şık: SINGLE_CHOICE/CODE_OUTPUT tam bir,
+  MULTIPLE_CHOICE en az bir.
+- **Question Review** (insan): ADMIN ekranı, Publish/Reject yalnızca `PENDING_REVIEW`'dan
+  (aksi `409`).
+- **Auto-publish** (`POST /api/internal/questions/{id}/auto-publish`) n8n'in AI Judge yolu
+  içindir; bu skill onu KULLANMAZ. Kuralları: aynı `X-Api-Key` VE ikinci anahtar
+  `QUIZ_AUTO_PUBLISH_ENABLED` (varsayılan `false`, kapalıyken `503`); yalnızca
+  `PENDING_REVIEW`→`PUBLISHED` geçişi, aksi `409` (insan Publish/Reject ile aynı kural);
+  `reviewed_by` = `n8n-ai-judge`. Auto-publish ya da Question Review soruyu sabit quiz'e
+  eklemez; bunun için yukarıdaki link migration gerekir. (git-github dersleri geçmişte bu
+  yolla yayınlanıp promotion + link ile taşındı.)
