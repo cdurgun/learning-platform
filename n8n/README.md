@@ -2,9 +2,27 @@
 
 This directory holds n8n workflow definitions that call the existing
 `POST /api/internal/questions/ingest` endpoint (`QuestionIngestController`/
-`QuestionIngestService`). n8n never talks to Postgres directly, never connects
-to production, and never publishes/rejects questions — it only ever calls this
-one HTTP endpoint, exactly like a manual `curl` call would.
+`QuestionIngestService`). n8n never talks to Postgres directly and never connects
+to production; it only calls HTTP endpoints under `/api/internal/**` with the
+`X-Api-Key` header, exactly like a manual `curl` call would.
+
+- `workflows/question-ingestion-test-batch.json` calls only the ingestion endpoint.
+  Ingested questions are always saved as `PENDING_REVIEW`; the ingestion API cannot
+  publish or reject.
+- `workflows/question-generation-enum-test.json` additionally calls the read-only
+  topic/question endpoints and contains the `AI Judge …` nodes and
+  `Post-Ingest Status Decision`, which calls
+  `POST /api/internal/questions/{id}/auto-publish` only for questions the AI Judge
+  approved (at most 10 per run). That endpoint answers `503`
+  unless the app runs with `QUIZ_AUTO_PUBLISH_ENABLED=true` (default `false`), and it
+  applies the same `PENDING_REVIEW`-only transition as a human Publish/Reject
+  (a question in any other status gets `409`).
+- `workflows/question-translation-en-to-tr.json` uses the read-only
+  `for-translation` and `existing` endpoints and the ingestion endpoint; it never
+  calls `auto-publish`.
+
+If a workflow's behavior changes (for example a new internal endpoint), update this
+list in the same change.
 
 ## workflows/question-ingestion-test-batch.json
 
