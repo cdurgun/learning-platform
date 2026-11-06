@@ -122,6 +122,12 @@ yalnızca insan incelemesine işaret eder.
 **`HashMap`/`HashSet` sırası (`hash-order`).** `HashMap` Javadoc'u yineleme sırası için garanti vermez ve sıranın zamanla sabit kalacağını da
 garanti etmez (Javadoc bilgisi; script yorumu yalnızca "iteration order of hash-based collections" der). Belirli bir JVM'de tekrarlanabilir
 görünmesi sözleşme değildir. Aynı mantık `toSet`/`groupingBy`/`toMap`/`partitioningBy` ve `Set.of`/`Map.of` için geçerlidir.
+Bayrak şu biçimleri de yakalar (`CONTRACT_FLAGS` yorumu; testler: `HashOrderCoverageTest`): `ConcurrentHashMap` (`newKeySet()` dahil), `IdentityHashMap`,
+`WeakHashMap`, `Hashtable` ve onun alt sınıfı `new Properties()`; `Set.ofEntries`/`Map.ofEntries`/`Set.copyOf`/`Map.copyOf` (script yorumu: "iteration order is
+unspecified and is subject to change"); toplayıcıların `toUnmodifiableSet`/`toUnmodifiableMap`/`toConcurrentMap`/`groupingByConcurrent` biçimleri;
+`Collectors.toCollection(HashSet::new)` (içindeki `HashSet` adı yüzünden); ve `Stream.unordered()`. Sıralı olanlar işaretlenmez: `LinkedHashMap`/`LinkedHashSet`,
+`TreeMap`/`TreeSet`, `EnumMap`/`EnumSet`, `ConcurrentSkipListMap`, `List.copyOf`, `toUnmodifiableList`. Ad yalnızca yorumda ya da string'te geçiyorsa bayrak engelleyici
+değil, bilgilendirici `hash-order:text-only` olur (tüm engelleyici desenler yorum ve string'ler boşaltılmış kod üzerinde çalışır).
 
 **Dosya örnekleri.** Serbest: kendi oluşturduğu dosyaları *göreli adla*, her çalıştırmada temiz/boş/yazılabilir çalışma dizininde (sandbox `/tmp`;
 sınıflar dışarıda, salt okunur) okuyup yazan örnek; panel o dizindeki **ilk** çalıştırmayı gösterir, önceden var olan dosya varsayılmaz. Engelli:
@@ -148,14 +154,21 @@ sınıflar dışarıda, salt okunur) okuyup yazan örnek; panel o dizindeki **il
 | `identity-text`, `object-identity`, `lambda-identity` | `hashCode()`, `toString()`i olmayan nesne, lambda/anonim sınıf metni (`Dog@1b6d3586`) | kimlik metni çalıştırmaya göre değişir |
 | `optional-text` | `Optional` yazdırma | Javadoc: biçim "unspecified" |
 | `priority-queue-order` | `PriorityQueue`'yu yazdırma/dolaşma/kopyalama | iterator sırası garanti değil (`poll`/`peek` serbest) |
-| `count-elision` | `count()` ile biten pipeline'da `peek`/`println` | kaynak boyutu biliniyorsa pipeline atlanabilir |
+| `count-elision` | `count()` ile biten pipeline'da `peek`/`println` | `Stream.count` Javadoc'u: kaynaktan sayı doğrudan hesaplanabiliyorsa pipeline hiç çalıştırılmayabilir, ara işlemler değerlendirilmeyebilir. Pipeline stream değişkenleri (tipli ya da `var`, sonradan yeniden atamalar dahil) ve aynı dosyada bildirilmiş, stream döndüren ya da yazdıran metotlar (başka yazdıran metodu çağıranlar dahil) üzerinden izlenir |
+| `count-unresolved` | `count()` izlenemeyen bir stream'e uygulanıyorsa (parametre, alan, `this.x`, bu dosyada bildirilmemiş metot) **ve** program stream pipeline'ı içinden yazdırıyorsa | `count()`'un yan etkiyi atlayıp atlamadığı statik olarak karara bağlanamaz; sessizce geçirmek yerine engellenir. Temiz bildirilmiş ya da yazdırmayan kaynaklar bayraklanmaz |
 | `reflection-order` | `getDeclaredFields/Methods/...()` | Javadoc: "not sorted and not in any particular order" (HotSpot'un bildirim sırasını koruması sözleşme değil) |
 
-**Bilgilendirici bayraklar** panelden dışlamaz, yalnızca insan incelemesine not düşer: `fail-fast` (`ConcurrentModificationException`), `locale-format`, `floating-point-text`, `stream-side-effects`, `local-file`, `deletes-files`, `main-args`, `exception-text`, `stderr`. Stderr'e yazan koşu hiç panele alınmaz (yalnızca stdout gösterilir).
+**Bilgilendirici bayraklar** panelden dışlamaz, yalnızca insan incelemesine not düşer (`BLOCKING_FLAGS`'te YOKTURLAR): `fail-fast` (`ConcurrentModificationException`), `locale-format`, `floating-point-text`, `stream-side-effects`, `local-file`, `deletes-files`, `line-separator`, `scanner-locale-set`, `main-args`, `exception-message`, `exception-text`, `record-text`, `stream-foreach-order`, `stderr`. Stderr'e yazan koşu hiç panele alınmaz (yalnızca stdout gösterilir). Engelleyici bayrağın yalnızca yorum/string'de geçmesi de bilgilendirici `<bayrak>:text-only` olur.
+
+- **`record-text`.** `toString()`'i kendisi tanımlamayan bir `record`'un metne çevrilip yazdırılması (değişken, koleksiyon/dizi elemanı, ya da yalnızca bu record'lardan oluşan arayüz üzerinden; companion'daki record da bilinir). `Record.toString` Javadoc'u biçimi "unspecified and subject to change" diye bırakır. **İnceleme kararı (2026-11-01):** yazdırılan satırlar bu metni göstermiyorsa onaylanır, aksi halde reddedilir (`RISK_NOTES`). Kendi `toString()`'i olan record ve record bileşenlerinin okunması işaretlenmez.
+- **`stream-foreach-order`.** Sıralı bir stream üzerinde `Stream.forEach`. Javadoc: "explicitly nondeterministic"; yalnızca `forEachOrdered` karşılaşma sırasını vaat eder (HotSpot pratikte korur, ama sözleşme değil). Dersin yazdırılan sırayı garanti gibi sunmadığı durumda onaylanır. İşaretlenmeyenler: `forEachOrdered`, `Iterable.forEach`/`Map.forEach` (`List`, `Deque`, `TreeMap`...; sırasız kaynaklar zaten `hash-order`/`priority-queue-order` ile engelli) ve paralel pipeline (zaten `parallel` ile engelli).
 
 **İstisna mesajı kuralı (`exception-message`, `56ef740`, 2026-11-03).** İnsan incelemesi kuralı: mesaj yalnızca programın *kendi* istisna kurucusuna verdiği
 *string literal* ise onaylanır; JDK'nın ürettiği mesajlar (`"/ by zero"`, `"For input string: ..."`, index mesajları) ve değişken/çalışma zamanı verisinden
 kurulanlar, her parça ayrıca sabit gösterilmedikçe reddedilir (`RISK_NOTES`). Nedeni script'te yazılı değil (çıkarım: JDK mesajları API ile sabit değil).
+**Araç bunu ayıramaz:** `new X("order not found")`, `new X("order " + id + " not found")` ve JDK'nın `"/ by zero"`'su aynı bayrakları alır, hiçbiri engellenmez ve her varyantta
+aynı yazdırılabilir; ayrım tamamen elle incelemedir (script başlığı ve `ExceptionFlagTest`: "does not tell a literal ... manual review rule"). Stack trace ve stderr'deki her şey
+zaten panele girmez (`STDERR_NOT_EMPTY`).
 
 **Companion, `.out` ve manifest.** Aynı dersin başka dosyasındaki tipi kullanan örnek o dosyayla (zincirleme) derlenir; tip dersin tam *bir* dosyasında
 tanımlı olmalı, yoksa örnek `MULTI_FILE` kalır. Companion'ın JDK dışı import'u ve bayrakları örneğe de uygulanır, hash'i `manifest.tsv` `companions`
@@ -167,7 +180,11 @@ sütununa yazılır. `ExampleOutputManifestTest`, `.out`'u olan bir `.java` ya d
 `target/` dışındaki git-ignored `.example-outputs/`'tadır (Faz 180). Panel eklemek sayfada görünen örneği değiştirdiği, örnek dosyalar iki dilin ortak kaynağı olduğu için
 iki dilin `updated_at`'ini ilerletir (bkz. §1, kural 1).
 
-**Kaynaklar:** `scripts/example_outputs.py`; `ExampleOutputManifestTest`; `StagingLocationTest`; `docs/phase-log.md` Faz 177-181, 189-193.
+**Seçilen varyantların kanıtı (`selftest`).** `selftest` ayrıca `IdentityHashProbe` (`scripts/example-outputs/selftest/`) çalıştırır: "identity-hash" varyantı gerçekten kimlik hash'lerini
+değiştirmiyorsa `Dog@1b6d3586` gibi metin her koşuda aynı çıkıp panele girerdi. Seçenek JVM tarafından reddedilirse ya da sessizce yok sayılırsa sonuç PASS değil FAIL'dir
+(`IdentityHashSelftestTest`).
+
+**Kaynaklar:** `scripts/example_outputs.py` (`CONTRACT_FLAGS`, `BLOCKING_FLAGS`, `CODE_INFO_FLAGS`, `RISK_NOTES`, `selftest`) ve testleri `scripts/example-outputs/test_example_outputs.py` (bayrak testleri, `IdentityHashSelftestTest`); `scripts/example-outputs/selftest/`; `ExampleOutputManifestTest`; `StagingLocationTest`; `docs/phase-log.md` Faz 177-181, 189-193.
 
 ## 4. Internal API ve `X-Api-Key` fail-closed
 
