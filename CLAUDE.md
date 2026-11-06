@@ -46,30 +46,28 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `scripts/example-outputs/manifest.tsv`'ye hash'leriyle yazar. Çıktısı Java API
   sözleşmesiyle sabit olmayan örnekler (HashMap/HashSet sırası, paralel stream,
   thread, zaman, rastgelelik, ağ/süreç/ortam değişkeni) çalıştırmada aynı çıksa bile
-  panele ALINMAZ. Dosya kullanan örnekler YALNIZCA kendi oluşturdukları dosyaları
-  göreli adla, çalışma dizininin içinde okuyup yazıyorsa panele girebilir: her çalıştırma
-  temiz, boş ve izole bir çalışma dizininde başlar (sandbox'ın kendi `/tmp`'si; derlenmiş
-  sınıflar onun dışında, salt okunur), panel de o dizindeki İLK çalıştırmayı gösterir --
-  okuyucunun dizininde önceden var olan dosyalar varsayılmaz. Mutlak, `~`'li ya da `..`
-  ile dışarı çıkan yollar, `toAbsolutePath()` gibi makineye göre değişen yol metinleri,
-  `createTemp*` adları, sıralanmamış dizin listeleri (`Files.list/walk/find`), dosya
-  zamanı/sahibi/izinleri ve Javadoc'ta "optional specific exception" olan
-  `java.nio.file` istisnalarına (`NoSuchFileException`, `FileAlreadyExistsException`
-  vb.) dayanan dallar ENGELLİ kalır (`scripts/example_outputs.py`, `CONTRACT_FLAGS`).
-  Satır sonu Linux `\n`'dir; `newLine()`/`Files.write(path, lines)` yalnızca not düşer.
-  Aynı dersin başka dosyasındaki tipi kullanan örnek o dosyayla (companion, zincirleme
-  bulunur) birlikte derlenir: tip derste tam bir dosyada tanımlı olmalı, yoksa örnek
-  `MULTI_FILE` kalır; companion'ın JDK dışı import'u ve sözleşme bayrakları örneğe de
-  uygulanır, hash'i manifest'in `companions` sütununa yazılır.
-  `ExampleOutputManifestTest`, `.out`'u olan bir `.java` ya da companion'ı değişince
-  build'i kırar: çıktıyı yeniden üret + incele ya da `.out`'u ve manifest satırını sil.
-  Panel eklemek sayfada görünen örneği değiştirdiği için iki dilin `updated_at`'ini de ilerletir
-  (aşağıdaki tarih kuralı, örn. `functional-interfaces-streams/V1139`). Dalga akışı
-  (Faz 178): `generate --topic SLUG [--dry-run]` → kullanıcı `review.tsv`'de her
-  örneğe ayrı `approve`/`reject` verir → `promote --review` (tek hata varsa hiçbir
-  dosya yazılmaz); çalıştırmadan önce `--dry-run` listesi gösterilir. Staging (Faz 180'den
-  beri) kökteki git-ignored `.example-outputs/` dizinidir, `target/` DEĞİL -- herhangi bir
-  oturumun `mvn clean`'i incelenmemiş çıktıları silmesin diye; `StagingLocationTest` bunu korur.
+  panele ALINMAZ. Dosya kullanan örnek YALNIZCA kendi oluşturduğu dosyaları göreli adla,
+  temiz ve izole çalışma dizininde kullanıyorsa girebilir; mutlak, `~`'li ya da `..`
+  yollar, `createTemp*`, sırasız dizin listeleri, dosya zamanı/sahibi/izinleri ve
+  Javadoc'ta "optional specific exception" olan `java.nio.file` dalları ENGELLİ kalır
+  (`scripts/example_outputs.py`, `CONTRACT_FLAGS`). Aynı dersin başka dosyasındaki tipi
+  kullanan örnek o dosyayla (companion) birlikte derlenir ve hash'i manifest'in
+  `companions` sütununa yazılır; tip tam bir dosyada tanımlı değilse örnek `MULTI_FILE`
+  kalır. `ExampleOutputManifestTest` (örneği çalıştırmaz, yalnızca dosyaları ve
+  manifest hash'lerini karşılaştırır), `.out`'u olan bir `.java` ya da companion'ı
+  değişince build'i kırar: eski çıktı artık geçersizdir. Örnek hâlâ sözleşmeyle sabit
+  bir çıktı üretiyorsa doğru çözüm çıktıyı yeniden üretmek (`generate`), incelemek ve
+  `promote` etmektir; `.out`'u ve manifest satırını silmek yalnızca panel o örnekte
+  artık kullanılmayacaksa seçenektir. Panel eklemek sayfada görünen örneği değiştirdiği için iki dilin
+  `updated_at`'ini de ilerletir (aşağıdaki tarih kuralı, örn.
+  `functional-interfaces-streams/V1139`). Dalga akışı (Faz 178): `generate --topic SLUG
+  [--dry-run]` → kullanıcı `review.tsv`'de her örneğe ayrı `approve`/`reject` verir →
+  `promote --review` (tek hata varsa hiçbir dosya yazılmaz). `--dry-run` her örneğin
+  ön-kontrol sonucunu listeler, hiçbir şey çalıştırmaz ve yazmaz; çalıştırmadan önce bu
+  liste gösterilir. Staging (Faz 180) kökteki
+  git-ignored `.example-outputs/` dizinidir, `target/` DEĞİL (`mvn clean` incelenmemiş
+  çıktıları silmesin; `StagingLocationTest` korur). Bayrak tabloları, satır sonu notu ve
+  gerekçeler: `docs/architecture-rationale.md` §3.
 - **Yayın durumu çeviri seviyesindedir:** `Topic`'te `published` yok,
   `TopicTranslation`'da var — bir dil yayında, diğeri taslak olabilir (örn. TR yayında,
   EN henüz taslak). Yeni bir konu eklerken önce TR'yi `published = true`, EN'i
@@ -77,11 +75,9 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
 - **Her çevirinin iki tarihi vardır: `topic_translation.published_at` ve `updated_at`
   (`DATE`, `core/V1137`).** `updated_at` ders sayfasındaki "Son güncelleme" satırını,
   JSON-LD'deki `dateModified`'ı ve sitemap'teki `<lastmod>`'u besler. `published_at`
-  HİÇBİR YERDE YAYINLANMAZ (sayfada, JSON-LD'de `datePublished` olarak ya da sitemap'te) —
-  yalnızca iç kayıttır; gerçek yayın tarihini garanti etmediği için bilinçli bir karar,
-  `datePublished` EKLEME. Bu tarihler
-  OTOMATİK DEĞİLDİR: git'ten ya da çalışma anında türetilmez, yalnızca migration'la
-  değişir (içerik dosyada yaşadığı için DB satırı kendiliğinden değişmez). Kurallar:
+  HİÇBİR YERDE YAYINLANMAZ (sayfada, JSON-LD'de `datePublished` olarak ya da sitemap'te)
+  — yalnızca iç kayıttır, `datePublished` EKLEME. İki tarih de OTOMATİK DEĞİLDİR:
+  git'ten ya da çalışma anında türetilmez, yalnızca migration'la değişir. Kurallar:
   (1) Bir dersin gövdesi (`content/{lang}/{slug}.md`) ya da sayfada görünen örnek kodu
   (`examples/{slug}/*`) ANLAMLI biçimde değişirse, aynı commit'te o slug + dil için
   `updated_at`'i AÇIK bir tarihle (`DATE '2026-11-03'` gibi) ilerleten bir migration
@@ -91,10 +87,11 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `INSERT`'i değişmeden çalışır: iki kolon `DEFAULT CURRENT_DATE` taşır, yani tarih
   migration'ın o ortamda uygulandığı gün olur. (3) EN çevirisi sonradan yayına alınırken
   (`publish_{slug}_english` migration'ı) `updated_at` yayın günüyle AÇIKÇA yazılır —
-  taslak satır eklendiği günün tarihini taşır. (4) `published_at` bir
-  kez yazıldıktan sonra değiştirilmez; `updated_at >= published_at` DB kısıtıdır.
-  Mevcut 336 çevirinin `published_at` değeri dosyanın git'teki İLK COMMIT tarihidir,
-  sitenin gerçek yayın tarihi değildir (bkz. `docs/google-seo-adsense-plan.md`).
+  taslak satır eklendiği günün tarihini taşır. (4) `published_at` bir kez yazıldıktan
+  sonra değiştirilmez; `updated_at >= published_at` DB kısıtıdır. Mevcut 336 çevirinin
+  `published_at` değeri dosyanın git'teki İLK COMMIT tarihidir, sitenin gerçek yayın
+  tarihi değildir. Gerekçe ve ayrıntı: `docs/architecture-rationale.md` §1,
+  `docs/google-seo-adsense-plan.md`.
 - **Dil, Faz 64'ten beri URL path'inin bir parçası, query parametresi değil:**
   gerçek içerik `/en/topics/{slug}` ve `/tr/topics/{slug}` altında (anasayfa: `/en`,
   `/tr`); eski `/topics/{slug}?lang=..` URL'leri 301 ile yeni adrese yönlendirilir
