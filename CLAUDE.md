@@ -149,13 +149,17 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   bölümünde...), **asla numarayla değil** ("Bölüm 3'te..." yazma). Bir bölüme referans
   verirken, o bölümün H2 başlığıyla **birebir aynı metni** tırnak içinde kullan — TR ve
   EN dosyaları ayrı ayrı doğrulanmalı.
-- **i18n:** `?lang=tr|en`. UI metinleri `messages*.properties`'de, içerik çevirisi
-  (`content/{lang}/*.md` + `TopicTranslation`) tamamen ayrı bir katman. **Varsayılan dil
-  İngilizce** (`LangParamLocaleResolver.DEFAULT_LOCALE`) — `lang` parametresi yoksa/
-  bozuksa arayüz de içerik de İngilizce'ye düşer. `HomeController`/`TopicController`,
-  `lang` verilmediğinde `LocaleContextHolder.getLocale()`'i (yani bu resolver'ın
-  sonucunu) kullanır — kendi başına ayrı bir varsayılan **tanımlama**; aksi halde arayüz
-  ile içerik dili birbirinden sapar (Faz 12'de yaşanan gerçek bir hataydı).
+- **i18n:** UI metinleri `messages*.properties`'de, içerik çevirisi
+  (`content/{lang}/*.md` + `TopicTranslation`) tamamen ayrı bir katman. Dil, "Dil, Faz
+  64'ten beri URL path'inin bir parçası" maddesindeki gibi URL path'inden (`{lang:en|tr}`)
+  belirlenir; `LangParamLocaleResolver` önce path'in ilk segmentine bakar, bulamazsa
+  `?lang=` parametresine bakar. `?lang=` YALNIZCA eski yer imleri/linkler için geriye
+  dönük uyumluluktur (bu yedek ve çıplak `/` negotiator'ı); yeni route'larda
+  kullanılmaz. **Varsayılan dil İngilizce** (`LangParamLocaleResolver.DEFAULT_LOCALE`) —
+  ikisi de yoksa/bozuksa arayüz de içerik de İngilizce'ye düşer. Controller'lar dili
+  `{lang:en|tr}` path variable'ından alır ve kendi başlarına ayrı bir varsayılan
+  **tanımlamaz**; aksi halde arayüz ile içerik dili birbirinden sapar (Faz 12'de
+  yaşanan gerçek bir hataydı).
 - **Flyway migration numaraları sıralı ve geçmişe dönük asla değiştirilmez** — her
   değişiklik yeni bir `V{n}__aciklama.sql` dosyası. SQL string literal'lerinde Türkçe
   apostrof geçen metinlerde (`Interface'in` gibi) SQL escaping'i (`''`) unutma.
@@ -278,7 +282,7 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   hâlâ artık var olmayan tekil `selectedOptionId`/`correctOptionId` alanlarını
   okuyordu. İkisi de düzeltildi (`collectAnswers()` her soru için ayrı
   `{questionId, selectedOptionIds}` topluyor, backend `QuizService`/`QuizAnswer`
-  DOKUNULMADI). Ayrıca `topic.html`'deki şık `<input>`'u da (`MULTIPLE_CHOICE`
+  DOKUNULMADI). Ayrıca `fragments/quiz.html`'deki şık `<input>`'u da (`MULTIPLE_CHOICE`
   hâlâ radio render ediyordu, tarayıcı seviyesinde birden fazla şık SEÇİLEMEZDİ)
   `th:type="${q.type()...} ? 'checkbox' : 'radio'"` ile düzeltildi (`quiz.js`
   zaten generic `:checked` sorgusu kullandığı için başka bir JS değişikliği
@@ -290,12 +294,8 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   manuel olarak `PUBLISHED`'a çekilip `quiz_question_link`'e geçici (migration
   DEĞİL, elle SQL) eklendi, tarayıcıda checkbox olarak render edildiği,
   birden fazla şıkkın aynı anda seçilebildiği ve iki doğru şık seçilince
-  quiz'in **6/6 — Passed** sonucu döndürdüğü doğrulandı. Kullanıcının kendi
-  ortamında `mvn clean test`: **43 test, 0 hata, 0 başarısızlık, BUILD
-  SUCCESS.** Bu sandbox'ta `mvn -o test` hâlâ Lombok'un offline modda hiç
-  annotation processing yapmaması yüzünden tamamlanamıyor (bkz.
-  `docs/known-constraints.md`) — kod defektiyle İLGİSİZ, kullanıcının kendi
-  ortamı asıl doğrulama kaynağı.
+  quiz'in **6/6 — Passed** sonucu döndürdüğü doğrulandı. Ayrıntı ve
+  gerekçe: `docs/architecture-rationale.md` §7 ("Tarayıcı sözleşmesi").
 - **Kullanıcı kimlik doğrulaması Faz 138'de eklendi, opsiyonel bir katman —
   anasayfa ve tüm kursların ders içeriği anonim erişime tamamen açık kalır.
   GÜNCELLEME (Faz 160/161): Java DIŞINDAKİ kursların quiz'leri ve Practice'i
@@ -318,16 +318,33 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `currentUserDisplayName` (girişli değilse `null`) enjekte eder — navbar
   (`fragments/layout.html`) bunu TR/EN dil butonlarının HEMEN SOLUNDA
   `[ Sign in ] [ TR ] [ EN ]` / `[ Kullanıcı Adı ] [ Logout ] [ TR ] [ EN ]`
-  şeklinde kullanır. Yeni bir gated (yalnızca girişli kullanıcıya açık) sayfa
-  eklenirse `SecurityConfig`'teki `authorizeHttpRequests` bloğuna (şu an
-  bilinçli olarak `anyRequest().permitAll()`) bir kural eklenmeli — var olan
+  şeklinde kullanır. `SecurityConfig`'teki `authorizeHttpRequests` kuralları
+  sırayla değerlendirilir, ilk eşleşen kazanır: `/{lang:en|tr}/admin/**` →
+  `hasRole("ADMIN")`; course'u URL'den belirlenebilen quiz rotaları
+  (`/{lang:en|tr}/topics/{slug}/quiz/**`, `/{lang:en|tr}/quiz/{definitionSlug}[/**]`)
+  → `CourseAccessPolicy`; geri kalan her şey `anyRequest().permitAll()` (anasayfa,
+  ders içeriği, Practice API -- course kontrolü serviste --, AI ingestion -- kendi
+  `X-Api-Key` interceptor'ıyla). Yeni bir gated (yalnızca girişli kullanıcıya açık)
+  sayfa eklenirse kuralı `anyRequest().permitAll()`'dan ÖNCE ekle — var olan
   hiçbir rota bu değişiklikten etkilenmemeli. **CSRF koruması artık varsayılan
   olarak açık** — gerçek Thymeleaf formları (`th:action`) `${_csrf.token}`
   hidden input'uyla korunmalı (bkz. `login.html`/`register.html`/navbar logout
   formu), ama tarayıcı oturumu olmadan çağrılan anonim JSON POST uç noktaları
-  (sabit quiz submit, Practice submit, AI ingestion) `SecurityConfig`'te
-  `csrf().ignoringRequestMatchers(...)` ile bilinçli olarak muaf tutuldu — yeni
-  bir anonim/oturumsuz POST API eklenirse aynı muafiyet listesine eklenmeli.
+  `SecurityConfig`'te `csrf().ignoringRequestMatchers(...)` ile bilinçli olarak muaf
+  tutuldu; liste YALNIZCA şunlardır: `/api/internal/**` (AI ingestion ve diğer n8n
+  uç noktaları; kendi `X-Api-Key` interceptor'ıyla korunur),
+  `/{lang:en|tr}/topics/*/quiz/*/submit` (sabit quiz), `/{lang:en|tr}/practice/submit`
+  (Practice) ve `/{lang:en|tr}/quiz/*/submit` (Quiz Area). Bu listenin dışındaki her
+  POST CSRF korumalıdır. Yeni bir anonim/oturumsuz POST API eklenirse aynı
+  muafiyet listesine eklenmeli.
+  **AI Tutor (DeepSeek) güvenlik kuralı:** varsayılan olarak KAPALIDIR; yalnızca
+  `AI_TUTOR_ENABLED=true` VE `DEEPSEEK_API_KEY` birlikte verilince çalışır (biri
+  eksikse uygulama yine açılır, tutor devre dışı kalır). Rotaları
+  `/{lang:en|tr}/admin/ai-tutor/**` olduğu için yukarıdaki `/admin/**` →
+  `hasRole("ADMIN")` kuralı onları da korur: yalnızca ADMIN erişir. JSON uç noktaları
+  (`.../messages`, `.../conversations/*`) CSRF'ten muaf DEĞİLDİR (oturum adına para
+  harcarlar) ve muafiyet listesine eklenmemelidir. API anahtarı yalnızca ortam
+  değişkeninden okunur, repoya yazılmaz. Ayrıntı: `docs/deepseek-ai-tutor-plan.md`.
 
 - **"Google ile devam et" (Faz 185) aynı session modeline eklenen ikinci giriş yolu,
   token tabanlı oturum DEĞİL.** Google hesabı `user_identity.provider_subject` (`sub`)
