@@ -343,34 +343,21 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   e-postadır ve yetki YALNIZCA `app_user.role`'den gelir (`LocalOidcUser`,
   `GoogleAccountService`). E-postası eşleşen mevcut hesap ASLA otomatik bağlanmaz
   (kayıtta e-posta doğrulanmıyor) -- o hesabın şifresi istenir; yeni Google hesabı
-  Kullanım Koşulları kutusu işaretlenmeden açılmaz. ADMIN hesabı Google'la bağlanamaz
-  ve giriş yapamaz (kural tek yerde: `GoogleAccountService.allowsGoogleSignIn`). Bağlı
-  olmayan doğrulanmış kimlik giriş SAYILMAZ, session'da bekler (`PendingGoogleSignIn`,
-  10 dk). İstemci yalnızca `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` verilince kurulur,
-  yoksa buton gizli. Prod session çerezi `SameSite=Lax` KALMALI (Strict Google dönüşünü
+  Kullanım Koşulları kutusu işaretlenmeden açılmaz. Bağlı olmayan kimliğin e-postası
+  doğrulanmamışsa (`email_verified`) giriş reddedilir; doğrulanmış kimlik giriş SAYILMAZ,
+  session'da bekler (`PendingGoogleSignIn`, 10 dk). ADMIN hesabı Google'la bağlanamaz ve
+  giriş yapamaz (kural tek yerde: `GoogleAccountService.allowsGoogleSignIn`); e-postası bir
+  ADMIN hesabına ait, henüz bağlı olmayan kimlik de parola isteyen bağlama sayfasından ÖNCE
+  reddedilir (`GoogleOidcUserService.loadUser` + `GoogleSignInController.render`, ikisi de
+  `GoogleAccountService.isGoogleSignInBlockedForEmail` üzerinden `allowsGoogleSignIn`'e
+  sorar). İstemci yalnızca `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` verilince kurulur,
+  ikisi de yoksa buton gizli; ikisi BİRLİKTE verilmeli -- yalnızca client-id verilirse
+  uygulama açılmaz. Prod session çerezi `SameSite=Lax` KALMALI (Strict Google dönüşünü
   kırar). E-posta kayıtta, Google eşleştirmesinde ve şifreyle girişte AYNI kuralla
   (`UserRegistrationService.normalizeEmail`: `trim()` + `toLowerCase(Locale.ROOT)`)
-  normalize edilir -- yeni bir e-posta araması da bunu kullanmalı. **Durum (2026-10-24):**
-  kod `4f623e3` ile canlıda (V1148 uygulandı) ama Google girişi KAPALI -- Railway'de
-  `GOOGLE_*` yok, düğme görünmüyor, şifreyle giriş aynen çalışıyor; prod istemcisiyle gerçek
-  uçtan uca test YAPILMADI; F2/F5/F6 açık. Açmak için: Google Console'da prod OAuth istemcisi
-  (redirect birebir `https://www.learnforgex.com/login/oauth2/code/google`, izin ekranının
-  yayın durumu kontrol edilir), Railway'e İKİ değişkeni BİRLİKTE ekle (yalnızca client-id
-  verilirse uygulama açılmaz), yeniden deploy, sonra canlıda yeni hesap + bağlama + ADMIN
-  reddi denenir. **Güncelleme (2026-10-25, production):** yukarıdaki "KAPALI" durumu artık güncel
-  değil -- kullanıcı gerçek Google hesabıyla prod'da test etti: Google ile yeni hesap açma, Google
-  ile giriş ve mevcut hesabı bağlama çalıştı, sayfa yenilenince oturum korundu, çıkış/giriş de
-  denendi. OAuth istemcisi ve Railway ayarları bu oturumda okunmadı. **Güncelleme (2026-10-25,
-  ADMIN erken reddi):** e-postası bir ADMIN hesabına ait, henüz bağlı olmayan Google kimliği artık
-  parola isteyen bağlama sayfasından ÖNCE reddediliyor (`GoogleOidcUserService.loadUser` +
-  `GoogleSignInController.render`, ikisi de `GoogleAccountService.isGoogleSignInBlockedForEmail`
-  üzerinden `allowsGoogleSignIn`'e soruyor) -- F6'nın ADMIN kısmı kapandı, şifresiz hesap kısmı
-  açık; tam suite 306/306. Bu düzeltme henüz production'a deploy edilmedi ve gerçek Google OAuth
-  ile doğrulanmadı. **Güncelleme (2026-10-25, sonra):** `7c5e12d` canlıda (deployment `6012f866`);
-  ADMIN hesabıyla gerçek Google girişi parola sayfasına girmeden reddedildi (deploy logunda
-  `google_admin_not_allowed`). `linkUnavailable` mesajı rolü/nedeni söylemeyen genel bir cümleye
-  çevrildi, eşleme ve EN/TR metni testli (309/309); bu mesaj değişikliği henüz canlıda değil.
-  Ayrıntı: `docs/phase-log.md` "185".
+  normalize edilir -- yeni bir e-posta araması da bunu kullanmalı. Etkinleştirme tarifi:
+  `docs/google-sign-in-operations.md`. Tarihli doğrulamalar, deployment kimlikleri ve açık
+  bulgular (F2, F5, F6): `docs/phase-log.md` Faz 185.
 - **Course seviyesi erişim kuralı (Faz 160, Faz 161'de DARALTILDI): ders içeriği
   (topic sayfası + PDF) TÜM kurslarda anonim okumaya açıktır; giriş yalnızca Java
   DIŞINDAKİ kursların etkileşimli özellikleri (sabit quiz, Quiz Area, Practice)
