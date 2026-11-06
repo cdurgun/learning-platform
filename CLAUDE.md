@@ -116,15 +116,13 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   arayüz ile içerik dili birbirinden sapar (Faz 12'de yaşanan gerçek bir hataydı).
 - **Mutlak URL üretmek gereken her yerde (hreflang, canonical, Open Graph/Twitter meta,
   JSON-LD, sitemap.xml) `app.base-url` kullanılır, asla sabit kodlanmış bir domain
-  DEĞİL** — bkz. Faz 65 notu. `application.yml`'de dev varsayılanı
-  (`http://localhost:8080`), `application-prod.yml`'de production değeri
-  (`https://www.learnforgex.com`) tanımlı; her `Model` alan controller'a
-  `GlobalModelAttributes` (`@ControllerAdvice`) aracılığıyla `baseUrl` model
-  attribute'u olarak otomatik enjekte edilir, `ResponseEntity` döndüren
-  controller'lar (örn. `SitemapController`) kendi constructor'ına
-  `@Value("${app.base-url}")` ile alır. Yeni bir konu sayfası türü eklenirse
-  `topic.html`'deki hreflang/canonical/OG deseni (yalnızca GERÇEKTEN yayında olan
-  dillere hreflang ver, x-default İngilizce'ye düşer) referans alınmalı.
+  DEĞİL** — bkz. Faz 65 notu. Değer `application.yml`'de (dev) ve
+  `application-prod.yml`'de (production) tanımlı. `Model` alan controller'lara
+  `GlobalModelAttributes` (`@ControllerAdvice`) `baseUrl` attribute'unu enjekte eder;
+  `ResponseEntity` döndüren controller'lar (örn. `SitemapController`)
+  `@Value("${app.base-url}")` kullanır. Yeni bir konu sayfası türünde `topic.html`'deki
+  hreflang/canonical/OG deseni referans alınır: hreflang yalnızca GERÇEKTEN yayında olan
+  dillere verilir, x-default İngilizce'ye düşer.
 - **`th:inline="javascript"` (JSON-LD `<script>` bloklarında kullanılır) `/*<![CDATA[*/
   ... /*]]>*/` sarmalayıcısı OLMADAN yazılır; yeni bir blokta CDATA sarmalayıcı EKLEME.**
   Proje HTML5 çıktı üretiyor (XHTML strict değil); sarmalayıcı attoparser'ın `<![CDATA[`'i
@@ -179,25 +177,20 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   ettirilmez.
 - **React course'unda her kategori, gerçek ve çalıştırılabilir bir "Pratik Proje" ile
   biter (Faz 30'dan itibaren kalıcı kural).** Java/Spring derslerindeki `## Ek: Mini
-  Proje` (gömülü, tek başına derlenmeyen `.java` dosyaları) React kategorileri için
-  kullanılmaz — bunun yerine, kategori bittiğinde ayrı bir repo'da
-  (`react-course-projects`, GitHub'da `cdurgun/react-course-projects`) o kategorinin
-  tüm kavramlarını birleştiren küçük, gerçek bir Vite/React uygulaması yazılır,
-  `npm run build` ile derlemesi doğrulanır, `main` branch'ine commit edilip
-  `{kategori-slug}-v1` gibi bir tag ile "dondurulur". İlgili konunun markdown'ında
-  (genelde son ana konunun, örn. `jsx`'in EN kategorinin son topic'i olduğu React
-  Fundamentals'ta olduğu gibi) bir `## Pratik Proje` bölümü açılıp bu tag'in GitHub
-  linkine ve `git clone` + `npm install` + `npm run dev` talimatına yer verilir. Bu
-  proje **yalnızca o kategoriye kadar öğretilmiş kavramları kullanır** — state, hook,
-  `.map()` ile liste render'ı gibi henüz işlenmemiş kavramlara asla atıfta bulunmaz.
-  Ayrı, uzun ömürlü branch'ler **kullanılmaz** — tüm kategori projeleri `main` üzerinde,
-  yalnızca tag'lerle versiyonlanır (bkz. Faz 30, "Bilinen Kısıtlar"). `react-course-
-  projects` repo kökünde bir **npm workspaces** kurulumu var (`package.json`'da
-  `"workspaces": ["projects/*"]`) — yeni bir kategori projesi eklerken `projects/`
-  altına yeni bir klasör (kendi `package.json`'ıyla) koymak yeterli, ayrıca bir kurulum
-  adımı gerekmez; workspaces otomatik olarak onu da kapsar. Amaç, her proje klasöründe
-  ayrı `node_modules` birikmesini önlemek — `npm install` yalnızca repo kökünde bir kez
-  çalıştırılır.
+  Proje` (gömülü `.java` dosyaları) React kategorileri için kullanılmaz; bunun yerine,
+  kategori bittiğinde ayrı bir repo'da (`react-course-projects`, GitHub'da
+  `cdurgun/react-course-projects`) o kategorinin kavramlarını birleştiren küçük, gerçek
+  bir Vite/React uygulaması yazılır, `npm run build` ile derlemesi doğrulanır, `main`
+  branch'ine commit edilip `{kategori-slug}-v1` gibi bir tag ile "dondurulur". İlgili
+  konunun markdown'ında (genelde kategorinin son ana konusu, örn. React Fundamentals'ta
+  `jsx`) bir `## Pratik Proje` bölümü bu tag'in GitHub linkini ve `git clone` + `npm
+  install` + `npm run dev` talimatını verir. Proje **yalnızca o kategoriye kadar
+  öğretilmiş kavramları kullanır** — state, hook, `.map()` ile liste render'ı gibi henüz
+  işlenmemiş kavramlara asla atıfta bulunmaz. Ayrı, uzun ömürlü branch'ler
+  **kullanılmaz**: tüm kategori projeleri `main` üzerinde, yalnızca tag'lerle
+  versiyonlanır. Repo kökü npm workspaces kullanır (`"workspaces": ["projects/*"]`): yeni
+  proje, `projects/` altına kendi `package.json`'lı bir klasör koymaktır, `npm install`
+  yalnızca kökte bir kez çalışır; ayrıntı: `docs/known-constraints.md` (Faz 30).
 - **`ai-development-tools` kategorisindeki (Claude Code, ileride Cursor/GitHub
   Copilot vb.) derslerde, CLI/araç davranışına dair sürüme bağımlı HİÇBİR iddia
   kullanıcının kendi gerçek terminal oturumunda doğrulanmadan kesin gerçek gibi
