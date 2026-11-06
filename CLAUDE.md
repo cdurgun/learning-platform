@@ -281,7 +281,7 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   yapıldı:** sabit enum quiz'i (5 SINGLE_CHOICE soru) grouped `answers`
   sözleşmesiyle sorunsuz submit edildi; AI ingestion endpoint'i (`POST
   /api/internal/questions/ingest`) gerçek bir `curl` çağrısıyla test edildi
-  (`201`, `PENDING_REVIEW`/`AI` döndü), sonuç bir `MULTIPLE_CHOICE` soru
+  (`201`, `PENDING_REVIEW` döndü), sonuç bir `MULTIPLE_CHOICE` soru
   manuel olarak `PUBLISHED`'a çekilip `quiz_question_link`'e geçici (migration
   DEĞİL, elle SQL) eklendi, tarayıcıda checkbox olarak render edildiği,
   birden fazla şıkkın aynı anda seçilebildiği ve iki doğru şık seçilince
@@ -696,8 +696,8 @@ görev bir kısıta gerçekten bağlıysa **önce bash ile yeniden doğrula** (`
   push, her pull request, elle `workflow_dispatch`): Temurin 21, `postgres:16-alpine`
   servis container'ı (5433, `application-test.yml` ile aynı DB/kullanıcı; Flyway şemayı
   sıfırdan kurar), `TZ=Europe/Istanbul`, `mvn -B test`, ardından `scripts/example-outputs`
-  Python testleri; Maven başarısız olursa Surefire raporları artifact olarak yüklenir.
-  Yerelde aynı koşul: JDK 21, `TZ=Europe/Istanbul` ve 5433'te `learning_test` DB'si (testler
+  ve `.claude/skills/deploy-check` Python testleri; Maven başarısız olursa Surefire
+  raporları artifact olarak yüklenir. Yerelde aynı koşul: JDK 21, `TZ=Europe/Istanbul` ve 5433'te `learning_test` DB'si (testler
   `application-test.yml`'deki adresi kullanır; mevcut container'lara dokunmamak için atılabilir
   bir container ve `SPRING_DATASOURCE_URL` ile başka port kullanılabilir).
   **Railway'in build'i `mvn ... -DskipTests` çalıştırır, yani deploy testleri HİÇ çalıştırmaz.**
