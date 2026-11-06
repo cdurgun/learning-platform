@@ -216,7 +216,7 @@ yorumları); `docs/phase-log.md` Faz 87, 144, 145, 146, 148; `n8n/README.md`.
 **Kural:** yeni soru üretimi/incelemesi hiçbir zaman migration olarak yazılmaz; yalnızca *promotion* bir
 migration'dır; export script yalnızca AÇIK dev id listesi alır ve hiçbir veritabanına YAZMAZ (üretilen migration'ın prod'a yazılması
 yalnızca normal deploy'da Flyway ile olur).
-(CLAUDE.md, "Mimari" / Faz 143 güncellemesi.)
+(CLAUDE.md, "Mimari", "Promotion (dev → prod)".)
 
 **Neden üretim migration olarak yazılmaz (gerçek bir tasarım hatasından).** Önceki taslak, `PENDING_REVIEW`
 içeriği bir migration'la seed edip sonra bir `UPDATE` migration'ıyla "publish" etmeyi öneriyordu. Ama projenin
@@ -311,7 +311,7 @@ izin ekranı, Railway değişkenleri) güvenlik kuralı değil işletim bilgisid
 ## 7. Soru havuzu ve yayınlama kuralları
 
 **Kural:** `status='PUBLISHED'` filtresi pool sorgusuna sabit; sabit quiz üyeliği statüden bağımsızdır; ingestion hep `PENDING_REVIEW`.
-(CLAUDE.md, "Mimari", Faz 87 maddesi.)
+(CLAUDE.md, "Mimari", "Quiz sistemi Faz 87'de…".)
 
 **Neden genel bir "soru havuzu".** Eski "bir soru = doğrudan bir quiz'e ait" modeli, AI/n8n'in sürekli yeni soru üreteceği, sabit quiz'lerin ve
 rastgele bir Practice modunun aynı soruları farklı biçimde tüketeceği bir sisteme yetmedi. `Question` artık topic+language'e bağlı ama hiçbir `Quiz`'e
@@ -352,8 +352,7 @@ sütununa dokunmaz; Faz 147).
 
 **Yayınlama (Question Review, Faz 141/142).** `publish`/`reject` yalnızca `PENDING_REVIEW`'dan geçişe izin verir; zaten `PUBLISHED`/`REJECTED`
 bir soruya tekrar çağrı `409 Conflict` döner ve satırı değiştirmez; `reviewedBy`/`reviewedAt` doldurulur. Public havuza sızma/dışlanma ek kod
-gerektirmez: pool sorgusunun sabit filtresi `publish()` anında soruyu otomatik uygun yapar. *(CLAUDE.md'nin Faz 87 maddesindeki "review için ayrı
-admin arayüzü YOK" cümlesi Faz 141/142'den beri güncel değildir.)* Admin arayüzü `/{lang}/admin/questions` (ADMIN); Publish/Reject formları
+gerektirmez: pool sorgusunun sabit filtresi `publish()` anında soruyu otomatik uygun yapar. Admin arayüzü `/{lang}/admin/questions` (ADMIN); Publish/Reject formları
 CSRF korumalıdır (anonim JSON uç noktalarının aksine muaf DEĞİL).
 
 **Quiz soru eklerken: önce shell'i kontrol et (Faz 157).** Bazı kursların topic-oluşturma migration'ları (`docker`, `git-github`) o topic için EN+TR quiz
