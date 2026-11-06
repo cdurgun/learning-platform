@@ -18,25 +18,26 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
 
 ## Mimari — Bunlar Kesinlikle Değişmeyecek Kurallar
 
-- **DB sadece metadata tutar.** Hiyerarşi: `Course > Category > Topic >
-  TopicTranslation`, ayrıca `CodeExample`. Ders içeriğinin kendisi asla DB'de değil,
-  `src/main/resources/content/{lang}/{slug}.md` dosyalarındadır (tek doğruluk kaynağı).
-- **Java örnekleri gerçek, derlenebilir `.java` dosyalarıdır:**
-  `src/main/resources/examples/{topic-slug}/*.java`. Markdown içinde
-  `{{DosyaAdi.java}}` yazılınca `MarkdownService` bunu fenced code block'a çevirir.
-  Bu dosyalar **default package**'ta, **İngilizce yorumlarla** yazılır (TR/EN her iki
-  markdown da aynı dosyaları paylaşır). Aynı topic klasöründe farklı dosyalarda aynı
-  sınıf adının (`Book`, `Animal`, `Duck` gibi) tekrar tekrar kullanılması **normaldir**
-  — her `.java` dosyası bağımsız bir derleme birimi, birlikte derlenmezler.
-- **Embed sistemi Faz 27'den itibaren uzantıdan bağımsız:** `{{DosyaAdi.ext}}` söz
-  dizimi artık genel — `MarkdownService`'teki `EXAMPLE_PLACEHOLDER` regex'i uzantıyı
-  ikinci bir yakalama grubu olarak okuyor, `CodeExampleResolver.resolve(slug, name,
-  extension)` bu uzantıyla dosya yolunu kuruyor, ve üretilen fenced code block'un dil
-  etiketi (` ```jsx ` gibi) doğrudan bu uzantıdan geliyor. React kategorisi için
-  `.jsx` dosyaları bu sayede Java örnekleriyle **birebir aynı mekanizmayla** gömülebilir
-  — yeni bir "React embed sistemi" yazmaya gerek yok. `highlight.js@11.9.0`'ın "jsx"i
-  "javascript" grammar'ının bir alias'ı olarak tanıdığı, bağımsız olarak doğrulandı
-  (bkz. "Bilinen Kısıtlar").
+- **DB sadece metadata tutar; DB ↔ dosya bağlantısı yalnızca slug convention ile
+  kurulur.** Hiyerarşi: `Course > Category > Topic > TopicTranslation`, ayrıca
+  `CodeExample`. Ders içeriği asla DB'de değil, `src/main/resources/content/{lang}/{slug}.md`
+  dosyalarındadır (tek doğruluk kaynağı); örnekler
+  `examples/{topic.slug}/{example_name}.{ext}`. Path hiçbir zaman DB'de saklanmaz,
+  `topic.slug`'dan türetilir.
+- **Java örnekleri gerçek, derlenebilir dosyalardır; embed sistemi Faz 27'den itibaren
+  uzantıdan bağımsızdır.** Örnekler `src/main/resources/examples/{topic-slug}/*.java`;
+  markdown'da `{{DosyaAdi.ext}}` yazılınca `MarkdownService` bunu fenced code block'a
+  çevirir. `EXAMPLE_PLACEHOLDER` regex'i uzantıyı ikinci yakalama grubu olarak okur,
+  `CodeExampleResolver.resolve(slug, name, extension)` dosya yolunu bu uzantıyla kurar,
+  code block'un dil etiketi (` ```jsx ` gibi) de bu uzantıdan gelir; React `.jsx`
+  dosyaları Java örnekleriyle **birebir aynı mekanizmayla** gömülür (yeni bir "React
+  embed sistemi" yazma; `highlight.js@11.9.0` "jsx"i "javascript" alias'ı olarak tanır,
+  bkz. "Bilinen Kısıtlar"). Java dosyaları **default package**'ta, **İngilizce
+  yorumlarla** yazılır (TR/EN markdown aynı dosyaları paylaşır); aynı topic klasöründe
+  farklı dosyalarda aynı sınıf adı (`Book`, `Animal`, `Duck`) **normaldir** — her
+  `.java` bağımsız bir derleme birimidir. Bir `.java` gömmesinin yanındaki `.out` ve
+  "Beklenen Çıktı" paneli için aşağıdaki "Beklenen Çıktı" maddesine ve
+  `docs/architecture-rationale.md` §3'e bak.
 - **"Beklenen Çıktı" paneli (Faz 177):** bir `.java` gömmesinin yanında
   `examples/{slug}/{Ad}.out` varsa kod bloğunun altında programın gerçek stdout'u
   gösterilir. `.out` ELLE YAZILMAZ ve elle düzeltilmez: yalnızca
@@ -69,9 +70,6 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   dosya yazılmaz); çalıştırmadan önce `--dry-run` listesi gösterilir. Staging (Faz 180'den
   beri) kökteki git-ignored `.example-outputs/` dizinidir, `target/` DEĞİL -- herhangi bir
   oturumun `mvn clean`'i incelenmemiş çıktıları silmesin diye; `StagingLocationTest` bunu korur.
-- **DB ↔ dosya bağlantısı yalnızca slug convention ile kurulur**, path hiçbir zaman
-  DB'de saklanmaz: `content/{language}/{topic.slug}.md` ve
-  `examples/{topic.slug}/{example_name}.{ext}`.
 - **Yayın durumu çeviri seviyesindedir:** `Topic`'te `published` yok,
   `TopicTranslation`'da var — bir dil yayında, diğeri taslak olabilir (örn. TR yayında,
   EN henüz taslak). Yeni bir konu eklerken önce TR'yi `published = true`, EN'i
@@ -99,16 +97,23 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   sitenin gerçek yayın tarihi değildir (bkz. `docs/google-seo-adsense-plan.md`).
 - **Dil, Faz 64'ten beri URL path'inin bir parçası, query parametresi değil:**
   gerçek içerik `/en/topics/{slug}` ve `/tr/topics/{slug}` altında (anasayfa: `/en`,
-  `/tr`); çıplak `/` bir negotiator, eski `/topics/{slug}?lang=..` URL'leri ise 301 ile
-  yeni adrese yönlendiriliyor (SEO gerekçesi: hreflang ile bağlanabilen, bağımsız
-  indexlenebilir URL'ler — bkz. Faz 64 notu). Yeni bir sayfa/route eklerken dili HER
-  ZAMAN `{lang:en|tr}` regex-kısıtlı bir path variable olarak ekle, query parametresi
-  olarak DEĞİL. **Negotiator'ın (`/`) varsayılan dili Faz 69'dan itibaren DAİMA
-  İngilizce'dir, `Accept-Language` başlığı BİLİNÇLİ OLARAK dikkate ALINMAZ** — bkz. Faz
-  69 notu (Faz 64'teki ilk tasarım tarayıcı diline bakıyordu, kullanıcı bunun kendi
-  ziyaretlerinde beklenmedik şekilde `/tr`'ye yönlendirdiğini fark edip DEĞİŞTİRİLMESİNİ
-  istedi — bu artık kalıcı, bilinçli bir ürün kararı, yanlışlıkla "eski hâline"
-  DÖNÜLMEMELİ).
+  `/tr`); eski `/topics/{slug}?lang=..` URL'leri 301 ile yeni adrese yönlendirilir
+  (SEO: hreflang ile bağlanabilen, bağımsız indexlenebilir URL'ler, bkz. Faz 64 notu).
+  Yeni bir sayfa/route eklerken dili HER ZAMAN `{lang:en|tr}` regex-kısıtlı bir path
+  variable olarak ekle, query parametresi olarak DEĞİL. `LangParamLocaleResolver` önce
+  path'in ilk segmentine bakar, bulamazsa `?lang=` parametresine bakar; `?lang=`
+  YALNIZCA eski yer imleri/linkler için geriye dönük uyumluluk fallback'idir (bu yedek
+  ve çıplak `/` negotiator'ı), yeni route'larda kullanılmaz. **Çıplak `/` bir
+  negotiator'dır; varsayılan dili Faz 69'dan itibaren DAİMA İngilizce'dir,
+  `Accept-Language` başlığı BİLİNÇLİ OLARAK dikkate ALINMAZ** (Faz 64'teki ilk tasarım
+  tarayıcı diline bakıyordu, kullanıcı beklenmedik `/tr` yönlendirmesi nedeniyle
+  değiştirilmesini istedi — kalıcı ürün kararı, "eski hâline" DÖNÜLMEMELİ; bkz. Faz 69
+  notu). Path ve `?lang=` yoksa/bozuksa arayüz de içerik de İngilizce'ye düşer
+  (`LangParamLocaleResolver.DEFAULT_LOCALE`). **i18n:** UI metinleri
+  `messages*.properties`'de, içerik çevirisi (`content/{lang}/*.md` +
+  `TopicTranslation`) ayrı bir katmandır; controller'lar dili `{lang:en|tr}` path
+  variable'ından alır ve kendi başlarına ayrı bir varsayılan **tanımlamaz**, aksi halde
+  arayüz ile içerik dili birbirinden sapar (Faz 12'de yaşanan gerçek bir hataydı).
 - **Mutlak URL üretmek gereken her yerde (hreflang, canonical, Open Graph/Twitter meta,
   JSON-LD, sitemap.xml) `app.base-url` kullanılır, asla sabit kodlanmış bir domain
   DEĞİL** — bkz. Faz 65 notu. `application.yml`'de dev varsayılanı
@@ -149,20 +154,20 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   bölümünde...), **asla numarayla değil** ("Bölüm 3'te..." yazma). Bir bölüme referans
   verirken, o bölümün H2 başlığıyla **birebir aynı metni** tırnak içinde kullan — TR ve
   EN dosyaları ayrı ayrı doğrulanmalı.
-- **i18n:** UI metinleri `messages*.properties`'de, içerik çevirisi
-  (`content/{lang}/*.md` + `TopicTranslation`) tamamen ayrı bir katman. Dil, "Dil, Faz
-  64'ten beri URL path'inin bir parçası" maddesindeki gibi URL path'inden (`{lang:en|tr}`)
-  belirlenir; `LangParamLocaleResolver` önce path'in ilk segmentine bakar, bulamazsa
-  `?lang=` parametresine bakar. `?lang=` YALNIZCA eski yer imleri/linkler için geriye
-  dönük uyumluluktur (bu yedek ve çıplak `/` negotiator'ı); yeni route'larda
-  kullanılmaz. **Varsayılan dil İngilizce** (`LangParamLocaleResolver.DEFAULT_LOCALE`) —
-  ikisi de yoksa/bozuksa arayüz de içerik de İngilizce'ye düşer. Controller'lar dili
-  `{lang:en|tr}` path variable'ından alır ve kendi başlarına ayrı bir varsayılan
-  **tanımlamaz**; aksi halde arayüz ile içerik dili birbirinden sapar (Faz 12'de
-  yaşanan gerçek bir hataydı).
 - **Flyway migration numaraları sıralı ve geçmişe dönük asla değiştirilmez** — her
   değişiklik yeni bir `V{n}__aciklama.sql` dosyası. SQL string literal'lerinde Türkçe
   apostrof geçen metinlerde (`Interface'in` gibi) SQL escaping'i (`''`) unutma.
+  Migration'lar `db/migration/{konu-slug}/` alt klasörlerinde tutulur (`core/`, `enum/`,
+  `record/`, ... `threads/`); Flyway `classpath:db/migration`'ı recursive taradığı için
+  alt klasör derinliği versiyon sırasını etkilemez (yalnızca dosya sistemi
+  organizasyonu). Yeni bir konu eklerken migration'ları o konunun kendi alt klasörüne
+  koy. **Doğrulama:** Maven Flyway plugin'i (`mvn flyway:migrate`) `application.yml`'i
+  okumaz (`placeholderReplacement` varsayılanı true), uygulamanın gerçek yolunu
+  doğrulamaz. Migration'lar Spring Boot test yaklaşımıyla doğrulanır: uygulama
+  yapılandırmasıyla çalışan Spring Boot testi (`LearningPlatformApplicationTests`) Flyway'i
+  uygulamanın kendi yolundan çalıştırır. `quiz-questions` skill'indeki 9a bunu geçici bir
+  PostgreSQL container'ına karşı yapar (günlük testlerden ÖNCE, zorunlu); 9b günlük
+  testlerdir (kalıcı `learning_test`) ve yeni migration doğrulaması yerine geçmez.
 - **Flyway placeholder değiştirme KAPALIDIR** (`application.yml`:
   `spring.flyway.placeholder-replacement: false`; dev/prod/test profilleri geçersiz
   kılmaz) — migration dosyalarında (yorum satırları dahil) literal `${...}`
@@ -171,11 +176,6 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   değerlendir: ayar açıkken eşleşen her `${...}` "No value provided for placeholder"
   hatasıyla **tüm uygulamanın başlamasını engeller**. Gerekçe ve geçmiş:
   `docs/architecture-rationale.md` §2.
-- **Migration dosyaları `db/migration/{konu-slug}/` alt klasörlerinde tutulur**
-  (`core/`, `enum/`, `record/`, ... `threads/`) — Flyway, `classpath:db/migration`
-  konumunu recursive taradığı için alt klasör derinliği versiyon sırasını etkilemez, bu
-  yalnızca dosya sistemi düzeyinde bir organizasyon. Yeni bir konu eklerken migration'ları
-  o konunun kendi alt klasörüne koy.
 - **Birden fazla `Category` olabilir** (Faz 11'den itibaren: `java-basics` +
   `concurrency`) — `category.sort_order` kategoriler arası sırayı, `topic.sort_order` ise
   **yalnızca kendi kategorisi içinde** sırayı belirler (`TopicRepository` sorgusu
@@ -220,23 +220,25 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   kalıcı olarak terk edildi.** Eski `QuizQuestion` → `Question`'a yeniden
   adlandırıldı: artık topic+language'e bağlı ama hiçbir `Quiz`'e bağlı OLMAK
   ZORUNDA olmayan, `type` (`QuestionType`: SINGLE_CHOICE/MULTIPLE_CHOICE/
-  CODE_OUTPUT), `difficulty` (mevcut `Difficulty` enum'u yeniden kullanılıyor,
-  yeni bir enum YARATILMADI), `status` (`QuestionStatus`:
+  CODE_OUTPUT), `difficulty` (mevcut `Difficulty` enum'u), `status` (`QuestionStatus`:
   DRAFT/PENDING_REVIEW/PUBLISHED/REJECTED) ve `source` (`QuestionSource`:
   MANUAL/CLAUDE/N8N/OPENAI) taşıyan genel bir havuz sorusu. Eski `QuizOption` →
-  `QuestionOption`'a yeniden adlandırıldı (anlamı değişmedi). `QuizQuestion`
-  ADI KORUNDU ama anlamı tamamen değişti — artık bir soru DEĞİL, yeni `Quiz`
+  `QuestionOption`'a yeniden adlandırıldı (anlamı değişmedi). **`QuizQuestion`
+  ADI KORUNDU ama anlamı tamamen değişti** — artık bir soru DEĞİL, yeni `Quiz`
   entity'si (bir topic+language'e bağlı, editoryal olarak KÜRE edilmiş/curated,
   `slug`+`title`+`passThreshold` taşıyan **sabit quiz**) ile `Question`
   arasında bir İLİŞKİ/join entity'si — hangi sorunun hangi quiz'de hangi
-  sırada (`position`) yer aldığını tutar. **Sabit quiz** (`QuizService`,
-  `/{lang}/topics/{topicSlug}/quiz/{quizSlug}/submit` — artık genel, eskiden
-  yalnızca `enum`'a hardcode'du) ile **Practice modu** (`PracticeService`,
-  `/{lang}/practice`, topic/language/difficulty/type filtreli RASTGELE
-  seçim) böylece aynı `Question` havuzunu iki farklı şekilde tüketiyor —
-  Practice hiçbir `Quiz` satırına ihtiyaç duymuyor, yalnızca
-  `status = 'PUBLISHED'` sorular arasından çekiyor (bu filtre sorgunun
-  KENDİSİNE sabit yazılı, hiçbir çağıran taraf override edemez). **DİKKAT:**
+  sırada (`position`) yer aldığını tutar; eski anlamıyla (bir soru olarak)
+  KULLANMA. Üç ayrı kavram aynı `Question` havuzunu tüketir: **sabit quiz**
+  (`QuizService`, `/{lang}/topics/{topicSlug}/quiz/{quizSlug}/submit`), **Practice
+  modu** (`PracticeService`, `/{lang}/practice`, topic/language/difficulty/type
+  filtreli RASTGELE seçim; hiçbir `Quiz` satırına ihtiyaç duymaz) ve **Quiz Area**
+  (`QuizDefinition`: kategori-kapsamlı, yeniden kullanılabilir tanım; sabit
+  quiz'in ve Practice'in yerine GEÇMEZ, ayrı bir kavramdır; submit/puanlamayı
+  `PracticeService.submit` ile paylaşır -- bkz. Faz Geçmişi bölümündeki Faz 139
+  notu ve `docs/architecture-rationale.md` §7). Practice ve Quiz Area havuzdan
+  yalnızca `status = 'PUBLISHED'` soruları çeker (bu filtre sorgunun KENDİSİNE sabit
+  yazılı, hiçbir çağıran taraf override edemez). **DİKKAT:**
   sabit quiz'in soru üyeliği (`quiz_question_link`) `Question.status`'tan
   TAMAMEN BAĞIMSIZDIR — `QuizService.loadQuiz()` hiçbir status filtresi
   uygulamaz, yalnızca `quiz_question_link`'te ne varsa onu döner. Yani bir
@@ -246,8 +248,7 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   açık bir `quiz_question_link` seed adımı gerektirir (bkz. `enum/V291`,
   `git-fundamentals/V467`/`V468` — topic slug + language + quiz slug ile
   portable şekilde resolve edilen quiz'e link'leyen migration deseni).
-  Puanlama
-  (`QuestionScorer`) her iki modda AYNI kuralı kullanır: seçilen şık id
+  Puanlama (`QuestionScorer`) her iki modda AYNI kuralı kullanır: seçilen şık id
   kümesi doğru şık id kümesiyle BİREBİR eşleşmeli (MULTIPLE_CHOICE kısmi
   doğru cevabı KABUL ETMEZ). **AI/n8n ingestion, insan incelemesi ve
   auto-publish** için aşağıdaki "Ingestion", "Question Review" ve "Auto-publish"
@@ -268,10 +269,14 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `NUMERIC(3,2)`) — `Double`/`Float` kullanılırsa Hibernate'in
   `ddl-auto: validate` şema doğrulaması `float(53)` bekleyip gerçek
   `NUMERIC` kolonuyla çakışır; NUMERIC/DECIMAL kolonlu her yeni alanda bu
-  eşleşmeye dikkat et. CODE_OUTPUT sorular `topic.html`'de `codeSnippet`/
-  `codeLanguage` alanları üzerinden MEVCUT highlight.js entegrasyonuyla
-  (`hljs.highlightAll()`, ayrı bir JS değişikliği GEREKMEDİ) render edilir.
-  Ayrıntılı uygulama akışı için `docs/phase-log.md`'de "Faz 87"yi grep'le.
+  eşleşmeye dikkat et. **CODE_OUTPUT soruları:** kod YALNIZCA `codeSnippet`
+  (+ `codeLanguage`) alanında tutulur, `question` metninde fenced blok olarak
+  tekrarlanmaz (tekrarlanmışsa admin ekranında
+  `QuestionReviewView.questionDisplayText()` bunu yalnızca SUNUMDA düşürür, DB'deki
+  `question` sütunu değişmez); quiz şablonunda (`fragments/quiz.html`) MEVCUT
+  highlight.js entegrasyonuyla (`hljs.highlightAll()`, ayrı bir JS değişikliği
+  GEREKMEDİ) render edilir. Gerekçe: `docs/architecture-rationale.md` §7; akış:
+  `docs/phase-log.md` "Faz 87".
 - **Faz 88'de GERÇEK bir regresyon bulunup düzeltildi ve grouped `answers`
   sözleşmesi uçtan uca (gerçek tarayıcıda) doğrulandı — bkz. `docs/phase-log.md`
   "Faz 88".** `static/js/quiz.js`, Faz 87'de `QuizSubmitRequest`/`QuizAnswer`
@@ -458,10 +463,6 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   başlıkları konunun kavramsal KAPSAMINI tanımlar, kelime-eşleşme şartı DEĞİLDİR: içerik
   uyumu prompt'un gerçek ders metnine topraklanmasıyla sağlanır, `Validate Output`
   yalnızca YAPISAL doğrulama yapar.
-- **CODE_OUTPUT soruları:** kod YALNIZCA `codeSnippet` (+ `codeLanguage`) alanında tutulur,
-  `question` metninde fenced blok olarak tekrarlanmaz. Tekrarlanmışsa admin ekranında
-  `QuestionReviewView.questionDisplayText()` bunu yalnızca SUNUMDA düşürür, DB'deki
-  `question` sütunu değişmez.
 
 ## Token ve Bağlam Verimliliği (Faz 75'ten itibaren, kullanıcı+ChatGPT kararı)
 
