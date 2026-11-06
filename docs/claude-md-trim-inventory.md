@@ -1,5 +1,15 @@
 # CLAUDE.md sadeleştirme: dış referans envanteri (Aşama 1)
 
+> **ARŞİV UYARISI (Aşama 11.5).** Bu belge, 2026-11-03..06 tarihli CLAUDE.md sadeleştirme
+> çalışmasının **tarihsel kaydıdır**. İçindeki teknik kurallar ve komutlar **güncel doğruluk kaynağı
+> DEĞİLDİR**; güncel kurallar için `CLAUDE.md`, `docs/architecture-rationale.md` ve
+> `docs/known-constraints.md` esas alınmalıdır. Özellikle eski Flyway plugin / `mvn flyway:migrate`
+> ifadeleri **güncel yöntem değildir**; güncel doğrulama yöntemi `docs/known-constraints.md`
+> içindedir ("DÜZELTME (2026-11-05 ...)" kaydı). Belge tarihsel denetim izi olarak korunmaktadır;
+> aşağıdaki "Geçici çalışma dokümanı ... silinebilir" cümlesi bu uyarıdan ÖNCEKİ durumu anlatır ve
+> artık geçerli değildir: belge silinebilir geçici çalışma belgesi değildir. Aşağıdaki içerik
+> bilerek olduğu gibi bırakılmıştır.
+
 Geçici çalışma dokümanı (`docs/claude-md-trim` dalı). Sadeleştirme bitince silinebilir ya da
 `architecture-rationale.md`'ye bir "bağımlılıklar" bölümü olarak taşınabilir.
 Taban: `CLAUDE.md` 89.126 bayt, 1.196 satır (HEAD `56ef740`, 2026-11-03).
