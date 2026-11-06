@@ -126,26 +126,22 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   `topic.html`'deki hreflang/canonical/OG deseni (yalnızca GERÇEKTEN yayında olan
   dillere hreflang ver, x-default İngilizce'ye düşer) referans alınmalı.
 - **`th:inline="javascript"` (JSON-LD `<script>` bloklarında kullanılır) `/*<![CDATA[*/
-  ... /*]]>*/` sarmalayıcısı OLMADAN yazılır** — bkz. Faz 66 notu. Bu proje HTML5 çıktı
-  üretiyor (XHTML strict değil), ve bu CDATA sarmalayıcı (bazı Thymeleaf örneklerinde
-  görülür) attoparser'ın `<![CDATA[`'i gerçek bir CDATA bölümü açılışı sanmasına, script
-  içeriğinin metin düğümlerinin yanlış parçalanmasına ve `TemplateInputException:
-  Incomplete structure: "/*"` hatasına yol açtığı canlı ortamda GERÇEKTEN doğrulandı.
-  Yeni bir `th:inline="javascript"` bloğu eklerken CDATA sarmalayıcı EKLEME.
-- **Sidebar, Faz 68'den itibaren `lg` altında Bootstrap'in responsive `offcanvas-lg`
-  bileşenidir** (`fragments/layout.html :: sidebar` — `<aside id="sidebarOffcanvas"
-  class="offcanvas-lg offcanvas-start ...">`), navbar'da `d-lg-none` bir hamburger
-  butonu (`data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas"`) bunu açar.
-  `offcanvas-body`'nin `d-block` sınıfı ZORUNLU (Bootstrap'in kendi `.offcanvas-lg
-  .offcanvas-body` kuralı lg+ ekranda `display:flex` verir, `d-block`'un `!important`'ı
-  bunu geçersiz kılıp orijinal blok düzenini korur). Navbar `sticky-top`. Sağdaki TOC
-  (`topic.html`, `.toc-sticky`) navbar'ın altına gizlenmesin diye `top: 4.25rem`
-  kullanır VE `align-self: flex-start` İÇERMELİDİR — bu olmadan Bootstrap `.row`'un
-  varsayılan `align-items: stretch`'i TOC'u `main` sütunuyla aynı yüksekliğe gerer ve
-  `position: sticky` hiçbir şekilde çalışmaz (bkz. Faz 68 notu, Playwright ile GERÇEKTEN
-  doğrulanmış bir hata). Bu sayfalara benzer yeni bir sticky/offcanvas eklenirse aynı
-  desen (`align-self: flex-start` + gerçek navbar yüksekliğine göre `top` offset'i)
-  tekrarlanmalı.
+  ... /*]]>*/` sarmalayıcısı OLMADAN yazılır; yeni bir blokta CDATA sarmalayıcı EKLEME.**
+  Proje HTML5 çıktı üretiyor (XHTML strict değil); sarmalayıcı attoparser'ın `<![CDATA[`'i
+  gerçek bir CDATA açılışı sanmasına ve `TemplateInputException: Incomplete structure:
+  "/*"` hatasına yol açar (canlı ortamda GERÇEKTEN doğrulandı). Gerekçe: `topic.html`
+  içindeki yorum ve `docs/phase-log.md` Faz 66 notu.
+- **Sidebar, Faz 68'den itibaren `lg` altında Bootstrap'in `offcanvas-lg` bileşenidir**
+  (`fragments/layout.html :: sidebar`, `#sidebarOffcanvas`); navbar'daki `d-lg-none`
+  hamburger butonu açar, navbar `sticky-top`'tır. İki ZORUNLU tuzak: (1) `offcanvas-body`
+  `d-block` taşımalı (Bootstrap'in `.offcanvas-lg .offcanvas-body` kuralı lg+ ekranda
+  `display:flex` verir; `d-block`'un `!important`'ı bunu geçersiz kılar). (2) Sağdaki TOC
+  (`topic.html`, `.toc-sticky`) navbar'ın altına gizlenmesin diye `top: 4.25rem` kullanır
+  VE `align-self: flex-start` İÇERMELİDİR — yoksa `.row`'un varsayılan `align-items:
+  stretch`'i TOC'u `main` ile aynı yüksekliğe gerer ve `position: sticky` hiç çalışmaz
+  (Playwright ile doğrulanmış gerçek hata). Yeni bir sticky/offcanvas aynı deseni
+  izlemeli. Ölçümler ve gerekçe: `static/css/custom.css` yorumu, `docs/phase-log.md`
+  Faz 68.
 - **`> 💡 Tip` / `> ⚠️ Warning` blockquote'ları** Bootstrap alert'e çevrilir —
   **tek paragraf olmalı**, içine boş satır ya da code fence **konamaz** (regex tabanlı
   post-process, çok paragraflı blockquote'ları desteklemiyor). Code fence'ler her zaman
@@ -176,11 +172,11 @@ Spring Boot 4.1, Java 21, Thymeleaf + Bootstrap 5, PostgreSQL + Flyway, CommonMa
   değerlendir: ayar açıkken eşleşen her `${...}` "No value provided for placeholder"
   hatasıyla **tüm uygulamanın başlamasını engeller**. Gerekçe ve geçmiş:
   `docs/architecture-rationale.md` §2.
-- **Birden fazla `Category` olabilir** (Faz 11'den itibaren: `java-basics` +
-  `concurrency`) — `category.sort_order` kategoriler arası sırayı, `topic.sort_order` ise
-  **yalnızca kendi kategorisi içinde** sırayı belirler (`TopicRepository` sorgusu
-  `WHERE category_id = ?` ile scoped'dır). Yeni bir kategori açarken `topic.sort_order`'ı
-  1'den başlat, önceki kategorilerin numaralarını devam ettirme.
+- **Birden fazla `Category` olabilir:** `category.sort_order` kategoriler arası sırayı,
+  `topic.sort_order` ise **yalnızca kendi kategorisi içinde** sırayı belirler (kategori
+  kapsamlı sorgu: `TopicRepository.findByCategoryIdOrderBySortOrderAsc`). Yeni bir
+  kategoride `topic.sort_order` 1'den başlar; önceki kategorilerin numaraları devam
+  ettirilmez.
 - **React course'unda her kategori, gerçek ve çalıştırılabilir bir "Pratik Proje" ile
   biter (Faz 30'dan itibaren kalıcı kural).** Java/Spring derslerindeki `## Ek: Mini
   Proje` (gömülü, tek başına derlenmeyen `.java` dosyaları) React kategorileri için
